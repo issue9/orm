@@ -95,7 +95,7 @@ func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *core.Column) error {
 		buf.WriteString("REAL")
 	case reflect.Array, reflect.Slice:
 		k := col.GoType.Elem().Kind()
-		if (k != reflect.Int8) && (k != reflect.Int32) {
+		if (k != reflect.Uint8) && (k != reflect.Int32) {
 			return errors.New("不支持数组类型")
 		} else {
 			buf.WriteString("TEXT")

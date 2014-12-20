@@ -267,7 +267,7 @@ func (p *Postgres) sqlType(buf *bytes.Buffer, col *core.Column) error {
 		}
 	case reflect.Slice, reflect.Array: // []rune,[]byte当作字符串处理
 		k := col.GoType.Elem().Kind()
-		if (k != reflect.Int8) && (k != reflect.Int32) {
+		if (k != reflect.Uint8) && (k != reflect.Int32) {
 			return errors.New("不支持数组类型")
 		}
 

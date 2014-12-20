@@ -120,8 +120,8 @@ func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
 		}
 	case reflect.Slice, reflect.Array: // []rune,[]byte当作字符串处理
 		k := col.GoType.Elem().Kind()
-		if (k != reflect.Int8) && (k != reflect.Int32) {
-			return errors.New("不支持数组类型")
+		if (k != reflect.Uint8) && (k != reflect.Int32) {
+			return fmt.Errorf("不支持[%v]类型的数组", k)
 		}
 
 		if col.Len1 < 65533 {

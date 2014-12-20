@@ -6,6 +6,7 @@ package dialect
 
 import (
 	"bytes"
+	"database/sql"
 	"reflect"
 	"testing"
 
@@ -48,4 +49,19 @@ func TestMysqlSQLType(t *testing.T) {
 	buf.Reset()
 	a.NotError(m.sqlType(buf, col))
 	a.StringEqual(buf.String(), "VARCHAR(5)", style)
+
+	col.GoType = reflect.TypeOf(1.2)
+	buf.Reset()
+	a.NotError(m.sqlType(buf, col))
+	a.StringEqual(buf.String(), "DOUBLE(5,6)", style)
+
+	col.GoType = reflect.TypeOf([]byte{'1', '2'})
+	buf.Reset()
+	a.NotError(m.sqlType(buf, col))
+	a.StringEqual(buf.String(), "VARCHAR(5)", style)
+
+	col.GoType = reflect.TypeOf(sql.NullInt64{})
+	buf.Reset()
+	a.NotError(m.sqlType(buf, col))
+	a.StringEqual(buf.String(), "BIGINT(5)", style)
 }
