@@ -67,7 +67,7 @@ func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
 		return errors.New("col参数是个空值")
 	}
 
-	if col.GoType.Kind() == reflect.Invalid {
+	if col.GoType == nil {
 		return errors.New("无效的col.GoType值")
 	}
 
@@ -115,8 +115,9 @@ func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
 	case reflect.String:
 		if col.Len1 < 65533 {
 			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
+		} else {
+			buf.WriteString("LONGTEXT")
 		}
-		buf.WriteString("LONGTEXT")
 	case reflect.Slice, reflect.Array: // []rune,[]byte当作字符串处理
 		k := col.GoType.Elem().Kind()
 		if (k != reflect.Int8) && (k != reflect.Int32) {
@@ -125,8 +126,9 @@ func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
 
 		if col.Len1 < 65533 {
 			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
+		} else {
+			buf.WriteString("LONGTEXT")
 		}
-		buf.WriteString("LONGTEXT")
 	case reflect.Struct:
 		switch col.GoType {
 		case nullBool:
@@ -139,8 +141,9 @@ func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
 		case nullString:
 			if col.Len1 < 65533 {
 				buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
+			} else {
+				buf.WriteString("LONGTEXT")
 			}
-			buf.WriteString("LONGTEXT")
 		case timeType:
 			buf.WriteString("DATETIME")
 		}

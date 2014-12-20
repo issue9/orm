@@ -30,10 +30,22 @@ func TestMysqlGetDBName(t *testing.T) {
 func TestMysqlSQLType(t *testing.T) {
 	a := assert.New(t)
 	buf := bytes.NewBufferString("")
-	col := &core.Column{
-		GoType: reflect.TypeOf(1),
-	}
+	col := &core.Column{}
+	a.Error(m.sqlType(buf, col))
 
-	m.sqlType(buf, col)
+	col.GoType = reflect.TypeOf(1)
+	buf.Reset()
+	a.NotError(m.sqlType(buf, col))
+	a.StringEqual(buf.String(), "BIGINT", style)
 
+	col.Len1 = 5
+	col.Len2 = 6
+	buf.Reset()
+	a.NotError(m.sqlType(buf, col))
+	a.StringEqual(buf.String(), "BIGINT(5)", style)
+
+	col.GoType = reflect.TypeOf("abc")
+	buf.Reset()
+	a.NotError(m.sqlType(buf, col))
+	a.StringEqual(buf.String(), "VARCHAR(5)", style)
 }

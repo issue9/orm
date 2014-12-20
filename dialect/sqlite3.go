@@ -81,7 +81,7 @@ func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *core.Column) error {
 		return errors.New("col参数是个空值")
 	}
 
-	if col.GoType.Kind() == reflect.Invalid {
+	if col.GoType == nil {
 		return errors.New("无效的col.GoType值")
 	}
 
@@ -97,8 +97,9 @@ func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *core.Column) error {
 		k := col.GoType.Elem().Kind()
 		if (k != reflect.Int8) && (k != reflect.Int32) {
 			return errors.New("不支持数组类型")
+		} else {
+			buf.WriteString("TEXT")
 		}
-		buf.WriteString("TEXT")
 	case reflect.Struct:
 		switch col.GoType {
 		case nullBool:
