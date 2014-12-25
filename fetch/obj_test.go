@@ -19,7 +19,7 @@ import (
 const testDBFile = "./test.db"
 
 type FetchEmail struct {
-	Email string `orm:"unique(unique_index);nullable;pk(pk_name)"`
+	Email string `orm:"unique(unique_index);nullable;pk"`
 }
 
 type FetchUser struct {

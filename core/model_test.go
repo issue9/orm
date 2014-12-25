@@ -42,8 +42,12 @@ type modelUser struct {
 }
 
 func (m *modelUser) Meta() string {
-	return "check(chk_name,id>5);engine(innodb);charset(utf-8)"
+	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
 }
+
+/*func (m modelUser) Meta() string {
+	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
+}*/
 
 func TestModels(t *testing.T) {
 	a := assert.New(t)
@@ -72,7 +76,9 @@ func TestModels(t *testing.T) {
 	a.Equal(0, len(models.items))
 }
 
+// 传递给NewModel是一个指针时的各种情况
 func TestModel(t *testing.T) {
+	FreeModels()
 	a := assert.New(t)
 
 	// todo 正确声明第二个参数！！
@@ -129,4 +135,7 @@ func TestModel(t *testing.T) {
 		"engine":  []string{"innodb"},
 		"charset": []string{"utf-8"},
 	})
+
+	// Meta返回的name属性
+	a.Equal(m.Name, "user")
 }

@@ -5,9 +5,13 @@
 package dialect
 
 import (
+	"bytes"
+	"database/sql"
+	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/core"
 )
 
 var _ base = &Postgres{}
@@ -22,4 +26,42 @@ func TestPostgresGetDBName(t *testing.T) {
 	a.Equal(p.GetDBName("dbname=dbname\tuser=abc"), "dbname")
 	a.Equal(p.GetDBName("\tdbname=dbname user=abc"), "dbname")
 	a.Equal(p.GetDBName("\tdbname = dbname user=abc"), "dbname")
+}
+
+func TestPostgresSQLType(t *testing.T) {
+	a := assert.New(t)
+	buf := bytes.NewBufferString("")
+	col := &core.Column{}
+	a.Error(p.sqlType(buf, col))
+
+	col.GoType = reflect.TypeOf(1)
+	buf.Reset()
+	a.NotError(p.sqlType(buf, col))
+	a.StringEqual(buf.String(), "BIGINT", style)
+
+	col.Len1 = 5
+	col.Len2 = 6
+	buf.Reset()
+	a.NotError(p.sqlType(buf, col))
+	a.StringEqual(buf.String(), "BIGINT", style)
+
+	col.GoType = reflect.TypeOf("abc")
+	buf.Reset()
+	a.NotError(p.sqlType(buf, col))
+	a.StringEqual(buf.String(), "VARCHAR(5)", style)
+
+	col.GoType = reflect.TypeOf(1.2)
+	buf.Reset()
+	a.NotError(p.sqlType(buf, col))
+	a.StringEqual(buf.String(), "DOUBLE(5,6)", style)
+
+	col.GoType = reflect.TypeOf([]byte{'1', '2'})
+	buf.Reset()
+	a.NotError(p.sqlType(buf, col))
+	a.StringEqual(buf.String(), "VARCHAR(5)", style)
+
+	col.GoType = reflect.TypeOf(sql.NullInt64{})
+	buf.Reset()
+	a.NotError(p.sqlType(buf, col))
+	a.StringEqual(buf.String(), "BIGINT", style)
 }

@@ -15,7 +15,6 @@ import (
 // 供engine.go和tx.go调用的一系列函数。
 
 // 插入一个对象到数据库
-// v.Kind()必须是reflect.Struct
 func insertOne(sql *SQL, v interface{}) error {
 	rval := reflect.ValueOf(v)
 
@@ -24,10 +23,22 @@ func insertOne(sql *SQL, v interface{}) error {
 		return err
 	}
 
+	if rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return errors.New("无效的v.Kind()")
+	}
+
 	sql.Reset().Table(m.Name)
 
 	for name, col := range m.Cols {
-		sql.Add(name, rval.FieldByName(col.GoType.Name()).Interface())
+		field := rval.FieldByName(col.GoName)
+		if !field.IsValid() {
+			return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+		}
+		sql.Add(name, field.Interface())
 	}
 
 	_, err = sql.Insert()
@@ -43,17 +54,33 @@ func updateOne(sql *SQL, v interface{}) error {
 		return err
 	}
 
+	if rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return errors.New("无效的v.Kind()")
+	}
+
 	sql.Reset().Table(m.Name)
 
 	switch {
 	case len(m.PK) != 0:
 		for _, col := range m.PK {
-			sql.Where(col.Name+"=?", rval.FieldByName(col.GoType.Name()).Interface())
+			field := rval.FieldByName(col.GoName)
+			if !field.IsValid() {
+				return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+			}
+			sql.Where(col.Name+"=?", field.Interface())
 		}
 	case len(m.UniqueIndexes) != 0:
 		for _, cols := range m.UniqueIndexes {
 			for _, col := range cols {
-				sql.Where(col.Name+"=?", rval.FieldByName(col.GoType.Name()).Interface())
+				field := rval.FieldByName(col.GoName)
+				if !field.IsValid() {
+					return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+				}
+				sql.Where(col.Name+"=?", field.Interface())
 			}
 			break // 只取一个UniqueIndex就可以了
 		}
@@ -69,7 +96,7 @@ func updateOne(sql *SQL, v interface{}) error {
 	return err
 }
 
-// 删除单个对象的内容
+// 删除v表示的单个对象的内容
 func deleteOne(sql *SQL, v interface{}) error {
 	rval := reflect.ValueOf(v)
 
@@ -78,17 +105,33 @@ func deleteOne(sql *SQL, v interface{}) error {
 		return err
 	}
 
+	if rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return errors.New("无效的v.Kind()")
+	}
+
 	sql.Reset().Table(m.Name)
 
 	switch {
 	case len(m.PK) != 0:
 		for _, col := range m.PK {
-			sql.Where(col.Name+"=?", rval.FieldByName(col.GoType.Name()).Interface())
+			field := rval.FieldByName(col.GoName)
+			if !field.IsValid() {
+				return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+			}
+			sql.Where(col.Name+"=?", field.Interface())
 		}
 	case len(m.UniqueIndexes) != 0:
 		for _, cols := range m.UniqueIndexes {
 			for _, col := range cols {
-				sql.Where(col.Name+"=?", rval.FieldByName(col.GoType.Name()).Interface())
+				field := rval.FieldByName(col.GoName)
+				if !field.IsValid() {
+					return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+				}
+				sql.Where(col.Name+"=?", field.Interface())
 			}
 			break // 只取一个UniqueIndex就可以了
 		}

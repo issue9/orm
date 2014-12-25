@@ -11,12 +11,16 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/fetch"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const testDBFile = "./test.db"
 
 type FetchEmail struct {
-	Email string `orm:"unique(unique_index);nullable;pk(pk_name)"`
+	Email string `orm:"unique(unique_index);nullable;pk"`
 }
 
 type FetchUser struct {
@@ -28,8 +32,15 @@ type FetchUser struct {
 	Regdate int `orm:"-"`
 }
 
+// core.Metaer.Meta()
+func (fu *FetchUser) Meta() string {
+	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
+}
+
+var _ core.Metaer = &FetchUser{}
+
 // 初始化一个sql.DB(sqlite3)，方便后面的测试用例使用。
-func initDB(a *assert.Assertion) *sql.DB {
+func initDB(a *assert.Assertion) (*sql.DB, *Engine) {
 	db, err := sql.Open("sqlite3", testDBFile)
 	a.NotError(err).NotNil(db)
 
@@ -56,7 +67,25 @@ func initDB(a *assert.Assertion) *sql.DB {
 	tx.Commit()
 	stmt.Close()
 
-	return db
+	e, err := newEngine("sqlite3", testDBFile, "prefix_")
+	a.NotError(err).NotNil(e)
+
+	return db, e
+}
+
+// 获取数据库剩余的记录数量
+func getCount(db *sql.DB, a *assert.Assertion) int {
+	rows, err := db.Query("SELECT count(*) AS c FROM user")
+	a.NotError(err).NotNil(rows)
+
+	ret, err := fetch.Column(true, "c", rows)
+	a.NotError(err).NotNil(ret)
+
+	if r, ok := ret[0].(int64); ok {
+		return int(r)
+	}
+
+	return -1
 }
 
 // 关闭sql.DB(sqlite3)的数据库连结。
@@ -68,4 +97,16 @@ func closeDB(db *sql.DB, a *assert.Assertion) {
 
 func TestDeleteOne(t *testing.T) {
 	a := assert.New(t)
+	db, e := initDB(a)
+	a.NotNil(db).NotNil(e)
+	defer closeDB(db, a)
+	defer e.close()
+
+	// 默认100条记录
+	a.Equal(100, getCount(db, a))
+	s := e.SQL()
+
+	obj := &FetchUser{Id: 12}
+	a.NotError(deleteOne(s.Reset(), obj))
+	a.Equal(99, getCount(db, a))
 }

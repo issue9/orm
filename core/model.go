@@ -100,6 +100,7 @@ type Column struct {
 	Len2     int
 	Nullable bool         // 是否可以为NULL
 	GoType   reflect.Type // Go语言中的数据类型
+	GoName   string       // 结构字段名
 
 	HasDefault bool
 	Default    string // 默认值
@@ -107,7 +108,7 @@ type Column struct {
 
 // 当前列是否为自增列
 func (c *Column) IsAI() bool {
-	return (c.model.AI != nil) && (c.model.AI.Col == c)
+	return (c.model != nil) && (c.model.AI != nil) && (c.model.AI.Col == c)
 }
 
 // 从参数中获取Column的len1和len2变量。
@@ -222,7 +223,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 
 	// 没有附加的struct tag，直接取得几个关键信息返回。
 	if len(tagTxt) == 0 {
-		m.Cols[field.Name] = &Column{GoType: field.Type, Name: field.Name, model: m}
+		m.Cols[field.Name] = &Column{GoType: field.Type, Name: field.Name, model: m, GoName: field.Name}
 		return nil
 	}
 
@@ -232,7 +233,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 		return nil
 	}
 
-	col := &Column{GoType: field.Type, Name: field.Name, model: m}
+	col := &Column{GoType: field.Type, Name: field.Name, model: m, GoName: field.Name}
 	tags := tag.Parse(tagTxt)
 	for k, v := range tags {
 		switch k {
