@@ -6,5 +6,6 @@ go:
 install:
     - go get github.com/issue9/assert
     - go get github.com/issue9/conv
+    - go get github.com/issue9/encoding/tag
     - go get github.com/go-sql-driver/mysql
     - go get github.com/mattn/go-sqlite3
