@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/issue9/orm/core"
@@ -22,6 +23,17 @@ const (
 	Update
 	Select
 )
+
+type Errors []error
+
+func (err Errors) Error() string {
+	ret := "发生以下错误:"
+	for index, msg := range err {
+		ret += (strconv.Itoa(index) + ":" + msg.Error())
+	}
+
+	return ret
+}
 
 // sql := sqlbuild.New()
 // sql.Table("#user").
