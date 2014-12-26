@@ -119,16 +119,20 @@ func (e *Engine) Stmt(name string) (*sql.Stmt, bool) {
 	return e.stmts.Get(name)
 }
 
+// 产生一个SQL实例。
 func (e *Engine) SQL() *SQL {
 	return newSQL(e)
 }
 
+// 相当于调用了Engine.SQL().Where(...)
 func (e *Engine) Where(cond string, args ...interface{}) *SQL {
 	return e.SQL().Where(cond, args...)
 }
 
-// 插入一个或多个数据
-// v可以是对象或是对象数组
+// 插入一个或多个数据。
+// v可以是struct或是相同struct组成的数组。
+// 若v中指定了自增字段，则该字段的值在插入数据库时，
+// 会被自动忽略。
 func (e *Engine) Insert(v interface{}) error {
 	return insertMult(e.sql, v)
 }

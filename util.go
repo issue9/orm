@@ -14,7 +14,40 @@ import (
 
 // 供engine.go和tx.go调用的一系列函数。
 
+// 要怕model中的主键或是唯一索引产生where语句，
+// 若两者都不存在，则返回错误信息。
+// rval为struct的reflect.Value
+func where(sql *SQL, m *core.Model, rval reflect.Value) error {
+	switch {
+	case len(m.PK) != 0:
+		for _, col := range m.PK {
+			field := rval.FieldByName(col.GoName)
+			if !field.IsValid() {
+				return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+			}
+			sql.Where("{"+col.Name+"}=?", field.Interface())
+		}
+	case len(m.UniqueIndexes) != 0:
+		for _, cols := range m.UniqueIndexes {
+			for _, col := range cols {
+				field := rval.FieldByName(col.GoName)
+				if !field.IsValid() {
+					return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+				}
+				sql.Where("{"+col.Name+"}=?", field.Interface())
+			}
+			break // 只取一个UniqueIndex就可以了
+		}
+	default:
+		return errors.New("无法产生where部分语句")
+	}
+
+	return nil
+}
+
 // 插入一个对象到数据库
+// 以v中的主键或是唯一索引作为where条件语句。
+// 自增字段，即使指定了值，也不会被添加
 func insertOne(sql *SQL, v interface{}) error {
 	rval := reflect.ValueOf(v)
 
@@ -34,11 +67,15 @@ func insertOne(sql *SQL, v interface{}) error {
 	sql.Reset().Table(m.Name)
 
 	for name, col := range m.Cols {
+		if col.IsAI() { // AI过滤
+			continue
+		}
+
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
 			return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
 		}
-		sql.Add(name, field.Interface())
+		sql.Add("{"+name+"}", field.Interface())
 	}
 
 	_, err = sql.Insert()
@@ -46,6 +83,7 @@ func insertOne(sql *SQL, v interface{}) error {
 }
 
 // 更新一个对象
+// 以v中的主键或是唯一索引作为where条件语句，其它值为更新值
 func updateOne(sql *SQL, v interface{}) error {
 	rval := reflect.ValueOf(v)
 
@@ -64,32 +102,16 @@ func updateOne(sql *SQL, v interface{}) error {
 
 	sql.Reset().Table(m.Name)
 
-	switch {
-	case len(m.PK) != 0:
-		for _, col := range m.PK {
-			field := rval.FieldByName(col.GoName)
-			if !field.IsValid() {
-				return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
-			}
-			sql.Where(col.Name+"=?", field.Interface())
-		}
-	case len(m.UniqueIndexes) != 0:
-		for _, cols := range m.UniqueIndexes {
-			for _, col := range cols {
-				field := rval.FieldByName(col.GoName)
-				if !field.IsValid() {
-					return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
-				}
-				sql.Where(col.Name+"=?", field.Interface())
-			}
-			break // 只取一个UniqueIndex就可以了
-		}
-	default:
-		return errors.New("无法产生where部分语句")
+	if err := where(sql, m, rval); err != nil {
+		return err
 	}
 
 	for name, col := range m.Cols {
-		sql.Add(name, rval.FieldByName(col.GoType.Name()).Interface())
+		field := rval.FieldByName(col.GoName)
+		if !field.IsValid() {
+			return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+		}
+		sql.Add("{"+name+"}", field.Interface())
 	}
 
 	_, err = sql.Update()
@@ -97,6 +119,7 @@ func updateOne(sql *SQL, v interface{}) error {
 }
 
 // 删除v表示的单个对象的内容
+// 以v中的主键或是唯一索引作为where条件语句
 func deleteOne(sql *SQL, v interface{}) error {
 	rval := reflect.ValueOf(v)
 
@@ -115,28 +138,8 @@ func deleteOne(sql *SQL, v interface{}) error {
 
 	sql.Reset().Table(m.Name)
 
-	switch {
-	case len(m.PK) != 0:
-		for _, col := range m.PK {
-			field := rval.FieldByName(col.GoName)
-			if !field.IsValid() {
-				return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
-			}
-			sql.Where(col.Name+"=?", field.Interface())
-		}
-	case len(m.UniqueIndexes) != 0:
-		for _, cols := range m.UniqueIndexes {
-			for _, col := range cols {
-				field := rval.FieldByName(col.GoName)
-				if !field.IsValid() {
-					return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
-				}
-				sql.Where(col.Name+"=?", field.Interface())
-			}
-			break // 只取一个UniqueIndex就可以了
-		}
-	default:
-		return errors.New("无法产生where部分语句")
+	if err := where(sql, m, rval); err != nil {
+		return err
 	}
 
 	_, err = sql.Delete()
@@ -155,7 +158,13 @@ func insertMult(sql *SQL, v interface{}) error {
 	case reflect.Struct:
 		return insertOne(sql, v)
 	case reflect.Slice, reflect.Array:
-		if rval.Elem().Kind() != reflect.Struct {
+		elemType := rval.Type().Elem() // 数组元素的类型
+
+		if elemType.Kind() == reflect.Ptr {
+			elemType = elemType.Elem()
+		}
+
+		if elemType.Kind() != reflect.Struct {
 			return errors.New("数组元素类型不正确")
 		}
 
@@ -184,7 +193,13 @@ func updateMult(sql *SQL, v interface{}) error {
 	case reflect.Struct:
 		return updateOne(sql, v)
 	case reflect.Array, reflect.Slice:
-		if rval.Elem().Kind() != reflect.Struct {
+		elemType := rval.Type().Elem() // 数组元素的类型
+
+		if elemType.Kind() == reflect.Ptr {
+			elemType = elemType.Elem()
+		}
+
+		if elemType.Kind() != reflect.Struct {
 			return errors.New("数组元素类型不正确")
 		}
 
@@ -211,8 +226,14 @@ func deleteMult(sql *SQL, v interface{}) error {
 	case reflect.Struct:
 		return deleteOne(sql, v)
 	case reflect.Array, reflect.Slice:
-		if rval.Elem().Kind() != reflect.Struct {
-			return errors.New("数组元素类型不正确")
+		elemType := rval.Type().Elem() // 数组元素的类型
+
+		if elemType.Kind() == reflect.Ptr {
+			elemType = elemType.Elem()
+		}
+
+		if elemType.Kind() != reflect.Struct {
+			return errors.New("数组元素类型不正确,只能是指针或是struct的指针")
 		}
 
 		for i := 0; i < rval.Len(); i++ {

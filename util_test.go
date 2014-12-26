@@ -77,6 +77,7 @@ func initDB(a *assert.Assertion) (*sql.DB, *Engine) {
 func getCount(db *sql.DB, a *assert.Assertion) int {
 	rows, err := db.Query("SELECT count(*) AS c FROM user")
 	a.NotError(err).NotNil(rows)
+	defer rows.Close()
 
 	ret, err := fetch.Column(true, "c", rows)
 	a.NotError(err).NotNil(ret)
@@ -86,6 +87,18 @@ func getCount(db *sql.DB, a *assert.Assertion) int {
 	}
 
 	return -1
+}
+
+// 获取指定ID的记录
+func getRecord(db *sql.DB, id int, a *assert.Assertion) map[string]string {
+	rows, err := db.Query("SELECT * FROM user WHERE id=? LIMIT 1", id)
+	a.NotError(err).NotNil(rows)
+	defer rows.Close()
+
+	ret, err := fetch.MapString(true, rows)
+	a.NotError(err).NotNil(ret)
+
+	return ret[0]
 }
 
 // 关闭sql.DB(sqlite3)的数据库连结。
@@ -104,9 +117,95 @@ func TestDeleteOne(t *testing.T) {
 
 	// 默认100条记录
 	a.Equal(100, getCount(db, a))
-	s := e.SQL()
 
+	// 删除一条信息
+	s := e.SQL()
 	obj := &FetchUser{Id: 12}
 	a.NotError(deleteOne(s.Reset(), obj))
 	a.Equal(99, getCount(db, a))
+}
+
+func TestDeleteMult(t *testing.T) {
+	a := assert.New(t)
+	db, e := initDB(a)
+	a.NotNil(db).NotNil(e)
+	defer closeDB(db, a)
+	defer e.close()
+
+	// 默认100条记录
+	a.Equal(100, getCount(db, a))
+
+	// 删除多条信息
+	s := e.SQL()
+	obj := []*FetchUser{&FetchUser{Id: 12}, &FetchUser{Id: 13}}
+	a.NotError(deleteMult(s.Reset(), obj))
+	a.Equal(98, getCount(db, a))
+}
+
+func TestUpdateOne(t *testing.T) {
+	a := assert.New(t)
+	db, e := initDB(a)
+	a.NotNil(db).NotNil(e)
+	defer closeDB(db, a)
+	defer e.close()
+
+	s := e.SQL()
+	obj := &FetchUser{Id: 12, FetchEmail: FetchEmail{Email: "12@test.com"}}
+	a.NotError(updateOne(s.Reset(), obj))
+	record := getRecord(db, 12, a)
+	a.NotNil(record).Equal("12@test.com", record["Email"])
+}
+
+func TestUpdateMult(t *testing.T) {
+	a := assert.New(t)
+	db, e := initDB(a)
+	a.NotNil(db).NotNil(e)
+	defer closeDB(db, a)
+	defer e.close()
+
+	s := e.SQL()
+	obj := []*FetchUser{
+		&FetchUser{Id: 12, FetchEmail: FetchEmail{Email: "12@test.com"}},
+		&FetchUser{Id: 13, FetchEmail: FetchEmail{Email: "13@test.com"}},
+	}
+	a.NotError(updateMult(s.Reset(), obj))
+	record := getRecord(db, 12, a)
+	a.NotNil(record).Equal("12@test.com", record["Email"])
+	record = getRecord(db, 13, a)
+	a.NotNil(record).Equal("13@test.com", record["Email"])
+}
+
+func TestInsertOne(t *testing.T) {
+	a := assert.New(t)
+	db, e := initDB(a)
+	a.NotNil(db).NotNil(e)
+	defer closeDB(db, a)
+	defer e.close()
+
+	// 默认100条记录
+	a.Equal(100, getCount(db, a))
+
+	s := e.SQL()
+	obj := &FetchUser{Username: "abc"}
+	a.NotError(insertOne(s.Reset(), obj))
+	a.Equal(101, getCount(db, a))
+}
+
+func TestInsertMult(t *testing.T) {
+	a := assert.New(t)
+	db, e := initDB(a)
+	a.NotNil(db).NotNil(e)
+	defer closeDB(db, a)
+	defer e.close()
+
+	// 默认100条记录
+	a.Equal(100, getCount(db, a))
+
+	s := e.SQL()
+	obj := []*FetchUser{
+		&FetchUser{Username: "abc"},
+		&FetchUser{Username: "def"},
+	}
+	a.NotError(insertMult(s.Reset(), obj))
+	a.Equal(102, getCount(db, a))
 }

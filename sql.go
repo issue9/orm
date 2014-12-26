@@ -391,7 +391,7 @@ func (s *SQL) Query(args ...interface{}) (*sql.Rows, error) {
 
 	if len(args) == 0 {
 		// 与selectSQL中添加的顺序相同，where在limit之前
-		args = append(s.condArgs, s.limitArgs)
+		args = append(s.condArgs, s.limitArgs...)
 	}
 
 	return s.db.Query(s.selectSQL(), args...)
@@ -405,7 +405,7 @@ func (s *SQL) QueryRow(args ...interface{}) *sql.Row {
 
 	if len(args) == 0 {
 		// 与sqlString中添加的顺序相同，where在limit之前
-		args = append(s.condArgs, s.limitArgs)
+		args = append(s.condArgs, s.limitArgs...)
 	}
 
 	return s.db.QueryRow(s.selectSQL(), args...)
@@ -588,7 +588,7 @@ func (s *SQL) Update(args ...interface{}) (sql.Result, error) {
 	}
 
 	if len(args) == 0 {
-		args = append(s.vals, s.condArgs)
+		args = append(s.vals, s.condArgs...)
 	}
 
 	return s.db.Exec(s.updateSQL(), args...)
