@@ -14,7 +14,9 @@
 //      Exec(args...)
 //
 // orm增加了数据操作的通用性，但相应的也损失了数据库独有的特性。
+//
+// nullable 将一个varchar设置成null，可能在导出时提示scan error <nil>to *string的错误
 package orm
 
 // 版本号
-const Version = "0.1.0.141225"
+const Version = "0.1.0.141229"

@@ -5,47 +5,16 @@
 package orm
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/fetch"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// 获取数据库剩余的记录数量
-func getCount(db *sql.DB, a *assert.Assertion) int {
-	rows, err := db.Query("SELECT count(*) AS c FROM user")
-	a.NotError(err).NotNil(rows)
-	defer rows.Close()
-
-	ret, err := fetch.Column(true, "c", rows)
-	a.NotError(err).NotNil(ret)
-
-	if r, ok := ret[0].(int64); ok {
-		return int(r)
-	}
-
-	return -1
-}
-
-// 获取指定ID的记录
-func getRecord(db *sql.DB, id int, a *assert.Assertion) map[string]string {
-	rows, err := db.Query("SELECT * FROM user WHERE id=? LIMIT 1", id)
-	a.NotError(err).NotNil(rows)
-	defer rows.Close()
-
-	ret, err := fetch.MapString(true, rows)
-	a.NotError(err).NotNil(ret)
-
-	return ret[0]
-}
-
 func TestDeleteOne(t *testing.T) {
 	a := assert.New(t)
 	db, e := initDB(a)
-	a.NotNil(db).NotNil(e)
 	defer closeDB(e, db, a)
 
 	// 默认10条记录
@@ -61,7 +30,6 @@ func TestDeleteOne(t *testing.T) {
 func TestDeleteMult(t *testing.T) {
 	a := assert.New(t)
 	db, e := initDB(a)
-	a.NotNil(db).NotNil(e)
 	defer closeDB(e, db, a)
 
 	// 默认10条记录
@@ -77,7 +45,6 @@ func TestDeleteMult(t *testing.T) {
 func TestUpdateOne(t *testing.T) {
 	a := assert.New(t)
 	db, e := initDB(a)
-	a.NotNil(db).NotNil(e)
 	defer closeDB(e, db, a)
 
 	s := e.SQL()
@@ -90,7 +57,6 @@ func TestUpdateOne(t *testing.T) {
 func TestUpdateMult(t *testing.T) {
 	a := assert.New(t)
 	db, e := initDB(a)
-	a.NotNil(db).NotNil(e)
 	defer closeDB(e, db, a)
 
 	s := e.SQL()
@@ -108,7 +74,6 @@ func TestUpdateMult(t *testing.T) {
 func TestInsertOne(t *testing.T) {
 	a := assert.New(t)
 	db, e := initDB(a)
-	a.NotNil(db).NotNil(e)
 	defer closeDB(e, db, a)
 
 	// 默认10条记录
@@ -123,7 +88,6 @@ func TestInsertOne(t *testing.T) {
 func TestInsertMult(t *testing.T) {
 	a := assert.New(t)
 	db, e := initDB(a)
-	a.NotNil(db).NotNil(e)
 	defer closeDB(e, db, a)
 
 	// 默认10条记录

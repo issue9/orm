@@ -17,6 +17,12 @@ import (
 	"github.com/issue9/orm/dialect"
 )
 
+const (
+	quoteLeft  = "{"
+	quoteRight = "}"
+	dbPrefix   = "#"
+)
+
 type Engine struct {
 	name   string // 数据库的名称
 	prefix string // 表名前缀
@@ -63,7 +69,7 @@ func (e *Engine) GetStmts() *core.Stmts {
 func (e *Engine) PrepareSQL(sql string) string {
 	// TODO 缓存replace
 	l, r := e.Dialect().QuoteStr()
-	replace := strings.NewReplacer("{", l, "}", r, "#", e.prefix)
+	replace := strings.NewReplacer(quoteLeft, l, quoteRight, r, dbPrefix, e.prefix)
 
 	return replace.Replace(sql)
 }

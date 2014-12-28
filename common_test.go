@@ -13,6 +13,7 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/fetch"
 )
 
 var style = assert.StyleSpace | assert.StyleTrim
@@ -81,4 +82,37 @@ func closeDB(e *Engine, db *sql.DB, a *assert.Assertion) {
 	a.NotError(db.Close()).
 		NotError(os.Remove(testDBFile)).
 		FileNotExists(testDBFile)
+}
+
+// 获取数据库剩余的记录数量
+func getCount(db *sql.DB, a *assert.Assertion) int {
+	rows, err := db.Query("SELECT count(*) AS c FROM user")
+	a.NotError(err).NotNil(rows)
+	defer rows.Close()
+
+	ret, err := fetch.Column(true, "c", rows)
+	a.NotError(err).NotNil(ret)
+
+	if r, ok := ret[0].(int64); ok {
+		return int(r)
+	}
+
+	return -1
+}
+
+// 获取指定ID的记录
+// 当查找的值不存在时,返回nil。
+func getRecord(db *sql.DB, id int, a *assert.Assertion) map[string]string {
+	rows, err := db.Query("SELECT * FROM user WHERE id=? LIMIT 1", id)
+	a.NotError(err).NotNil(rows)
+	defer rows.Close()
+
+	ret, err := fetch.MapString(true, rows)
+	a.NotError(err)
+
+	if len(ret) == 0 {
+		return nil
+	}
+
+	return ret[0]
 }
