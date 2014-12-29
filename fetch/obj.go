@@ -196,8 +196,8 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 // 将rows中的所有记录依次写入obj中。若rows中的记录比len(obj)要长，
 // 则会增长obj的长度以适应rows的所有记录。
 //
-// struct可以在struct tag中用name指定字段名称，或是以减号(-)开头
-// 表示忽略该字段的导出：
+// struct可以在struct tag中用name指定字段名称，
+// 或是以减号(-)开头表示忽略该字段的导出：
 //  type user struct {
 //      ID    int `orm:"name(id)"`  // 对应rows中的id字段，而不是ID。
 //      age   int `orm:"name(Age)"` // 小写不会被导出。

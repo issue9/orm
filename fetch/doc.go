@@ -2,6 +2,8 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// fetch包提供了几种将sql.Rows中的数据导出到常用
-// 数据结构(map,obj等)的方法。
+// fetch 包提供了将sql.Rows导出为几种常用数据格式的方法。
 package fetch
+
+// 版本号
+const Version = "0.1.0.141229"

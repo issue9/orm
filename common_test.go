@@ -14,6 +14,8 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/fetch"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var style = assert.StyleSpace | assert.StyleTrim

@@ -35,10 +35,15 @@ func (err Errors) Error() string {
 	return ret
 }
 
-// sql := sqlbuild.New()
-// sql.Table("#user").
-//     Where("id>?",5).
-//     And("username like ?", "%admin%").
+// SQL 语句的构建工具。
+//
+//  sql := engine.SQL()
+//      Table("#user").
+//      Where("id>?",5).
+//      And("username like ?", "%admin%").
+//      AndIsNotNull("Email").
+//      Desc("id")
+//  data := sql.FetchMaps()
 type SQL struct {
 	db        core.DB
 	tableName string

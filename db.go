@@ -17,6 +17,7 @@ import (
 	"github.com/issue9/orm/dialect"
 )
 
+// sql语句中的占位符。
 const (
 	quoteLeft  = "{"
 	quoteRight = "}"
@@ -156,6 +157,7 @@ func (e *Engine) Delete(v interface{}) error {
 }
 
 // 根据obj创建表
+// TODO obj可以接受数组！
 func (e *Engine) Create(obj interface{}) error {
 	m, err := core.NewModel(obj)
 	if err != nil {
