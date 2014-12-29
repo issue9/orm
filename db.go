@@ -24,12 +24,13 @@ const (
 )
 
 type Engine struct {
-	name   string // 数据库的名称
-	prefix string // 表名前缀
-	d      core.Dialect
-	db     *sql.DB
-	stmts  *core.Stmts
-	sql    *SQL // 内置的SQL引擎，用于执行Update等操作
+	name     string // 数据库的名称
+	prefix   string // 表名前缀
+	d        core.Dialect
+	db       *sql.DB
+	stmts    *core.Stmts
+	sql      *SQL // 内置的SQL引擎，用于执行Update等操作
+	replacer *strings.Replacer
 }
 
 func newEngine(driverName, dataSourceName, prefix string) (*Engine, error) {
@@ -43,11 +44,13 @@ func newEngine(driverName, dataSourceName, prefix string) (*Engine, error) {
 		return nil, err
 	}
 
+	l, r := d.QuoteStr()
 	inst := &Engine{
-		db:     dbInst,
-		d:      d,
-		prefix: prefix,
-		name:   d.GetDBName(dataSourceName),
+		db:       dbInst,
+		d:        d,
+		prefix:   prefix,
+		name:     d.GetDBName(dataSourceName),
+		replacer: strings.NewReplacer(quoteLeft, l, quoteRight, r, dbPrefix, prefix),
 	}
 	inst.stmts = core.NewStmts(inst)
 	inst.sql = inst.SQL()
@@ -67,11 +70,7 @@ func (e *Engine) GetStmts() *core.Stmts {
 
 // 对orm/core.DB.PrepareSQL()的实现。替换语句的各种占位符。
 func (e *Engine) PrepareSQL(sql string) string {
-	// TODO 缓存replace
-	l, r := e.Dialect().QuoteStr()
-	replace := strings.NewReplacer(quoteLeft, l, quoteRight, r, dbPrefix, e.prefix)
-
-	return replace.Replace(sql)
+	return e.replacer.Replace(sql)
 }
 
 // 对orm/core.DB.Dialect()的实现。返回当前数据库对应的Dialect
