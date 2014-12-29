@@ -93,6 +93,28 @@ func TestSelect(t *testing.T) {
 	db, e := initDB(a)
 	defer closeDB(e, db, a)
 
-	sql := e.SQL()
-	sql.Table("#user")
+	// 最基本的查询
+	sql := e.SQL().
+		Table("user").
+		Columns("*").
+		Where("id<?", 1)
+	a.StringEqual(sql.selectSQL(), "SELECT * FROM user WHERE(id<?)", style)
+
+	m, err := sql.Fetch2Map(2)
+	a.NotError(err).Equal(m["id"], 0)
+
+	// 带排序的查询
+	sql.Reset().
+		Table("user").
+		Columns("*").
+		Where("id<?").
+		Desc("id").
+		Limit(2)
+	a.StringEqual(sql.selectSQL(), "SELECT * FROM user WHERE(id<?)ORDER BY id DESC LIMIT ?", style)
+
+	arr, err := sql.Fetch2Maps(5, 2) // 小于5的ID，倒序两条记录
+	a.NotError(err).
+		Equal(2, len(arr)).
+		Equal(4, arr[0]["id"]). // 4
+		Equal(3, arr[1]["id"])  // 3
 }

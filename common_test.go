@@ -43,6 +43,16 @@ var _ core.Metaer = &FetchUser{}
 
 // 初始化一个sql.DB(sqlite3)，以及相关的Engine实例。
 func initDB(a *assert.Assertion) (*sql.DB, *Engine) {
+	// 若存在文件，先删除
+	_, err := os.Stat(testDBFile)
+	if err != nil {
+		if os.IsExist(err) {
+			a.NotError(os.Remove(testDBFile))
+		} else {
+			//a.T().Error(err)
+		}
+	}
+
 	db, err := sql.Open("sqlite3", testDBFile)
 	a.NotError(err).NotNil(db)
 

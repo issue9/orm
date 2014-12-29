@@ -16,6 +16,7 @@
 // orm增加了数据操作的通用性，但相应的也损失了数据库独有的特性。
 //
 // nullable 将一个varchar设置成null，可能在导出时提示scan error <nil>to *string的错误
+// Limit 参数将被替换成占位符，所以若要在Query()中传递参数，不要忘记limit中相关的参数
 package orm
 
 // 版本号
