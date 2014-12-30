@@ -11,7 +11,6 @@ package orm
 import (
 	"database/sql"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/issue9/orm/core"
