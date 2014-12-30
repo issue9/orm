@@ -29,7 +29,7 @@ type FetchEmail struct {
 
 type FetchUser struct {
 	FetchEmail
-	Id       int    `orm:"name(id);ai(1,2);"`
+	Id       int    `orm:"name(id);ai;"`
 	Username string `orm:"index(index)"`
 	Group    int    `orm:"name(group);fk(fk_group,group,id)"`
 

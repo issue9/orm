@@ -31,7 +31,7 @@
 //
 // Model:
 //  type User struct {
-//      Id          int64      `orm:"name(id);ai(0);"`
+//      Id          int64      `orm:"name(id);ai;"`
 //      FirstName   string     `orm:"name(first_name);index(index_name)"`
 //      LastName    string     `orm:"name(first_name);index(index_name)"`
 //  }
@@ -53,8 +53,7 @@
 //
 //  pk: 主键，支持联合主键，给多个字段加上pk的struct tag即可。
 //
-//  ai(start,step): 自增，若指定了自增列，则将自动取消其它的pk设置。
-//  start,step指定了自增列的起始值及步长，但并不是所有的数据库都支持。
+//  ai: 自增，若指定了自增列，则将自动取消其它的pk设置。无法指定起始值和步长。
 //
 //  unique(index_name): 唯一索引，支持联合索引，index_name为约束名，
 //  会将index_name为一样的字段定义为一个联合索引。

@@ -71,7 +71,7 @@ type Model struct {
 	UniqueIndexes map[string][]*Column   // 唯一索引列
 	FK            map[string]*ForeignKey // 外键
 	PK            []*Column              // 主键
-	AI            *AutoIncr              // 自增列
+	AI            *Column                // 自增列
 	Check         map[string]string      // Check
 	Meta          map[string][]string    // 表级别的元数据，如存储引擎，字符集等。
 
@@ -83,12 +83,6 @@ type ForeignKey struct {
 	Col                      *Column
 	RefTableName, RefColName string
 	UpdateRule, DeleteRule   string
-}
-
-// 自增列
-type AutoIncr struct {
-	Col         *Column
-	Start, Step int // 起始和步长
 }
 
 // 列结构
@@ -108,7 +102,7 @@ type Column struct {
 
 // 当前列是否为自增列
 func (c *Column) IsAI() bool {
-	return (c.model != nil) && (c.model.AI != nil) && (c.model.AI.Col == c)
+	return (c.model != nil) && (c.model.AI == c)
 }
 
 // 从参数中获取Column的len1和len2变量。
@@ -121,7 +115,7 @@ func (c *Column) setLen(vals []string) (err error) {
 	case 2:
 		c.Len2, err = strconv.Atoi(vals[1])
 	default:
-		err = fmt.Errorf("[%v]字段的len属性指定了过多的参数:[%v]", c.Name, vals)
+		err = fmt.Errorf("setLen:[%v]字段的len属性指定了过多的参数:[%v]", c.Name, vals)
 	}
 
 	return
@@ -131,7 +125,7 @@ func (c *Column) setLen(vals []string) (err error) {
 // nullable; or nullable(true);
 func (c *Column) setNullable(vals []string) (err error) {
 	if c.IsAI() {
-		return fmt.Errorf("自增列[%v]不能为nullable", c.Name)
+		return fmt.Errorf("setNullable:自增列[%v]不能为nullable", c.Name)
 	}
 
 	switch {
@@ -142,7 +136,7 @@ func (c *Column) setNullable(vals []string) (err error) {
 			return err
 		}
 	default:
-		return fmt.Errorf("[%v]字段的nullable属性指定了太多的值:[%v]", c.Name, vals)
+		return fmt.Errorf("setNullable:[%v]字段的nullable属性指定了太多的值:[%v]", c.Name, vals)
 	}
 
 	return nil
@@ -161,7 +155,7 @@ func NewModel(obj interface{}) (*Model, error) {
 	rtype := rval.Type()
 
 	if rtype.Kind() != reflect.Struct {
-		return nil, errors.New("obj参数只能是struct或是struct指针")
+		return nil, errors.New("NewModel:obj参数只能是struct或是struct指针")
 	}
 
 	// 是否已经缓存的数组
@@ -239,7 +233,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 		switch k {
 		case "name": // name(colname)
 			if len(v) != 1 {
-				return fmt.Errorf("name属性指定了太多的参数：[%v]", v)
+				return fmt.Errorf("parseColumn:name属性指定了太多的参数：[%v]", v)
 			}
 			col.Name = v[0]
 		case "index":
@@ -259,7 +253,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 		case "default":
 			err = m.setDefault(col, v)
 		default:
-			err = fmt.Errorf("未知的struct tag属性:[%v]", k)
+			err = fmt.Errorf("parseColumn:未知的struct tag属性:[%v]", k)
 		}
 
 		if err != nil {
@@ -287,21 +281,21 @@ func (m *Model) parseMeta(obj interface{}) error {
 		switch k {
 		case "name":
 			if len(v) != 1 {
-				return fmt.Errorf("Meta接口的name属性指定了太多参数：[%v]", v)
+				return fmt.Errorf("parseMeta:Meta接口的name属性指定了太多参数：[%v]", v)
 			}
 
 			m.Name = v[0]
 		case "check":
 			if len(v) != 2 {
-				return fmt.Errorf("Meta接口的check属性的参数只能为2个，当前值为:[%v]", v)
+				return fmt.Errorf("parseMeta:Meta接口的check属性的参数只能为2个，当前值为:[%v]", v)
 			}
 
 			if _, found := m.Check[v[0]]; found {
-				return fmt.Errorf("已经存在相同名称[%v]的Check约束", v[0])
+				return fmt.Errorf("parseMeta:已经存在相同名称[%v]的Check约束", v[0])
 			}
 
 			if typ := m.hasConstraint(v[0], check); typ != none {
-				return fmt.Errorf("已经存在相同的约束名[%v]，位于[%v]中", v[0], typ)
+				return fmt.Errorf("parseMeta:已经存在相同的约束名[%v]，位于[%v]中", v[0], typ)
 			}
 
 			m.constraints[v[0]] = check
@@ -317,12 +311,12 @@ func (m *Model) parseMeta(obj interface{}) error {
 // 通过vals设置字段的default属性
 // default(5)
 func (m *Model) setDefault(col *Column, vals []string) error {
-	if m.AI.Col == col {
-		return errors.New("自增列不能设置默认值")
+	if m.AI == col {
+		return errors.New("setDefault:自增列不能设置默认值")
 	}
 
 	if len(vals) != 1 {
-		return fmt.Errorf("[%v]字段的default属性指定了太多的参数：[%v]", col.Name, vals)
+		return fmt.Errorf("setDefault:[%v]字段的default属性指定了太多的参数：[%v]", col.Name, vals)
 	}
 
 	col.HasDefault = true
@@ -335,11 +329,11 @@ func (m *Model) setDefault(col *Column, vals []string) error {
 // index(idx_name)
 func (m *Model) setIndex(col *Column, vals []string) error {
 	if len(vals) != 1 {
-		return fmt.Errorf("[%v]字段的index属性指定了太多的参数:[%v]", col.Name, vals)
+		return fmt.Errorf("setIndex:[%v]字段的index属性指定了太多的参数:[%v]", col.Name, vals)
 	}
 
 	if typ := m.hasConstraint(vals[0], index); typ != none {
-		return fmt.Errorf("已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
+		return fmt.Errorf("setIndex:已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
 	}
 
 	m.constraints[vals[0]] = index
@@ -351,11 +345,11 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 // pk
 func (m *Model) setPK(col *Column, vals []string) error {
 	if len(vals) != 0 {
-		return fmt.Errorf("[%v]字段的pk属性指定了太多的参数:[%v]", col.Name, vals)
+		return fmt.Errorf("setPK:[%v]字段的pk属性指定了太多的参数:[%v]", col.Name, vals)
 	}
 
 	if m.AI != nil {
-		return fmt.Errorf("已经存在自增列，不需要再次指定主键")
+		return fmt.Errorf("setPK:已经存在自增列，不需要再次指定主键")
 	}
 
 	m.PK = append(m.PK, col)
@@ -366,11 +360,11 @@ func (m *Model) setPK(col *Column, vals []string) error {
 // unique(unique_name)
 func (m *Model) setUnique(col *Column, vals []string) error {
 	if len(vals) != 1 {
-		return fmt.Errorf("[%v]字段的unique属性只能带一个参数:[%v]", col.Name, vals)
+		return fmt.Errorf("setUnique:[%v]字段的unique属性只能带一个参数:[%v]", col.Name, vals)
 	}
 
 	if typ := m.hasConstraint(vals[0], unique); typ != none {
-		return fmt.Errorf("已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
+		return fmt.Errorf("setUnique:已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
 	}
 
 	m.constraints[vals[0]] = unique
@@ -383,15 +377,15 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
 func (m *Model) setFK(col *Column, vals []string) error {
 	if typ := m.hasConstraint(vals[0], fk); typ != none {
-		return fmt.Errorf("已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
+		return fmt.Errorf("setFK:已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
 	}
 
 	if len(vals) < 3 {
-		return errors.New("fk参数必须大于3个")
+		return errors.New("setFK:fk参数必须大于3个")
 	}
 
 	if _, found := m.FK[vals[0]]; found {
-		return fmt.Errorf("重复的外键约束名:[%v]", vals[0])
+		return fmt.Errorf("setFK:重复的外键约束名:[%v]", vals[0])
 	}
 
 	fkInst := &ForeignKey{
@@ -415,33 +409,25 @@ func (m *Model) setFK(col *Column, vals []string) error {
 // 通过vals设置Model的自增列。
 // ai(colName,start,step)
 func (m *Model) setAI(col *Column, vals []string) (err error) {
+	if len(vals) != 0 {
+		return fmt.Errorf("setAI:[%v]字段的ai属性指定了太多的参数:[%v]", col.Name, vals)
+	}
+
 	if col.Nullable {
-		return fmt.Errorf("自增列[%v]不能为nullable", col.Name)
+		return fmt.Errorf("setAI:自增列[%v]不能为nullable", col.Name)
 	}
 
 	switch col.GoType.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 	default:
-		return errors.New("自增列只能是整数类型")
+		return errors.New("setAI:自增列只能是整数类型")
 	}
 
-	m.AI = &AutoIncr{Col: col, Start: 1, Step: 1}
+	m.AI = col
 
-	switch len(vals) {
-	case 0:
-	case 1:
-		m.AI.Start, err = strconv.Atoi(vals[0])
-	case 2:
-		m.AI.Step, err = strconv.Atoi(vals[1])
-	default:
-		err = errors.New("AI标签有过多的参数")
-	}
-	if err != nil {
-		return err
-	}
-
-	m.PK = append(m.PK[:0], col) // 去掉其它主键，将自增列设置为主键
+	// 去掉其它主键，将自增列设置为主键
+	m.PK = append(m.PK[:0], col)
 	return nil
 }
 

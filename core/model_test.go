@@ -34,7 +34,7 @@ type modelGroup struct {
 type modelUser struct {
 	modelGroup
 
-	Id       int    `orm:"name(id);ai(1,2);"`
+	Id       int    `orm:"name(id);ai;"`
 	Email    string `orm:"unique(unique_name);index(index_name);nullable;"`
 	Username string `orm:"index(index_name)"`
 
@@ -44,10 +44,6 @@ type modelUser struct {
 func (m *modelUser) Meta() string {
 	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
 }
-
-/*func (m modelUser) Meta() string {
-	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
-}*/
 
 func TestModels(t *testing.T) {
 	a := assert.New(t)
@@ -109,7 +105,7 @@ func TestModel(t *testing.T) {
 		Equal(usernameCol, index[1])
 
 	// ai
-	a.Equal(m.AI.Col, idCol)
+	a.Equal(m.AI, idCol)
 
 	// 主键应该和自增列相同
 	a.NotNil(m.PK).Equal(m.PK[0], idCol)
