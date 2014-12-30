@@ -15,23 +15,23 @@
 // 初始化：
 //
 // 默认情况下，orm包并不会加载任何数据库的实例。所以想要用哪个数据库，需要手动初始化：
-//  // 加载dialect管理包
-//  import github.com/issue9/orm/dialect
-//
-//  // 加载数据库驱动
-//  import _ github.com/mattn/go-sqlite3
+//  import (
+//      github.com/issue9/orm/dialect  // 加载dialect管理包
+//      _ github.com/mattn/go-sqlite3  // 加载数据库驱动
+//  )
 //
 //  // 向orm/dialect包注册dialect
 //  dialect.Register("sqlite3", &dialect.Sqlite3{})
 //
-//  // 之后可以调用db1的各类方法操作数据库
+//  // 初始化一个Engine，表前缀为prefix_
 //  db1 := orm.New("sqlite3", "./db1", "db1", "prefix_")
+//
+//  // 另一个Engine
+//  db2 := orm.New("sqlite3", "./db2", "db2", "db2_")
 //
 // Model:
 //  type User struct {
-//      // 对应表中的id字段，为自增列，从0开始
 //      Id          int64      `orm:"name(id);ai(0);"`
-//      // 对应表中的first_name字段，为索引index_name的一部分
 //      FirstName   string     `orm:"name(first_name);index(index_name)"`
 //      LastName    string     `orm:"name(first_name);index(index_name)"`
 //  }
@@ -71,10 +71,9 @@
 // 关于core.Metaer接口。
 //
 // 在go不能将struct tag作用于结构体，所以为了指定一些表级别的属性，
-// 只能通过接口的方式指定，然后在接口方法中返回一段类似于struct tag的字符串，
+// 只能通过接口的形式，然后在接口方法中返回一段类似于struct tag的字符串，
 // 以达到相同的目的。
 // 当然在go中receive区分值类型和指针类型，所以指定接口时，需要注意这个情况。
-//
 //
 //
 // 如何使用：
@@ -109,6 +108,7 @@
 //  m, err := e.Where("id=?", 1).FetchMap()
 //  // 导出id<5的所有数据
 //  m, err := e.Where("id<?", 1).FetchMaps(5)
+//
 //
 // 事务：
 //
