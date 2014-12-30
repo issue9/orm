@@ -11,6 +11,7 @@ package orm
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/issue9/orm/core"
@@ -131,9 +132,11 @@ func (e *Engine) SQL() *SQL {
 	return newSQL(e)
 }
 
-// 相当于调用了Engine.SQL().Where(...)
+// 指定一个条件语句，并返回SQL实例。
+// 与SQL()方法稍微有一点不同，Where()会使用已缓存的SQL实例，
+// 而SQL()方法会新声明一个SQL实例。
 func (e *Engine) Where(cond string, args ...interface{}) *SQL {
-	return e.SQL().Where(cond, args...)
+	return e.sql.Reset().Where(cond, args...)
 }
 
 // 插入一个或多个数据。
@@ -157,13 +160,9 @@ func (e *Engine) Delete(v interface{}) error {
 }
 
 // 根据obj创建表
-// TODO obj可以接受数组！
-func (e *Engine) Create(obj interface{}) error {
-	m, err := core.NewModel(obj)
-	if err != nil {
-		return err
-	}
-	return e.Dialect().CreateTable(e, m)
+// obj可以是结构体或是结构体数据
+func (e *Engine) Create(v interface{}) error {
+	return createMult(e, v)
 }
 
 // 事务对象
@@ -249,9 +248,11 @@ func (t *Tx) SQL() *SQL {
 	return newSQL(t)
 }
 
-// 相当于调用了Engine.SQL().Where(...)
+// 指定一个条件语句，并返回SQL实例。
+// 与SQL()方法稍微有一点不同，Where()会使用已缓存的SQL实例，
+// 而SQL()方法会新声明一个SQL实例。
 func (t *Tx) Where(cond string, args ...interface{}) *SQL {
-	return t.SQL().Where(cond, args...)
+	return t.sql.Reset().Where(cond, args...)
 }
 
 // 插入一个或多个数据。
@@ -272,4 +273,8 @@ func (t *Tx) Update(v interface{}) error {
 // 删除指定的数据对象。
 func (t *Tx) Delete(v interface{}) error {
 	return deleteMult(t.sql, v)
+}
+
+func (t *Tx) Create(v interface{}) error {
+	return createMult(t, v)
 }

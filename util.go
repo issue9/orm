@@ -45,6 +45,27 @@ func where(sql *SQL, m *core.Model, rval reflect.Value) error {
 	return nil
 }
 
+// 创建或是更新一个数据表。
+// v为一个结构体或是结构体指针。
+func createOne(db core.DB, v interface{}) error {
+	rval := reflect.ValueOf(v)
+
+	m, err := core.NewModel(v)
+	if err != nil {
+		return err
+	}
+
+	if rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return errors.New("无效的v.Kind()")
+	}
+
+	return db.Dialect().CreateTable(db, m)
+}
+
 // 插入一个对象到数据库
 // 以v中的主键或是唯一索引作为where条件语句。
 // 自增字段，即使指定了值，也不会被添加
@@ -144,6 +165,40 @@ func deleteOne(sql *SQL, v interface{}) error {
 
 	_, err = sql.Delete()
 	return err
+}
+
+// 创建或是更新一个或多个数据表
+// v可以是对象或是对象数组
+func createMult(db core.DB, v interface{}) error {
+	rval := reflect.ValueOf(v)
+	if rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	switch rval.Kind() {
+	case reflect.Struct:
+		return createOne(db, v)
+	case reflect.Slice, reflect.Array:
+		elemType := rval.Type().Elem() // 数组元素的类型
+
+		if elemType.Kind() == reflect.Ptr {
+			elemType = elemType.Elem()
+		}
+
+		if elemType.Kind() != reflect.Struct {
+			return errors.New("数组元素类型不正确")
+		}
+
+		for i := 0; i < rval.Len(); i++ {
+			if err := createOne(db, rval.Index(i).Interface()); err != nil {
+				return err
+			}
+		}
+	default:
+		return fmt.Errorf("v的类型[%v]无效", rval.Kind())
+	}
+
+	return nil
 }
 
 // 插入一个或多个数据
