@@ -69,11 +69,6 @@ func (e *Engine) GetStmts() *core.Stmts {
 	return e.stmts
 }
 
-// 对orm/core.DB.PrepareSQL()的实现。替换语句的各种占位符。
-func (e *Engine) PrepareSQL(sql string) string {
-	return e.replacer.Replace(sql)
-}
-
 // 对orm/core.DB.Dialect()的实现。返回当前数据库对应的Dialect
 func (e *Engine) Dialect() core.Dialect {
 	return e.d
@@ -81,23 +76,23 @@ func (e *Engine) Dialect() core.Dialect {
 
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return e.db.Exec(sql, args...)
+	return e.db.Exec(e.replacer.Replace(sql), args...)
 }
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	return e.db.Query(sql, args...)
+	return e.db.Query(e.replacer.Replace(sql), args...)
 }
 
 // 对orm/core.DB.QueryRow()的实现。
 // 执行一条查询语句，并返回第一条符合条件的记录。
 func (e *Engine) QueryRow(sql string, args ...interface{}) *sql.Row {
-	return e.db.QueryRow(sql, args...)
+	return e.db.QueryRow(e.replacer.Replace(sql), args...)
 }
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
-	return e.db.Prepare(sql)
+	return e.db.Prepare(e.replacer.Replace(sql))
 }
 
 // 关闭当前的db，销毁所有的数据。不能再次使用。
@@ -181,11 +176,6 @@ func (t *Tx) GetStmts() *core.Stmts {
 	return t.engine.GetStmts()
 }
 
-// 对orm/core.DB.PrepareSQL()的实现。替换语句的各种占位符。
-func (t *Tx) PrepareSQL(sql string) string {
-	return t.engine.PrepareSQL(sql)
-}
-
 // 对orm/core.DB.Dialect()的实现。返回当前数据库对应的Dialect
 func (t *Tx) Dialect() core.Dialect {
 	return t.engine.Dialect()
@@ -193,23 +183,23 @@ func (t *Tx) Dialect() core.Dialect {
 
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return t.tx.Exec(sql, args...)
+	return t.tx.Exec(t.engine.replacer.Replace(sql), args...)
 }
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	return t.tx.Query(sql, args...)
+	return t.tx.Query(t.engine.replacer.Replace(sql), args...)
 }
 
 // 对orm/core.DB.QueryRow()的实现。
 // 执行一条查询语句，并返回第一条符合条件的记录。
 func (t *Tx) QueryRow(sql string, args ...interface{}) *sql.Row {
-	return t.tx.QueryRow(sql, args...)
+	return t.tx.QueryRow(t.engine.replacer.Replace(sql), args...)
 }
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
-	return t.tx.Prepare(sql)
+	return t.tx.Prepare(t.engine.replacer.Replace(sql))
 }
 
 // 关闭当前的db

@@ -35,30 +35,28 @@ type Dialect interface {
 
 // 操作数据库的接口，用于统一普通数据库操作和事务操作。
 type DB interface {
-	// 当前操作数据库的名称
+	// 当前操作数据库的名称。
 	Name() string
 
-	// 获取Stmts实例
+	// 获取Stmts实例。
 	GetStmts() *Stmts
 
-	// 预处理SQL语句，包括：
-	// 替换sql语句中的{}符号为Dialect.QuoteStr中的值；
-	// 替换sql语句中表名前缀占位符为真实的表名前缀。
-	// 若这些都不存在，则直接返回原字符串。
-	PrepareSQL(sql string) string
-
-	// 返回Dialect接口
+	// 返回Dialect接口。
 	Dialect() Dialect
 
-	// 相当于sql.DB.Exec()
+	// 相当于sql.DB.Exec()。
+	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 
-	// 相当于sql.DB.Query()
+	// 相当于sql.DB.Query()。
+	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
 	Query(sql string, args ...interface{}) (*sql.Rows, error)
 
-	// 相当于sql.DB.QueryRow()
+	// 相当于sql.DB.QueryRow()。
+	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
 	QueryRow(sql string, args ...interface{}) *sql.Row
 
-	// 相当于sql.DB.Prepare()
+	// 相当于sql.DB.Prepare()。
+	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
 	Prepare(sql string) (*sql.Stmt, error)
 }

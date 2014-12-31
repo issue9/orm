@@ -78,11 +78,11 @@ func (s *Sqlite3) hasTable(db core.DB, tableName string) (bool, error) {
 // 具体规则参照:http://www.sqlite.org/datatype3.html
 func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *core.Column) error {
 	if col == nil {
-		return errors.New("col参数是个空值")
+		return errors.New("sqlType:col参数是个空值")
 	}
 
 	if col.GoType == nil {
-		return errors.New("无效的col.GoType值")
+		return errors.New("sqlType:无效的col.GoType值")
 	}
 
 	switch col.GoType.Kind() {

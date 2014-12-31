@@ -49,7 +49,7 @@ func (m *Mysql) SupportLastInsertId() bool {
 // implement core.Dialect.CreateTable()
 func (m *Mysql) CreateTable(db core.DB, model *core.Model) error {
 	sql := "SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA`=? and `TABLE_NAME`=?"
-	rows, err := db.Query(sql, db.Name(), db.PrepareSQL(model.Name))
+	rows, err := db.Query(sql, db.Name(), model.Name)
 	if err != nil {
 		return err
 	}

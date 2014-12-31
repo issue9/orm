@@ -400,7 +400,7 @@ func (s *SQL) selectSQL() string {
 	s.buf.WriteString(s.order.String()) // NOTE(caixw):mysql中若要limit，order字段是必须提供的
 	s.buf.WriteString(s.limitSQL)
 
-	return s.db.PrepareSQL(s.buf.String())
+	return s.buf.String()
 }
 
 // 功能同database/sql.DB.Query(...)
@@ -417,7 +417,7 @@ func (s *SQL) Query(args ...interface{}) (*sql.Rows, error) {
 	sql := s.selectSQL()
 	cnt := strings.Count(sql, "?")
 	if cnt != len(args) {
-		return nil, fmt.Errorf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
+		return nil, fmt.Errorf("Query:占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
 	}
 
 	return s.db.Query(sql, args...)
@@ -514,10 +514,10 @@ func (s *SQL) Fetch(v interface{}, args ...interface{}) error {
 	switch vv.Kind() {
 	case reflect.Map:
 		if vv.Type().Key().Kind() != reflect.String {
-			return errors.New("map的键名类型只能为string")
+			return errors.New("Fetch:map的键名类型只能为string")
 		}
 		if vv.Type().Elem().Kind() != reflect.Interface {
-			return errors.New("map的键值类型只能为interface{}")
+			return errors.New("Fetch:map的键值类型只能为interface{}")
 		}
 
 		mapped, err := s.Fetch2Map(args...)
@@ -537,15 +537,15 @@ func (s *SQL) Stmt(action int, name string) (*sql.Stmt, error) {
 	var sql string
 	switch action {
 	case Delete:
-		sql = s.db.PrepareSQL(s.deleteSQL())
+		sql = s.deleteSQL()
 	case Update:
-		sql = s.db.PrepareSQL(s.updateSQL())
+		sql = s.updateSQL()
 	case Insert:
-		sql = s.db.PrepareSQL(s.insertSQL())
+		sql = s.insertSQL()
 	case Select:
-		sql = s.db.PrepareSQL(s.selectSQL())
+		sql = s.selectSQL()
 	default:
-		return nil, fmt.Errorf("无效的的action值[%v]", action)
+		return nil, fmt.Errorf("Stmt:无效的的action值[%v]", action)
 	}
 
 	return s.db.GetStmts().AddSQL(name, sql)
@@ -562,9 +562,9 @@ func (s *SQL) Exec(action int, args ...interface{}) (sql.Result, error) {
 	case Insert:
 		return s.Insert(args...)
 	case Select:
-		return nil, errors.New("select语句不能使用Exec()方法执行")
+		return nil, errors.New("Exec:select语句不能使用Exec()方法执行")
 	default:
-		return nil, fmt.Errorf("无效的的action值[%v]", action)
+		return nil, fmt.Errorf("Exec:无效的的action值[%v]", action)
 	}
 }
 
@@ -577,7 +577,7 @@ func (s *SQL) deleteSQL() string {
 	// where
 	s.buf.WriteString(s.cond.String())
 
-	return s.db.PrepareSQL(s.buf.String())
+	return s.buf.String()
 }
 
 // 执行DELETE操作。
@@ -594,7 +594,7 @@ func (s *SQL) Delete(args ...interface{}) (sql.Result, error) {
 	sql := s.deleteSQL()
 	cnt := strings.Count(sql, "?")
 	if cnt != len(args) {
-		return nil, fmt.Errorf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
+		return nil, fmt.Errorf("Delete:占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
 	}
 
 	return s.db.Exec(sql, args...)
@@ -615,7 +615,7 @@ func (s *SQL) updateSQL() string {
 	// where
 	s.buf.WriteString(s.cond.String())
 
-	return s.db.PrepareSQL(s.buf.String())
+	return s.buf.String()
 }
 
 // 执行UPDATE操作。
@@ -632,7 +632,7 @@ func (s *SQL) Update(args ...interface{}) (sql.Result, error) {
 	sql := s.updateSQL()
 	cnt := strings.Count(sql, "?")
 	if cnt != len(args) {
-		return nil, fmt.Errorf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
+		return nil, fmt.Errorf("Update:占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
 	}
 
 	return s.db.Exec(sql, args...)
@@ -653,7 +653,7 @@ func (s *SQL) insertSQL() string {
 	s.buf.WriteString(placeholder[0 : len(placeholder)-1])
 	s.buf.WriteByte(')')
 
-	return s.db.PrepareSQL(s.buf.String())
+	return s.buf.String()
 }
 
 // 执行INSERT操作。
@@ -670,7 +670,7 @@ func (s *SQL) Insert(args ...interface{}) (sql.Result, error) {
 	sql := s.insertSQL()
 	cnt := strings.Count(sql, "?")
 	if cnt != len(args) {
-		return nil, fmt.Errorf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
+		return nil, fmt.Errorf("Insert:占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
 	}
 
 	return s.db.Exec(sql, args...)

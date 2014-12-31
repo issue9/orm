@@ -177,10 +177,6 @@ func (f *fakeDB) GetStmts() *Stmts {
 	return nil
 }
 
-func (f *fakeDB) PrepareSQL(sql string) string {
-	return ""
-}
-
 func (f *fakeDB) Dialect() Dialect {
 	return nil
 }

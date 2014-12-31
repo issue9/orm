@@ -40,7 +40,7 @@ func TestUpdate(t *testing.T) {
 		Table("user").
 		Where("id=?", 1).
 		Columns("Email", "{group}")
-	a.StringEqual(sql.updateSQL(), "UPDATE user SET Email=?,[group]=? WHERE(id=?)", style)
+	a.StringEqual(sql.updateSQL(), "UPDATE user SET Email=?,{group}=? WHERE(id=?)", style)
 
 	result, err := sql.Update("email@test.com", 2, 3)
 	a.NotError(err).NotNil(result)
@@ -60,7 +60,7 @@ func TestInsert(t *testing.T) {
 		Add("Email", "email@test.com").
 		Add("{group}", 1).
 		Add("Username", "username")
-	a.StringEqual(sql.insertSQL(), "INSERT INTO user(Email,[group],Username) VALUES(?,?,?)", style)
+	a.StringEqual(sql.insertSQL(), "INSERT INTO user(Email,{group},Username) VALUES(?,?,?)", style)
 
 	// 插入一条数据
 	result, err := sql.Insert()
