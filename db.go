@@ -76,12 +76,24 @@ func (e *Engine) Dialect() core.Dialect {
 
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return e.db.Exec(e.replacer.Replace(sql), args...)
+	sql = e.replacer.Replace(sql)
+	r, err := e.db.Exec(sql, args...)
+
+	if err == nil {
+		return r, err
+	}
+	return nil, newSQLError(err, sql, args...)
 }
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	return e.db.Query(e.replacer.Replace(sql), args...)
+	sql = e.replacer.Replace(sql)
+	r, err := e.db.Query(sql, args...)
+
+	if err == nil {
+		return r, err
+	}
+	return nil, newSQLError(err, sql, args...)
 }
 
 // 对orm/core.DB.QueryRow()的实现。
@@ -92,7 +104,13 @@ func (e *Engine) QueryRow(sql string, args ...interface{}) *sql.Row {
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
-	return e.db.Prepare(e.replacer.Replace(sql))
+	sql = e.replacer.Replace(sql)
+	r, err := e.db.Prepare(sql)
+
+	if err == nil {
+		return r, err
+	}
+	return nil, newSQLError(err, sql)
 }
 
 // 关闭当前的db，销毁所有的数据。不能再次使用。
@@ -183,12 +201,24 @@ func (t *Tx) Dialect() core.Dialect {
 
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return t.tx.Exec(t.engine.replacer.Replace(sql), args...)
+	sql = t.engine.replacer.Replace(sql)
+	r, err := t.tx.Exec(sql, args...)
+
+	if err == nil {
+		return r, err
+	}
+	return nil, newSQLError(err, sql, args...)
 }
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	return t.tx.Query(t.engine.replacer.Replace(sql), args...)
+	sql = t.engine.replacer.Replace(sql)
+	r, err := t.tx.Query(sql, args...)
+
+	if err == nil {
+		return r, err
+	}
+	return nil, newSQLError(err, sql, args...)
 }
 
 // 对orm/core.DB.QueryRow()的实现。
@@ -199,7 +229,13 @@ func (t *Tx) QueryRow(sql string, args ...interface{}) *sql.Row {
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
-	return t.tx.Prepare(t.engine.replacer.Replace(sql))
+	sql = t.engine.replacer.Replace(sql)
+	r, err := t.tx.Prepare(sql)
+
+	if err == nil {
+		return r, err
+	}
+	return nil, newSQLError(err, sql)
 }
 
 // 关闭当前的db

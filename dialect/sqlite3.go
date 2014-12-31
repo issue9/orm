@@ -57,9 +57,9 @@ func (s *Sqlite3) CreateTable(db core.DB, m *core.Model) error {
 	}
 
 	if has {
-		return s.createTable(db, m)
+		return s.upgradeTable(db, m)
 	}
-	return s.upgradeTable(db, m)
+	return s.createTable(db, m)
 }
 
 // 是否存在指定名称的表
