@@ -53,11 +53,9 @@ type modelsMap struct {
 	items map[reflect.Type]*Model
 }
 
-// go本身不支持struct级别的struct tag，所以想要给一个struct
-// 指定struct tag，只能通过一个函数返回一段描述信息。
+// 用于指定一个表级别的元数据。如表名，存储引擎等：
+//  "name(tbl_name);engine(myISAM);charset(utf-8)"
 type Metaer interface {
-	// 表级别的数据。如表名，存储引擎等：
-	//  "name:tbl;engine:myISAM;charset:utf-8"
 	Meta() string
 }
 

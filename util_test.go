@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestDeleteOne(t *testing.T) {

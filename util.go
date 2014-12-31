@@ -23,7 +23,7 @@ func where(sql *SQL, m *core.Model, rval reflect.Value) error {
 		for _, col := range m.PK {
 			field := rval.FieldByName(col.GoName)
 			if !field.IsValid() {
-				return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+				return fmt.Errorf("where:未找到该名称[%v]的值", col.GoName)
 			}
 			sql.Where("{"+col.Name+"}=?", field.Interface())
 		}
@@ -32,14 +32,14 @@ func where(sql *SQL, m *core.Model, rval reflect.Value) error {
 			for _, col := range cols {
 				field := rval.FieldByName(col.GoName)
 				if !field.IsValid() {
-					return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+					return fmt.Errorf("where:未找到该名称[%v]的值", col.GoName)
 				}
 				sql.Where("{"+col.Name+"}=?", field.Interface())
 			}
 			break // 只取一个UniqueIndex就可以了
 		}
 	default:
-		return errors.New("无法产生where部分语句")
+		return errors.New("where:无法产生where部分语句")
 	}
 
 	return nil
@@ -60,7 +60,7 @@ func createOne(db core.DB, v interface{}) error {
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return errors.New("无效的v.Kind()")
+		return errors.New("createOne:无效的v.Kind()")
 	}
 
 	return db.Dialect().CreateTable(db, m)
@@ -82,7 +82,7 @@ func insertOne(sql *SQL, v interface{}) error {
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return errors.New("无效的v.Kind()")
+		return errors.New("insertOne:无效的v.Kind()")
 	}
 
 	sql.Reset().Table(m.Name)
@@ -94,7 +94,7 @@ func insertOne(sql *SQL, v interface{}) error {
 
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
-			return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+			return fmt.Errorf("insertOne:未找到该名称[%v]的值", col.GoName)
 		}
 		sql.Add("{"+name+"}", field.Interface())
 	}
@@ -118,7 +118,7 @@ func updateOne(sql *SQL, v interface{}) error {
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return errors.New("无效的v.Kind()")
+		return errors.New("updateOne:无效的v.Kind()")
 	}
 
 	sql.Reset().Table(m.Name)
@@ -130,7 +130,7 @@ func updateOne(sql *SQL, v interface{}) error {
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
-			return fmt.Errorf("未找到该名称[%v]的值", col.GoName)
+			return fmt.Errorf("updateOne:未找到该名称[%v]的值", col.GoName)
 		}
 		sql.Add("{"+name+"}", field.Interface())
 	}
@@ -154,7 +154,7 @@ func deleteOne(sql *SQL, v interface{}) error {
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return errors.New("无效的v.Kind()")
+		return errors.New("deleteOne:无效的v.Kind()")
 	}
 
 	sql.Reset().Table(m.Name)
@@ -186,7 +186,7 @@ func createMult(db core.DB, v interface{}) error {
 		}
 
 		if elemType.Kind() != reflect.Struct {
-			return errors.New("数组元素类型不正确")
+			return errors.New("createMult:数组元素类型不正确")
 		}
 
 		for i := 0; i < rval.Len(); i++ {
@@ -195,7 +195,7 @@ func createMult(db core.DB, v interface{}) error {
 			}
 		}
 	default:
-		return fmt.Errorf("v的类型[%v]无效", rval.Kind())
+		return fmt.Errorf("createMult:v的类型[%v]无效", rval.Kind())
 	}
 
 	return nil
@@ -220,7 +220,7 @@ func insertMult(sql *SQL, v interface{}) error {
 		}
 
 		if elemType.Kind() != reflect.Struct {
-			return errors.New("数组元素类型不正确")
+			return errors.New("insertMult:数组元素类型不正确")
 		}
 
 		for i := 0; i < rval.Len(); i++ {
@@ -229,7 +229,7 @@ func insertMult(sql *SQL, v interface{}) error {
 			}
 		}
 	default:
-		return fmt.Errorf("v的类型[%v]无效", rval.Kind())
+		return fmt.Errorf("insertMult:v的类型[%v]无效", rval.Kind())
 	}
 
 	return nil
@@ -255,7 +255,7 @@ func updateMult(sql *SQL, v interface{}) error {
 		}
 
 		if elemType.Kind() != reflect.Struct {
-			return errors.New("数组元素类型不正确")
+			return errors.New("updateMult:数组元素类型不正确")
 		}
 
 		for i := 0; i < rval.Len(); i++ {
@@ -264,7 +264,7 @@ func updateMult(sql *SQL, v interface{}) error {
 			}
 		}
 	default:
-		return errors.New("v的类型无效")
+		return errors.New("updateMult:v的类型无效")
 	}
 
 	return nil
@@ -288,7 +288,7 @@ func deleteMult(sql *SQL, v interface{}) error {
 		}
 
 		if elemType.Kind() != reflect.Struct {
-			return errors.New("数组元素类型不正确,只能是指针或是struct的指针")
+			return errors.New("deleteMult:数组元素类型不正确,只能是指针或是struct的指针")
 		}
 
 		for i := 0; i < rval.Len(); i++ {
@@ -297,7 +297,7 @@ func deleteMult(sql *SQL, v interface{}) error {
 			}
 		}
 	default:
-		return errors.New("v的类型无效")
+		return errors.New("deleteMult:v的类型无效")
 	}
 
 	return nil
