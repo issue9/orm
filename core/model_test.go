@@ -34,7 +34,7 @@ type modelGroup struct {
 type modelUser struct {
 	modelGroup
 
-	Id       int    `orm:"name(id);ai(1,2);"`
+	Id       int    `orm:"name(id);ai;"`
 	Email    string `orm:"unique(unique_name);index(index_name);nullable;"`
 	Username string `orm:"index(index_name)"`
 
@@ -42,7 +42,7 @@ type modelUser struct {
 }
 
 func (m *modelUser) Meta() string {
-	return "check(chk_name,id>5);engine(innodb);charset(utf-8)"
+	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
 }
 
 func TestModels(t *testing.T) {
@@ -72,7 +72,9 @@ func TestModels(t *testing.T) {
 	a.Equal(0, len(models.items))
 }
 
+// 传递给NewModel是一个指针时的各种情况
 func TestModel(t *testing.T) {
+	FreeModels()
 	a := assert.New(t)
 
 	// todo 正确声明第二个参数！！
@@ -103,7 +105,7 @@ func TestModel(t *testing.T) {
 		Equal(usernameCol, index[1])
 
 	// ai
-	a.Equal(m.AI.Col, idCol)
+	a.Equal(m.AI, idCol)
 
 	// 主键应该和自增列相同
 	a.NotNil(m.PK).Equal(m.PK[0], idCol)
@@ -129,4 +131,7 @@ func TestModel(t *testing.T) {
 		"engine":  []string{"innodb"},
 		"charset": []string{"utf-8"},
 	})
+
+	// Meta返回的name属性
+	a.Equal(m.Name, "user")
 }

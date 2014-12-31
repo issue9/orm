@@ -216,12 +216,6 @@ func (m *Mysql) createTable(db core.DB, model *core.Model) error {
 	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
 	buf.WriteByte(')')          // end CreateTable
 
-	// 指定起始ai
-	if (model.AI != nil) && (model.AI.Start > 1) {
-		buf.WriteString(" AUTO_INCREMENT=")
-		buf.WriteString(strconv.Itoa(model.AI.Start))
-	}
-
 	_, err := db.Exec(buf.String())
 	return err
 }
@@ -269,7 +263,7 @@ func (m *Mysql) upgradeTable(db core.DB, model *core.Model) error {
 	// ALTER TABLE document MODIFY COLUMN document_id INT auto_increment
 	buf.Truncate(size)
 	buf.WriteString(" MODIFY COLUMN ")
-	createColSQL(m, buf, model.AI.Col)
+	createColSQL(m, buf, model.AI)
 	buf.WriteString(" PRIMARY KEY AUTO_INCREMENT")
 	_, err := db.Exec(buf.String())
 	return err

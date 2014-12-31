@@ -32,7 +32,7 @@ func (s *Stmts) AddSQL(name, sql string) (*sql.Stmt, error) {
 	defer s.Unlock()
 
 	if _, found := s.items[name]; found {
-		return nil, fmt.Errorf("该名称[%v]的stmt已经存在", name)
+		return nil, fmt.Errorf("AddSQL:该名称[%v]的stmt已经存在", name)
 	}
 
 	stmt, err := s.db.Prepare(sql)

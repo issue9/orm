@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/issue9/orm/core"
@@ -23,10 +24,26 @@ const (
 	Select
 )
 
-// sql := sqlbuild.New()
-// sql.Table("#user").
-//     Where("id>?",5).
-//     And("username like ?", "%admin%").
+type Errors []error
+
+func (err Errors) Error() string {
+	ret := "发生以下错误:"
+	for index, msg := range err {
+		ret += (strconv.Itoa(index) + ":" + msg.Error())
+	}
+
+	return ret
+}
+
+// SQL 语句的构建工具。
+//
+//  sql := engine.SQL()
+//      Table("#user").
+//      Where("id>?",5).
+//      And("username like ?", "%admin%").
+//      AndIsNotNull("Email").
+//      Desc("id")
+//  data := sql.FetchMaps()
 type SQL struct {
 	db        core.DB
 	tableName string
@@ -308,7 +325,7 @@ func (s *SQL) FullJoin(table, on string) *SQL {
 	return s.joinOn(3, table, on)
 }
 
-var orderType = []string{"ASC ", "DESC "}
+var orderType = []string{" ASC ", " DESC "}
 
 // 供Asc()和Desc()使用。
 // sort: 0=asc,1=desc，其它值无效
@@ -348,9 +365,12 @@ func (s *SQL) Desc(cols ...string) *SQL {
 }
 
 // LIMIT ... OFFSET ...
-// offset值为0时，相当于limit N的效果。
-func (s *SQL) Limit(limit, offset int) *SQL {
-	s.limitSQL, s.limitArgs = s.db.Dialect().LimitSQL(limit, offset)
+func (s *SQL) Limit(limit int, offset ...int) *SQL {
+	if len(offset) > 1 {
+		s.errors = append(s.errors, errors.New("Limit:指定了太多的参数"))
+	}
+
+	s.limitSQL, s.limitArgs = s.db.Dialect().LimitSQL(limit, offset...)
 	return s
 }
 
@@ -391,10 +411,16 @@ func (s *SQL) Query(args ...interface{}) (*sql.Rows, error) {
 
 	if len(args) == 0 {
 		// 与selectSQL中添加的顺序相同，where在limit之前
-		args = append(s.condArgs, s.limitArgs)
+		args = append(s.condArgs, s.limitArgs...)
 	}
 
-	return s.db.Query(s.selectSQL(), args...)
+	sql := s.selectSQL()
+	cnt := strings.Count(sql, "?")
+	if cnt != len(args) {
+		return nil, fmt.Errorf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
+	}
+
+	return s.db.Query(sql, args...)
 }
 
 // 功能同data/sql.DB.QueryRow(...)
@@ -405,7 +431,13 @@ func (s *SQL) QueryRow(args ...interface{}) *sql.Row {
 
 	if len(args) == 0 {
 		// 与sqlString中添加的顺序相同，where在limit之前
-		args = append(s.condArgs, s.limitArgs)
+		args = append(s.condArgs, s.limitArgs...)
+	}
+
+	sql := s.selectSQL()
+	cnt := strings.Count(sql, "?")
+	if cnt != len(args) {
+		panic(fmt.Sprintf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args)))
 	}
 
 	return s.db.QueryRow(s.selectSQL(), args...)
@@ -559,7 +591,13 @@ func (s *SQL) Delete(args ...interface{}) (sql.Result, error) {
 		args = s.condArgs
 	}
 
-	return s.db.Exec(s.deleteSQL(), args...)
+	sql := s.deleteSQL()
+	cnt := strings.Count(sql, "?")
+	if cnt != len(args) {
+		return nil, fmt.Errorf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
+	}
+
+	return s.db.Exec(sql, args...)
 }
 
 // 产生update语句
@@ -588,10 +626,16 @@ func (s *SQL) Update(args ...interface{}) (sql.Result, error) {
 	}
 
 	if len(args) == 0 {
-		args = append(s.vals, s.condArgs)
+		args = append(s.vals, s.condArgs...)
 	}
 
-	return s.db.Exec(s.updateSQL(), args...)
+	sql := s.updateSQL()
+	cnt := strings.Count(sql, "?")
+	if cnt != len(args) {
+		return nil, fmt.Errorf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
+	}
+
+	return s.db.Exec(sql, args...)
 }
 
 // 产生insert语句
@@ -623,5 +667,11 @@ func (s *SQL) Insert(args ...interface{}) (sql.Result, error) {
 		args = s.vals
 	}
 
-	return s.db.Exec(s.insertSQL(), args...)
+	sql := s.insertSQL()
+	cnt := strings.Count(sql, "?")
+	if cnt != len(args) {
+		return nil, fmt.Errorf("占位符数量[%v]与参数数量[%v]不相等", cnt, len(args))
+	}
+
+	return s.db.Exec(sql, args...)
 }

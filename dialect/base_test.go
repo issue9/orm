@@ -105,7 +105,3 @@ func TestCreateCheckSQL(t *testing.T) {
 	wont := "CONSTRAINT chkname CHECK(id>5)"
 	a.StringEqual(wont, buf.String(), style)
 }
-
-func TestAddIndexes(t *testing.T) {
-	// TODO
-}
