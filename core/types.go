@@ -13,18 +13,18 @@ import (
 // 有可能一个Dialect实例会被多个其它实例引用，
 // 不应该在Dialect实例中保存状态值等内容。
 type Dialect interface {
-	// 对字段或是表名的引用字符
+	// 对字段或是表名的引用字符。
 	QuoteStr() (left, right string)
 
-	// 是否支持返回LastInsertId()特性
+	// 是否支持返回LastInsertId()特性。
 	SupportLastInsertId() bool
 
-	// 从dataSourceName变量中获取数据库的名称
+	// 从dataSourceName变量中获取数据库的名称。
 	GetDBName(dataSourceName string) string
 
 	// 生成LIMIT N OFFSET M 或是相同的语意的语句。
 	// offset值为一个可选参数，若不指定，则表示LIMIT N语句。
-	// 返回的是对应数据库的limit语句以及语句中占位符对应的值
+	// 返回的是对应数据库的limit语句以及语句中占位符对应的值。
 	LimitSQL(limit int, offset ...int) (sql string, args []interface{})
 
 	// 根据一个Model创建或是更新表。

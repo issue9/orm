@@ -238,9 +238,10 @@ func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
 	return nil, newSQLError(err, sql)
 }
 
-// 关闭当前的db
+// 关闭当前的db。
+// 不会关闭与之关联的engine实例，
+// 仅是取消了与之的关联。
 func (t *Tx) close() {
-	// 仅仅取消与engine的关联。
 	t.engine = nil
 }
 

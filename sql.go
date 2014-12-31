@@ -423,7 +423,8 @@ func (s *SQL) Query(args ...interface{}) (*sql.Rows, error) {
 	return s.db.Query(sql, args...)
 }
 
-// 功能同data/sql.DB.QueryRow(...)
+// 功能同data/sql.DB.QueryRow(...)。
+// 若存在错误，则触发panic
 func (s *SQL) QueryRow(args ...interface{}) *sql.Row {
 	if s.HasErrors() {
 		panic("构建语句时发生错误信息")
