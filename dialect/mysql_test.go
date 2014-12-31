@@ -18,7 +18,7 @@ var _ base = &Mysql{}
 
 var m = &Mysql{}
 
-func TestMysqlGetDBName(t *testing.T) {
+func TestMysql_GetDBName(t *testing.T) {
 	a := assert.New(t)
 
 	a.Equal(m.GetDBName("root:password@/dbname"), "dbname")
@@ -28,7 +28,7 @@ func TestMysqlGetDBName(t *testing.T) {
 	a.Equal(m.GetDBName("root:/"), "")
 }
 
-func TestMysqlSQLType(t *testing.T) {
+func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
 	buf := bytes.NewBufferString("")
 	col := &core.Column{}

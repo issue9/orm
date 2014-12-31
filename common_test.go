@@ -13,10 +13,22 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/fetch"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+func init() {
+	if err := dialect.Register("sqlite3", &dialect.Sqlite3{}); err != nil {
+		panic(err)
+	}
+
+	if err := dialect.Register("mysql", &dialect.Mysql{}); err != nil {
+		panic(err)
+	}
+}
 
 var style = assert.StyleSpace | assert.StyleTrim
 

@@ -18,7 +18,7 @@ var _ base = &Postgres{}
 
 var p = &Postgres{}
 
-func TestPostgresGetDBName(t *testing.T) {
+func TestPostgres_GetDBName(t *testing.T) {
 	a := assert.New(t)
 
 	a.Equal(p.GetDBName("user=abc dbname = dbname password=abc"), "dbname")
@@ -28,7 +28,7 @@ func TestPostgresGetDBName(t *testing.T) {
 	a.Equal(p.GetDBName("\tdbname = dbname user=abc"), "dbname")
 }
 
-func TestPostgresSQLType(t *testing.T) {
+func TestPostgres_SQLType(t *testing.T) {
 	a := assert.New(t)
 	buf := bytes.NewBufferString("")
 	col := &core.Column{}

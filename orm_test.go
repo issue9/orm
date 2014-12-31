@@ -8,19 +8,11 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/dialect"
-
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // 测试orm的一些常用操作：New,Get,Close,CloseAll
 func TestEngines(t *testing.T) {
 	a := assert.New(t)
-
-	// 注册dialect
-	a.NotError(dialect.Register("sqlite3", &dialect.Sqlite3{}))
-	a.NotError(dialect.Register("mysql", &dialect.Mysql{}))
 
 	e, err := New("sqlite3", "./test", "main", "main_")
 	a.NotError(err).NotNil(e)

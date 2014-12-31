@@ -50,7 +50,7 @@ func (p *Postgres) GetDBName(dataSource string) string {
 }
 
 // implement core.Dialect.LimitSQL()
-func (p *Postgres) LimitSQL(limit int, offset ...int) (sql string, args []interface{}) {
+func (p *Postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 

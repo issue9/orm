@@ -169,13 +169,13 @@ func (m *Mysql) createTable(db core.DB, model *core.Model) error {
 		}
 
 		if col.IsAI() {
-			buf.WriteString(" AUTO_INCRMENT")
+			buf.WriteString(" AUTO_INCREMENT")
 		}
 		buf.WriteByte(',')
 	}
 
-	// PK
-	if len(model.PK) > 0 {
+	// PK，若有自增，则已经在上面指定
+	if len(model.PK) > 0 && !model.PK[0].IsAI() {
 		createPKSQL(m, buf, model.PK, pkName)
 		buf.WriteByte(',')
 	}

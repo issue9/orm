@@ -6,8 +6,23 @@ package dialect
 
 import (
 	"bytes"
+	"database/sql"
+	"reflect"
+	"time"
 
 	"github.com/issue9/orm/core"
+)
+
+const (
+	pkName = "pk" // 默认的主键约束名
+)
+
+var (
+	nullString  = reflect.TypeOf(sql.NullString{})
+	nullInt64   = reflect.TypeOf(sql.NullInt64{})
+	nullBool    = reflect.TypeOf(sql.NullBool{})
+	nullFloat64 = reflect.TypeOf(sql.NullFloat64{})
+	timeType    = reflect.TypeOf(time.Time{})
 )
 
 // 对core.Dialect接口的扩展，包含一些包内通用的接口。
@@ -181,4 +196,24 @@ func addIndexes(b base, db core.DB, model *core.Model) error {
 	}
 
 	return nil
+}
+
+// mysq系列数据库分页语法的实现。支持以下数据库：
+// MySQL, H2, HSQLDB, Postgres, SQLite3
+func mysqlLimitSQL(limit int, offset ...int) (string, []interface{}) {
+	if len(offset) == 0 {
+		return " LIMIT ? ", []interface{}{limit}
+	}
+
+	return " LIMIT ? OFFSET ? ", []interface{}{limit, offset[0]}
+}
+
+// oracle系列数据库分页语法的实现。支持以下数据库：
+// Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
+func oracleLimitSQL(limit int, offset ...int) (string, []interface{}) {
+	if len(offset) == 0 {
+		return " FETCH NEXT ? ROWS ONLY ", []interface{}{limit}
+	}
+
+	return " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ", []interface{}{offset[0], limit}
 }
