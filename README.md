@@ -1,6 +1,9 @@
 orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https://travis-ci.org/issue9/orm)
 ======
 
+###开发中，勿用!
+
+
 ```go
 type User struct {
     // 对应表中的id字段，为自增列，从0开始
