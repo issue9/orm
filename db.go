@@ -114,7 +114,8 @@ func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
 }
 
 // 关闭当前的db，销毁所有的数据。不能再次使用。
-func (e *Engine) close() {
+// 与之关联的Tx也将不能使用。
+func (e *Engine) Close() {
 	e.stmts.Close()
 	e.db.Close()
 }
@@ -241,7 +242,7 @@ func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
 // 关闭当前的db。
 // 不会关闭与之关联的engine实例，
 // 仅是取消了与之的关联。
-func (t *Tx) close() {
+func (t *Tx) Close() {
 	t.engine = nil
 }
 
@@ -249,14 +250,14 @@ func (t *Tx) close() {
 // 提交之后，整个Tx对象将不再有效。
 func (t *Tx) Commit() (err error) {
 	if err = t.tx.Commit(); err == nil {
-		t.close()
+		t.Close()
 	}
 	return
 }
 
 // 回滚事务
-func (t *Tx) Rollback() {
-	t.tx.Rollback()
+func (t *Tx) Rollback() error {
+	return t.tx.Rollback()
 }
 
 // 查找缓存的sql.Stmt，在未找到的情况下，第二个参数返回false

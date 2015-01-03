@@ -101,7 +101,7 @@ func initDB(a *assert.Assertion) (*sql.DB, *Engine) {
 
 // 关闭由initDB初始化的一切实例。
 func closeDB(e *Engine, db *sql.DB, a *assert.Assertion) {
-	e.close()
+	e.Close()
 
 	a.NotError(db.Close()).
 		NotError(os.Remove(testDBFile)).

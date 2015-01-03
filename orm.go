@@ -54,7 +54,7 @@ func Close(engineName string) {
 		return
 	}
 
-	e.close()
+	e.Close()
 	delete(engines.items, engineName)
 }
 
@@ -64,7 +64,7 @@ func CloseAll() {
 	defer engines.Unlock()
 
 	for _, v := range engines.items {
-		v.close()
+		v.Close()
 	}
 
 	// 重新声明一块内存，而不是直接赋值nil
