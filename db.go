@@ -115,14 +115,14 @@ func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
 	return nil, newSQLError(err, e.driverName, sql)
 }
 
-// 关闭当前的db，销毁所有的数据。不能再次使用。
+// 关闭当前的Engine，销毁所有的数据。不能再次使用。
 // 与之关联的Tx也将不能使用。
 func (e *Engine) Close() error {
 	e.stmts.Close()
 	return e.db.Close()
 }
 
-// 开始一个新的事务
+// 开始一个新的事务。
 func (e *Engine) Begin() (*Tx, error) {
 	tx, err := e.db.Begin()
 	if err != nil {
@@ -174,13 +174,13 @@ func (e *Engine) Delete(v interface{}) error {
 	return deleteMult(e.sql, v)
 }
 
-// 根据models创建表
-// 若表已经存在，则返回错误信息
+// 根据models创建表。
+// 若表已经存在，则返回错误信息。
 func (e *Engine) Create(models ...interface{}) (err error) {
 	return createMult(e, models...)
 }
 
-// 根据models更新或创建表
+// 根据models更新或创建表。
 func (e *Engine) Upgrade(models ...interface{}) (err error) {
 	return upgradeMult(e, models...)
 }
@@ -309,10 +309,12 @@ func (t *Tx) Delete(v interface{}) error {
 	return deleteMult(t.sql, v)
 }
 
+// 创建数据表。
 func (t *Tx) Create(v ...interface{}) error {
 	return createMult(t, v...)
 }
 
+// 更新或是创建数据表。
 func (t *Tx) Upgrade(v ...interface{}) error {
 	return upgradeMult(t, v...)
 }

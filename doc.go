@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // orm提供了一个相对统一的数据库操作，目前内置了对部分数据库的支持，
-// 用户可以通过实现自定义来实现对特定数据库的支持。
+// 用户也可以自行实现core.Dialect接口，来实现特定数据库的支持。
 //
 // 支持的数据库：
 //  1. sqlite3: github.com/mattn/go-sqlite3
@@ -96,7 +96,7 @@
 //
 // Upgrade:
 //  // 创建或更新表
-//  e.Create(&User{})
+//  e.Upgrade(&User{})
 //  // 创建或是更新多个表
 //  e.Upgrade(&User{},&Email{})
 //

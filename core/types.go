@@ -16,7 +16,7 @@ type Dialect interface {
 	// 对字段或是表名的引用字符。
 	QuoteStr() (left, right string)
 
-	// 是否支持返回LastInsertId()特性。
+	// 是否支持LastInsertId()特性。
 	SupportLastInsertId() bool
 
 	// 从dataSourceName变量中获取数据库的名称。
