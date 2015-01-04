@@ -169,7 +169,7 @@ func (m *Mysql) createTable(db core.DB, model *core.Model) error {
 		}
 
 		if col.IsAI() {
-			buf.WriteString(" AUTO_INCREMENT")
+			buf.WriteString(" PRIMARK AUTO_INCREMENT")
 		}
 		buf.WriteByte(',')
 	}

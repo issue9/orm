@@ -177,17 +177,19 @@ func (s *Sqlite3) upgradeTable(db core.DB, model *core.Model) error {
 		return err
 	}
 
+	// 重命名旧表
 	tmpName, err := s.rename(db, model.Name)
 	if err != nil {
 		return err
 	}
 
+	// 新建表
 	if err := s.createTable(db, model); err != nil {
 		return err
 	}
 
 	// 从tmpName表中导出数据到model.Name表中
-	// "INSERT INTO ?(cols...) SELECT cols FROM ?"
+	// "INSERT INTO newTable (cols...) SELECT cols FROM oldTable "
 	cols := make([]string, 0, len(model.Cols))
 	for colName, _ := range model.Cols {
 		cols = append(cols, colName)
@@ -197,9 +199,7 @@ func (s *Sqlite3) upgradeTable(db core.DB, model *core.Model) error {
 	buf.WriteString(model.Name)
 	buf.WriteByte('(')
 	buf.WriteString(colsSQL)
-	buf.WriteString(") SELECT ")
-	buf.WriteString(colsSQL)
-	buf.WriteString("FROM ")
+	buf.WriteString(") SELECT * FROM ")
 	buf.WriteString(tmpName)
 	if _, err := db.Exec(buf.String()); err != nil {
 		return err
