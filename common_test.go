@@ -59,12 +59,8 @@ var _ core.Metaer = &FetchUser{}
 func initDB(a *assert.Assertion) (*sql.DB, *Engine) {
 	// 若存在文件，先删除
 	_, err := os.Stat(testDBFile)
-	if err != nil {
-		if os.IsExist(err) {
-			a.NotError(os.Remove(testDBFile))
-		} else {
-			//a.T().Error(err)
-		}
+	if err == nil || os.IsExist(err) {
+		a.NotError(os.Remove(testDBFile))
 	}
 
 	db, err := sql.Open("sqlite3", testDBFile)
