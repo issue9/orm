@@ -174,10 +174,15 @@ func (e *Engine) Delete(v interface{}) error {
 	return deleteMult(e.sql, v)
 }
 
-// 根据obj创建表
-// obj可以是结构体或是结构体数据
-func (e *Engine) Create(v interface{}) error {
-	return createMult(e, v)
+// 根据models创建表
+// 若表已经存在，则返回错误信息
+func (e *Engine) Create(models ...interface{}) (err error) {
+	return createMult(e, models...)
+}
+
+// 根据models更新或创建表
+func (e *Engine) Upgrade(models ...interface{}) (err error) {
+	return upgradeMult(e, models...)
 }
 
 // 事务对象
@@ -304,6 +309,10 @@ func (t *Tx) Delete(v interface{}) error {
 	return deleteMult(t.sql, v)
 }
 
-func (t *Tx) Create(v interface{}) error {
-	return createMult(t, v)
+func (t *Tx) Create(v ...interface{}) error {
+	return createMult(t, v...)
+}
+
+func (t *Tx) Upgrade(v ...interface{}) error {
+	return upgradeMult(t, v...)
 }

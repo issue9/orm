@@ -69,7 +69,7 @@ func where(sql *SQL, m *core.Model, rval reflect.Value) error {
 
 // 创建或是更新一个数据表。
 // v为一个结构体或是结构体指针。
-func createOne(db core.DB, v interface{}) error {
+func createOne(db core.DB, onlyCreate bool, v interface{}) error {
 	rval := reflect.ValueOf(v)
 
 	m, err := core.NewModel(v)
@@ -85,7 +85,7 @@ func createOne(db core.DB, v interface{}) error {
 		return errors.New("createOne:无效的v.Kind()")
 	}
 
-	return db.Dialect().CreateTable(db, m)
+	return db.Dialect().UpgradeTable(db, m, onlyCreate)
 }
 
 // 插入一个对象到数据库
@@ -189,38 +189,26 @@ func deleteOne(sql *SQL, v interface{}) error {
 	return err
 }
 
+// 创建一个或多个数据表
+func createMult(db core.DB, objs ...interface{}) (err error) {
+	for _, obj := range objs {
+		if err = createOne(db, true, obj); err != nil {
+			return
+		}
+	}
+
+	return
+}
+
 // 创建或是更新一个或多个数据表
-// v可以是对象或是对象数组
-func createMult(db core.DB, v interface{}) error {
-	rval := reflect.ValueOf(v)
-	if rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
+func upgradeMult(db core.DB, objs ...interface{}) (err error) {
+	for _, obj := range objs {
+		if err = createOne(db, false, obj); err != nil {
+			return
+		}
 	}
 
-	switch rval.Kind() {
-	case reflect.Struct:
-		return createOne(db, v)
-	case reflect.Slice, reflect.Array:
-		elemType := rval.Type().Elem() // 数组元素的类型
-
-		if elemType.Kind() == reflect.Ptr {
-			elemType = elemType.Elem()
-		}
-
-		if elemType.Kind() != reflect.Struct {
-			return errors.New("createMult:数组元素类型不正确")
-		}
-
-		for i := 0; i < rval.Len(); i++ {
-			if err := createOne(db, rval.Index(i).Interface()); err != nil {
-				return err
-			}
-		}
-	default:
-		return fmt.Errorf("createMult:v的类型[%v]无效", rval.Kind())
-	}
-
-	return nil
+	return
 }
 
 // 插入一个或多个数据

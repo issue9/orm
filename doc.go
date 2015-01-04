@@ -89,10 +89,16 @@
 //
 // Create:
 // 可以通过Engine.Create()或是Tx.Create()创建一张表。
-//  // 创建或是更新表
+//  // 创建表
+//  e.Create(&User{})
+//  // 创建多个表
+//  e.Create(&User{},&Email{})
+//
+// Upgrade:
+//  // 创建或更新表
 //  e.Create(&User{})
 //  // 创建或是更新多个表
-//  e.Create([]*User{&User{},&Email{}})
+//  e.Upgrade(&User{},&Email{})
 //
 // Update:
 //  // 将id为1的记录的FirstName更改为abc
@@ -130,4 +136,4 @@
 package orm
 
 // 版本号
-const Version = "0.3.5.150104"
+const Version = "0.4.7.150104"

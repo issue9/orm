@@ -54,8 +54,8 @@ func (p *Postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-// implement core.Dialect.CreateTable()
-func (p *Postgres) CreateTable(db core.DB, model *core.Model) error {
+// implement core.Dialect.UpgradeTable()
+func (p *Postgres) UpgradeTable(db core.DB, model *core.Model, onlyCreate bool) error {
 	sql := "SELECT * FROM pg_tables where schemaname = 'public' and tablename=?"
 	rows, err := db.Query(sql, model.Name)
 	if err != nil {
@@ -63,10 +63,15 @@ func (p *Postgres) CreateTable(db core.DB, model *core.Model) error {
 	}
 	defer rows.Close()
 
-	if rows.Next() { // 表已经存在
-		return p.upgradeTable(db, model)
+	if !rows.Next() { // 不存在相同的表名
+		return p.createTable(db, model)
 	}
-	return p.createTable(db, model)
+
+	if onlyCreate {
+		return fmt.Errorf("UpgradeTable:指定的表名[%v]已经存在", model.Name)
+	}
+
+	return p.upgradeTable(db, model)
 }
 
 // 创建新表

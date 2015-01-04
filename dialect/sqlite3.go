@@ -7,6 +7,7 @@ package dialect
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
 	"runtime"
@@ -49,17 +50,22 @@ func (s *Sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-// implement core.Dialect.CreateTable()
-func (s *Sqlite3) CreateTable(db core.DB, m *core.Model) error {
+// implement core.Dialect.UpgradeTable()
+func (s *Sqlite3) UpgradeTable(db core.DB, m *core.Model, onlyCreate bool) error {
 	has, err := s.hasTable(db, m.Name)
 	if err != nil {
 		return err
 	}
 
-	if has {
-		return s.upgradeTable(db, m)
+	if !has {
+		return s.createTable(db, m)
 	}
-	return s.createTable(db, m)
+
+	if onlyCreate {
+		return fmt.Errorf("UpgradeTable:指定的表名[%v]已经存在", m.Name)
+	}
+
+	return s.upgradeTable(db, m)
 }
 
 // 是否存在指定名称的表

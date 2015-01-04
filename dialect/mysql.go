@@ -46,8 +46,8 @@ func (m *Mysql) SupportLastInsertId() bool {
 	return true
 }
 
-// implement core.Dialect.CreateTable()
-func (m *Mysql) CreateTable(db core.DB, model *core.Model) error {
+// implement core.Dialect.UpgradeTable()
+func (m *Mysql) UpgradeTable(db core.DB, model *core.Model, onlyCreate bool) error {
 	sql := "SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA`=? and `TABLE_NAME`=?"
 	rows, err := db.Query(sql, db.Name(), model.Name)
 	if err != nil {
@@ -55,10 +55,15 @@ func (m *Mysql) CreateTable(db core.DB, model *core.Model) error {
 	}
 	defer rows.Close()
 
-	if rows.Next() { // 存在指定的表名
-		return m.upgradeTable(db, model)
+	if !rows.Next() { // 不存在相同的表名
+		return m.createTable(db, model)
 	}
-	return m.createTable(db, model)
+
+	if onlyCreate {
+		return fmt.Errorf("CreateTable:该表名[%v]已经存在", model.Name)
+	}
+
+	return m.upgradeTable(db, model)
 }
 
 // implement base.sqlType()

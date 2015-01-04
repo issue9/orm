@@ -27,10 +27,9 @@ type Dialect interface {
 	// 返回的是对应数据库的limit语句以及语句中占位符对应的值。
 	LimitSQL(limit int, offset ...int) (sql string, args []interface{})
 
-	// 根据一个Model创建或是更新表。
-	// 表的创建虽然语法上大致上相同，但细节部分却又不一样，
-	// 干脆整个过程完全交给Dialect去完成。
-	CreateTable(db DB, m *Model) error
+	// 根据数据模型，创建或是更新表。
+	// 若onlyCreate为true，则仅在表不存在时，执行创建表操作。
+	UpgradeTable(db DB, m *Model, onlyCreate bool) error
 }
 
 // 操作数据库的接口，用于统一普通数据库操作和事务操作。
