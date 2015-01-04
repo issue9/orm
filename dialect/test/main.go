@@ -12,9 +12,9 @@ import (
 
 	"github.com/issue9/orm"
 	"github.com/issue9/orm/dialect"
+	"github.com/issue9/orm/fetch"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/issue9/orm/fetch"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -58,7 +58,7 @@ func mysqlCreateTable() {
 
 func postgresCreateTable() {
 	chkError(dialect.Register("mysql", &dialect.Mysql{}))
-	e, err := orm.New("qp", "dbname=test", "pq1", "pq1_")
+	e, err := orm.New("pq", "dbname=test", "pq1", "pq1_")
 	chkError(err)
 	defer e.Close()
 
