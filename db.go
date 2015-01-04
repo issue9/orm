@@ -25,13 +25,14 @@ const (
 )
 
 type Engine struct {
-	name     string // 数据库的名称
-	prefix   string // 表名前缀
-	d        core.Dialect
-	db       *sql.DB
-	stmts    *core.Stmts
-	sql      *SQL // 内置的SQL引擎，用于执行Update等操作
-	replacer *strings.Replacer
+	name       string // 数据库的名称
+	prefix     string // 表名前缀
+	driverName string
+	d          core.Dialect
+	db         *sql.DB
+	stmts      *core.Stmts
+	sql        *SQL // 内置的SQL引擎，用于执行Update等操作
+	replacer   *strings.Replacer
 }
 
 func newEngine(driverName, dataSourceName, prefix string) (*Engine, error) {
@@ -47,11 +48,12 @@ func newEngine(driverName, dataSourceName, prefix string) (*Engine, error) {
 
 	l, r := d.QuoteStr()
 	inst := &Engine{
-		db:       dbInst,
-		d:        d,
-		prefix:   prefix,
-		name:     d.GetDBName(dataSourceName),
-		replacer: strings.NewReplacer(quoteLeft, l, quoteRight, r, dbPrefix, prefix),
+		d:          d,
+		prefix:     prefix,
+		driverName: driverName,
+		db:         dbInst,
+		name:       d.GetDBName(dataSourceName),
+		replacer:   strings.NewReplacer(quoteLeft, l, quoteRight, r, dbPrefix, prefix),
 	}
 	inst.stmts = core.NewStmts(inst)
 	inst.sql = inst.SQL()
@@ -82,7 +84,7 @@ func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
 	if err == nil {
 		return r, err
 	}
-	return nil, newSQLError(err, sql, args...)
+	return nil, newSQLError(err, e.driverName, sql, args...)
 }
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
@@ -93,7 +95,7 @@ func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 	if err == nil {
 		return r, err
 	}
-	return nil, newSQLError(err, sql, args...)
+	return nil, newSQLError(err, e.driverName, sql, args...)
 }
 
 // 对orm/core.DB.QueryRow()的实现。
@@ -110,7 +112,7 @@ func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
 	if err == nil {
 		return r, err
 	}
-	return nil, newSQLError(err, sql)
+	return nil, newSQLError(err, e.driverName, sql)
 }
 
 // 关闭当前的db，销毁所有的数据。不能再次使用。
@@ -208,7 +210,7 @@ func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
 	if err == nil {
 		return r, err
 	}
-	return nil, newSQLError(err, sql, args...)
+	return nil, newSQLError(err, t.engine.driverName, sql, args...)
 }
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
@@ -219,7 +221,7 @@ func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 	if err == nil {
 		return r, err
 	}
-	return nil, newSQLError(err, sql, args...)
+	return nil, newSQLError(err, t.engine.driverName, sql, args...)
 }
 
 // 对orm/core.DB.QueryRow()的实现。
@@ -236,7 +238,7 @@ func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
 	if err == nil {
 		return r, err
 	}
-	return nil, newSQLError(err, sql)
+	return nil, newSQLError(err, t.engine.driverName, sql)
 }
 
 // 关闭当前的db。

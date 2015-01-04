@@ -15,7 +15,9 @@ func TestEngines(t *testing.T) {
 	a := assert.New(t)
 
 	e, err := New("sqlite3", "./test", "main", "main_")
-	a.NotError(err).NotNil(e)
+	a.NotError(err).
+		NotNil(e).
+		Equal("sqlite3", e.driverName)
 
 	// 不存在的实例
 	e, found := Get("test1test")
@@ -33,10 +35,14 @@ func TestEngines(t *testing.T) {
 	// 重新添加2个Engine
 
 	e, err = New("mysql", "root:@/", "second", "second_")
-	a.NotError(err).NotNil(e)
+	a.NotError(err).
+		NotNil(e).
+		Equal("mysql", e.driverName)
 
 	e, err = New("sqlite3", "./test", "main", "main_")
-	a.NotError(err).NotNil(e)
+	a.NotError(err).
+		NotNil(e).
+		Equal("sqlite3", e.driverName)
 
 	e, found = Get("main")
 	a.True(found).NotNil(e)

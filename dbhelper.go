@@ -14,21 +14,24 @@ import (
 
 // sql错误信息
 type SQLError struct {
-	Err  error
-	SQL  string
-	Args []interface{}
+	Err        error
+	DriverName string
+	SQL        string
+	Args       []interface{}
 }
 
-func newSQLError(err error, sql string, args ...interface{}) error {
+func newSQLError(err error, driverName, sql string, args ...interface{}) error {
 	return &SQLError{
-		Err:  err,
-		SQL:  sql,
-		Args: args,
+		Err:        err,
+		DriverName: driverName,
+		SQL:        sql,
+		Args:       args,
 	}
 }
 
 func (err *SQLError) Error() string {
-	return fmt.Sprintf("SQLError:原始错误信息:%v\nsql语句:%v\n对应参数:%v", err.Err, err.SQL, err.Args)
+	format := "SQLError:原始错误信息:%v;\ndriverName:%v;\nsql语句:%v;\n对应参数:%v"
+	return fmt.Sprintf(format, err.Err, err.DriverName, err.SQL, err.Args)
 }
 
 // 供engine.go和tx.go调用的一系列函数。
