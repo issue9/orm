@@ -26,7 +26,7 @@ func TestEngines(t *testing.T) {
 	a.True(found).NotNil(e)
 
 	// 关闭之后，是否能再次正常获取
-	Close("main")
+	a.NotError(Close("main"))
 	e, found = Get("main")
 	a.False(found).Nil(e)
 
@@ -45,7 +45,7 @@ func TestEngines(t *testing.T) {
 	a.True(found).NotNil(e)
 
 	// 关闭所有
-	CloseAll()
+	a.NotError(CloseAll())
 	e, found = Get("main")
 	a.False(found).Nil(e)
 	e, found = Get("second")

@@ -45,29 +45,34 @@ func Get(engineName string) (e *Engine, found bool) {
 }
 
 // 关闭指定名称的Engine
-func Close(engineName string) {
+func Close(engineName string) error {
 	engines.Lock()
 	defer engines.Unlock()
 
 	e, found := engines.items[engineName]
 	if !found {
-		return
+		return nil
 	}
 
-	e.Close()
+	err := e.Close()
 	delete(engines.items, engineName)
+	return err
 }
 
 // 关闭所有的Engine
-func CloseAll() {
+func CloseAll() error {
 	engines.Lock()
 	defer engines.Unlock()
 
 	for _, v := range engines.items {
-		v.Close()
+		if err := v.Close(); err != nil {
+			return err
+		}
 	}
 
 	// 重新声明一块内存，而不是直接赋值nil
 	// 防止在CloseAll()之后，再New()新的Engine
 	engines.items = make(map[string]*Engine)
+
+	return nil
 }

@@ -28,7 +28,7 @@ func newSQLError(err error, sql string, args ...interface{}) error {
 }
 
 func (err *SQLError) Error() string {
-	return fmt.Sprintf("原始错误信息:%v\nsql语句:%v\n对应参数:%v", err.Err, err.SQL, err.Args)
+	return fmt.Sprintf("SQLError:原始错误信息:%v\nsql语句:%v\n对应参数:%v", err.Err, err.SQL, err.Args)
 }
 
 // 供engine.go和tx.go调用的一系列函数。
@@ -44,7 +44,7 @@ func where(sql *SQL, m *core.Model, rval reflect.Value) error {
 			if !field.IsValid() {
 				return fmt.Errorf("where:未找到该名称[%v]的值", col.GoName)
 			}
-			sql.Where("{"+col.Name+"}=?", field.Interface())
+			sql.Where(col.Name+"=?", field.Interface())
 		}
 	case len(m.UniqueIndexes) != 0:
 		for _, cols := range m.UniqueIndexes {
@@ -53,7 +53,7 @@ func where(sql *SQL, m *core.Model, rval reflect.Value) error {
 				if !field.IsValid() {
 					return fmt.Errorf("where:未找到该名称[%v]的值", col.GoName)
 				}
-				sql.Where("{"+col.Name+"}=?", field.Interface())
+				sql.Where(col.Name+"=?", field.Interface())
 			}
 			break // 只取一个UniqueIndex就可以了
 		}
@@ -115,7 +115,7 @@ func insertOne(sql *SQL, v interface{}) error {
 		if !field.IsValid() {
 			return fmt.Errorf("insertOne:未找到该名称[%v]的值", col.GoName)
 		}
-		sql.Add("{"+name+"}", field.Interface())
+		sql.Add(name, field.Interface())
 	}
 
 	_, err = sql.Insert()
@@ -151,7 +151,7 @@ func updateOne(sql *SQL, v interface{}) error {
 		if !field.IsValid() {
 			return fmt.Errorf("updateOne:未找到该名称[%v]的值", col.GoName)
 		}
-		sql.Add("{"+name+"}", field.Interface())
+		sql.Add(name, field.Interface())
 	}
 
 	_, err = sql.Update()

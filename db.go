@@ -115,9 +115,9 @@ func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
 
 // 关闭当前的db，销毁所有的数据。不能再次使用。
 // 与之关联的Tx也将不能使用。
-func (e *Engine) Close() {
+func (e *Engine) Close() error {
 	e.stmts.Close()
-	e.db.Close()
+	return e.db.Close()
 }
 
 // 开始一个新的事务
