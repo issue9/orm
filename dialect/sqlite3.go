@@ -193,16 +193,19 @@ func (s *Sqlite3) upgradeTable(db core.DB, model *core.Model) error {
 		cols = append(cols, colName)
 	}
 	colsSQL := strings.Join(cols, ",")
-	buf := bytes.NewBufferString("INSERT INTO ?(")
+	buf := bytes.NewBufferString("INSERT INTO ")
+	buf.WriteString(model.Name)
+	buf.WriteByte('(')
 	buf.WriteString(colsSQL)
-	buf.WriteString(") SELECT")
+	buf.WriteString(") SELECT ")
 	buf.WriteString(colsSQL)
-	buf.WriteString("FROM ?")
-	if _, err := db.Exec(buf.String(), model.Name, tmpName); err != nil {
+	buf.WriteString("FROM ")
+	buf.WriteString(tmpName)
+	if _, err := db.Exec(buf.String()); err != nil {
 		return err
 	}
 
-	if _, err := db.Exec("DROP TABLE IF EXISTS ?", tmpName); err != nil {
+	if _, err := db.Exec("DROP TABLE IF EXISTS " + tmpName); err != nil {
 		return err
 	}
 
@@ -229,8 +232,8 @@ func (s *Sqlite3) rename(db core.DB, tableName string) (string, error) {
 	}
 
 	// 将当前表改名
-	sql := "ALTER TABLE ? RENAME TO ?"
-	if _, err := db.Exec(sql, tableName, tmpName); err != nil {
+	sql := "ALTER TABLE " + tableName + " RENAME TO " + tmpName
+	if _, err := db.Exec(sql); err != nil {
 		return "", err
 	}
 
