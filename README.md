@@ -1,4 +1,4 @@
-orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https://travis-ci.org/issue9/orm)
+orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https://travis-ci.org/issue9/orm) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://github.com/issue9/orm/blob/master/LICENSE)
 ======
 
 ###开发中，勿用!
@@ -45,6 +45,6 @@ go get github.com/issue9/orm
 [![GoDoc](https://godoc.org/github.com/issue9/orm?status.svg)](https://godoc.org/github.com/issue9/orm)
 
 
-### 版权 [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://github.com/issue9/orm/blob/master/LICENSE)
+### 版权
 
 本项目采用[MIT](http://opensource.org/licenses/MIT)开源授权许可证，完整的授权说明可在LICENSE文件中找到。
