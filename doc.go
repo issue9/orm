@@ -127,4 +127,4 @@
 package orm
 
 // 版本号
-const Version = "0.3.3.141231"
+const Version = "0.3.5.150104"
