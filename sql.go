@@ -195,13 +195,13 @@ func (s *SQL) IsNotNull(col string) *SQL {
 	return s.AndIsNull(col)
 }
 
-// 所有SQL子句的构建，最终都调用此方法来写入实例中。
-// op 与前一个语句的连接符号，可以是and或是or常量；
+// 所有where子句的构建，最终都调用此方法来写入实例中。
+// op 与前一个语句的连接符号，可以是0(and)或是1(or)常量；
 // cond 条件语句，值只能是占位符，不能直接写值；
 // condArgs 占位符对应的值。
 //  w := newSQL(...)
 //  w.build(0, "username=='abc'") // 错误：不能使用abc，只能使用？占位符。
-//  w.build(1, "username=?", "abc") // 正确，将转换成: and username='abc'
+//  w.build(1, "username=?", "abc") // 正确
 func (s *SQL) build(op int, cond string, args ...interface{}) *SQL {
 	switch {
 	case s.cond.Len() == 0:
@@ -222,7 +222,7 @@ func (s *SQL) build(op int, cond string, args ...interface{}) *SQL {
 	return s
 }
 
-// SQL col in(v1,v2)语句的实现函数，供andIn()和orIn()函数调用。
+// WHERE col IN(v1,v2)语句的实现函数，供andIn()和orIn()函数调用。
 func (s *SQL) in(op int, col string, args ...interface{}) *SQL {
 	if len(args) <= 0 {
 		s.errors = append(s.errors, errors.New("in:args参数不能为空"))

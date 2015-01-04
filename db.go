@@ -82,7 +82,7 @@ func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
 	r, err := e.db.Exec(sql, args...)
 
 	if err == nil {
-		return r, err
+		return r, nil
 	}
 	return nil, newSQLError(err, e.driverName, sql, args...)
 }
@@ -93,7 +93,7 @@ func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 	r, err := e.db.Query(sql, args...)
 
 	if err == nil {
-		return r, err
+		return r, nil
 	}
 	return nil, newSQLError(err, e.driverName, sql, args...)
 }
@@ -110,7 +110,7 @@ func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
 	r, err := e.db.Prepare(sql)
 
 	if err == nil {
-		return r, err
+		return r, nil
 	}
 	return nil, newSQLError(err, e.driverName, sql)
 }
@@ -213,7 +213,7 @@ func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
 	r, err := t.tx.Exec(sql, args...)
 
 	if err == nil {
-		return r, err
+		return r, nil
 	}
 	return nil, newSQLError(err, t.engine.driverName, sql, args...)
 }
@@ -224,7 +224,7 @@ func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 	r, err := t.tx.Query(sql, args...)
 
 	if err == nil {
-		return r, err
+		return r, nil
 	}
 	return nil, newSQLError(err, t.engine.driverName, sql, args...)
 }
@@ -241,7 +241,7 @@ func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
 	r, err := t.tx.Prepare(sql)
 
 	if err == nil {
-		return r, err
+		return r, nil
 	}
 	return nil, newSQLError(err, t.engine.driverName, sql)
 }

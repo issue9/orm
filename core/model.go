@@ -59,8 +59,7 @@ type Metaer interface {
 	Meta() string
 }
 
-// 表示一个数据库的表模型。数据结构从字段和
-// 字段的struct tag中分析得出。
+// 表示一个数据库的表模型。数据结构从字段和字段的struct tag中分析得出。
 type Model struct {
 	Name string // 表的名称
 
@@ -71,7 +70,7 @@ type Model struct {
 	PK            []*Column              // 主键
 	AI            *Column                // 自增列
 	Check         map[string]string      // Check
-	Meta          map[string][]string    // 表级别的元数据，如存储引擎，字符集等。
+	Meta          map[string][]string    // 表级别的数据，如存储引擎，表名和字符集等。
 
 	constraints map[string]conType // 约束名缓存
 }
