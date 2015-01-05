@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/fetch"
 )
 
 type Sqlite3 struct{}
@@ -30,13 +31,11 @@ func (s *Sqlite3) SupportLastInsertId() bool {
 
 // implement core.Dialect.GetDBName()
 func (s *Sqlite3) GetDBName(dataSource string) string {
-	// 取得最后个路径分隔符的位置，无论是否存在分隔符，用++
-	// 表达式都正好能表示文件名开始的位置。
 	start := strings.LastIndex(dataSource, string(os.PathSeparator))
 	if start < 0 && runtime.GOOS == "windows" { // windows下可以使用/
 		start = strings.LastIndex(dataSource, "/")
 	}
-	start++
+	start++ // 去掉分隔符
 	end := strings.LastIndex(dataSource, ".")
 
 	if end < start { // 不存在扩展名，取全部文件名
@@ -70,7 +69,7 @@ func (s *Sqlite3) UpgradeTable(db core.DB, m *core.Model, onlyCreate bool) error
 
 // 是否存在指定名称的表
 func (s *Sqlite3) hasTable(db core.DB, tableName string) (bool, error) {
-	sql := "SELECT * FROM sqlite_master WHERE type='table' AND name=?"
+	sql := "SELECT sql FROM sqlite_master WHERE type='table' AND name=?"
 	rows, err := db.Query(sql, tableName)
 	if err != nil {
 		return false, err
@@ -196,21 +195,25 @@ func (s *Sqlite3) upgradeTable(db core.DB, model *core.Model) error {
 
 	// 从tmpName表中导出数据到model.Name表中
 	// "INSERT INTO newTable (cols...) SELECT cols FROM oldTable "
-	cols := make([]string, 0, len(model.Cols))
-	for colName, _ := range model.Cols {
-		cols = append(cols, colName)
+
+	cols, err := s.getCols(db, model, tmpName)
+	if err != nil {
+		return err
 	}
 	colsSQL := strings.Join(cols, ",")
 	buf := bytes.NewBufferString("INSERT INTO ")
 	buf.WriteString(model.Name)
 	buf.WriteByte('(')
 	buf.WriteString(colsSQL)
-	buf.WriteString(") SELECT * FROM ")
+	buf.WriteString(")SELECT ")
+	buf.WriteString(colsSQL)
+	buf.WriteString(" FROM ")
 	buf.WriteString(tmpName)
 	if _, err := db.Exec(buf.String()); err != nil {
 		return err
 	}
 
+	// 删除旧表
 	if _, err := db.Exec("DROP TABLE IF EXISTS " + tmpName); err != nil {
 		return err
 	}
@@ -244,4 +247,52 @@ func (s *Sqlite3) rename(db core.DB, tableName string) (string, error) {
 	}
 
 	return tmpName, nil
+}
+
+// 将[group]转换成{group}
+func (s *Sqlite3) unQuote(str string) string {
+	first := str[0]
+	last := str[len(str)-1]
+	switch {
+	case first == '"' && last == '"',
+		first == '`' && last == '`',
+		first == '[' && last == ']':
+		return core.QuoteLeft + str[1:len(str)-1] + core.QuoteRight
+	}
+	return str
+}
+
+// 获取同时存在于tableName表和m中的字段名。
+func (s *Sqlite3) getCols(db core.DB, m *core.Model, tableName string) ([]string, error) {
+	sql := "SELECT sql FROM sqlite_master WHERE type='table' AND name=?"
+	rows, err := db.Query(sql, tableName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	createSQL, err := fetch.ColumnString(true, "sql", rows)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := []string{}
+
+	start := strings.Index(createSQL[0], "(")
+	end := strings.Index(createSQL[0], ")")
+	colsSQL := strings.Split(createSQL[0][start+1:end], ",")
+	for _, sql = range colsSQL {
+		name := strings.Fields(sql)[0]
+		if name == "CONSTRAINT" || strings.ToUpper(name) == "CONSTRAINT" {
+			continue
+		}
+
+		name = s.unQuote(name)
+		if _, ok := m.Cols[name]; !ok {
+			continue
+		}
+
+		ret = append(ret, name)
+	}
+	return ret, nil
 }

@@ -5,8 +5,7 @@
 package orm
 
 // 两个实现了core.DB接口的结构：Engine和Tx。
-// 相对于database/sql下的DB和Tx，一个实现普通的
-// 数据库操作，一个用于事务的操作。
+// 一个实现普通的数据库操作，一个用于事务的操作。
 
 import (
 	"database/sql"
@@ -15,13 +14,6 @@ import (
 
 	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/dialect"
-)
-
-// sql语句中的占位符。
-const (
-	quoteLeft  = "{"
-	quoteRight = "}"
-	dbPrefix   = "#"
 )
 
 type Engine struct {
@@ -38,7 +30,7 @@ type Engine struct {
 func newEngine(driverName, dataSourceName, prefix string) (*Engine, error) {
 	d, found := dialect.Get(driverName)
 	if !found {
-		return nil, fmt.Errorf("未找到与driverName[%v]相同的Dialect", driverName)
+		return nil, fmt.Errorf("newEngine:未找到与driverName[%v]相同的Dialect", driverName)
 	}
 
 	dbInst, err := sql.Open(driverName, dataSourceName)
@@ -53,7 +45,11 @@ func newEngine(driverName, dataSourceName, prefix string) (*Engine, error) {
 		driverName: driverName,
 		db:         dbInst,
 		name:       d.GetDBName(dataSourceName),
-		replacer:   strings.NewReplacer(quoteLeft, l, quoteRight, r, dbPrefix, prefix),
+		replacer: strings.NewReplacer(
+			core.QuoteLeft, l,
+			core.QuoteRight, r,
+			core.TableNamePrefix, prefix,
+		),
 	}
 	inst.stmts = core.NewStmts(inst)
 	inst.sql = inst.SQL()
@@ -76,9 +72,14 @@ func (e *Engine) Dialect() core.Dialect {
 	return e.d
 }
 
+// 去掉占位符。
+func (e *Engine) prepareSQL(sql string) string {
+	return e.replacer.Replace(sql)
+}
+
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	sql = e.replacer.Replace(sql)
+	sql = e.prepareSQL(sql)
 	r, err := e.db.Exec(sql, args...)
 
 	if err == nil {
@@ -89,7 +90,7 @@ func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	sql = e.replacer.Replace(sql)
+	sql = e.prepareSQL(sql)
 	r, err := e.db.Query(sql, args...)
 
 	if err == nil {
@@ -101,12 +102,12 @@ func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 // 对orm/core.DB.QueryRow()的实现。
 // 执行一条查询语句，并返回第一条符合条件的记录。
 func (e *Engine) QueryRow(sql string, args ...interface{}) *sql.Row {
-	return e.db.QueryRow(e.replacer.Replace(sql), args...)
+	return e.db.QueryRow(e.prepareSQL(sql), args...)
 }
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
-	sql = e.replacer.Replace(sql)
+	sql = e.prepareSQL(sql)
 	r, err := e.db.Prepare(sql)
 
 	if err == nil {
@@ -207,9 +208,14 @@ func (t *Tx) Dialect() core.Dialect {
 	return t.engine.Dialect()
 }
 
+// 去掉占位符。
+func (t *Tx) prepareSQL(sql string) string {
+	return t.engine.replacer.Replace(sql)
+}
+
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	sql = t.engine.replacer.Replace(sql)
+	sql = t.prepareSQL(sql)
 	r, err := t.tx.Exec(sql, args...)
 
 	if err == nil {
@@ -220,7 +226,7 @@ func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	sql = t.engine.replacer.Replace(sql)
+	sql = t.prepareSQL(sql)
 	r, err := t.tx.Query(sql, args...)
 
 	if err == nil {
@@ -232,12 +238,12 @@ func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 // 对orm/core.DB.QueryRow()的实现。
 // 执行一条查询语句，并返回第一条符合条件的记录。
 func (t *Tx) QueryRow(sql string, args ...interface{}) *sql.Row {
-	return t.tx.QueryRow(t.engine.replacer.Replace(sql), args...)
+	return t.tx.QueryRow(t.prepareSQL(sql), args...)
 }
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
-	sql = t.engine.replacer.Replace(sql)
+	sql = t.prepareSQL(sql)
 	r, err := t.tx.Prepare(sql)
 
 	if err == nil {

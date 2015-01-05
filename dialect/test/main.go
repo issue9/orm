@@ -22,14 +22,14 @@ import (
 var sqlite3DBFile = "./test.db"
 
 func main() {
-	sqlite3CreateTable()
+	testSqlite3()
 
-	mysqlCreateTable()
+	testMysql()
 
-	postgresCreateTable()
+	testPostgres()
 }
 
-func sqlite3CreateTable() {
+func testSqlite3() {
 	// 删除原有文件
 	_, err := os.Stat(sqlite3DBFile)
 	if err == nil || os.IsExist(err) {
@@ -47,7 +47,7 @@ func sqlite3CreateTable() {
 	runTest(e)
 }
 
-func mysqlCreateTable() {
+func testMysql() {
 	chkError(dialect.Register("mysql", &dialect.Mysql{}))
 	e, err := orm.New("mysql", "root:@/test", "mysql1", "mysql1_")
 	chkError(err)
@@ -56,7 +56,7 @@ func mysqlCreateTable() {
 	runTest(e)
 }
 
-func postgresCreateTable() {
+func testPostgres() {
 	chkError(dialect.Register("mysql", &dialect.Mysql{}))
 	e, err := orm.New("pq", "dbname=test", "pq1", "pq1_")
 	chkError(err)
@@ -75,8 +75,8 @@ func chkError(err error) {
 	}
 }
 
-// 获取数据库剩余的记录数量
-func getCount(e *orm.Engine) int {
+// 检测数据库中记录数量是否和count相等。
+func chkCount(e *orm.Engine, count int) {
 	rows, err := e.Query("SELECT count(*) AS c FROM user")
 	chkError(err)
 	defer rows.Close()
@@ -84,16 +84,13 @@ func getCount(e *orm.Engine) int {
 	ret, err := fetch.Column(true, "c", rows)
 	chkError(err)
 
-	if r, ok := ret[0].(int64); ok {
-		return int(r)
+	r, ok := ret[0].(int64)
+	if !ok {
+		chkError(fmt.Errorf("记录数量[%v]与预期值[%v]不相等", -1, count))
 	}
 
-	return -1
-}
-
-func eq(v1, v2 int) {
-	if v1 != v2 {
-		chkError(fmt.Errorf("v1=[%v];v2=[%v]", v1, v2))
+	if int(r) != count {
+		chkError(fmt.Errorf("记录数量[%v]与预期值[%v]不相等", r, count))
 	}
 }
 
@@ -101,21 +98,17 @@ func eq(v1, v2 int) {
 func runTest(e *orm.Engine) {
 	chkError(e.Create(&User1{}))
 	chkError(e.Insert(&User1{Username: "admin1", Group: "1"}))
-	eq(1, getCount(e))
+	chkCount(e, 1)
 
-	chkError(e.Create(&User2{}))
+	chkError(e.Upgrade(&User2{}))
 	chkError(e.Insert(&User2{Username: "admin2", Group: 2}))
-	eq(2, getCount(e))
+	chkCount(e, 2)
 
-	chkError(e.Create(&User3{}))
+	chkError(e.Upgrade(&User3{}))
 	chkError(e.Insert(&User3{Id: 3, Username: "admin3", Group: 3}))
-	eq(3, getCount(e))
+	chkCount(e, 3)
 
-	chkError(e.Create(&User4{}))
+	chkError(e.Upgrade(&User4{}))
 	chkError(e.Insert(&User4{Id: 4, Account: "admin4", Group: 4}))
-	eq(4, getCount(e))
-
-	chkError(e.Create(&User5{}))
-	chkError(e.Insert(&User5{Id: 5, Account: "admin5", Group: "5"}))
-	eq(5, getCount(e))
+	chkCount(e, 4)
 }

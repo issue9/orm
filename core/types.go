@@ -8,6 +8,13 @@ import (
 	"database/sql"
 )
 
+// sql语句中的占位符。
+const (
+	QuoteLeft       = "{"
+	QuoteRight      = "}"
+	TableNamePrefix = "#"
+)
+
 // 通用但又没有统一标准的数据库功能接口。
 //
 // 有可能一个Dialect实例会被多个实例引用，
