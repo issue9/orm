@@ -10,18 +10,18 @@
 //  2. mysql:   github.com/go-sql-driver/mysql
 //  3. postgres:github.com/lib/pq
 // 其它数据库，用户可以通过实现orm/core.Dialect接口，
-// 然后调用orm/dialect.Register()注册来实现支持。
+// 然后调用orm.Register()注册来实现支持。
 //
 // 初始化：
 //
 // 默认情况下，orm包并不会加载任何数据库的实例。所以想要用哪个数据库，需要手动初始化：
 //  import (
-//      github.com/issue9/orm/dialect  // 加载dialect管理包
+//      github.com/issue9/orm          // orm.Register(...)注册dialect
 //      _ github.com/mattn/go-sqlite3  // 加载数据库驱动
 //  )
 //
-//  // 向orm/dialect包注册dialect
-//  dialect.Register("sqlite3", &dialect.Sqlite3{})
+//  // 向orm包注册dialect
+//  orm.Register("sqlite3", &dialect.Sqlite3{})
 //
 //  // 初始化一个Engine，表前缀为prefix_
 //  db1 := orm.New("sqlite3", "./db1", "db1", "prefix_")

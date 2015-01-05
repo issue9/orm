@@ -36,7 +36,7 @@ func testSqlite3() {
 		chkError(os.Remove(sqlite3DBFile))
 	}
 
-	chkError(dialect.Register("sqlite3", &dialect.Sqlite3{}))
+	chkError(orm.Register("sqlite3", &dialect.Sqlite3{}))
 	e, err := orm.New("sqlite3", sqlite3DBFile, "sqlite31", "sqlite31_")
 	chkError(err)
 	defer func() {
@@ -48,7 +48,7 @@ func testSqlite3() {
 }
 
 func testMysql() {
-	chkError(dialect.Register("mysql", &dialect.Mysql{}))
+	chkError(orm.Register("mysql", &dialect.Mysql{}))
 	e, err := orm.New("mysql", "root:@/test", "mysql1", "mysql1_")
 	chkError(err)
 	defer e.Close()
@@ -57,7 +57,7 @@ func testMysql() {
 }
 
 func testPostgres() {
-	chkError(dialect.Register("mysql", &dialect.Mysql{}))
+	chkError(orm.Register("mysql", &dialect.Mysql{}))
 	e, err := orm.New("pq", "dbname=test", "pq1", "pq1_")
 	chkError(err)
 	defer e.Close()

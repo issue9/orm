@@ -21,11 +21,15 @@ import (
 )
 
 func init() {
-	if err := dialect.Register("sqlite3", &dialect.Sqlite3{}); err != nil {
+	regDialects()
+}
+
+func regDialects() {
+	if err := Register("sqlite3", &dialect.Sqlite3{}); err != nil {
 		panic(err)
 	}
 
-	if err := dialect.Register("mysql", &dialect.Mysql{}); err != nil {
+	if err := Register("mysql", &dialect.Mysql{}); err != nil {
 		panic(err)
 	}
 }

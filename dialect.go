@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package dialect
+package orm
 
 import (
 	"database/sql"
@@ -22,7 +22,7 @@ type dialectMap struct {
 var dialects = &dialectMap{items: make(map[string]core.Dialect)}
 
 // 清空所有已经注册的dialect
-func clear() {
+func clearDialect() {
 	dialects.Lock()
 	defer dialects.Unlock()
 
@@ -36,16 +36,16 @@ func Register(name string, d core.Dialect) error {
 	defer dialects.Unlock()
 
 	if !isRegistedDriver(name) {
-		return fmt.Errorf("该名称[%v]的driver未注册", name)
+		return fmt.Errorf("Register:该名称[%v]的driver未注册", name)
 	}
 
 	for k, v := range dialects.items {
 		if k == name {
-			return fmt.Errorf("该名称[%v]已经存在", name)
+			return fmt.Errorf("Register:该名称[%v]已经存在", name)
 		}
 
 		if reflect.TypeOf(d) == reflect.TypeOf(v) {
-			return fmt.Errorf("该Dialect的实例已经存在，其注册名称为[%v]", k)
+			return fmt.Errorf("Register:该Dialect的实例已经存在，其注册名称为[%v]", k)
 		}
 	}
 
@@ -85,7 +85,7 @@ func Dialects() []string {
 }
 
 // 获取一个Dialect
-func Get(name string) (d core.Dialect, found bool) {
+func getDialect(name string) (d core.Dialect, found bool) {
 	dialects.Lock()
 	defer dialects.Unlock()
 
