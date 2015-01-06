@@ -22,11 +22,6 @@ func (s *Sqlite3) QuoteStr() (l, r string) {
 	return "[", "]"
 }
 
-// implement core.Dialect.SupportLastInsertId()
-func (s *Sqlite3) SupportLastInsertId() bool {
-	return true
-}
-
 // implement core.Dialect.GetDBName()
 func (s *Sqlite3) GetDBName(dataSource string) string {
 	start := strings.LastIndex(dataSource, string(os.PathSeparator))

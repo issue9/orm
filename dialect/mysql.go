@@ -40,11 +40,6 @@ func (m *Mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-// implement core.Dialect.SupportLastInsertId()
-func (m *Mysql) SupportLastInsertId() bool {
-	return true
-}
-
 // implement core.Dialect.CreateTableSQL()
 func (m *Mysql) CreateTableSQL(model *core.Model) (string, error) {
 	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")

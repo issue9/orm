@@ -16,9 +16,6 @@ type Dialect interface {
 	// 对字段或是表名的引用字符。
 	QuoteStr() (left, right string)
 
-	// 是否支持LastInsertId()特性。
-	SupportLastInsertId() bool
-
 	// 从dataSourceName变量中获取数据库的名称。
 	GetDBName(dataSourceName string) string
 
@@ -33,9 +30,6 @@ type Dialect interface {
 
 // 操作数据库的接口，用于统一普通数据库操作和事务操作。
 type DB interface {
-	// 当前操作数据库的名称。
-	Name() string
-
 	// 获取Stmts实例。
 	GetStmts() *Stmts
 

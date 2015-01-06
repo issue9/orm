@@ -25,7 +25,6 @@ var (
 	timeType    = reflect.TypeOf(time.Time{})
 )
 
-// 对core.Dialect接口的扩展，包含一些包内通用的接口。
 type base interface {
 	core.Dialect
 

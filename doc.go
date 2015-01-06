@@ -94,12 +94,6 @@
 //  // 创建多个表
 //  e.Create(&User{},&Email{})
 //
-// Upgrade:
-//  // 创建或更新表
-//  e.Upgrade(&User{})
-//  // 创建或是更新多个表
-//  e.Upgrade(&User{},&Email{})
-//
 // Update:
 //  // 将id为1的记录的FirstName更改为abc
 //  e.Update(&User{Id:1,FirstName:"abc"})
@@ -139,4 +133,4 @@ package orm
 // 在没有比较完美的方法之前，准备先去掉这个功能。
 
 // 版本号
-const Version = "0.7.11.150106"
+const Version = "0.8.12.150106"

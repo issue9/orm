@@ -21,11 +21,6 @@ func (p *Postgres) QuoteStr() (l, r string) {
 	return `"`, `"`
 }
 
-// implement core.Dialect.SupportLastInsertId()
-func (p *Postgres) SupportLastInsertId() bool {
-	return true
-}
-
 // 匹配dbname=dbname 或是dbname =dbname等格式
 var dbnamePrefix = regexp.MustCompile(`\s*=\s*|\s+`)
 

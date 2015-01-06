@@ -65,11 +65,6 @@ func newEngine(driverName, dataSourceName, prefix string) (*Engine, error) {
 	return inst, nil
 }
 
-// 对orm/core.DB.Name()的实现，返回当前操作的数据库名称。
-func (e *Engine) Name() string {
-	return e.name
-}
-
 // 对orm/core.DB.GetStmts()的实现，返回当前的sql.Stmt实例缓存容器。
 func (e *Engine) GetStmts() *core.Stmts {
 	return e.stmts
@@ -185,8 +180,20 @@ func (e *Engine) Delete(v interface{}) error {
 
 // 根据models创建表。
 // 若表已经存在，则返回错误信息。
-func (e *Engine) Create(models ...interface{}) (err error) {
+func (e *Engine) Create(models ...interface{}) error {
 	return createMult(e, models...)
+}
+
+// 删除表结构及数据。
+func (e *Engine) Drop(tableName string) error {
+	_, err := e.Exec("DROP TABLE " + tableName)
+	return err
+}
+
+// 清除表内容，但保留表结构。
+func (e *Engine) Truncate(tableName string) error {
+	_, err := e.Exec("TRUNCATE TABLE " + tableName)
+	return err
 }
 
 // 事务对象
@@ -194,11 +201,6 @@ type Tx struct {
 	engine *Engine
 	tx     *sql.Tx
 	sql    *SQL
-}
-
-// 对orm/core.DB.Name()的实现，返回当前操作的数据库名称。
-func (t *Tx) Name() string {
-	return t.engine.Name()
 }
 
 // 对orm/core.DB.GetStmts()的实现，返回当前的sql.Stmt实例缓存容器。
@@ -321,6 +323,18 @@ func (t *Tx) Delete(v interface{}) error {
 // 创建数据表。
 func (t *Tx) Create(v ...interface{}) error {
 	return createMult(t, v...)
+}
+
+// 删除表结构及数据。
+func (t *Tx) Drop(tableName string) error {
+	_, err := t.Exec("DROP TABLE " + tableName)
+	return err
+}
+
+// 清除表内容，但保留表结构。
+func (t *Tx) Truncate(tableName string) error {
+	_, err := t.Exec("TRUNCATE TABLE " + tableName)
+	return err
 }
 
 // sql错误信息
