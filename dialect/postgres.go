@@ -194,7 +194,7 @@ func (p *Postgres) getCols(db core.DB, model *core.Model) (map[string]interface{
 
 	dbCols, err := fetch.ColumnString(false, "column_name", rows)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	// 转换成map，仅用到键名，键值一律置空

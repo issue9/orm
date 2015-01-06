@@ -74,13 +74,13 @@ func (e *Engine) Dialect() core.Dialect {
 }
 
 // 去掉占位符。
-func (e *Engine) prepareSQL(sql string) string {
+func (e *Engine) PrepareSQL(sql string) string {
 	return e.replacer.Replace(sql)
 }
 
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	sql = e.prepareSQL(sql)
+	sql = e.PrepareSQL(sql)
 	r, err := e.db.Exec(sql, args...)
 
 	if err == nil {
@@ -91,7 +91,7 @@ func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	sql = e.prepareSQL(sql)
+	sql = e.PrepareSQL(sql)
 	r, err := e.db.Query(sql, args...)
 
 	if err == nil {
@@ -103,12 +103,12 @@ func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 // 对orm/core.DB.QueryRow()的实现。
 // 执行一条查询语句，并返回第一条符合条件的记录。
 func (e *Engine) QueryRow(sql string, args ...interface{}) *sql.Row {
-	return e.db.QueryRow(e.prepareSQL(sql), args...)
+	return e.db.QueryRow(e.PrepareSQL(sql), args...)
 }
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
-	sql = e.prepareSQL(sql)
+	sql = e.PrepareSQL(sql)
 	r, err := e.db.Prepare(sql)
 
 	if err == nil {
@@ -210,13 +210,13 @@ func (t *Tx) Dialect() core.Dialect {
 }
 
 // 去掉占位符。
-func (t *Tx) prepareSQL(sql string) string {
+func (t *Tx) PrepareSQL(sql string) string {
 	return t.engine.replacer.Replace(sql)
 }
 
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	sql = t.prepareSQL(sql)
+	sql = t.PrepareSQL(sql)
 	r, err := t.tx.Exec(sql, args...)
 
 	if err == nil {
@@ -227,7 +227,7 @@ func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	sql = t.prepareSQL(sql)
+	sql = t.PrepareSQL(sql)
 	r, err := t.tx.Query(sql, args...)
 
 	if err == nil {
@@ -239,12 +239,12 @@ func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 // 对orm/core.DB.QueryRow()的实现。
 // 执行一条查询语句，并返回第一条符合条件的记录。
 func (t *Tx) QueryRow(sql string, args ...interface{}) *sql.Row {
-	return t.tx.QueryRow(t.prepareSQL(sql), args...)
+	return t.tx.QueryRow(t.PrepareSQL(sql), args...)
 }
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
-	sql = t.prepareSQL(sql)
+	sql = t.PrepareSQL(sql)
 	r, err := t.tx.Prepare(sql)
 
 	if err == nil {

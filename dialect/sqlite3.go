@@ -262,6 +262,19 @@ func (s *Sqlite3) unQuote(str string) string {
 	return str
 }
 
+// 将[group]转换成group
+func (s *Sqlite3) trimQuote(str string) string {
+	first := str[0]
+	last := str[len(str)-1]
+	switch {
+	case first == '"' && last == '"',
+		first == '`' && last == '`',
+		first == '[' && last == ']':
+		return str[1 : len(str)-1]
+	}
+	return str
+}
+
 // 获取同时存在于tableName表和m中的字段名。
 func (s *Sqlite3) getCols(db core.DB, m *core.Model, tableName string) ([]string, error) {
 	sql := "SELECT sql FROM sqlite_master WHERE type='table' AND name=?"
@@ -282,14 +295,17 @@ func (s *Sqlite3) getCols(db core.DB, m *core.Model, tableName string) ([]string
 	end := strings.Index(createSQL[0], ")")
 	colsSQL := strings.Split(createSQL[0][start+1:end], ",")
 	for _, sql = range colsSQL {
-		name := strings.Fields(sql)[0]
-		if name == "CONSTRAINT" || strings.ToUpper(name) == "CONSTRAINT" {
+		fieldName := strings.Fields(sql)[0]
+		if fieldName == "CONSTRAINT" || strings.ToUpper(fieldName) == "CONSTRAINT" {
 			continue
 		}
 
-		name = s.unQuote(name)
+		name := s.trimQuote(fieldName)
 		if _, ok := m.Cols[name]; !ok {
-			continue
+			name = s.unQuote(fieldName)
+			if _, ok := m.Cols[name]; !ok {
+				continue
+			}
 		}
 
 		ret = append(ret, name)

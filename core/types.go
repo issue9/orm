@@ -65,4 +65,6 @@ type DB interface {
 	// 相当于sql.DB.Prepare()。
 	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
 	Prepare(sql string) (*sql.Stmt, error)
+
+	PrepareSQL(sql string) string
 }

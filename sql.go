@@ -17,6 +17,8 @@ import (
 	"github.com/issue9/orm/fetch"
 )
 
+// TODO count()
+
 const (
 	Delete = iota
 	Insert

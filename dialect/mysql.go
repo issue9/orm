@@ -174,7 +174,7 @@ func (m *Mysql) createTable(db core.DB, model *core.Model) error {
 		}
 
 		if col.IsAI() {
-			buf.WriteString(" PRIMARK AUTO_INCREMENT")
+			buf.WriteString(" PRIMARY KEY AUTO_INCREMENT")
 		}
 		buf.WriteByte(',')
 	}
@@ -227,11 +227,11 @@ func (m *Mysql) createTable(db core.DB, model *core.Model) error {
 
 // 更新表
 func (m *Mysql) upgradeTable(db core.DB, model *core.Model) error {
-	if err := m.upgradeCols(db, model); err != nil {
+	if err := m.deleteIndexes(db, model); err != nil {
 		return err
 	}
 
-	if err := m.deleteIndexes(db, model); err != nil {
+	if err := m.upgradeCols(db, model); err != nil {
 		return err
 	}
 
@@ -274,11 +274,14 @@ func (m *Mysql) upgradeTable(db core.DB, model *core.Model) error {
 	return err
 }
 
-// 更新表的列信息。
-// 将model中的列与表中的列做对比：存在的修改；不存在的添加；只存在于
-// 表中的列则直接删除。
+func (m *Mysql) unQuote(sql string) string {
+	sql = strings.Replace(sql, core.QuoteLeft, "", 1)
+	return strings.Replace(sql, core.QuoteRight, "", 1)
+}
+
+// 更新表的字段信息。
 func (m *Mysql) upgradeCols(db core.DB, model *core.Model) error {
-	dbColsMap, err := m.getCols(db, model)
+	oldCols, err := m.getCols(db, model.Name)
 	if err != nil {
 		return err
 	}
@@ -291,12 +294,14 @@ func (m *Mysql) upgradeCols(db core.DB, model *core.Model) error {
 	// 并将过滤dbCols中的列，只剩下不存在于model中的字段。
 	for colName, col := range model.Cols {
 		buf.Truncate(size)
-
-		if _, found := dbColsMap[colName]; !found {
+		//nameWithQuote := core.QuoteLeft + colName + core.QuoteRight
+		_, found1 := oldCols[m.unQuote(colName)]
+		//_, found2 := oldCols[core.QuoteLeft+colName+core.QuoteRight]
+		if !found1 {
 			buf.WriteString(" ADD ")
 		} else {
 			buf.WriteString(" MODIFY COLUMN ")
-			delete(dbColsMap, colName)
+			delete(oldCols, colName)
 		}
 
 		createColSQL(m, buf, col)
@@ -306,7 +311,7 @@ func (m *Mysql) upgradeCols(db core.DB, model *core.Model) error {
 		}
 	}
 
-	if len(dbColsMap) == 0 {
+	if len(oldCols) == 0 {
 		return nil
 	}
 
@@ -314,9 +319,9 @@ func (m *Mysql) upgradeCols(db core.DB, model *core.Model) error {
 	buf.Truncate(size)
 	buf.WriteString(" DROP COLUMN ")
 	size = buf.Len()
-	for name, _ := range dbColsMap {
+	for name, _ := range oldCols {
 		buf.Truncate(size)
-		buf.WriteString(name)
+		buf.WriteString("`" + name + "`")
 		if _, err := db.Exec(buf.String()); err != nil {
 			return err
 		}
@@ -325,10 +330,11 @@ func (m *Mysql) upgradeCols(db core.DB, model *core.Model) error {
 	return nil
 }
 
-// 获取表的列信息
-func (m *Mysql) getCols(db core.DB, model *core.Model) (map[string]interface{}, error) {
+// 获取表的字段信息。
+// 返回值：键名为字段名，键值无效。
+func (m *Mysql) getCols(db core.DB, tableName string) (map[string]interface{}, error) {
 	sql := "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?"
-	rows, err := db.Query(sql, db.Name(), model.Name)
+	rows, err := db.Query(sql, db.Name(), tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -365,11 +371,12 @@ func (m *Mysql) deleteIndexes(db core.DB, model *core.Model) error {
 	for _, record := range mapped {
 		switch record["CONSTRAINT_TYPE"] {
 		case "PRIMARY KEY":
-			_, err = db.Exec("ALTER TABLE ? DROP PRIMARY KEY", model.Name)
+			//_,err = db.Exec("ALTER TABLE "+model.Name+" MODIFY id INT NOT NULL");
+			_, err = db.Exec("ALTER TABLE " + model.Name + " DROP PRIMARY KEY")
 		case "FOREIGN KEY":
-			_, err = db.Exec("ALTER TABLE ? DROP FOREIGN KEY ?", model.Name, record["CONSTRAINT_NAME"])
+			_, err = db.Exec("ALTER TABLE " + model.Name + " DROP FOREIGN KEY " + record["CONSTRAINT_NAME"])
 		case "UNIQUE":
-			_, err = db.Exec("ALTER TABLE ? DROP INDEX ?", model.Name, record["CONSTRAINT_NAME"])
+			_, err = db.Exec("ALTER TABLE " + model.Name + " DROP INDEX " + record["CONSTRAINT_NAME"])
 		default:
 		}
 
@@ -391,7 +398,7 @@ func (m *Mysql) deleteIndexes(db core.DB, model *core.Model) error {
 		return err
 	}
 	for _, index := range indexes {
-		_, err := db.Exec("ALTER TABLE ? DROP INDEX ?", model.Name, index)
+		_, err := db.Exec("ALTER TABLE " + model.Name + " DROP INDEX " + index)
 		if err != nil {
 			return err
 		}

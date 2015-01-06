@@ -48,8 +48,8 @@
 //  len(l1, l2): 指定字段的长度，比如mysql中的int(5),varchar(255),double(1,2),
 //  仅部分数据库支持，比如sqlite3不支持该属性。
 //
-//  nullable: 相当于定义表结构时的NULL，建议尽量少用该属性，若非用不可的话，
-//  与之对应的Go属性必须声明为NullString之类的结构。
+//  nullable(true|false): 相当于定义表结构时的NULL，建议尽量少用该属性，
+//  若非用不可的话，与之对应的Go属性必须声明为NullString之类的结构。
 //
 //  pk: 主键，支持联合主键，给多个字段加上pk的struct tag即可。
 //

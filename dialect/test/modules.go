@@ -31,7 +31,7 @@ var _ core.Metaer = &User1{}
 // 相对于User1，将Group的类型从string改为int
 type User2 struct {
 	Id       int    `orm:"name(id);ai"`
-	Username string `orm:"name(username);unique(unique_name);len(20);default(username1)"`
+	Username string `orm:"name(username);unique(unique_name);len(20);default(username2)"`
 	Group    int    `orm:"name({group});unique(unique_name)"`
 }
 
@@ -48,7 +48,7 @@ var _ core.Metaer = &User2{}
 // 相对于User2，id的属性从ai变成了普通的PK
 type User3 struct {
 	Id       int    `orm:"name(id);pk"`
-	Username string `orm:"name({username});unique(unique_name);len(20);default(username1)"`
+	Username string `orm:"name({username});unique(unique_name);len(20);default(username3)"`
 	Group    int    `orm:"name({group});unique(unique_name)"`
 }
 

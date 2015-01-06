@@ -140,7 +140,8 @@ func addIndexes(b base, db core.DB, model *core.Model) error {
 		buf.WriteString(col.Name)
 		buf.WriteByte(',')
 	}
-	buf.UnreadByte()
+	buf.Truncate(buf.Len() - 1) // 去掉最后一个逗号
+
 	buf.WriteByte(')')
 	if _, err := db.Exec(buf.String()); err != nil {
 		return err
@@ -155,7 +156,8 @@ func addIndexes(b base, db core.DB, model *core.Model) error {
 			buf.WriteString(col.Name)
 			buf.WriteByte(',')
 		}
-		buf.UnreadByte()
+		buf.Truncate(buf.Len() - 1) // 去掉最后一个逗号
+
 		buf.WriteByte(')')
 
 		if _, err := db.Exec(buf.String()); err != nil {

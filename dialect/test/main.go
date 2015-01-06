@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/issue9/conv"
 	"github.com/issue9/orm"
 	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/fetch"
@@ -77,19 +78,18 @@ func chkError(err error) {
 
 // 检测数据库中记录数量是否和count相等。
 func chkCount(e *orm.Engine, count int) {
-	rows, err := e.Query("SELECT count(*) AS c FROM user")
+	rows, err := e.Query("SELECT count(*) FROM user")
 	chkError(err)
 	defer rows.Close()
 
-	ret, err := fetch.Column(true, "c", rows)
+	// 在mysql中count(*)返回的是[]byte
+	ret, err := fetch.Column(true, "count(*)", rows)
 	chkError(err)
 
-	r, ok := ret[0].(int64)
-	if !ok {
-		chkError(fmt.Errorf("记录数量[%v]与预期值[%v]不相等", -1, count))
-	}
+	r, err := conv.Int(ret[0])
+	chkError(err)
 
-	if int(r) != count {
+	if r != count {
 		chkError(fmt.Errorf("记录数量[%v]与预期值[%v]不相等", r, count))
 	}
 }
