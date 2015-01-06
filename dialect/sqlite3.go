@@ -7,14 +7,12 @@ package dialect
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"reflect"
 	"runtime"
 	"strings"
 
 	"github.com/issue9/orm/core"
-	"github.com/issue9/orm/fetch"
 )
 
 type Sqlite3 struct{}
@@ -49,34 +47,54 @@ func (s *Sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-// implement core.Dialect.UpgradeTable()
-func (s *Sqlite3) UpgradeTable(db core.DB, m *core.Model, onlyCreate bool) error {
-	has, err := s.hasTable(db, m.Name)
-	if err != nil {
-		return err
+// implement core.Dialect.CreateTableSQL()
+func (s *Sqlite3) CreateTableSQL(model *core.Model) (string, error) {
+	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
+	buf.Grow(300)
+
+	buf.WriteString(model.Name)
+	buf.WriteByte('(')
+
+	// 写入字段信息
+	for _, col := range model.Cols {
+		if err := createColSQL(s, buf, col); err != nil {
+			return "", err
+		}
+
+		if col.IsAI() {
+			buf.WriteString(" PRIMARY KEY AUTOINCREMENT")
+		}
+		buf.WriteByte(',')
 	}
 
-	if !has {
-		return s.createTable(db, m)
+	// PK，若有自增，则已经在上面指定
+	if len(model.PK) > 0 && !model.PK[0].IsAI() {
+		createPKSQL(s, buf, model.PK, pkName)
+		buf.WriteByte(',')
 	}
 
-	if onlyCreate {
-		return fmt.Errorf("UpgradeTable:指定的表名[%v]已经存在", m.Name)
+	// Unique Index
+	for name, index := range model.UniqueIndexes {
+		createUniqueSQL(s, buf, index, name)
+		buf.WriteByte(',')
 	}
 
-	return s.upgradeTable(db, m)
-}
-
-// 是否存在指定名称的表
-func (s *Sqlite3) hasTable(db core.DB, tableName string) (bool, error) {
-	sql := "SELECT sql FROM sqlite_master WHERE type='table' AND name=?"
-	rows, err := db.Query(sql, tableName)
-	if err != nil {
-		return false, err
+	// foreign  key
+	for name, fk := range model.FK {
+		createFKSQL(s, buf, fk, name)
+		buf.WriteByte(',')
 	}
-	defer rows.Close()
 
-	return rows.Next(), nil
+	// Check
+	for name, chk := range model.Check {
+		createCheckSQL(s, buf, chk, name)
+		buf.WriteByte(',')
+	}
+
+	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
+	buf.WriteByte(')')          // end CreateTable
+
+	return buf.String(), nil
 }
 
 // implement base.sqlType()
@@ -121,194 +139,4 @@ func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *core.Column) error {
 	}
 
 	return nil
-}
-
-// 创建表
-func (s *Sqlite3) createTable(db core.DB, model *core.Model) error {
-	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
-	buf.Grow(300)
-
-	buf.WriteString(model.Name)
-	buf.WriteByte('(')
-
-	// 写入字段信息
-	for _, col := range model.Cols {
-		if err := createColSQL(s, buf, col); err != nil {
-			return err
-		}
-
-		if col.IsAI() {
-			buf.WriteString(" PRIMARY KEY AUTOINCREMENT")
-		}
-		buf.WriteByte(',')
-	}
-
-	// PK，若有自增，则已经在上面指定
-	if len(model.PK) > 0 && !model.PK[0].IsAI() {
-		createPKSQL(s, buf, model.PK, pkName)
-		buf.WriteByte(',')
-	}
-
-	// Unique Index
-	for name, index := range model.UniqueIndexes {
-		createUniqueSQL(s, buf, index, name)
-		buf.WriteByte(',')
-	}
-
-	// foreign  key
-	for name, fk := range model.FK {
-		createFKSQL(s, buf, fk, name)
-		buf.WriteByte(',')
-	}
-
-	// Check
-	for name, chk := range model.Check {
-		createCheckSQL(s, buf, chk, name)
-		buf.WriteByte(',')
-	}
-
-	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
-	buf.WriteByte(')')          // end CreateTable
-
-	_, err := db.Exec(buf.String())
-	return err
-}
-
-// 更新表。Sqlite3并没有更改列类型的方法，只能采取官网说的方法来实现：
-// http://www.sqlite.org/lang_altertable.html
-func (s *Sqlite3) upgradeTable(db core.DB, model *core.Model) error {
-	// 关闭外键
-	if _, err := db.Exec("PRAGMA foreign_keys=OFF"); err != nil {
-		return err
-	}
-
-	// 重命名旧表
-	tmpName, err := s.rename(db, model.Name)
-	if err != nil {
-		return err
-	}
-
-	// 新建表
-	if err := s.createTable(db, model); err != nil {
-		return err
-	}
-
-	// 从tmpName表中导出数据到model.Name表中
-	// "INSERT INTO newTable (cols...) SELECT cols FROM oldTable "
-
-	cols, err := s.getCols(db, model, tmpName)
-	if err != nil {
-		return err
-	}
-	colsSQL := strings.Join(cols, ",")
-	buf := bytes.NewBufferString("INSERT INTO ")
-	buf.WriteString(model.Name)
-	buf.WriteByte('(')
-	buf.WriteString(colsSQL)
-	buf.WriteString(")SELECT ")
-	buf.WriteString(colsSQL)
-	buf.WriteString(" FROM ")
-	buf.WriteString(tmpName)
-	if _, err := db.Exec(buf.String()); err != nil {
-		return err
-	}
-
-	// 删除旧表
-	if _, err := db.Exec("DROP TABLE IF EXISTS " + tmpName); err != nil {
-		return err
-	}
-
-	// 打开外键
-	_, err = db.Exec("PRAGMA foreign_keys=OFF")
-
-	return err
-}
-
-// 将一个表重命名，新名称通过返回值返回。
-func (s *Sqlite3) rename(db core.DB, tableName string) (string, error) {
-	tmpName := tableName + "_tmp"
-	for {
-		has, err := s.hasTable(db, tmpName)
-		if err != nil {
-			return "", err
-		}
-
-		if !has {
-			break
-		}
-
-		tmpName += "_tmp"
-	}
-
-	// 将当前表改名
-	sql := "ALTER TABLE " + tableName + " RENAME TO " + tmpName
-	if _, err := db.Exec(sql); err != nil {
-		return "", err
-	}
-
-	return tmpName, nil
-}
-
-// 将[group]转换成{group}
-func (s *Sqlite3) unQuote(str string) string {
-	first := str[0]
-	last := str[len(str)-1]
-	switch {
-	case first == '"' && last == '"',
-		first == '`' && last == '`',
-		first == '[' && last == ']':
-		return core.QuoteLeft + str[1:len(str)-1] + core.QuoteRight
-	}
-	return str
-}
-
-// 将[group]转换成group
-func (s *Sqlite3) trimQuote(str string) string {
-	first := str[0]
-	last := str[len(str)-1]
-	switch {
-	case first == '"' && last == '"',
-		first == '`' && last == '`',
-		first == '[' && last == ']':
-		return str[1 : len(str)-1]
-	}
-	return str
-}
-
-// 获取同时存在于tableName表和m中的字段名。
-func (s *Sqlite3) getCols(db core.DB, m *core.Model, tableName string) ([]string, error) {
-	sql := "SELECT sql FROM sqlite_master WHERE type='table' AND name=?"
-	rows, err := db.Query(sql, tableName)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	createSQL, err := fetch.ColumnString(true, "sql", rows)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := []string{}
-
-	start := strings.Index(createSQL[0], "(")
-	end := strings.Index(createSQL[0], ")")
-	colsSQL := strings.Split(createSQL[0][start+1:end], ",")
-	for _, sql = range colsSQL {
-		fieldName := strings.Fields(sql)[0]
-		if fieldName == "CONSTRAINT" || strings.ToUpper(fieldName) == "CONSTRAINT" {
-			continue
-		}
-
-		name := s.trimQuote(fieldName)
-		if _, ok := m.Cols[name]; !ok {
-			name = s.unQuote(fieldName)
-			if _, ok := m.Cols[name]; !ok {
-				continue
-			}
-		}
-
-		ret = append(ret, name)
-	}
-	return ret, nil
 }

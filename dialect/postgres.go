@@ -12,7 +12,6 @@ import (
 	"regexp"
 
 	"github.com/issue9/orm/core"
-	"github.com/issue9/orm/fetch"
 )
 
 type Postgres struct{}
@@ -54,28 +53,8 @@ func (p *Postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-// implement core.Dialect.UpgradeTable()
-func (p *Postgres) UpgradeTable(db core.DB, model *core.Model, onlyCreate bool) error {
-	sql := "SELECT * FROM pg_tables where schemaname = 'public' and tablename=?"
-	rows, err := db.Query(sql, model.Name)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	if !rows.Next() { // 不存在相同的表名
-		return p.createTable(db, model)
-	}
-
-	if onlyCreate {
-		return fmt.Errorf("UpgradeTable:指定的表名[%v]已经存在", model.Name)
-	}
-
-	return p.upgradeTable(db, model)
-}
-
-// 创建新表
-func (p *Postgres) createTable(db core.DB, model *core.Model) error {
+// implement core.Dialect.CreateTableSQL()
+func (p *Postgres) CreateTableSQL(model *core.Model) (string, error) {
 	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
 	buf.Grow(300)
 
@@ -84,7 +63,9 @@ func (p *Postgres) createTable(db core.DB, model *core.Model) error {
 
 	// 写入字段信息
 	for _, col := range model.Cols {
-		createColSQL(p, buf, col)
+		if err := createColSQL(p, buf, col); err != nil {
+			return "", err
+		}
 		buf.WriteByte(',')
 	}
 
@@ -115,119 +96,7 @@ func (p *Postgres) createTable(db core.DB, model *core.Model) error {
 	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
 	buf.WriteByte(')')          // end CreateTable
 
-	_, err := db.Exec(buf.String())
-	return err
-}
-
-// 更新表
-func (p *Postgres) upgradeTable(db core.DB, model *core.Model) error {
-	if err := p.upgradeCols(db, model); err != nil {
-		return err
-	}
-
-	if err := p.deleteConstraints(db, model); err != nil {
-		return err
-	}
-
-	return addIndexes(p, db, model)
-}
-
-// 更新表的列信息。
-// 将model中的列与表中的列做对比：存在的修改；不存在的添加；只存在于
-// 表中的列则直接删除。
-func (p *Postgres) upgradeCols(db core.DB, model *core.Model) error {
-	dbColsMap, err := p.getCols(db, model)
-	if err != nil {
-		return err
-	}
-
-	buf := bytes.NewBufferString("ALTER TABLE ")
-	buf.WriteString(model.Name)
-	size := buf.Len()
-
-	// 将model中的列信息作用于数据库中的表，
-	// 并将过滤dbCols中的列，只剩下不存在于model中的字段。
-	for colName, col := range model.Cols {
-		buf.Truncate(size)
-
-		if _, found := dbColsMap[colName]; !found {
-			buf.WriteString(" ADD ")
-		} else {
-			buf.WriteString(" MODIFY COLUMN ")
-			delete(dbColsMap, colName)
-		}
-
-		createColSQL(p, buf, col)
-
-		if _, err := db.Exec(buf.String()); err != nil {
-			return err
-		}
-	}
-
-	if len(dbColsMap) == 0 {
-		return nil
-	}
-
-	// 删除已经不存在于model中的字段。
-	buf.Truncate(size)
-	buf.WriteString(" DROP COLUMN ")
-	size = buf.Len()
-	for name, _ := range dbColsMap {
-		buf.Truncate(size)
-		buf.WriteString(name)
-		if _, err := db.Exec(buf.String()); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// 获取表的列信息
-func (p *Postgres) getCols(db core.DB, model *core.Model) (map[string]interface{}, error) {
-	sql := "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = ?"
-	rows, err := db.Query(sql, model.Name)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	dbCols, err := fetch.ColumnString(false, "column_name", rows)
-	if err != nil {
-		return nil, err
-	}
-
-	// 转换成map，仅用到键名，键值一律置空
-	dbColsMap := make(map[string]interface{}, len(dbCols))
-	for _, col := range dbCols {
-		dbColsMap[col] = nil
-	}
-
-	return dbColsMap, nil
-}
-
-// 删除表中所有约束
-func (p *Postgres) deleteConstraints(db core.DB, model *core.Model) error {
-	sql := "SELECT  con.conname FROM pg_constraint AS con, pg_class AS cls WHERE con.conrelid=c.oid AND c.relname=?"
-	rows, err := db.Query(sql, model.Name)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	conts, err := fetch.ColumnString(false, "conname", rows)
-	if err != nil {
-		return err
-	}
-
-	buf := bytes.NewBufferString("ALTER TABLE ? DROP CONSTRAINT ?")
-	for _, cont := range conts {
-		if _, err := db.Exec(buf.String(), model.Name, cont); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return buf.String(), nil
 }
 
 // implement base.sqlType

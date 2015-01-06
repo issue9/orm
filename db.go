@@ -17,6 +17,13 @@ import (
 	"github.com/issue9/orm/core"
 )
 
+// sql语句中的占位符。
+const (
+	quoteLeft       = "{"
+	quoteRight      = "}"
+	tableNamePrefix = "#"
+)
+
 type Engine struct {
 	name       string // 数据库的名称
 	prefix     string // 表名前缀
@@ -47,9 +54,9 @@ func newEngine(driverName, dataSourceName, prefix string) (*Engine, error) {
 		db:         dbInst,
 		name:       d.GetDBName(dataSourceName),
 		replacer: strings.NewReplacer(
-			core.QuoteLeft, l,
-			core.QuoteRight, r,
-			core.TableNamePrefix, prefix,
+			quoteLeft, l,
+			quoteRight, r,
+			tableNamePrefix, prefix,
 		),
 	}
 	inst.stmts = core.NewStmts(inst)
@@ -74,13 +81,13 @@ func (e *Engine) Dialect() core.Dialect {
 }
 
 // 去掉占位符。
-func (e *Engine) PrepareSQL(sql string) string {
+func (e *Engine) prepareSQL(sql string) string {
 	return e.replacer.Replace(sql)
 }
 
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	sql = e.PrepareSQL(sql)
+	sql = e.prepareSQL(sql)
 	r, err := e.db.Exec(sql, args...)
 
 	if err == nil {
@@ -91,7 +98,7 @@ func (e *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) {
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	sql = e.PrepareSQL(sql)
+	sql = e.prepareSQL(sql)
 	r, err := e.db.Query(sql, args...)
 
 	if err == nil {
@@ -103,12 +110,12 @@ func (e *Engine) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 // 对orm/core.DB.QueryRow()的实现。
 // 执行一条查询语句，并返回第一条符合条件的记录。
 func (e *Engine) QueryRow(sql string, args ...interface{}) *sql.Row {
-	return e.db.QueryRow(e.PrepareSQL(sql), args...)
+	return e.db.QueryRow(e.prepareSQL(sql), args...)
 }
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (e *Engine) Prepare(sql string) (*sql.Stmt, error) {
-	sql = e.PrepareSQL(sql)
+	sql = e.prepareSQL(sql)
 	r, err := e.db.Prepare(sql)
 
 	if err == nil {
@@ -182,11 +189,6 @@ func (e *Engine) Create(models ...interface{}) (err error) {
 	return createMult(e, models...)
 }
 
-// 根据models更新或创建表。
-func (e *Engine) Upgrade(models ...interface{}) (err error) {
-	return upgradeMult(e, models...)
-}
-
 // 事务对象
 type Tx struct {
 	engine *Engine
@@ -210,13 +212,13 @@ func (t *Tx) Dialect() core.Dialect {
 }
 
 // 去掉占位符。
-func (t *Tx) PrepareSQL(sql string) string {
+func (t *Tx) prepareSQL(sql string) string {
 	return t.engine.replacer.Replace(sql)
 }
 
 // 对orm/core.DB.Exec()的实现。执行一条非查询的SQL语句。
 func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	sql = t.PrepareSQL(sql)
+	sql = t.prepareSQL(sql)
 	r, err := t.tx.Exec(sql, args...)
 
 	if err == nil {
@@ -227,7 +229,7 @@ func (t *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
 func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
-	sql = t.PrepareSQL(sql)
+	sql = t.prepareSQL(sql)
 	r, err := t.tx.Query(sql, args...)
 
 	if err == nil {
@@ -239,12 +241,12 @@ func (t *Tx) Query(sql string, args ...interface{}) (*sql.Rows, error) {
 // 对orm/core.DB.QueryRow()的实现。
 // 执行一条查询语句，并返回第一条符合条件的记录。
 func (t *Tx) QueryRow(sql string, args ...interface{}) *sql.Row {
-	return t.tx.QueryRow(t.PrepareSQL(sql), args...)
+	return t.tx.QueryRow(t.prepareSQL(sql), args...)
 }
 
 // 对orm/core.DB.Prepare()的实现。预处理SQL语句成sql.Stmt实例。
 func (t *Tx) Prepare(sql string) (*sql.Stmt, error) {
-	sql = t.PrepareSQL(sql)
+	sql = t.prepareSQL(sql)
 	r, err := t.tx.Prepare(sql)
 
 	if err == nil {
@@ -321,11 +323,6 @@ func (t *Tx) Create(v ...interface{}) error {
 	return createMult(t, v...)
 }
 
-// 更新或是创建数据表。
-func (t *Tx) Upgrade(v ...interface{}) error {
-	return upgradeMult(t, v...)
-}
-
 // sql错误信息
 type SQLError struct {
 	Err        error
@@ -383,7 +380,7 @@ func where(sql *SQL, m *core.Model, rval reflect.Value) error {
 
 // 创建或是更新一个数据表。
 // v为一个结构体或是结构体指针。
-func createOne(db core.DB, onlyCreate bool, v interface{}) error {
+func createOne(db core.DB, v interface{}) error {
 	rval := reflect.ValueOf(v)
 
 	m, err := core.NewModel(v)
@@ -399,7 +396,13 @@ func createOne(db core.DB, onlyCreate bool, v interface{}) error {
 		return errors.New("createOne:无效的v.Kind()")
 	}
 
-	return db.Dialect().UpgradeTable(db, m, onlyCreate)
+	sql, err := db.Dialect().CreateTableSQL(m)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(sql)
+	return err
 }
 
 // 插入一个对象到数据库
@@ -504,25 +507,14 @@ func deleteOne(sql *SQL, v interface{}) error {
 }
 
 // 创建一个或多个数据表
-func createMult(db core.DB, objs ...interface{}) (err error) {
+func createMult(db core.DB, objs ...interface{}) error {
 	for _, obj := range objs {
-		if err = createOne(db, true, obj); err != nil {
-			return
+		if err := createOne(db, obj); err != nil {
+			return err
 		}
 	}
 
-	return
-}
-
-// 创建或是更新一个或多个数据表
-func upgradeMult(db core.DB, objs ...interface{}) (err error) {
-	for _, obj := range objs {
-		if err = createOne(db, false, obj); err != nil {
-			return
-		}
-	}
-
-	return
+	return nil
 }
 
 // 插入一个或多个数据

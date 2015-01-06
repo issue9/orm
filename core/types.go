@@ -8,13 +8,6 @@ import (
 	"database/sql"
 )
 
-// sql语句中的占位符。
-const (
-	QuoteLeft       = "{"
-	QuoteRight      = "}"
-	TableNamePrefix = "#"
-)
-
 // 通用但又没有统一标准的数据库功能接口。
 //
 // 有可能一个Dialect实例会被多个实例引用，
@@ -34,9 +27,8 @@ type Dialect interface {
 	// 返回的是对应数据库的limit语句以及语句中占位符对应的值。
 	LimitSQL(limit int, offset ...int) (sql string, args []interface{})
 
-	// 根据数据模型，创建或是更新表。
-	// 若onlyCreate为true，则仅在表不存在时，执行创建表操作。
-	UpgradeTable(db DB, m *Model, onlyCreate bool) error
+	// 根据数据模型，创建表。
+	CreateTableSQL(m *Model) (string, error)
 }
 
 // 操作数据库的接口，用于统一普通数据库操作和事务操作。
@@ -65,6 +57,4 @@ type DB interface {
 	// 相当于sql.DB.Prepare()。
 	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
 	Prepare(sql string) (*sql.Stmt, error)
-
-	PrepareSQL(sql string) string
 }
