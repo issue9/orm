@@ -6,6 +6,7 @@ package core
 
 import (
 	"database/sql"
+	"errors"
 )
 
 // 通用但又没有统一标准的数据库功能接口。
@@ -22,33 +23,89 @@ type Dialect interface {
 	// 生成LIMIT N OFFSET M 或是相同的语意的语句。
 	// offset值为一个可选参数，若不指定，则表示LIMIT N语句。
 	// 返回的是对应数据库的limit语句以及语句中占位符对应的值。
-	LimitSQL(limit int, offset ...int) (sql string, args []interface{})
+	LimitSQL(limit interface{}, offset ...interface{}) (sql string)
 
 	// 根据数据模型，创建表。
-	CreateTableSQL(m *Model) (string, error)
+	CreateTableSQL(m *Model) (sql string, err error)
+
+	// 清空表内容，重置AI。
+	TruncateTableSQL(tableName string) (sql string)
 }
 
 // 操作数据库的接口，用于统一普通数据库操作和事务操作。
 type DB interface {
-	// 获取Stmts实例。
-	GetStmts() *Stmts
+	DB() *sql.DB
 
 	// 返回Dialect接口。
 	Dialect() Dialect
 
-	// 相当于sql.DB.Exec()。
-	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
-	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Exec(sql string, args map[string]interface{}) (sql.Result, error)
 
 	// 相当于sql.DB.Query()。
-	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
-	Query(sql string, args ...interface{}) (*sql.Rows, error)
-
-	// 相当于sql.DB.QueryRow()。
-	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
-	QueryRow(sql string, args ...interface{}) *sql.Row
+	Query(sql string, args map[string]interface{}) (*sql.Rows, error)
 
 	// 相当于sql.DB.Prepare()。
-	// 但是会将语句中的表名前缀和字段引号占位符替换掉。
-	Prepare(sql string) (*sql.Stmt, error)
+	// 若存在name参数，则以name为名称缓存此条Stmt。
+	Prepare(sql string, name ...string) (*Stmt, error)
+
+	// 获取缓存的Stmt，若不存在，found返回false值。
+	GetStmt(name string) (stmt *Stmt, found bool)
+}
+
+// 包装sql.Stmt，使其可以指定命名参数。
+type Stmt struct {
+	stmt     *sql.Stmt
+	argNames []string
+}
+
+// 声明一个新的Stmt
+func NewStmt(stmt *sql.Stmt, argNames []string) *Stmt {
+	return &Stmt{stmt: stmt, argNames: argNames}
+}
+
+func (s *Stmt) GetStmt() *sql.Stmt {
+	return s.stmt
+}
+
+// 关闭当前的Stmt实例。
+func (s *Stmt) Close() error {
+	s.argNames = s.argNames[:0]
+	return s.stmt.Close()
+}
+
+// 执行非查询语句。
+// 参数将根据命名参数进行排序。
+func (s *Stmt) Exec(args map[string]interface{}) (sql.Result, error) {
+	if len(s.argNames) != len(args) {
+		return nil, errors.New("ExecMap:参数长度不一样")
+	}
+
+	if len(s.argNames) == 0 && len(args) == 0 {
+		return s.stmt.Exec()
+	}
+
+	argList, err := ConvArgs(s.argNames, args)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.stmt.Exec(argList...)
+}
+
+// 执行查询语句
+func (s *Stmt) Query(args map[string]interface{}) (*sql.Rows, error) {
+	if len(s.argNames) != len(args) {
+		return nil, errors.New("ExecMap:参数长度不一样")
+	}
+
+	if len(s.argNames) == 0 && len(args) == 0 {
+		return s.stmt.Query()
+	}
+
+	argList, err := ConvArgs(s.argNames, args)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.stmt.Query(argList...)
 }

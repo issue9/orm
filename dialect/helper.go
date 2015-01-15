@@ -125,20 +125,20 @@ func createCheckSQL(b base, buf *bytes.Buffer, expr, chkName string) {
 
 // mysq系列数据库分页语法的实现。支持以下数据库：
 // MySQL, H2, HSQLDB, Postgres, SQLite3
-func mysqlLimitSQL(limit int, offset ...int) (string, []interface{}) {
+func mysqlLimitSQL(limit interface{}, offset ...interface{}) string {
 	if len(offset) == 0 {
-		return " LIMIT ? ", []interface{}{limit}
+		return " LIMIT " + core.AsSQLValue(limit)
 	}
 
-	return " LIMIT ? OFFSET ? ", []interface{}{limit, offset[0]}
+	return " LIMIT " + core.AsSQLValue(limit) + " OFFSET " + core.AsSQLValue(offset[0])
 }
 
 // oracle系列数据库分页语法的实现。支持以下数据库：
 // Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
-func oracleLimitSQL(limit int, offset ...int) (string, []interface{}) {
+func oracleLimitSQL(limit interface{}, offset ...interface{}) string {
 	if len(offset) == 0 {
-		return " FETCH NEXT ? ROWS ONLY ", []interface{}{limit}
+		return " FETCH NEXT " + core.AsSQLValue(limit) + " ROWS ONLY "
 	}
 
-	return " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ", []interface{}{offset[0], limit}
+	return " OFFSET " + core.AsSQLValue(offset[0]) + " ROWS FETCH NEXT " + core.AsSQLValue(limit) + " ROWS ONLY "
 }

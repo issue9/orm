@@ -16,10 +16,9 @@ import (
 
 var _ base = &Sqlite3{}
 
-var s = &Sqlite3{}
-
 func TestSqlite3_GetDBName(t *testing.T) {
 	a := assert.New(t)
+	var s = &Sqlite3{}
 
 	a.Equal(s.GetDBName("./dbname.db"), "dbname")
 	a.Equal(s.GetDBName("./dbname"), "dbname")
@@ -30,6 +29,8 @@ func TestSqlite3_GetDBName(t *testing.T) {
 
 func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
+	var s = &Sqlite3{}
+
 	buf := bytes.NewBufferString("")
 	col := &core.Column{}
 	a.Error(s.sqlType(buf, col))

@@ -2,46 +2,46 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package orm
+package core
 
 import (
 	"database/sql"
 	"fmt"
 	"reflect"
 	"sync"
-
-	"github.com/issue9/orm/core"
 )
 
 type dialectMap struct {
 	sync.Mutex
-	items map[string]core.Dialect
+	items map[string]Dialect
 }
 
 // 所有注册的dialect
-var dialects = &dialectMap{items: make(map[string]core.Dialect)}
+var dialects = &dialectMap{items: make(map[string]Dialect)}
 
 // 清空所有已经注册的dialect
 func clearDialect() {
 	dialects.Lock()
 	defer dialects.Unlock()
 
-	dialects.items = make(map[string]core.Dialect)
+	dialects.items = make(map[string]Dialect)
 }
 
-// 注册一个新的core.Dialect
-// name值应该与sql.Open()中的driverName参数相同。
-func Register(name string, d core.Dialect) error {
+// 注册一个新的Dialect。
+// 每一个Dialect实例与一个数据库驱动相对应。
+// driverName:对应的数据库驱动器名称。
+// 若driverName对应的数据库驱动没有注册或是相同的Dialect已经注册都将触发error。
+func Register(driverName string, d Dialect) error {
 	dialects.Lock()
 	defer dialects.Unlock()
 
-	if !isRegistedDriver(name) {
-		return fmt.Errorf("Register:该名称[%v]的driver未注册", name)
+	if !isRegistedDriver(driverName) {
+		return fmt.Errorf("Register:该名称[%v]的sql driver未注册", driverName)
 	}
 
 	for k, v := range dialects.items {
-		if k == name {
-			return fmt.Errorf("Register:该名称[%v]已经存在", name)
+		if k == driverName {
+			return fmt.Errorf("Register:该名称[%v]的Dialect已经存在", driverName)
 		}
 
 		if reflect.TypeOf(d) == reflect.TypeOf(v) {
@@ -49,7 +49,7 @@ func Register(name string, d core.Dialect) error {
 		}
 	}
 
-	dialects.items[name] = d
+	dialects.items[driverName] = d
 	return nil
 }
 
@@ -67,6 +67,9 @@ func isRegistedDriver(driverName string) bool {
 
 // 指定名称的Dialect是否已经被注册
 func IsRegisted(name string) bool {
+	dialects.Lock()
+	defer dialects.Unlock()
+
 	_, found := dialects.items[name]
 	return found
 }
@@ -85,7 +88,7 @@ func Dialects() []string {
 }
 
 // 获取一个Dialect
-func getDialect(name string) (d core.Dialect, found bool) {
+func Get(name string) (d Dialect, found bool) {
 	dialects.Lock()
 	defer dialects.Unlock()
 

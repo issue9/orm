@@ -44,7 +44,7 @@ func (p *Postgres) GetDBName(dataSource string) string {
 }
 
 // implement core.Dialect.LimitSQL()
-func (p *Postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+func (p *Postgres) LimitSQL(limit interface{}, offset ...interface{}) string {
 	return mysqlLimitSQL(limit, offset...)
 }
 
@@ -92,6 +92,11 @@ func (p *Postgres) CreateTableSQL(model *core.Model) (string, error) {
 	buf.WriteByte(')')          // end CreateTable
 
 	return buf.String(), nil
+}
+
+// implement core.Dialect.TruncateTableSQL()
+func (p *Postgres) TruncateTableSQL(tableName string) string {
+	return "TRUNCATE TABLE " + tableName
 }
 
 // implement base.sqlType

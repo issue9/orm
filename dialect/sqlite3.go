@@ -38,7 +38,7 @@ func (s *Sqlite3) GetDBName(dataSource string) string {
 }
 
 // implement core.Dialect.LimitSQL()
-func (s *Sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+func (s *Sqlite3) LimitSQL(limit interface{}, offset ...interface{}) string {
 	return mysqlLimitSQL(limit, offset...)
 }
 
@@ -90,6 +90,11 @@ func (s *Sqlite3) CreateTableSQL(model *core.Model) (string, error) {
 	buf.WriteByte(')')          // end CreateTable
 
 	return buf.String(), nil
+}
+
+// implement core.Dialect.TruncateTableSQL()
+func (s *Sqlite3) TruncateTableSQL(tableName string) string {
+	return "DELETE FROM " + tableName
 }
 
 // implement base.sqlType()

@@ -16,12 +16,12 @@
 //
 // 默认情况下，orm包并不会加载任何数据库的实例。所以想要用哪个数据库，需要手动初始化：
 //  import (
-//      github.com/issue9/orm          // orm.Register(...)注册dialect
+//      github.com/issue9/orm/core     // core.Register(...)注册dialect
 //      _ github.com/mattn/go-sqlite3  // 加载数据库驱动
 //  )
 //
 //  // 向orm包注册dialect
-//  orm.Register("sqlite3", &dialect.Sqlite3{})
+//  core.Register("sqlite3", &dialect.Sqlite3{})
 //
 //  // 初始化一个Engine，表前缀为prefix_
 //  db1 := orm.New("sqlite3", "./db1", "db1", "prefix_")
@@ -95,16 +95,16 @@
 //  e.Create(&User{},&Email{})
 //
 // Update:
-//  // 将id为1的记录的FirstName更改为abc
+//  // 将id为1的记录的FirstName更改为abc；对象中的零值不会被提交。
 //  e.Update(&User{Id:1,FirstName:"abc"})
-//  e.Where("id=?", 1).Add("FirstName", "abc").Update()
-//  e.Where("id=?").Columns("FirstName").Update("abc", 1)
+//  e.Where("id=1").Set("FirstName", "abc").Update(nil)
+//  e.Where("id=@id").Data(map[string]interface{"FirstName":"abc"}).Update(map[string]interface{"id":1})
 //
 // Delete:
 //  // 删除id为1的记录
 //  e.Delete(&User{Id:1})
-//  e.Where("id=?").Delte(1)
-//  e.Where("id=?", 1).Delete()
+//  e.Where("id=@id").Delte(map[string]interface{"id":1})
+//  e.Where("id=1").Delete(nil)
 //
 // Insert:
 //  // 一次性插入一条数据
@@ -114,9 +114,9 @@
 //
 // Select:
 //  // 导出id=1的数据
-//  m, err := e.Where("id=?", 1).FetchMap()
+//  m, err := e.Where("id=1").FetchMap(nil)
 //  // 导出id<5的所有数据
-//  m, err := e.Where("id<?", 1).FetchMaps(5)
+//  m, err := e.Where("id<@id").FetchMaps(map[string]interface{"id":5})
 //
 // 事务：
 //
@@ -133,4 +133,4 @@ package orm
 // 在没有比较完美的方法之前，准备先去掉这个功能。
 
 // 版本号
-const Version = "0.8.12.150106"
+const Version = "0.9.13.150115"
