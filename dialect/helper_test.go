@@ -7,13 +7,34 @@ package dialect
 import (
 	"bytes"
 	"reflect"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/core"
 )
 
-var style = assert.StyleTrim | assert.StyleSpace | assert.StyleCase
+var replacer = strings.NewReplacer(")", " ) ", "(", " ( ", ",", " , ")
+
+var spaceReplaceRegexp = regexp.MustCompile("\\s+")
+
+// 检测两条SQL语句是否相等，忽略大小写与多余的空格。
+func chkSQLEqual(a *assert.Assertion, s1, s2 string) {
+	// 将'(', ')', ',' 等字符的前后空格标准化
+	s1 = replacer.Replace(s1)
+	s2 = replacer.Replace(s2)
+
+	// 转换成小写，去掉首尾空格
+	s1 = strings.TrimSpace(strings.ToLower(s1))
+	s2 = strings.TrimSpace(strings.ToLower(s2))
+
+	// 去掉多余的空格。
+	s1 = spaceReplaceRegexp.ReplaceAllString(s1, " ")
+	s2 = spaceReplaceRegexp.ReplaceAllString(s2, " ")
+
+	a.Equal(s1, s2)
+}
 
 func TestCreatColSQL(t *testing.T) {
 	a := assert.New(t)
@@ -26,7 +47,7 @@ func TestCreatColSQL(t *testing.T) {
 	col.Len1 = 5
 	createColSQL(dialect, buf, col)
 	wont := "id BIGINT(5) NOT NULL"
-	a.StringEqual(buf.String(), wont, style)
+	chkSQLEqual(a, buf.String(), wont)
 
 	buf.Reset()
 	col.Len1 = 0
@@ -35,7 +56,7 @@ func TestCreatColSQL(t *testing.T) {
 	col.Default = "1"
 	createColSQL(dialect, buf, col)
 	wont = "id SMALLINT NOT NULL DEFAULT '1'"
-	a.StringEqual(buf.String(), wont, style)
+	chkSQLEqual(a, buf.String(), wont)
 
 	buf.Reset()
 	col.HasDefault = false
@@ -54,12 +75,12 @@ func TestCreatePKSQL(t *testing.T) {
 
 	createPKSQL(dialect, buf, cols, "pkname")
 	wont := "CONSTRAINT pkname PRIMARY KEY(id,username)"
-	a.StringEqual(buf.String(), wont, style)
+	chkSQLEqual(a, buf.String(), wont)
 
 	buf.Reset()
 	createPKSQL(dialect, buf, cols[:1], "pkname")
 	wont = "CONSTRAINT pkname PRIMARY KEY(id)"
-	a.StringEqual(buf.String(), wont, style)
+	chkSQLEqual(a, buf.String(), wont)
 }
 
 func TestCreateUniqueSQL(t *testing.T) {
@@ -72,12 +93,12 @@ func TestCreateUniqueSQL(t *testing.T) {
 
 	createUniqueSQL(dialect, buf, cols, "pkname")
 	wont := "CONSTRAINT pkname UNIQUE(id,username)"
-	a.StringEqual(buf.String(), wont, style)
+	chkSQLEqual(a, buf.String(), wont)
 
 	buf.Reset()
 	createUniqueSQL(dialect, buf, cols[:1], "pkname")
 	wont = "CONSTRAINT pkname UNIQUE(id)"
-	a.StringEqual(buf.String(), wont, style)
+	chkSQLEqual(a, buf.String(), wont)
 }
 
 func TestCreateFKSQL(t *testing.T) {
@@ -93,7 +114,7 @@ func TestCreateFKSQL(t *testing.T) {
 
 	createFKSQL(dialect, buf, fk, "fkname")
 	wont := "CONSTRAINT fkname FOREIGN KEY(id) REFERENCES refTable(refCol) ON UPDATE NO ACTION"
-	a.StringEqual(buf.String(), wont, style)
+	chkSQLEqual(a, buf.String(), wont)
 }
 
 func TestCreateCheckSQL(t *testing.T) {
@@ -103,25 +124,25 @@ func TestCreateCheckSQL(t *testing.T) {
 
 	createCheckSQL(dialect, buf, "id>5", "chkname")
 	wont := "CONSTRAINT chkname CHECK(id>5)"
-	a.StringEqual(wont, buf.String(), style)
+	chkSQLEqual(a, buf.String(), wont)
 }
 
 func TestMysqlLimitSQL(t *testing.T) {
 	a := assert.New(t)
 
 	sql := mysqlLimitSQL(5, 0)
-	a.StringEqual(sql, " LIMIT 5 OFFSET 0 ", style)
+	chkSQLEqual(a, sql, " LIMIT 5 OFFSET 0 ")
 
 	sql = mysqlLimitSQL(5)
-	a.StringEqual(sql, "LIMIT 5", style)
+	chkSQLEqual(a, sql, "LIMIT 5")
 }
 
 func TestOracleLimitSQL(t *testing.T) {
 	a := assert.New(t)
 
 	sql := oracleLimitSQL(5, 0)
-	a.StringEqual(sql, " OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY ", style)
+	chkSQLEqual(a, sql, " OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY ")
 
 	sql = oracleLimitSQL(5)
-	a.StringEqual(sql, "FETCH NEXT 5 ROWS ONLY ", style)
+	chkSQLEqual(a, sql, "FETCH NEXT 5 ROWS ONLY ")
 }

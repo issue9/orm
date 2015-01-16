@@ -37,31 +37,31 @@ func TestMysql_SQLType(t *testing.T) {
 	col.GoType = reflect.TypeOf(1)
 	buf.Reset()
 	a.NotError(m.sqlType(buf, col))
-	a.StringEqual(buf.String(), "BIGINT", style)
+	chkSQLEqual(a, buf.String(), "BIGINT")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
 	a.NotError(m.sqlType(buf, col))
-	a.StringEqual(buf.String(), "BIGINT(5)", style)
+	chkSQLEqual(a, buf.String(), "BIGINT(5)")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
 	a.NotError(m.sqlType(buf, col))
-	a.StringEqual(buf.String(), "VARCHAR(5)", style)
+	chkSQLEqual(a, buf.String(), "VARCHAR(5)")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
 	a.NotError(m.sqlType(buf, col))
-	a.StringEqual(buf.String(), "DOUBLE(5,6)", style)
+	chkSQLEqual(a, buf.String(), "DOUBLE(5,6)")
 
 	col.GoType = reflect.TypeOf([]byte{'1', '2'})
 	buf.Reset()
 	a.NotError(m.sqlType(buf, col))
-	a.StringEqual(buf.String(), "VARCHAR(5)", style)
+	chkSQLEqual(a, buf.String(), "VARCHAR(5)")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	a.NotError(m.sqlType(buf, col))
-	a.StringEqual(buf.String(), "BIGINT(5)", style)
+	chkSQLEqual(a, buf.String(), "BIGINT(5)")
 }

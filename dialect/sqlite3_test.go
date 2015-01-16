@@ -38,31 +38,31 @@ func TestSqlite3_SQLType(t *testing.T) {
 	col.GoType = reflect.TypeOf(1)
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	a.StringEqual(buf.String(), "INTEGER", style)
+	chkSQLEqual(a, buf.String(), "INTEGER")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	a.StringEqual(buf.String(), "INTEGER", style)
+	chkSQLEqual(a, buf.String(), "INTEGER")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	a.StringEqual(buf.String(), "TEXT", style)
+	chkSQLEqual(a, buf.String(), "TEXT")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	a.StringEqual(buf.String(), "REAL", style)
+	chkSQLEqual(a, buf.String(), "REAL")
 
 	col.GoType = reflect.TypeOf([]byte{'1', '2'})
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	a.StringEqual(buf.String(), "TEXT", style)
+	chkSQLEqual(a, buf.String(), "TEXT")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	a.StringEqual(buf.String(), "INTEGER", style)
+	chkSQLEqual(a, buf.String(), "INTEGER")
 }
