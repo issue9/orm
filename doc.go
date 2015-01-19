@@ -10,7 +10,7 @@
 //  2. mysql:   github.com/go-sql-driver/mysql
 //  3. postgres:github.com/lib/pq
 // 其它数据库，用户可以通过实现orm/core.Dialect接口，
-// 然后调用orm.Register()注册来实现支持。
+// 然后调用core.Register()注册来实现支持。
 //
 // 初始化：
 //
@@ -133,4 +133,4 @@ package orm
 // 在没有比较完美的方法之前，准备先去掉这个功能。
 
 // 版本号
-const Version = "0.9.13.150115"
+const Version = "0.9.14.150119"
