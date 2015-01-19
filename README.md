@@ -1,8 +1,5 @@
-orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https://travis-ci.org/issue9/orm) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://github.com/issue9/orm/blob/master/LICENSE)
+orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https://travis-ci.org/issue9/orm)
 ======
-
-###开发中，勿用!
-
 
 ```go
 type User struct {
@@ -18,18 +15,18 @@ e.Create(&User{})
 
 // 更新id为1的记录
 e.Update(&User{Id:1,FirstName:"abc"})
-e.Where("id=?", 1).Add("FirstName", "abc").Update()
+e.Where("id=1").Add("FirstName", "abc").Update()
 
 // 删除id为1的记录
 e.Delete(&User{Id:1})
-e.Where("id=?").Delete(1)
+e.Where("id=@id").Delete(map[string]interface{}{"id":1})
 
 // 插入数据
 e.Insert(&User{FirstName:"abc"})
 e.SQL().Columns("FirstName","LastName").Insert("firstName", "lastName")
 
 // 查找数据
-maps,err := e.Where("id<?", 5).FetchMaps()
+maps,err := e.Where("id<5").FetchMaps()
 ```
 
 ### 安装

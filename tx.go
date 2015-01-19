@@ -7,7 +7,6 @@ package orm
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/issue9/orm/builder"
@@ -49,7 +48,7 @@ func (t *Tx) Exec(sql string, args map[string]interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	r, err := t.tx.Exec(sql, args)
+	r, err := t.tx.Exec(realSQL, argList...)
 	if err != nil {
 		return nil, newSQLError(err, t.engine.driverName, sql, realSQL, argList)
 	}
@@ -65,7 +64,7 @@ func (t *Tx) Query(sql string, args map[string]interface{}) (*sql.Rows, error) {
 		return nil, err
 	}
 
-	r, err := t.tx.Query(sql, args)
+	r, err := t.tx.Query(realSQL, argList...)
 	if err != nil {
 		return nil, newSQLError(err, t.engine.driverName, sql, realSQL, argList)
 	}
@@ -78,19 +77,15 @@ func (t *Tx) Prepare(sql string, name ...string) (*core.Stmt, error) {
 		return nil, errors.New("Prepare:name参数长度最大只能为１")
 	}
 
-	realSQL, argNames := t.prepareSQL(sql)
-	stmt, err := t.tx.Prepare(sql)
+	realSQL, args := t.prepareSQL(sql)
+	stmt, err := t.tx.Prepare(realSQL)
 	if err != nil {
 		return nil, newSQLError(err, t.engine.driverName, sql, realSQL)
 	}
-	coreStmt := core.NewStmt(stmt, argNames)
+	coreStmt := core.NewStmt(stmt, args)
 
 	if len(name) == 1 {
 		t.stmtsMux.Lock()
-		if _, found := t.stmts[name[0]]; found {
-			t.stmtsMux.Unlock()
-			return nil, fmt.Errorf("该名称[%v]已经存在", name[0])
-		}
 		t.stmts[name[0]] = coreStmt
 		t.stmtsMux.Unlock()
 	}

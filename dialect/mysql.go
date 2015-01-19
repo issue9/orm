@@ -66,23 +66,7 @@ func (m *Mysql) CreateTableSQL(model *core.Model) (string, error) {
 		buf.WriteByte(',')
 	}
 
-	// Unique Index
-	for name, index := range model.UniqueIndexes {
-		createUniqueSQL(m, buf, index, name)
-		buf.WriteByte(',')
-	}
-
-	// foreign  key
-	for name, fk := range model.FK {
-		createFKSQL(m, buf, fk, name)
-		buf.WriteByte(',')
-	}
-
-	// Check
-	for name, chk := range model.Check {
-		createCheckSQL(m, buf, chk, name)
-		buf.WriteByte(',')
-	}
+	createConstraints(m, buf, model)
 
 	// key index不存在CONSTRAINT形式的语句
 	if len(model.KeyIndexes) == 0 {
@@ -113,11 +97,11 @@ func (m *Mysql) TruncateTableSQL(tableName string) string {
 // implement base.sqlType()
 func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
 	if col == nil {
-		return errors.New("col参数是个空值")
+		return errors.New("sqlType:col参数是个空值")
 	}
 
 	if col.GoType == nil {
-		return errors.New("无效的col.GoType值")
+		return errors.New("sqlType:无效的col.GoType值")
 	}
 
 	addIntLen := func() {
@@ -170,7 +154,7 @@ func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
 	case reflect.Slice, reflect.Array: // []rune,[]byte当作字符串处理
 		k := col.GoType.Elem().Kind()
 		if (k != reflect.Uint8) && (k != reflect.Int32) {
-			return fmt.Errorf("不支持[%v]类型的数组", k)
+			return fmt.Errorf("sqlType:不支持[%v]类型的数组", k)
 		}
 
 		if col.Len1 < 65533 {
@@ -197,7 +181,7 @@ func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
 			buf.WriteString("DATETIME")
 		}
 	default:
-		return fmt.Errorf("不支持的类型:[%v]", col.GoType.Name())
+		return fmt.Errorf("sqlType:不支持的类型:[%v]", col.GoType.Name())
 	}
 
 	return nil

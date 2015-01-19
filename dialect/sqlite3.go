@@ -68,23 +68,7 @@ func (s *Sqlite3) CreateTableSQL(model *core.Model) (string, error) {
 		buf.WriteByte(',')
 	}
 
-	// Unique Index
-	for name, index := range model.UniqueIndexes {
-		createUniqueSQL(s, buf, index, name)
-		buf.WriteByte(',')
-	}
-
-	// foreign  key
-	for name, fk := range model.FK {
-		createFKSQL(s, buf, fk, name)
-		buf.WriteByte(',')
-	}
-
-	// Check
-	for name, chk := range model.Check {
-		createCheckSQL(s, buf, chk, name)
-		buf.WriteByte(',')
-	}
+	createConstraints(s, buf, model)
 
 	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
 	buf.WriteByte(')')          // end CreateTable
@@ -119,7 +103,7 @@ func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *core.Column) error {
 	case reflect.Array, reflect.Slice:
 		k := col.GoType.Elem().Kind()
 		if (k != reflect.Uint8) && (k != reflect.Int32) {
-			return errors.New("不支持数组类型")
+			return errors.New("sqlType:不支持数组类型")
 		} else {
 			buf.WriteString("TEXT")
 		}

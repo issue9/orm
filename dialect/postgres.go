@@ -70,23 +70,7 @@ func (p *Postgres) CreateTableSQL(model *core.Model) (string, error) {
 		buf.WriteByte(',')
 	}
 
-	// Unique Index
-	for name, index := range model.UniqueIndexes {
-		createUniqueSQL(p, buf, index, name)
-		buf.WriteByte(',')
-	}
-
-	// foreign  key
-	for name, fk := range model.FK {
-		createFKSQL(p, buf, fk, name)
-		buf.WriteByte(',')
-	}
-
-	// Check
-	for name, chk := range model.Check {
-		createCheckSQL(p, buf, chk, name)
-		buf.WriteByte(',')
-	}
+	createConstraints(p, buf, model)
 
 	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
 	buf.WriteByte(')')          // end CreateTable
@@ -103,11 +87,11 @@ func (p *Postgres) TruncateTableSQL(tableName string) string {
 // 将col转换成sql类型，并写入buf中。
 func (p *Postgres) sqlType(buf *bytes.Buffer, col *core.Column) error {
 	if col == nil {
-		return errors.New("col参数是个空值")
+		return errors.New("sqlType:col参数是个空值")
 	}
 
 	if col.GoType == nil {
-		return errors.New("无效的col.GoType值")
+		return errors.New("sqlType:无效的col.GoType值")
 	}
 
 	switch col.GoType.Kind() {
@@ -142,7 +126,7 @@ func (p *Postgres) sqlType(buf *bytes.Buffer, col *core.Column) error {
 	case reflect.Slice, reflect.Array: // []rune,[]byte当作字符串处理
 		k := col.GoType.Elem().Kind()
 		if (k != reflect.Uint8) && (k != reflect.Int32) {
-			return errors.New("不支持数组类型")
+			return errors.New("sqlType:不支持数组类型")
 		}
 
 		if col.Len1 < 65533 {
@@ -171,7 +155,7 @@ func (p *Postgres) sqlType(buf *bytes.Buffer, col *core.Column) error {
 			buf.WriteString("TIME")
 		}
 	default:
-		return fmt.Errorf("不支持的类型:[%v]", col.GoType.Name())
+		return fmt.Errorf("sqlType:不支持的类型:[%v]", col.GoType.Name())
 	}
 
 	return nil

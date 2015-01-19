@@ -46,6 +46,7 @@ type DB interface {
 
 	// 相当于sql.DB.Prepare()。
 	// 若存在name参数，则以name为名称缓存此条Stmt。
+	// 若已存在相同名称的，则覆盖原内容。
 	Prepare(sql string, name ...string) (*Stmt, error)
 
 	// 获取缓存的Stmt，若不存在，found返回false值。

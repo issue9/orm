@@ -35,17 +35,15 @@ func (err Errors) Error() string {
 
 // SQL语句的构建和缓存工具。
 // 可以通过函数链的形式来写SQL语句，无须关注SQL语句本身的结构顺序。
+// 把持使用命名参数的形式传递参数。
 //
-// 支持使用?占位符来分离语句和值，但不能直接使用?，而是`@id`这种形式，
-// 在最后传递参数时，传递map[string]interface{}，会自动解析。
-//
-//  sql := engine.SQL()
+//  sql := NewSQL(db)
 //      Table("user").
 //      Where("id>@id").
 //      And("username like @username").
 //      AndIsNotNull("Email").
 //      Desc("id")
-//  data := sql.FetchMaps(map[string]interface{}{"@id":1,"@username":"abc"})
+//  data := sql.FetchMaps(map[string]interface{}{"id":1,"username":"abc"})
 type SQL struct {
 	db        core.DB
 	tableName string
@@ -127,7 +125,8 @@ func (s *SQL) Set(col string, val interface{}) *SQL {
 
 // 将当前语句预编译并缓存到stmts中，方便之后再次使用。
 // action用于指定语句的类型，可以是Insert, Delete, Update或是Select。
-func (s *SQL) Stmt(action int, name string) (*core.Stmt, error) {
+// 若name与已有的相同，则会覆盖！
+func (s *SQL) Prepare(action int, name string) (*core.Stmt, error) {
 	var sql string
 	switch action {
 	case Delete:

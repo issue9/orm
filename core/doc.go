@@ -2,5 +2,5 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// orm包中的一些前置声明。
+// orm包的基本服务包。
 package core

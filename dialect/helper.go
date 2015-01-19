@@ -123,6 +123,27 @@ func createCheckSQL(b base, buf *bytes.Buffer, expr, chkName string) {
 	buf.WriteByte(')')
 }
 
+// 创建标准的几种约束：unique, foreign key, check
+func createConstraints(b base, buf *bytes.Buffer, model *core.Model) {
+	// Unique Index
+	for name, index := range model.UniqueIndexes {
+		createUniqueSQL(b, buf, index, name)
+		buf.WriteByte(',')
+	}
+
+	// foreign  key
+	for name, fk := range model.FK {
+		createFKSQL(b, buf, fk, name)
+		buf.WriteByte(',')
+	}
+
+	// Check
+	for name, chk := range model.Check {
+		createCheckSQL(b, buf, chk, name)
+		buf.WriteByte(',')
+	}
+}
+
 // mysq系列数据库分页语法的实现。支持以下数据库：
 // MySQL, H2, HSQLDB, Postgres, SQLite3
 func mysqlLimitSQL(limit interface{}, offset ...interface{}) string {
