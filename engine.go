@@ -31,7 +31,7 @@ var engines = engineMap{items: make(map[string]*Engine)}
 
 // 数据库操作引擎.
 type Engine struct {
-	name       string // 的engines中的名称。
+	name       string
 	dbName     string // 数据库的名称
 	prefix     string // 表名前缀
 	driverName string
@@ -112,6 +112,8 @@ func CloseAll() error {
 	}
 
 	engines.items = make(map[string]*Engine)
+
+	core.ClearModels()
 	return nil
 }
 
@@ -180,6 +182,12 @@ func (e *Engine) Prepare(sql string, name ...string) (*core.Stmt, error) {
 	return coreStmt, nil
 }
 
+// 查找缓存的sql.Stmt，在未找到的情况下，第二个参数返回false
+func (e *Engine) GetStmt(name string) (stmt *core.Stmt, found bool) {
+	stmt, found = e.stmts[name]
+	return
+}
+
 // 替换占位符。
 func (e *Engine) prepareSQL(sql string) (string, []string) {
 	sql = e.replacer.Replace(sql)
@@ -216,12 +224,6 @@ func (e *Engine) Begin() (*Tx, error) {
 	}
 	ret.sql = ret.SQL()
 	return ret, nil
-}
-
-// 查找缓存的sql.Stmt，在未找到的情况下，第二个参数返回false
-func (e *Engine) GetStmt(name string) (stmt *core.Stmt, found bool) {
-	stmt, found = e.stmts[name]
-	return
 }
 
 // 产生一个SQL实例。

@@ -439,8 +439,8 @@ func (m *Model) hasConstraint(name string, except conType) conType {
 	return none
 }
 
-// 释放所有的Model缓存。
-func FreeModels() {
+// 清除所有的Model缓存。
+func ClearModels() {
 	models.Lock()
 	defer models.Unlock()
 
