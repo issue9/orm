@@ -14,10 +14,24 @@ import (
 
 func TestEngine(t *testing.T) {
 	a := assert.New(t)
-	e, err := New("sqlite3", dbFile, "main", "main_")
+
+	// 不存在的sql.Driver
+	e, err := New("sqlite4", dbFile, "main", "main_")
+	a.Error(err).Nil(e)
+
+	e, err = New("sqlite3", dbFile, "main", "main_")
 	a.NotError(err).NotNil(e)
+
+	// 不存在的Engine
+	a.Nil(Get("main1"))
+
+	e = Get("main")
+	a.NotNil(e)
 	defer func() {
-		a.NotError(e.Close())
+		// 测试CloseAll是否正常
+		a.NotError(CloseAll())
+		a.Nil(Get("main"))
+
 		closeDBFile(a)
 	}()
 

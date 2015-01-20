@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	//"github.com/issue9/orm/dialect"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
@@ -39,20 +38,25 @@ func TestDialects(t *testing.T) {
 	d, found = Get("sqlite4") // 未注册
 	a.False(found).Nil(d)
 
+	// 注册一个不存在的数据库驱动
+	err = Register("fake3", &sqlite3{})
+	a.Error(err)                    // 注册失败
+	a.Equal(1, len(dialects.items)) // 数量还是1，注册没有成功
+
 	// 注册一个相同名称的
 	err = Register("sqlite3", &sqlite3{})
 	a.Error(err)                    // 注册失败
 	a.Equal(1, len(dialects.items)) // 数量还是1，注册没有成功
 
-	// 再注册一个名称不相同的
+	// 注册类型相同，但名称不同的实例
+	err = Register("mysql", &sqlite3{})
+	a.Error(err)                // 注册失败
+	a.Equal(1, len(Dialects())) // 数量还是2，注册没有成功
+
+	// 注册一个名称不相同的
 	err = Register("mysql", &mysql{})
 	a.NotError(err)
-	a.Equal(2, len(dialects.items))
-
-	// 注册类型相同，但名称不同的实例
-	err = Register("fake3", &mysql{})
-	a.Error(err)                    // 注册失败
-	a.Equal(2, len(dialects.items)) // 数量还是2，注册没有成功
+	a.Equal(2, len(Dialects()))
 
 	// 清空
 	clearDialect()

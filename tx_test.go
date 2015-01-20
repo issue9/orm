@@ -164,10 +164,16 @@ func txTruncateDrop(a *assert.Assertion, e *Engine) {
 
 // 检测#user表中的记录数据是否和size相同。
 func txChkCount(a *assert.Assertion, e *Engine, size int, tableName, name string) {
-	rows, err := e.Query("SELECT count(*) AS c FROM "+tableName, nil)
-	a.NotError(err).NotNil(rows)
+	t, err := e.Begin()
+	a.NotError(err).NotNil(t)
+	a.True(e.DB() == t.DB(), "e.DB() != t.DB()")
+
+	rows, err := t.Query("SELECT count(*) AS c FROM "+tableName, nil)
+	a.NotError(err).NotNil(rows).NotError(rows.Err())
+	a.NotError(t.Commit())
 	defer rows.Close()
 
+	// 导出数据
 	ret, err := fetch.Column(true, "c", rows)
 	a.NotError(err).NotNil(ret)
 

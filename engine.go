@@ -51,7 +51,6 @@ func New(driverName, dataSourceName, engineName, prefix string) (*Engine, error)
 	engines.Lock()
 	defer engines.Unlock()
 
-	// 当inst为nil时，表示无用，可以覆盖。
 	if _, found := engines.items[engineName]; found {
 		return nil, fmt.Errorf("该名称[%v]的Engine已经存在", engineName)
 	}
@@ -106,14 +105,14 @@ func CloseAll() error {
 	defer engines.Unlock()
 
 	for _, v := range engines.items {
-		if err := v.Close(); err != nil {
+		if err := v.close(); err != nil {
 			return err
 		}
 	}
 
 	engines.items = make(map[string]*Engine)
 
-	core.ClearModels()
+	//core.ClearModels()
 	return nil
 }
 
@@ -140,7 +139,7 @@ func (e *Engine) Exec(sql string, args map[string]interface{}) (sql.Result, erro
 	if err == nil {
 		return r, nil
 	}
-	return nil, newSQLError(err, e.driverName, sql, realSQL, argList)
+	return nil, newSQLError(err, e.driverName, sql, realSQL, argList...)
 }
 
 // 对orm/core.DB.Query()的实现，执行一条查询语句。
@@ -154,7 +153,7 @@ func (e *Engine) Query(sql string, args map[string]interface{}) (*sql.Rows, erro
 
 	r, err := e.db.Query(realSQL, argList...)
 	if err != nil {
-		return nil, newSQLError(err, e.driverName, sql, realSQL, argList)
+		return nil, newSQLError(err, e.driverName, sql, realSQL, argList...)
 	}
 	return r, nil
 }
@@ -194,20 +193,23 @@ func (e *Engine) prepareSQL(sql string) (string, []string) {
 	return core.ExtractArgs(sql)
 }
 
+func (e *Engine) close() error {
+	if err := e.db.Close(); err != nil {
+		return err
+	}
+	e.stmts = nil
+	delete(engines.items, e.name)
+
+	return nil
+}
+
 // 关闭当前的Engine，销毁所有的数据。不能再次使用。
 // 与之关联的Tx也将不能使用。
 func (e *Engine) Close() error {
 	engines.Lock()
 	defer engines.Unlock()
 
-	if err := e.db.Close(); err != nil {
-		return err
-	}
-	e.stmts = nil
-
-	delete(engines.items, e.name)
-
-	return nil
+	return e.close()
 }
 
 // 开始一个新的事务。

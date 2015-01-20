@@ -50,7 +50,7 @@ func (t *Tx) Exec(sql string, args map[string]interface{}) (sql.Result, error) {
 
 	r, err := t.tx.Exec(realSQL, argList...)
 	if err != nil {
-		return nil, newSQLError(err, t.engine.driverName, sql, realSQL, argList)
+		return nil, newSQLError(err, t.engine.driverName, sql, realSQL, argList...)
 	}
 	return r, nil
 }
@@ -66,7 +66,7 @@ func (t *Tx) Query(sql string, args map[string]interface{}) (*sql.Rows, error) {
 
 	r, err := t.tx.Query(realSQL, argList...)
 	if err != nil {
-		return nil, newSQLError(err, t.engine.driverName, sql, realSQL, argList)
+		return nil, newSQLError(err, t.engine.driverName, sql, realSQL, argList...)
 	}
 	return r, nil
 }
@@ -97,6 +97,16 @@ func (t *Tx) Prepare(sql string, name ...string) (*core.Stmt, error) {
 // 不会关闭与之关联的engine实例，
 // 仅是取消了与之的关联。
 func (t *Tx) Close() error {
+	t.stmtsMux.Lock()
+	defer t.stmtsMux.Unlock()
+
+	for _, stmt := range t.stmts {
+		if err := stmt.Close(); err != nil {
+			return err
+		}
+	}
+
+	t.stmts = nil
 	t.engine = nil
 	return nil
 }
@@ -105,14 +115,17 @@ func (t *Tx) Close() error {
 // 提交之后，整个Tx对象将不再有效。
 func (t *Tx) Commit() (err error) {
 	if err = t.tx.Commit(); err == nil {
-		t.Close()
+		return t.Close()
 	}
 	return
 }
 
 // 回滚事务
-func (t *Tx) Rollback() error {
-	return t.tx.Rollback()
+func (t *Tx) Rollback() (err error) {
+	if err = t.tx.Rollback(); err == nil {
+		return t.Close()
+	}
+	return
 }
 
 // 查找缓存的sql.Stmt，在未找到的情况下，第二个参数返回false

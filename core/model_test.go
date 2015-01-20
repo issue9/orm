@@ -36,7 +36,7 @@ type modelUser struct {
 
 	Id       int    `orm:"name(id);ai;"`
 	Email    string `orm:"unique(unique_name);index(index_name);nullable;"`
-	Username string `orm:"index(index_name)"`
+	Username string `orm:"index(index_name);len(50)"`
 
 	Regdate int `orm:"-"`
 }
@@ -48,7 +48,7 @@ func (m *modelUser) Meta() string {
 func TestModels(t *testing.T) {
 	a := assert.New(t)
 
-	FreeModels()
+	ClearModels()
 	a.Equal(0, len(models.items))
 
 	m, err := NewModel(&modelUser{})
@@ -68,13 +68,13 @@ func TestModels(t *testing.T) {
 		NotNil(m).
 		Equal(2, len(models.items))
 
-	FreeModels()
+	ClearModels()
 	a.Equal(0, len(models.items))
 }
 
 // 传递给NewModel是一个指针时的各种情况
 func TestModel(t *testing.T) {
-	FreeModels()
+	ClearModels()
 	a := assert.New(t)
 
 	// todo 正确声明第二个参数！！
