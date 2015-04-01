@@ -21,10 +21,12 @@ func TestSQL_Join(t *testing.T) {
 
 	wont := "SELECT c1,c2 FROM #user as u LEFT JOIN #group as g on g.id=u.gid WHERE(true)"
 	chkSQLEqual(a, wont, sql.selectSQL())
+	a.False(sql.HasErrors())
 
 	sql.RightJoin("#group as g", "g.id=u.gid")
 	wont = "SELECT c1,c2 FROM #user as u LEFT JOIN #group as g on g.id=u.gid RIGHT join #group as g on g.id=u.gid WHERE(true)"
 	chkSQLEqual(a, wont, sql.selectSQL())
+	a.False(sql.HasErrors())
 }
 
 func TestSQL_Order(t *testing.T) {
@@ -39,6 +41,7 @@ func TestSQL_Order(t *testing.T) {
 
 	wont := "SELECT c1,c2 FROM #user WHERE(true)ORDER BY c1 ASC , c2, c3 desc"
 	chkSQLEqual(a, wont, sql.selectSQL())
+	a.False(sql.HasErrors())
 }
 
 func TestSQL_Limit(t *testing.T) {
@@ -55,10 +58,18 @@ func TestSQL_Limit(t *testing.T) {
 
 	wont := "SELECT c1,c2 FROM #user WHERE(true) limit 5"
 	chkSQLEqual(a, wont, sql.selectSQL())
+	a.False(sql.HasErrors())
 
 	sql.Limit(5, 7)
 	wont = "SELECT c1,c2 FROM #user WHERE(true) limit 5 offset 7"
 	chkSQLEqual(a, wont, sql.selectSQL())
+	a.False(sql.HasErrors())
+
+	// 多余的参数
+	sql.Limit(5, 6, 7)
+	a.True(sql.HasErrors())
+	rs, err := sql.Query(nil) // 不处理错误，直接招待Query
+	a.Error(err).Nil(rs)
 }
 
 func TestSQL_Fetch(t *testing.T) {
@@ -66,28 +77,61 @@ func TestSQL_Fetch(t *testing.T) {
 	db := newDB(a)
 	defer db.Close(a)
 
+	// Fetch2Maps
 	sql := NewSQL(db)
-	m, err := sql.Columns("*").
+	maps, err := sql.Columns("*").
 		Table("user").
 		Limit(2).
 		Asc("id").
 		Fetch2Maps(nil)
-	a.NotError(err).NotNil(m)
-	a.Equal(m, []map[string]interface{}{
+	a.NotError(err).NotNil(maps)
+	a.Equal(maps, []map[string]interface{}{
 		map[string]interface{}{"id": 1, "account": []byte("account-1")}, // 字符串默认被转换成[]byte
 		map[string]interface{}{"id": 2, "account": []byte("account-2")},
 	})
 
+	// Fetch2Map
+	m, err := sql.Fetch2Map(nil)
+	a.NotError(err).NotNil(m)
+	a.Equal(m, map[string]interface{}{"id": 1, "account": []byte("account-1")})
+
+	// FetchColumn
+	col, err := sql.FetchColumn("id", nil)
+	a.NotError(err).NotNil(col)
+	a.Equal(col, 1)
+
+	// FetchColumns
+	cols, err := sql.FetchColumns("id", nil)
+	a.NotError(err).NotNil(cols)
+	a.Equal(cols, []interface{}{1, 2})
+
 	// desc
-	m, err = sql.Reset().
+
+	// Fetch2Maps
+	maps, err = sql.Reset().
 		Columns("*").
 		Table("user").
 		Limit("@limit").
 		Desc("id").
 		Fetch2Maps(map[string]interface{}{"limit": 2})
-	a.NotError(err).NotNil(m)
-	a.Equal(m, []map[string]interface{}{
+	a.NotError(err).NotNil(maps)
+	a.Equal(maps, []map[string]interface{}{
 		map[string]interface{}{"id": 10, "account": []byte("account-10")}, // 字符串默认被转换成[]byte
 		map[string]interface{}{"id": 9, "account": []byte("account-9")},
 	})
+
+	// Fetch2Map
+	m, err = sql.Fetch2Map(map[string]interface{}{"limit": 2})
+	a.NotError(err).NotNil(m)
+	a.Equal(m, map[string]interface{}{"id": 10, "account": []byte("account-10")})
+
+	// FetchColumn
+	col, err = sql.FetchColumn("id", map[string]interface{}{"limit": 2})
+	a.NotError(err).NotNil(col)
+	a.Equal(col, 10)
+
+	// FetchColumns
+	cols, err = sql.FetchColumns("id", map[string]interface{}{"limit": 2})
+	a.NotError(err).NotNil(cols)
+	a.Equal(cols, []interface{}{10, 9})
 }

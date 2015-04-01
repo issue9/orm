@@ -15,6 +15,7 @@ import (
 	"github.com/issue9/orm/core"
 )
 
+// 表示四种SQL语句操作类型
 const (
 	Delete = iota
 	Insert
@@ -35,7 +36,7 @@ func (err Errors) Error() string {
 
 // SQL语句的构建和缓存工具。
 // 可以通过函数链的形式来写SQL语句，无须关注SQL语句本身的结构顺序。
-// 把持使用命名参数的形式传递参数。
+// 并且使用命名参数的形式传递参数。
 //
 //  sql := NewSQL(db)
 //      Table("user").
@@ -43,6 +44,7 @@ func (err Errors) Error() string {
 //      And("username like @username").
 //      AndIsNotNull("Email").
 //      Desc("id")
+//  // 以命名参数id和username来传递变量值。
 //  data := sql.FetchMaps(map[string]interface{}{"id":1,"username":"abc"})
 type SQL struct {
 	db        core.DB
