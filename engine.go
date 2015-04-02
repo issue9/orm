@@ -159,7 +159,7 @@ func (e *Engine) Query(sql string, args map[string]interface{}) (*sql.Rows, erro
 }
 
 // 对orm/core.DB.Prepare()的实现。
-// 预处理SQL语句成sql.Stmt实例，若指定了name参数，则以name缓存该实例。
+// 预处理SQL语句成core.Stmt实例，若指定了name参数，则以name缓存该实例。
 func (e *Engine) Prepare(sql string, name ...string) (*core.Stmt, error) {
 	if len(name) > 1 {
 		return nil, errors.New("Prepare:name参数长度最大只能为１")

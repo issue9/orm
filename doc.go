@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// orm提供了一个相对统一和方便的数据库操作。
+// 一个简单小巧的orm实现方案。
 //
 // 目前内置了对以下数据库的支持：
 //  1. sqlite3:  github.com/mattn/go-sqlite3
@@ -144,4 +144,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.9.15.150120"
+const Version = "0.9.16.150402"

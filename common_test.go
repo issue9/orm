@@ -36,7 +36,7 @@ func closeDBFile(a *assert.Assertion) {
 }
 
 // 注册其它测试用例需要用到的dialect，
-// dialect测试函数需要注意，在测试完成之后，请调用些函数还原必要的测试用dialect
+// dialect测试函数需要注意，在测试完成之后，请调用此函数还原必要的测试用dialect
 func init() {
 	if !core.IsRegisted("sqlite3") {
 		if err := core.Register("sqlite3", &dialect.Sqlite3{}); err != nil {
