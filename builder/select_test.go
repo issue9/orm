@@ -72,6 +72,7 @@ func TestSQL_Limit(t *testing.T) {
 	a.Error(err).Nil(rs)
 }
 
+// 测试SQL.Fetch*系列函数
 func TestSQL_Fetch(t *testing.T) {
 	a := assert.New(t)
 	db := newDB(a)
@@ -105,7 +106,17 @@ func TestSQL_Fetch(t *testing.T) {
 	a.NotError(err).NotNil(cols)
 	a.Equal(cols, []interface{}{1, 2})
 
-	// desc
+	// FetchObj=>单个对象
+	obj := &user{}
+	a.NotError(sql.FetchObj(obj, nil))
+	a.Equal(obj, &user{ID: 1, Account: "account-1"})
+
+	// FetchObj=>对象数组
+	objs := []*user{&user{}}
+	a.NotError(sql.FetchObj(&objs, nil))
+	a.Equal(objs, []*user{&user{ID: 1, Account: "account-1"}, &user{ID: 2, Account: "account-2"}})
+
+	// 以desc排序
 
 	// Fetch2Maps
 	maps, err = sql.Reset().
@@ -134,4 +145,14 @@ func TestSQL_Fetch(t *testing.T) {
 	cols, err = sql.FetchColumns("id", map[string]interface{}{"limit": 2})
 	a.NotError(err).NotNil(cols)
 	a.Equal(cols, []interface{}{10, 9})
+
+	// FetchObj=>单个对象
+	obj = &user{}
+	a.NotError(sql.FetchObj(obj, map[string]interface{}{"limit": 2}))
+	a.Equal(obj, &user{ID: 10, Account: "account-10"})
+
+	// FetchObj=>对象数组
+	objs = []*user{&user{}}
+	a.NotError(sql.FetchObj(&objs, map[string]interface{}{"limit": 2}))
+	a.Equal(objs, []*user{&user{ID: 10, Account: "account-10"}, &user{ID: 9, Account: "account-9"}})
 }

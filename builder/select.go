@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"reflect"
+	//"reflect"
 	"strings"
 
 	"github.com/issue9/orm/fetch"
@@ -185,35 +185,13 @@ func (s *SQL) FetchColumns(col string, args map[string]interface{}) ([]interface
 }
 
 // 将当前select语句查询的数据导出到v中
-// v可以是map[string]interface{}，或是orm/fetch.Obj中允许的类型。
-func (s *SQL) Fetch(v interface{}, args map[string]interface{}) error {
+// v可以是orm/fetch.Obj中允许的类型。
+func (s *SQL) FetchObj(v interface{}, args map[string]interface{}) error {
 	rows, err := s.Query(args)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
-	vv := reflect.ValueOf(v)
-	if vv.Kind() == reflect.Ptr {
-		vv = vv.Elem()
-	}
-
-	switch vv.Kind() {
-	case reflect.Map:
-		if vv.Type().Key().Kind() != reflect.String {
-			return errors.New("Fetch:map的键名类型只能为string")
-		}
-		if vv.Type().Elem().Kind() != reflect.Interface {
-			return errors.New("Fetch:map的键值类型只能为interface{}")
-		}
-
-		mapped, err := s.Fetch2Map(args)
-		if err != nil {
-			return err
-		}
-		vv.Set(reflect.ValueOf(mapped))
-	default:
-		return fetch.Obj(v, rows)
-	}
-	return nil
+	return fetch.Obj(v, rows)
 }

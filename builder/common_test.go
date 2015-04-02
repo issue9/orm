@@ -23,8 +23,10 @@ import (
 
 var dbFile = "./test.db"
 
+// 用于chkSQLEqual
 var replacer = strings.NewReplacer(")", " ) ", "(", " ( ", ",", " , ")
 
+// 用于chkSQLEqual
 var spaceReplaceRegexp = regexp.MustCompile("\\s+")
 
 // 检测两条SQL语句是否相等，忽略大小写与多余的空格。
@@ -93,6 +95,12 @@ func init() {
 //////////////////////////////////////////////////////////////////////
 ///////////////////////  core.DB
 //////////////////////////////////////////////////////////////////////
+
+// 对应DB结构初始化时插入的数据
+type user struct {
+	ID      int    `orm:"name(id)"`
+	Account string `orm:"name(account)"`
+}
 
 type DB struct {
 	db      *sql.DB
