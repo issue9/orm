@@ -146,10 +146,6 @@ func (s *SQL) Prepare(action int, name string) (*core.Stmt, error) {
 	return s.db.Prepare(sql, name)
 }
 
-func (s *SQL) ExecMap(action int, args ...interface{}) (sql.Result, error) {
-	return nil, nil
-}
-
 // 执行当前语句。
 // action指定语句类型，可以是Delete,Insert或Update，但不能是Select
 func (s *SQL) Exec(action int, args map[string]interface{}) (sql.Result, error) {
