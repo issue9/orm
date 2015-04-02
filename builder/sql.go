@@ -140,7 +140,7 @@ func (s *SQL) Prepare(action int, name string) (*core.Stmt, error) {
 	case Select:
 		sql = s.selectSQL()
 	default:
-		return nil, fmt.Errorf("Stmt:无效的的action值[%v]", action)
+		return nil, fmt.Errorf("Prepare:无效的的action值[%v]", action)
 	}
 
 	return s.db.Prepare(sql, name)

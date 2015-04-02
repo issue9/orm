@@ -5,10 +5,20 @@
 package builder
 
 import (
+	"errors"
+	"strings"
 	"testing"
 
 	"github.com/issue9/assert"
 )
+
+func TestErrors(t *testing.T) {
+	a := assert.New(t)
+
+	errs := Errors([]error{errors.New("1"), errors.New("2")})
+	a.True(strings.Index(errs.Error(), "1") > -1)
+	a.True(strings.Index(errs.Error(), "2") > -1)
+}
 
 func TestSQL_Delete(t *testing.T) {
 	a := assert.New(t)
@@ -113,4 +123,58 @@ func TestSQL_Update(t *testing.T) {
 		map[string]interface{}{"id": 2, "account": []byte("abc")},
 		map[string]interface{}{"id": 3, "account": []byte("account-3")},
 	})
+}
+
+func TestSQL_Insert(t *testing.T) {
+	a := assert.New(t)
+
+	db := newDB(a)
+	defer db.Close(a)
+
+	sql := NewSQL(db).
+		Table("user").
+		Data(map[string]interface{}{"account": "@account"})
+	stmt, err := sql.Prepare(Insert, "insert-user")
+	a.NotError(err).NotNil(stmt)
+	defer func() {
+		a.NotError(stmt.Close())
+	}()
+
+	r, err := stmt.Exec(map[string]interface{}{"account": "insert"})
+	a.NotError(err).NotNil(r)
+	id, err := r.LastInsertId()
+	a.NotError(err).Equal(11, id)
+}
+
+func TestSQL_Exec(t *testing.T) {
+	a := assert.New(t)
+
+	db := newDB(a)
+	defer db.Close(a)
+
+	sql := NewSQL(db).
+		Table("user").
+		Where("id=@id").
+		Data(map[string]interface{}{"account": "@account"})
+
+	// 错误的Action类型
+	r, err := sql.Exec(100, map[string]interface{}{"id": 1, "account": "upd"})
+	a.Error(err).Nil(r)
+
+	// 错误的Action类型:Select
+	r, err = sql.Exec(Select, map[string]interface{}{"id": 1, "account": "upd"})
+	a.Error(err).Nil(r)
+
+	// 执行Exec:Update
+	r, err = sql.Exec(Update, map[string]interface{}{"id": 1, "account": "upd"})
+	a.NotError(err).NotNil(r)
+
+	// 验证Exec执行的结果
+	m, err := sql.Reset().
+		Table("user").
+		Where("id=1").
+		Columns("*").
+		Fetch2Map(nil)
+	a.NotError(err).NotNil(m)
+	a.Equal(m, map[string]interface{}{"id": 1, "account": []byte("upd")})
 }

@@ -28,10 +28,10 @@ func ExtractArgs(sql string) (string, []string) {
 	return sql, args
 }
 
-// 将args中的数据项转换成[]interface{}，其顺序为argNames中的顺序。
+// 按照argNames中的顺序排列args中的项，并以[]interface{}返回。
 func ConvArgs(argNames []string, args map[string]interface{}) ([]interface{}, error) {
 	if len(argNames) != len(args) {
-		return nil, fmt.Errorf("PrepareArgs:参数长度不一样:len(argName)=%v; len(args)=%v", len(argNames), len(args))
+		return nil, fmt.Errorf("ConvArgs:参数长度不一样:len(argName)=%v; len(args)=%v", len(argNames), len(args))
 	}
 
 	ret := make([]interface{}, len(argNames))
