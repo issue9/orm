@@ -15,6 +15,7 @@ func TestColumn(t *testing.T) {
 	db := initDB(a)
 	defer closeDB(db, a)
 
+	// 正常数据匹配，读取多行
 	sql := `SELECT id FROM user WHERE id<2 ORDER BY id`
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
@@ -25,7 +26,7 @@ func TestColumn(t *testing.T) {
 	a.Equal([]interface{}{0, 1}, cols)
 	a.NotError(rows.Close())
 
-	// 读取一行
+	// 正常数据匹配，读取一行
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
@@ -34,6 +35,27 @@ func TestColumn(t *testing.T) {
 
 	a.Equal([]interface{}{0}, cols)
 	a.NotError(rows.Close())
+
+	// 没有数据匹配，读取多行
+	sql = `SELECT id FROM user WHERE id<0 ORDER BY id`
+	rows, err = db.Query(sql)
+	a.NotError(err).NotNil(rows)
+
+	cols, err = Column(false, "id", rows)
+	a.NotError(err)
+
+	a.Equal([]interface{}{}, cols)
+	a.NotError(rows.Close())
+
+	// 没有数据匹配，读取一行
+	rows, err = db.Query(sql)
+	a.NotError(err).NotNil(rows)
+
+	cols, err = Column(true, "id", rows)
+	a.NotError(err)
+
+	a.Equal([]interface{}{}, cols)
+	a.NotError(rows.Close())
 }
 
 func TestColumnString(t *testing.T) {
@@ -41,6 +63,7 @@ func TestColumnString(t *testing.T) {
 	db := initDB(a)
 	defer closeDB(db, a)
 
+	// 正常数据匹配，读取多行
 	sql := `SELECT id FROM user WHERE id<2 ORDER BY id`
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
@@ -51,7 +74,7 @@ func TestColumnString(t *testing.T) {
 	a.Equal([]string{"0", "1"}, cols)
 	a.NotError(rows.Close())
 
-	// 读取一行
+	// 正常数据匹配，读取一行
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
@@ -59,5 +82,26 @@ func TestColumnString(t *testing.T) {
 	a.NotError(err).NotNil(cols)
 
 	a.Equal([]string{"0"}, cols)
+	a.NotError(rows.Close())
+
+	// 没有数据匹配，读取多行
+	sql = `SELECT id FROM user WHERE id<0 ORDER BY id`
+	rows, err = db.Query(sql)
+	a.NotError(err).NotNil(rows)
+
+	cols, err = ColumnString(false, "id", rows)
+	a.NotError(err)
+
+	a.Equal([]string{}, cols)
+	a.NotError(rows.Close())
+
+	// 没有数据匹配，读取一行
+	rows, err = db.Query(sql)
+	a.NotError(err).NotNil(rows)
+
+	cols, err = ColumnString(true, "id", rows)
+	a.NotError(err)
+
+	a.Equal([]string{}, cols)
 	a.NotError(rows.Close())
 }

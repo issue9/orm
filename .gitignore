@@ -30,4 +30,4 @@ _testmain.go
 **/test.db
 
 # mac os x
-**/.DS_Store
+.DS_Store
