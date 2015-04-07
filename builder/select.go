@@ -131,6 +131,7 @@ func (s *SQL) Query(args map[string]interface{}) (*sql.Rows, error) {
 }
 
 // 导出数据到map[string]interface{}
+// 当没有查找到符合条件的数据时，返回空值。
 func (s *SQL) Fetch2Map(args map[string]interface{}) (map[string]interface{}, error) {
 	rows, err := s.Query(args)
 	if err != nil {
@@ -143,10 +144,14 @@ func (s *SQL) Fetch2Map(args map[string]interface{}) (map[string]interface{}, er
 		return nil, err
 	}
 
+	if len(data) == 0 {
+		return nil, nil
+	}
 	return data[0], nil
 }
 
 // 导出所有数据到[]map[string]interface{}
+// 当没有查找到符合条件的数据时，返回空值。
 func (s *SQL) Fetch2Maps(args map[string]interface{}) ([]map[string]interface{}, error) {
 	rows, err := s.Query(args)
 	if err != nil {
@@ -158,6 +163,7 @@ func (s *SQL) Fetch2Maps(args map[string]interface{}) ([]map[string]interface{},
 }
 
 // 返回指定列的第一行内容
+// 当没有查找到符合条件的数据时，返回空值。
 func (s *SQL) FetchColumn(col string, args map[string]interface{}) (interface{}, error) {
 	rows, err := s.Query(args)
 	if err != nil {
@@ -170,10 +176,14 @@ func (s *SQL) FetchColumn(col string, args map[string]interface{}) (interface{},
 		return nil, err
 	}
 
+	if len(data) == 0 {
+		return nil, nil
+	}
 	return data[0], nil
 }
 
 // 返回指定列的所有数据
+// 当没有查找到符合条件的数据时，返回空值。
 func (s *SQL) FetchColumns(col string, args map[string]interface{}) ([]interface{}, error) {
 	rows, err := s.Query(args)
 	if err != nil {
