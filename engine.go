@@ -48,6 +48,10 @@ type Engine struct {
 
 // New 声明一个新的Engine实例。
 func New(driverName, dataSourceName, engineName, prefix string) (*Engine, error) {
+	if len(engineName) == 0 {
+		return nil, errors.New("参数engineName不能为空")
+	}
+
 	engines.Lock()
 	defer engines.Unlock()
 

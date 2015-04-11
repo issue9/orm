@@ -19,6 +19,11 @@ func TestEngine(t *testing.T) {
 	e, err := New("sqlite4", dbFile, "main", "main_")
 	a.Error(err).Nil(e)
 
+	// 空的名称
+	e, err = New("sqlite3", dbFile, "", "")
+	a.Error(err).Nil(e)
+
+	// 正常声明
 	e, err = New("sqlite3", dbFile, "main", "main_")
 	a.NotError(err).NotNil(e)
 
