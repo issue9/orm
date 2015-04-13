@@ -103,6 +103,19 @@ func Get(engineName string) *Engine {
 	return e
 }
 
+// 返回所有已经注册的Engine实例名称
+func Engines() []string {
+	ret := []string{}
+	engines.Lock()
+	defer engines.Unlock()
+
+	for k, _ := range engines.items {
+		ret = append(ret, k)
+	}
+
+	return ret
+}
+
 // 关闭所有的Engine
 func CloseAll() error {
 	engines.Lock()
