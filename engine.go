@@ -265,6 +265,12 @@ func (e *Engine) Insert(v interface{}) error {
 	return insertMult(e.sql, v)
 }
 
+// 查找一个或多个数据。
+// v可以是struct或是相同struct组成的数组。
+func (e *Engine) Find(v interface{}) error {
+	return findMult(e.sql, v)
+}
+
 // 更新一个或多个类型。
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。

@@ -27,6 +27,10 @@ func TestEngine(t *testing.T) {
 	e, err = New("sqlite3", dbFile, "main", "main_")
 	a.NotError(err).NotNil(e)
 
+	// Engines
+	es := Engines()
+	a.Equal(len(es), 1)
+
 	// 不存在的Engine
 	a.Nil(Get("main1"))
 
@@ -42,6 +46,7 @@ func TestEngine(t *testing.T) {
 
 	engineDelete(a, e)
 	engineUpdate(a, e)
+	engineFind(a, e)
 }
 
 // 检测#user表中的记录数据是否和size相同。
@@ -73,24 +78,24 @@ func engineCreateInsert(a *assert.Assertion, e *Engine) {
 	engineChkCount(a, e, 0, "Address", "创建多个表结构之#Address")
 
 	// 插入一条数据
-	a.NotError(e.Insert(&User{Address: Address{City: 1, Detail: "#1"}, Group: 1, Account: "admin1"}))
+	a.NotError(e.Insert(&User{Address: Address{City: 1, Detail: "!1"}, Group: 1, Account: "admin1"}))
 	engineChkCount(a, e, 1, "#user", "插入一条数据")
 
 	// 插入多条数据
 	a.NotError(e.Insert(
 		[]*User{
-			&User{Address: Address{City: 2, Detail: "#2"}, Account: "admin2"},
-			&User{Address: Address{City: 3, Detail: "#3"}, Account: "admin3"},
+			&User{Address: Address{City: 2, Detail: "!2"}, Account: "admin2"},
+			&User{Address: Address{City: 3, Detail: "!3"}, Account: "admin3"},
 		},
 	))
 	engineChkCount(a, e, 3, "#user", "插入多条数据到#user")
 	engineChkCount(a, e, 0, "Address", "插入0条数据到Address")
 
 	// 插入一条非唯一数据，联合唯一约束(unique_address)不成立
-	a.Error(e.Insert(&User{Address: Address{City: 1, Detail: "#1"}, Group: 5, Account: "admin4"}))
+	a.Error(e.Insert(&User{Address: Address{City: 1, Detail: "!1"}, Group: 5, Account: "admin4"}))
 
 	// 插入一条非唯一数据，唯一约束(account)不成立
-	a.Error(e.Insert(&User{Address: Address{City: 5, Detail: "#1"}, Group: 1, Account: "admin3"}))
+	a.Error(e.Insert(&User{Address: Address{City: 5, Detail: "!1"}, Group: 1, Account: "admin3"}))
 }
 
 // 测试Truncate和Drop函数，顺便用作清除数据库内容的工具。
@@ -101,6 +106,27 @@ func engineTruncateDrop(a *assert.Assertion, e *Engine) {
 	// 最后清除所有的数据，方便其它测试
 	a.NotError(e.Drop("#user"))
 	a.NotError(e.Drop("Address"))
+}
+
+func engineFind(a *assert.Assertion, e *Engine) {
+	engineCreateInsert(a, e)
+	defer engineTruncateDrop(a, e)
+
+	// 一条数据
+	u1 := &User{Id: 1, Account: "account5", Address: Address{City: 2, Detail: "1"}}
+	a.NotError(e.Find(u1))
+	a.Equal(u1, &User{Id: 1, Account: "admin1", Address: Address{City: 1, Detail: "!1"}})
+
+	// 多条数据
+	u2 := []*User{
+		&User{Id: 2, Account: "account2"},
+		&User{Id: 3, Account: "account3"},
+	}
+	a.NotError(e.Find(u2))
+	a.Equal(u2, []*User{
+		&User{Id: 2, Account: "admin2", Address: Address{City: 2, Detail: "!2"}},
+		&User{Id: 3, Account: "admin3", Address: Address{City: 3, Detail: "!3"}},
+	})
 }
 
 func engineUpdate(a *assert.Assertion, e *Engine) {
@@ -141,7 +167,7 @@ func engineDelete(a *assert.Assertion, e *Engine) {
 	// 删除两条记录
 	a.NotError(e.Delete([]*User{
 		&User{Id: 2},
-		&User{Address: Address{City: 3, Detail: "#3"}},
+		&User{Address: Address{City: 3, Detail: "!3"}},
 	}))
 	engineChkCount(a, e, 0, "#user", "删除两条记录")
 }

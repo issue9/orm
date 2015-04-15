@@ -118,6 +118,32 @@ func createOne(db core.DB, v interface{}) error {
 	return err
 }
 
+// 根据v的pk或中唯一索引列查找一行数据，并赋值给v
+func findOne(sql *builder.SQL, v interface{}) error {
+	rval := reflect.ValueOf(v)
+
+	m, err := core.NewModel(v)
+	if err != nil {
+		return err
+	}
+
+	if rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return errors.New("updateOne:无效的v.Kind()")
+	}
+
+	sql.Reset().Table(m.Name).Columns("*")
+
+	if err := where(sql, m, rval); err != nil {
+		return err
+	}
+
+	return sql.FetchObj(v, nil)
+}
+
 // 插入一个对象到数据库
 // 以v中的主键或是唯一索引作为where条件语句。
 // 自增字段，即使指定了值，也不会被添加
@@ -265,6 +291,39 @@ func insertMult(sql *builder.SQL, v interface{}) error {
 		}
 	default:
 		return fmt.Errorf("insertMult:v的类型[%v]无效", rval.Kind())
+	}
+
+	return nil
+}
+
+// 查找多个数据
+func findMult(sql *builder.SQL, v interface{}) error {
+	rval := reflect.ValueOf(v)
+	if rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	switch rval.Kind() {
+	case reflect.Struct:
+		return findOne(sql, v)
+	case reflect.Array, reflect.Slice:
+		elemType := rval.Type().Elem() // 数组元素的类型
+
+		if elemType.Kind() == reflect.Ptr {
+			elemType = elemType.Elem()
+		}
+
+		if elemType.Kind() != reflect.Struct {
+			return errors.New("updateMult:数组元素类型不正确")
+		}
+
+		for i := 0; i < rval.Len(); i++ {
+			if err := findOne(sql, rval.Index(i).Interface()); err != nil {
+				return err
+			}
+		}
+	default:
+		return errors.New("updateMult:v的类型无效")
 	}
 
 	return nil
