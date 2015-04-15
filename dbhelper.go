@@ -51,11 +51,11 @@ func checkCols(cols []*core.Column, rval reflect.Value) bool {
 
 	for _, col := range cols {
 		field := rval.FieldByName(col.GoName)
-		if reflect.Zero(col.GoType).Interface() == field.Interface() {
+		if !field.IsValid() {
 			return false
 		}
 
-		if !field.IsValid() {
+		if reflect.Zero(col.GoType).Interface() == field.Interface() {
 			return false
 		}
 	}
@@ -64,7 +64,7 @@ func checkCols(cols []*core.Column, rval reflect.Value) bool {
 
 // 供engine.go和tx.go调用的一系列函数。
 
-// 根据model中的主键或是唯一索引产生where语句，
+// 根据model中的主键或是唯一索引为sql产生where语句，
 // 若两者都不存在，则返回错误信息。
 // rval为struct的reflect.Value
 func where(sql *builder.SQL, m *core.Model, rval reflect.Value) error {
