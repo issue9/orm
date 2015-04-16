@@ -101,7 +101,7 @@ func createOne(db core.DB, v interface{}) error {
 		return err
 	}
 
-	if rval.Kind() == reflect.Ptr {
+	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
 	}
 
@@ -127,7 +127,7 @@ func findOne(sql *builder.SQL, v interface{}) error {
 		return err
 	}
 
-	if rval.Kind() == reflect.Ptr {
+	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
 	}
 
@@ -155,7 +155,7 @@ func insertOne(sql *builder.SQL, v interface{}) error {
 		return err
 	}
 
-	if rval.Kind() == reflect.Ptr {
+	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
 	}
 
@@ -191,7 +191,7 @@ func updateOne(sql *builder.SQL, v interface{}) error {
 		return err
 	}
 
-	if rval.Kind() == reflect.Ptr {
+	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
 	}
 
@@ -233,7 +233,7 @@ func deleteOne(sql *builder.SQL, v interface{}) error {
 		return err
 	}
 
-	if rval.Kind() == reflect.Ptr {
+	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
 	}
 

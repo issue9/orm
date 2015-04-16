@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/builder"
 	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/dialect"
 
@@ -69,3 +70,23 @@ type User struct {
 func (u *User) Meta() string {
 	return "name(#user)"
 }
+
+/////////////////////////////////////////////////////
+////////////// 确保Engine和Tx都实现了这些接口
+
+type db interface {
+	core.DB
+	Close() error
+	SQL() *builder.SQL
+
+	Where(cond string) *builder.SQL
+	Create(models ...interface{}) error
+	Insert(v interface{}) error
+	Update(v interface{}) error
+	Delete(v interface{}) error
+	Drop(tableName string) error
+	Truncate(tableName string) error
+}
+
+var _ db = &Engine{}
+var _ db = &Tx{}
