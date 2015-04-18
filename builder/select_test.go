@@ -136,10 +136,20 @@ func TestSQL_Fetch(t *testing.T) {
 	a.NotError(err).NotNil(m)
 	a.Equal(m, map[string]interface{}{"id": 10, "account": []byte("account-10")})
 
+	// Fetch2MapString
+	ms, err := sql.Fetch2MapString(map[string]interface{}{"limit": 2})
+	a.NotError(err).NotNil(ms)
+	a.Equal(ms, map[string]string{"id": "10", "account": "account-10"})
+
 	// FetchColumn
 	col, err = sql.FetchColumn("id", map[string]interface{}{"limit": 2})
 	a.NotError(err).NotNil(col)
 	a.Equal(col, 10)
+
+	// FetchColumnString
+	colstr, err := sql.FetchColumnString("id", map[string]interface{}{"limit": 2})
+	a.NotError(err).NotNil(colstr)
+	a.Equal(colstr, "10")
 
 	// FetchColumns
 	cols, err = sql.FetchColumns("id", map[string]interface{}{"limit": 2})

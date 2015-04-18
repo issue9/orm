@@ -150,6 +150,26 @@ func (s *SQL) Fetch2Map(args map[string]interface{}) (map[string]interface{}, er
 	return data[0], nil
 }
 
+// 导出数据到map[string]string
+// 当没有查找到符合条件的数据时，返回空值。
+func (s *SQL) Fetch2MapString(args map[string]interface{}) (map[string]string, error) {
+	rows, err := s.Query(args)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	data, err := fetch.MapString(true, rows)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return nil, nil
+	}
+	return data[0], nil
+}
+
 // 导出所有数据到[]map[string]interface{}
 // 当没有查找到符合条件的数据时，返回空值。
 func (s *SQL) Fetch2Maps(args map[string]interface{}) ([]map[string]interface{}, error) {
@@ -160,6 +180,18 @@ func (s *SQL) Fetch2Maps(args map[string]interface{}) ([]map[string]interface{},
 	defer rows.Close()
 
 	return fetch.Map(false, rows)
+}
+
+// 导出所有数据到[]map[string]string
+// 当没有查找到符合条件的数据时，返回空值。
+func (s *SQL) Fetch2MapsString(args map[string]interface{}) ([]map[string]string, error) {
+	rows, err := s.Query(args)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return fetch.MapString(false, rows)
 }
 
 // 返回指定列的第一行内容
@@ -182,6 +214,26 @@ func (s *SQL) FetchColumn(col string, args map[string]interface{}) (interface{},
 	return data[0], nil
 }
 
+// 返回指定列的第一行内容
+// 当没有查找到符合条件的数据时，返回空值。
+func (s *SQL) FetchColumnString(col string, args map[string]interface{}) (string, error) {
+	rows, err := s.Query(args)
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+
+	data, err := fetch.ColumnString(true, col, rows)
+	if err != nil {
+		return "", err
+	}
+
+	if len(data) == 0 {
+		return "", nil
+	}
+	return data[0], nil
+}
+
 // 返回指定列的所有数据
 // 当没有查找到符合条件的数据时，返回空值。
 func (s *SQL) FetchColumns(col string, args map[string]interface{}) ([]interface{}, error) {
@@ -192,6 +244,18 @@ func (s *SQL) FetchColumns(col string, args map[string]interface{}) ([]interface
 	defer rows.Close()
 
 	return fetch.Column(false, col, rows)
+}
+
+// 返回指定列的所有数据
+// 当没有查找到符合条件的数据时，返回空值。
+func (s *SQL) FetchColumnsString(col string, args map[string]interface{}) ([]string, error) {
+	rows, err := s.Query(args)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return fetch.ColumnString(false, col, rows)
 }
 
 // 将当前select语句查询的数据导出到v中
