@@ -106,6 +106,7 @@ func (s *SQL) GetErrors() []error {
 }
 
 // 设置表名。多次调用，只有最后一次启作用。
+// name参数可以是string,[]byte,[]rune常量或是一个struct实例。
 func (s *SQL) Table(name interface{}) *SQL {
 	switch v := name.(type) {
 	case string:
