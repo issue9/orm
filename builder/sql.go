@@ -106,9 +106,29 @@ func (s *SQL) GetErrors() []error {
 }
 
 // 设置表名。多次调用，只有最后一次启作用。
-func (s *SQL) Table(name string) *SQL {
-	s.tableName = name
+func (s *SQL) Table(name interface{}) *SQL {
+	switch v := name.(type) {
+	case string:
+		s.tableName = v
+	case []byte:
+		s.tableName = string(v)
+	case []rune:
+		s.tableName = string(v)
+	default:
+		m, err := core.NewModel(v)
+		if err == nil {
+			s.errors = append(s.errors, err)
+		} else {
+			s.tableName = m.Name
+		}
+	}
+
 	return s
+}
+
+// SQL.Table()的别名
+func (s *SQL) From(v interface{}) *SQL {
+	return s.Table(v)
 }
 
 // update/insert 语句可以用此方法批量指定需要更新的字段及相应的数据，
