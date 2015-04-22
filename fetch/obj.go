@@ -18,7 +18,7 @@ import (
 // 键值为字段的值。支持匿名字段，不会转换不可导出(小写字母开头)的
 // 字段，也不会转换struct tag以-开头的字段。
 func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
-	if v.Kind() == reflect.Ptr {
+	for v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
 
@@ -82,7 +82,7 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) error {
 		if !found {
 			continue
 		}
-		if err = conv.To(v, item); err != nil {
+		if err = conv.Value(v, item); err != nil {
 			return err
 		}
 	}
@@ -94,12 +94,12 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) error {
 // val的类型必须是reflect.Slice或是reflect.Array.
 func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) error {
 	itemType := val.Type().Elem()
-	if itemType.Kind() == reflect.Ptr {
+	for itemType.Kind() == reflect.Ptr {
 		itemType = itemType.Elem()
 	}
 	// 判断数组元素的类型是否为struct
 	if itemType.Kind() != reflect.Struct {
-		return fmt.Errorf("元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
+		return fmt.Errorf("fetchObjToFixedSlice:元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
 	}
 
 	// 先导出数据到map中
@@ -123,7 +123,7 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) error {
 			if !found {
 				continue
 			}
-			if err = conv.To(v, item); err != nil {
+			if err = conv.Value(v, item); err != nil {
 				return err
 			}
 		} // end for objItem
@@ -138,7 +138,7 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 	elem := val.Elem()
 
 	itemType := elem.Type().Elem()
-	if itemType.Kind() == reflect.Ptr {
+	for itemType.Kind() == reflect.Ptr {
 		itemType = itemType.Elem()
 	}
 	// 判断数组元素的类型是否为struct
@@ -172,7 +172,7 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 			if !found {
 				continue
 			}
-			if err = conv.To(e, item); err != nil {
+			if err = conv.Value(e, item); err != nil {
 				return err
 			}
 		} // end for objItem

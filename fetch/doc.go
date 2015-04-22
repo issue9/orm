@@ -6,4 +6,4 @@
 package fetch
 
 // 版本号
-const Version = "0.1.0.141229"
+const Version = "0.1.1.150422"
