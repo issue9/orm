@@ -49,19 +49,19 @@ type Engine struct {
 // New 声明一个新的Engine实例。
 func New(driverName, dataSourceName, engineName, prefix string) (*Engine, error) {
 	if len(engineName) == 0 {
-		return nil, errors.New("参数engineName不能为空")
+		return nil, errors.New("New:参数engineName不能为空")
 	}
 
 	engines.Lock()
 	defer engines.Unlock()
 
 	if _, found := engines.items[engineName]; found {
-		return nil, fmt.Errorf("该名称[%v]的Engine已经存在", engineName)
+		return nil, fmt.Errorf("New:该名称[%v]的Engine已经存在", engineName)
 	}
 
 	dialect, found := core.Get(driverName)
 	if !found {
-		return nil, fmt.Errorf("newEngine:未找到与driverName[%v]相同的Dialect", driverName)
+		return nil, fmt.Errorf("New:未找到与driverName[%v]相同的Dialect", driverName)
 	}
 
 	db, err := sql.Open(driverName, dataSourceName)
@@ -183,7 +183,7 @@ func (e *Engine) Prepare(sql string, name ...string) (*core.Stmt, error) {
 	}
 
 	realSQL, args := e.prepareSQL(sql)
-	stmt, err := e.db.Prepare(sql)
+	stmt, err := e.db.Prepare(realSQL)
 	if err != nil {
 		return nil, newSQLError(err, e.driverName, sql, realSQL)
 	}

@@ -102,14 +102,14 @@
 // Update:
 //  // 将id为1的记录的FirstName更改为abc；对象中的零值不会被提交。
 //  e.Update(&User{Id:1,FirstName:"abc"})
-//  e.Where("id=1").Set("FirstName", "abc").Update(nil)
-//  e.Where("id=@id").Data(map[string]interface{"FirstName":"abc"}).Update(map[string]interface{"id":1})
+//  e.Where("id=1").Table("#table").Set("FirstName", "abc").Update(nil)
+//  e.Where("id=@id").Table("#table").Data(map[string]interface{"FirstName":"abc"}).Update(map[string]interface{"id":1})
 //
 // Delete:
 //  // 删除id为1的记录
 //  e.Delete(&User{Id:1})
-//  e.Where("id=@id").Delte(map[string]interface{"id":1})
-//  e.Where("id=1").Delete(nil)
+//  e.Where("id=@id").Table("#table").Delte(map[string]interface{"id":1})
+//  e.Where("id=1").Table("#table").Delete(nil)
 //
 // Insert:
 //  // 一次性插入一条数据
@@ -119,9 +119,20 @@
 //
 // Select:
 //  // 导出id=1的数据
-//  m, err := e.Where("id=1").FetchMap(nil)
+//  m, err := e.Where("id=1").Table("#table").FetchMap(nil)
+//  // 导出id为1的数据，并回填到user实例中
+//  user := &User{Id:1}
+//  err := e.Find(u)
 //  // 导出id<5的所有数据
-//  m, err := e.Where("id<@id").FetchMaps(map[string]interface{"id":5})
+//  m, err := e.Where("id<@id").Table("#table").FetchMaps(map[string]interface{"id":5})
+//
+//  Query/Exec:
+//  // Query返回参数与sql.Query是相同的
+//  sql := "select * from #tbl_name where id=@id"
+//  rows, err := e.Query(sql, map[string]interface{}{"id":5})
+//  // Exec返回参数与sql.Exec是相同的
+//  sql = "update #tbl_name set name=@name where id=@id"
+//  r, err := e.Exec(sql, map[string]interface{}{"name":"name5", "id": 2})
 //
 // 事务：
 //
@@ -144,4 +155,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.9.22.150418"
+const Version = "0.9.23.150505"

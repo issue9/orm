@@ -6,7 +6,6 @@ package fetch
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"reflect"
 )
@@ -32,7 +31,7 @@ func Column(once bool, colName string, rows *sql.Rows) ([]interface{}, error) {
 	}
 
 	if index == -1 {
-		return nil, errors.New("指定的名不存在")
+		return nil, fmt.Errorf("Column:指定的列名[%v]不存在", colName)
 	}
 
 	var data []interface{}
@@ -70,7 +69,7 @@ func ColumnString(once bool, colName string, rows *sql.Rows) ([]string, error) {
 	}
 
 	if index == -1 {
-		return nil, fmt.Errorf("指定的名[%v]不存在", colName)
+		return nil, fmt.Errorf("Column:指定的列名[%v]不存在", colName)
 	}
 
 	var data []string
