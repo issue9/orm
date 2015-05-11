@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm"
 )
 
 const (
@@ -26,14 +26,14 @@ var (
 )
 
 type base interface {
-	core.Dialect
+	orm.Dialect
 
 	// 将col转换成sql类型，并写入buf中。
-	sqlType(buf *bytes.Buffer, col *core.Column) error
+	sqlType(buf *bytes.Buffer, col *orm.Column) error
 }
 
 // 用于产生在createTable中使用的普通列信息表达式，不包含autoincrement和primary key的关键字。
-func createColSQL(b base, buf *bytes.Buffer, col *core.Column) error {
+func createColSQL(b base, buf *bytes.Buffer, col *orm.Column) error {
 	// col_name VARCHAR(100) NOT NULL DEFAULT 'abc'
 	buf.WriteString(col.Name)
 	buf.WriteByte(' ')
@@ -57,7 +57,7 @@ func createColSQL(b base, buf *bytes.Buffer, col *core.Column) error {
 }
 
 // create table语句中pk约束的语句
-func createPKSQL(b base, buf *bytes.Buffer, cols []*core.Column, pkName string) {
+func createPKSQL(b base, buf *bytes.Buffer, cols []*orm.Column, pkName string) {
 	//CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 	buf.WriteString(" CONSTRAINT ")
 	buf.WriteString(pkName)
@@ -72,7 +72,7 @@ func createPKSQL(b base, buf *bytes.Buffer, cols []*core.Column, pkName string) 
 }
 
 // create table语句中的unique约束部分的语句。
-func createUniqueSQL(b base, buf *bytes.Buffer, cols []*core.Column, indexName string) {
+func createUniqueSQL(b base, buf *bytes.Buffer, cols []*orm.Column, indexName string) {
 	//CONSTRAINT unique_name UNIQUE (id,lastName)
 	buf.WriteString(" CONSTRAINT ")
 	buf.WriteString(indexName)
@@ -87,7 +87,7 @@ func createUniqueSQL(b base, buf *bytes.Buffer, cols []*core.Column, indexName s
 }
 
 // create table语句中fk的约束部分的语句
-func createFKSQL(b base, buf *bytes.Buffer, fk *core.ForeignKey, fkName string) {
+func createFKSQL(b base, buf *bytes.Buffer, fk *orm.ForeignKey, fkName string) {
 	//CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ")
 	buf.WriteString(fkName)
@@ -124,7 +124,7 @@ func createCheckSQL(b base, buf *bytes.Buffer, expr, chkName string) {
 }
 
 // 创建标准的几种约束：unique, foreign key, check
-func createConstraints(b base, buf *bytes.Buffer, model *core.Model) {
+func createConstraints(b base, buf *bytes.Buffer, model *orm.Model) {
 	// Unique Index
 	for name, index := range model.UniqueIndexes {
 		createUniqueSQL(b, buf, index, name)
@@ -146,20 +146,38 @@ func createConstraints(b base, buf *bytes.Buffer, model *core.Model) {
 
 // mysq系列数据库分页语法的实现。支持以下数据库：
 // MySQL, H2, HSQLDB, Postgres, SQLite3
-func mysqlLimitSQL(limit interface{}, offset ...interface{}) string {
-	if len(offset) == 0 {
-		return " LIMIT " + core.AsSQLValue(limit)
+func mysqlLimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
+	if _, err := w.WriteString(" LIMIT "); err != nil {
+		return err
+	}
+	if err := orm.AsString(w, limit); err != nil {
+		return err
 	}
 
-	return " LIMIT " + core.AsSQLValue(limit) + " OFFSET " + core.AsSQLValue(offset[0])
+	if len(offset) == 0 {
+		return nil
+	}
+
+	if _, err := w.WriteString(" OFFSET "); err != nil {
+		return err
+	}
+	return orm.AsString(w, offset[0])
 }
 
 // oracle系列数据库分页语法的实现。支持以下数据库：
 // Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
-func oracleLimitSQL(limit interface{}, offset ...interface{}) string {
+func oracleLimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
 	if len(offset) == 0 {
-		return " FETCH NEXT " + core.AsSQLValue(limit) + " ROWS ONLY "
+		w.WriteString(" FETCH NEXT ")
+		orm.AsString(w, limit)
+		w.WriteString(" ROWS ONLY ")
+		return nil
 	}
 
-	return " OFFSET " + core.AsSQLValue(offset[0]) + " ROWS FETCH NEXT " + core.AsSQLValue(limit) + " ROWS ONLY "
+	w.WriteString(" OFFSET ")
+	orm.AsString(w, offset[0])
+	w.WriteString(" ROWS FETCH NEXT ")
+	orm.AsString(w, limit)
+	w.WriteString(" ROWS ONLY ")
+	return nil
 }

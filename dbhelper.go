@@ -10,15 +10,48 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/issue9/orm/fetch"
 )
 
+// DB与Tx的共有接口，方便以下方法调用。
 type db interface {
 	Dialect() Dialect
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	Prepare(query string) (*sql.Stmt, error)
+}
+
+// 将src转换成sql的值，并写入到w中。
+func AsString(w *bytes.Buffer, src interface{}) error {
+	switch v := src.(type) {
+	case string:
+		w.WriteString(v)
+	case []byte:
+		w.Write(v)
+	case []rune:
+		w.WriteString(string(v))
+	}
+
+	rv := reflect.ValueOf(src)
+	switch rv.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		w.WriteString(strconv.FormatInt(rv.Int(), 10))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		w.WriteString(strconv.FormatUint(rv.Uint(), 10))
+	case reflect.Float64:
+		w.WriteString(strconv.FormatFloat(rv.Float(), 'g', -1, 64))
+	case reflect.Float32:
+		w.WriteString(strconv.FormatFloat(rv.Float(), 'g', -1, 32))
+	case reflect.Bool:
+		w.WriteString(strconv.FormatBool(rv.Bool()))
+	default:
+		_, err := fmt.Fprint(w, src)
+		return err
+	}
+
+	return nil
 }
 
 // 检测rval中与cols对应的字段都是有效的，且为非零值。
@@ -41,8 +74,6 @@ func checkCols(cols []*Column, rval reflect.Value) bool {
 	return true
 }
 
-// 供engine.go和tx.go调用的一系列函数。
-
 // 根据model中的主键或是唯一索引为sql产生where语句，
 // 若两者都不存在，则返回错误信息。
 // rval为struct的reflect.Value
@@ -52,7 +83,7 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 		for _, col := range m.PK {
 			sql.WriteString(col.Name)
 			sql.WriteByte('=')
-			asString(sql, rval.FieldByName(col.GoName).Interface())
+			AsString(sql, rval.FieldByName(col.GoName).Interface())
 		}
 		return nil
 	}
@@ -68,7 +99,7 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 			field := rval.FieldByName(col.GoName)
 			sql.WriteString(col.Name)
 			sql.WriteByte('=')
-			asString(sql, field.Interface())
+			AsString(sql, field.Interface())
 		}
 		return nil
 	} // end range m.UniqueIndexes
@@ -183,7 +214,7 @@ func insertOne(db db, v interface{}) error {
 	sql.Truncate(sql.Len() - 1)
 	sql.WriteString(")VALUES(")
 	for _, val := range vals {
-		asString(sql, val)
+		AsString(sql, val)
 		sql.WriteByte(',')
 	}
 	sql.Truncate(sql.Len() - 1)
@@ -228,7 +259,7 @@ func updateOne(db db, v interface{}) error {
 
 		db.Dialect().Quote(sql, name)
 		sql.WriteByte('=')
-		asString(sql, field.Interface())
+		AsString(sql, field.Interface())
 	}
 
 	if err := where(sql, m, rval); err != nil {
