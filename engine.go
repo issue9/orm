@@ -18,9 +18,9 @@ import (
 // DB与Tx的共有接口，方便以下方法调用。
 type engine interface {
 	Dialect() Dialect
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Prepare(query string) (*sql.Stmt, error)
+	Query(replace bool, query string, args ...interface{}) (*sql.Rows, error)
+	Exec(replace bool, query string, args ...interface{}) (sql.Result, error)
+	Prepare(replace bool, query string) (*sql.Stmt, error)
 }
 
 // 将src转换成sql的值，并写入到w中。
@@ -156,7 +156,7 @@ func createOne(e engine, v interface{}) error {
 		return err
 	}
 
-	_, err = e.Exec(sql, nil)
+	_, err = e.Exec(false, sql, nil)
 	return err
 }
 
@@ -184,7 +184,7 @@ func findOne(e engine, v interface{}) error {
 		return err
 	}
 
-	rows, err := e.Query(sql.String())
+	rows, err := e.Query(false, sql.String())
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func insertOne(e engine, v interface{}) error {
 	sql.Truncate(sql.Len() - 1)
 	sql.WriteByte(')')
 
-	_, err = e.Exec(sql.String())
+	_, err = e.Exec(false, sql.String())
 	return err
 }
 
@@ -293,7 +293,7 @@ func updateOne(e engine, v interface{}) error {
 		return err
 	}
 
-	_, err = e.Exec(sql.String())
+	_, err = e.Exec(false, sql.String())
 	return err
 }
 
@@ -322,7 +322,7 @@ func deleteOne(e engine, v interface{}) error {
 		return err
 	}
 
-	_, err = e.Exec(sql.String())
+	_, err = e.Exec(false, sql.String())
 	return err
 }
 
@@ -352,7 +352,7 @@ func dropOne(e engine, v interface{}) error {
 
 	sql := bytes.NewBufferString("DROP ")
 	WriteString(sql, tbl)
-	_, err = e.Exec(sql.String())
+	_, err = e.Exec(false, sql.String())
 	return err
 }
 
@@ -367,7 +367,7 @@ func truncateOne(e engine, v interface{}) error {
 	}
 
 	sql := e.Dialect().TruncateTableSQL(buf.String())
-	_, err = e.Exec(sql)
+	_, err = e.Exec(false, sql)
 	return err
 }
 

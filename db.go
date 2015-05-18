@@ -54,15 +54,24 @@ func (db *DB) Dialect() Dialect {
 	return db.dialect
 }
 
-func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+func (db *DB) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
+	if replace {
+		query = db.replacer.Replace(query)
+	}
 	return db.stdDB.Query(query, args...)
 }
 
-func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (db *DB) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
+	if replace {
+		query = db.replacer.Replace(query)
+	}
 	return db.stdDB.Exec(query, args...)
 }
 
-func (db *DB) Prepare(query string) (*sql.Stmt, error) {
+func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
+	if replace {
+		query = db.replacer.Replace(query)
+	}
 	return db.stdDB.Prepare(query)
 }
 
@@ -119,15 +128,24 @@ func (t *Tx) StdTx() *sql.Tx {
 	return t.stdTx
 }
 
-func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
+func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
+	if replace {
+		query = tx.db.replacer.Replace(query)
+	}
 	return tx.stdTx.Query(query, args...)
 }
 
-func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
+	if replace {
+		query = tx.db.replacer.Replace(query)
+	}
 	return tx.stdTx.Exec(query, args...)
 }
 
-func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
+func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
+	if replace {
+		query = tx.db.replacer.Replace(query)
+	}
 	return tx.stdTx.Prepare(query)
 }
 

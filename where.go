@@ -68,7 +68,7 @@ func (w *Where) Delete() error {
 	sql := bytes.NewBufferString("DELETE FROM ")
 	w.e.Dialect().Quote(sql, w.table)
 	sql.WriteString(w.cond.String())
-	_, err := w.e.Exec(sql.String(), w.args...)
+	_, err := w.e.Exec(false, sql.String(), w.args...)
 	return err
 }
 
@@ -93,7 +93,7 @@ func (w *Where) Update(data map[string]interface{}) error {
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
 
 	sql.WriteString(w.cond.String())
-	_, err := w.e.Exec(sql.String(), w.args...)
+	_, err := w.e.Exec(false, sql.String(), w.args...)
 	return err
 }
 
@@ -118,7 +118,7 @@ func (w *Where) Select(cols ...string) ([]map[string]interface{}, error) {
 	sql.WriteByte(' ')
 	sql.WriteString(w.cond.String())
 
-	rows, err := w.e.Query(sql.String(), w.args...)
+	rows, err := w.e.Query(false, sql.String(), w.args...)
 	if err != nil {
 		return nil, err
 	}
