@@ -6,6 +6,7 @@ package orm
 
 import (
 	"bytes"
+	"database/sql"
 	"errors"
 
 	"github.com/issue9/orm/fetch"
@@ -60,7 +61,7 @@ func (w *Where) Table(tableName string) *Where {
 	return w
 }
 
-func (w *Where) Delete() error {
+func (w *Where) Delete(replace bool) error {
 	if len(w.table) == 0 {
 		return errors.New("Where:Delete:未指定表名")
 	}
@@ -68,11 +69,11 @@ func (w *Where) Delete() error {
 	sql := bytes.NewBufferString("DELETE FROM ")
 	w.e.Dialect().Quote(sql, w.table)
 	sql.WriteString(w.cond.String())
-	_, err := w.e.Exec(false, sql.String(), w.args...)
+	_, err := w.e.Exec(replace, sql.String(), w.args...)
 	return err
 }
 
-func (w *Where) Update(data map[string]interface{}) error {
+func (w *Where) Update(replace bool, data map[string]interface{}) error {
 	if len(w.table) == 0 {
 		return errors.New("Where:Update:未指定表名")
 	}
@@ -93,11 +94,27 @@ func (w *Where) Update(data map[string]interface{}) error {
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
 
 	sql.WriteString(w.cond.String())
-	_, err := w.e.Exec(false, sql.String(), w.args...)
+	_, err := w.e.Exec(replace, sql.String(), w.args...)
 	return err
 }
 
-func (w *Where) Select(cols ...string) ([]map[string]interface{}, error) {
+func (w *Where) Select(replace bool, objs interface{}) error {
+	rows, err := w.buildSelectSQL(replace)
+	if err != nil {
+		return err
+	}
+	return fetch.Obj(objs, rows)
+}
+
+func (w *Where) SelectMap(replace bool, cols ...string) ([]map[string]interface{}, error) {
+	rows, err := w.buildSelectSQL(replace, cols...)
+	if err != nil {
+		return nil, err
+	}
+	return fetch.Map(false, rows)
+}
+
+func (w *Where) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
 	if len(w.table) == 0 {
 		return nil, errors.New("Where:Select:未指定表名")
 	}
@@ -118,9 +135,5 @@ func (w *Where) Select(cols ...string) ([]map[string]interface{}, error) {
 	sql.WriteByte(' ')
 	sql.WriteString(w.cond.String())
 
-	rows, err := w.e.Query(false, sql.String(), w.args...)
-	if err != nil {
-		return nil, err
-	}
-	return fetch.Map(false, rows)
+	return w.e.Query(replace, sql.String(), w.args...)
 }
