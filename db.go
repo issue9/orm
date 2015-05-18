@@ -15,6 +15,7 @@ const (
 	closeQuotePlaceholder = "}"
 )
 
+// 可以以对象的方式存取数据库。
 type DB struct {
 	stdDB    *sql.DB
 	dialect  Dialect
@@ -22,6 +23,7 @@ type DB struct {
 	replacer *strings.Replacer
 }
 
+// 声明一个新的DB实例。
 func NewDB(driverName, dataSourceName, prefix string, dialect Dialect) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
