@@ -9,6 +9,8 @@ import (
 )
 
 type Dialect interface {
+	QuoteTuple() (openQuote, closeQuote byte)
+
 	Quote(w *bytes.Buffer, colName string) error
 
 	// 生成LIMIT N OFFSET M 或是相同的语意的语句。

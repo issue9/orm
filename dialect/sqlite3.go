@@ -14,6 +14,11 @@ import (
 
 type Sqlite3 struct{}
 
+// implement orm.Dialect.QuoteTuple()
+func (m *Sqlite3) QuoteTuple() (byte, byte) {
+	return '`', '`'
+}
+
 // implement orm.Dialect.Quote()
 func (s *Sqlite3) Quote(w *bytes.Buffer, name string) error {
 	if err := w.WriteByte('`'); err != nil {

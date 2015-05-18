@@ -16,6 +16,11 @@ import (
 
 type Mysql struct{}
 
+// implement orm.Dialect.QuoteTuple()
+func (m *Mysql) QuoteTuple() (byte, byte) {
+	return '`', '`'
+}
+
 // implement orm.Dialect.Quote
 func (m *Mysql) Quote(w *bytes.Buffer, name string) error {
 	if err := w.WriteByte('`'); err != nil {

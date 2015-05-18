@@ -6,12 +6,20 @@ package orm
 
 import (
 	"database/sql"
+	"strings"
+)
+
+const (
+	prefixPlaceholder     = "#"
+	openQuotePlaceholder  = "{"
+	closeQuotePlaceholder = "}"
 )
 
 type DB struct {
-	stdDB   *sql.DB
-	dialect Dialect
-	prefix  string
+	stdDB    *sql.DB
+	dialect  Dialect
+	prefix   string
+	replacer *strings.Replacer
 }
 
 func NewDB(driverName, dataSourceName, prefix string, dialect Dialect) (*DB, error) {
@@ -20,10 +28,16 @@ func NewDB(driverName, dataSourceName, prefix string, dialect Dialect) (*DB, err
 		return nil, err
 	}
 
+	l, r := dialect.QuoteTuple()
 	return &DB{
 		stdDB:   db,
 		dialect: dialect,
 		prefix:  prefix,
+		replacer: strings.NewReplacer(
+			prefixPlaceholder, prefix,
+			openQuotePlaceholder, string(l),
+			closeQuotePlaceholder, string(r),
+		),
 	}, nil
 }
 

@@ -15,6 +15,11 @@ import (
 
 type Postgres struct{}
 
+// implement orm.Dialect.QuoteTuple()
+func (m *Postgres) QuoteTuple() (byte, byte) {
+	return '`', '`'
+}
+
 // implement orm.Dialect.Quote()
 func (p *Postgres) Quote(w *bytes.Buffer, name string) error {
 	if err := w.WriteByte('`'); err != nil {
