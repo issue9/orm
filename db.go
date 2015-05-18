@@ -52,25 +52,50 @@ func (db *DB) Prepare(query string) (*sql.Stmt, error) {
 	return db.stdDB.Prepare(query)
 }
 
-// 插入一个或是多个数据，v只能是struct或是Struct指针
-func (db *DB) Insert(v interface{}) error {
-	return insertMult(db, v)
+// 插入一个或是多个数据。v可以是struct或是struct指针，
+// 每个v的o类型可以不相同。
+func (db *DB) Insert(v ...interface{}) error {
+	return insertMult(db, v...)
 }
 
-func (db *DB) Delete(v interface{}) error {
-	return deleteMult(db, v)
+// 向table表中插入一条或多条数据。
+func (db *DB) InsertMap(table string, values []map[string]interface{}) error {
+	// TODO
+	return nil
 }
 
-func (db *DB) Update(v interface{}) error {
-	return updateMult(db, v)
+func (db *DB) Delete(v ...interface{}) error {
+	return deleteMult(db, v...)
 }
 
-func (db *DB) Select(v interface{}) error {
-	return findMult(db, v)
+// 删除table表中col字段为vals的所有记录。
+func (db *DB) DeleteCol(table string, col string, vals ...interface{}) error {
+	//TODO
+	return nil
 }
 
-func (db *DB) Create(v interface{}) error {
-	return createMult(db, v)
+func (db *DB) Update(v ...interface{}) error {
+	return updateMult(db, v...)
+}
+
+// 删除table表中字段col的值为vals的所有记录。
+func (db *DB) UpdateCol(table string, data map[string]interface{}, col string, vals ...interface{}) error {
+	// TODO
+	return nil
+}
+
+func (db *DB) Select(v ...interface{}) error {
+	return findMult(db, v...)
+}
+
+// 查询table表中字段col的值为vals的所有记录
+func (db *DB) Find(table string, col string, vals ...interface{}) ([]map[string]interface{}, error) {
+	//TODO
+	return nil, nil
+}
+
+func (db *DB) Create(v ...interface{}) error {
+	return createMult(db, v...)
 }
 
 // 删除表
@@ -130,20 +155,20 @@ func (tx *Tx) Rollback() error {
 // v可以是struct或是相同struct组成的数组。
 // 若v中指定了自增字段，则该字段的值在插入数据库时，
 // 会被自动忽略。
-func (tx *Tx) Insert(v interface{}) error {
-	return insertMult(tx, v)
+func (tx *Tx) Insert(v ...interface{}) error {
+	return insertMult(tx, v...)
 }
 
 // 更新一个或多个类型。
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func (tx *Tx) Update(v interface{}) error {
-	return updateMult(tx, v)
+func (tx *Tx) Update(v ...interface{}) error {
+	return updateMult(tx, v...)
 }
 
 // 删除指定的数据对象。
-func (tx *Tx) Delete(v interface{}) error {
-	return deleteMult(tx, v)
+func (tx *Tx) Delete(v ...interface{}) error {
+	return deleteMult(tx, v...)
 }
 
 // 创建数据表。

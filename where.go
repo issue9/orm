@@ -17,15 +17,15 @@ const (
 )
 
 type Where struct {
-	db    db
+	e     engine
 	table string
 	cond  *bytes.Buffer
 	args  []interface{}
 }
 
-func newWhere(db db) *Where {
+func newWhere(engine engine) *Where {
 	return &Where{
-		db:   db,
+		e:    engine,
 		cond: new(bytes.Buffer),
 		args: []interface{}{},
 	}
@@ -66,9 +66,9 @@ func (w *Where) Delete() error {
 	}
 
 	sql := bytes.NewBufferString("DELETE FROM ")
-	w.db.Dialect().Quote(sql, w.table)
+	w.e.Dialect().Quote(sql, w.table)
 	sql.WriteString(w.cond.String())
-	_, err := w.db.Exec(sql.String(), w.args...)
+	_, err := w.e.Exec(sql.String(), w.args...)
 	return err
 }
 
@@ -82,10 +82,10 @@ func (w *Where) Update(data map[string]interface{}) error {
 	}
 
 	sql := bytes.NewBufferString("UPDATE ")
-	w.db.Dialect().Quote(sql, w.table)
+	w.e.Dialect().Quote(sql, w.table)
 	sql.WriteString(" SET ")
 	for k, v := range data {
-		w.db.Dialect().Quote(sql, k)
+		w.e.Dialect().Quote(sql, k)
 		sql.WriteByte('=')
 		AsString(sql, v)
 		sql.WriteByte(',')
@@ -93,7 +93,7 @@ func (w *Where) Update(data map[string]interface{}) error {
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
 
 	sql.WriteString(w.cond.String())
-	_, err := w.db.Exec(sql.String(), w.args...)
+	_, err := w.e.Exec(sql.String(), w.args...)
 	return err
 }
 
@@ -108,17 +108,17 @@ func (w *Where) Select(cols ...string) ([]map[string]interface{}, error) {
 
 	sql := bytes.NewBufferString("SELECT ")
 	for _, v := range cols {
-		w.db.Dialect().Quote(sql, v)
+		w.e.Dialect().Quote(sql, v)
 		sql.WriteByte(',')
 	}
 	sql.Truncate(sql.Len() - 1)
 
 	sql.WriteString(" FROM ")
-	w.db.Dialect().Quote(sql, w.table)
+	w.e.Dialect().Quote(sql, w.table)
 	sql.WriteByte(' ')
 	sql.WriteString(w.cond.String())
 
-	rows, err := w.db.Query(sql.String(), w.args...)
+	rows, err := w.e.Query(sql.String(), w.args...)
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ import (
 )
 
 // DB与Tx的共有接口，方便以下方法调用。
-type db interface {
+type engine interface {
 	Dialect() Dialect
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
@@ -109,7 +109,7 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 
 // 创建或是更新一个数据表。
 // v为一个结构体或是结构体指针。
-func createOne(db db, v interface{}) error {
+func createOne(engine engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -124,17 +124,17 @@ func createOne(db db, v interface{}) error {
 		return errors.New("createOne:无效的v.Kind()")
 	}
 
-	sql, err := db.Dialect().CreateTableSQL(m)
+	sql, err := engine.Dialect().CreateTableSQL(m)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec(sql, nil)
+	_, err = engine.Exec(sql, nil)
 	return err
 }
 
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
-func findOne(db db, v interface{}) error {
+func findOne(engine engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -151,13 +151,13 @@ func findOne(db db, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("SELECT * FROM ")
-	db.Dialect().Quote(sql, m.Name)
+	engine.Dialect().Quote(sql, m.Name)
 
 	if err := where(sql, m, rval); err != nil {
 		return err
 	}
 
-	rows, err := db.Query(sql.String())
+	rows, err := engine.Query(sql.String())
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func findOne(db db, v interface{}) error {
 // 插入一个对象到数据库
 // 以v中的主键或是唯一索引作为where条件语句。
 // 自增字段，即使指定了值，也不会被添加
-func insertOne(db db, v interface{}) error {
+func insertOne(engine engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -204,11 +204,11 @@ func insertOne(db db, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("INSERT INTO ")
-	db.Dialect().Quote(sql, m.Name)
+	engine.Dialect().Quote(sql, m.Name)
 
 	sql.WriteByte('(')
 	for _, col := range keys {
-		db.Dialect().Quote(sql, col)
+		engine.Dialect().Quote(sql, col)
 		sql.WriteByte(',')
 	}
 	sql.Truncate(sql.Len() - 1)
@@ -220,13 +220,13 @@ func insertOne(db db, v interface{}) error {
 	sql.Truncate(sql.Len() - 1)
 	sql.WriteByte(')')
 
-	_, err = db.Exec(sql.String())
+	_, err = engine.Exec(sql.String())
 	return err
 }
 
 // 更新一个对象
 // 以v中的主键或是唯一索引作为where条件语句，其它值为更新值
-func updateOne(db db, v interface{}) error {
+func updateOne(engine engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -243,7 +243,7 @@ func updateOne(db db, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("UPDATE ")
-	db.Dialect().Quote(sql, m.Name)
+	engine.Dialect().Quote(sql, m.Name)
 	sql.WriteString(" SET ")
 
 	for name, col := range m.Cols {
@@ -257,7 +257,7 @@ func updateOne(db db, v interface{}) error {
 			continue
 		}
 
-		db.Dialect().Quote(sql, name)
+		engine.Dialect().Quote(sql, name)
 		sql.WriteByte('=')
 		AsString(sql, field.Interface())
 	}
@@ -266,13 +266,13 @@ func updateOne(db db, v interface{}) error {
 		return err
 	}
 
-	_, err = db.Exec(sql.String())
+	_, err = engine.Exec(sql.String())
 	return err
 }
 
 // 删除v表示的单个对象的内容
 // 以v中的主键或是唯一索引作为where条件语句
-func deleteOne(db db, v interface{}) error {
+func deleteOne(engine engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -289,20 +289,20 @@ func deleteOne(db db, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("DELETE FROM ")
-	db.Dialect().Quote(sql, m.Name)
+	engine.Dialect().Quote(sql, m.Name)
 
 	if err := where(sql, m, rval); err != nil {
 		return err
 	}
 
-	_, err = db.Exec(sql.String())
+	_, err = engine.Exec(sql.String())
 	return err
 }
 
 // 创建一个或多个数据表
-func createMult(db db, objs ...interface{}) error {
+func createMult(engine engine, objs ...interface{}) error {
 	for _, obj := range objs {
-		if err := createOne(db, obj); err != nil {
+		if err := createOne(engine, obj); err != nil {
 			return err
 		}
 	}
@@ -312,135 +312,43 @@ func createMult(db db, objs ...interface{}) error {
 
 // 插入一个或多个数据
 // v可以是对象或是对象数组
-func insertMult(db db, v interface{}) error {
-	rval := reflect.ValueOf(v)
-	if rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
+func insertMult(engine engine, objs ...interface{}) error {
+	for _, obj := range objs {
+		if err := insertOne(engine, obj); err != nil {
+			return err
+		}
 	}
-
-	switch rval.Kind() {
-	case reflect.Struct:
-		return insertOne(db, v)
-	case reflect.Slice, reflect.Array:
-		elemType := rval.Type().Elem() // 数组元素的类型
-
-		if elemType.Kind() == reflect.Ptr {
-			elemType = elemType.Elem()
-		}
-
-		if elemType.Kind() != reflect.Struct {
-			return errors.New("insertMult:数组元素类型不正确")
-		}
-
-		for i := 0; i < rval.Len(); i++ {
-			if err := insertOne(db, rval.Index(i).Interface()); err != nil {
-				return err
-			}
-		}
-	default:
-		return fmt.Errorf("insertMult:v的类型[%v]无效", rval.Kind())
-	}
-
 	return nil
 }
 
 // 查找多个数据
-func findMult(db db, v interface{}) error {
-	rval := reflect.ValueOf(v)
-	if rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
+func findMult(engine engine, objs ...interface{}) error {
+	for _, obj := range objs {
+		if err := findOne(engine, obj); err != nil {
+			return err
+		}
 	}
-
-	switch rval.Kind() {
-	case reflect.Struct:
-		return findOne(db, v)
-	case reflect.Array, reflect.Slice:
-		elemType := rval.Type().Elem() // 数组元素的类型
-
-		if elemType.Kind() == reflect.Ptr {
-			elemType = elemType.Elem()
-		}
-
-		if elemType.Kind() != reflect.Struct {
-			return errors.New("findMult:数组元素类型不正确")
-		}
-
-		for i := 0; i < rval.Len(); i++ {
-			if err := findOne(db, rval.Index(i).Interface()); err != nil {
-				return err
-			}
-		}
-	default:
-		return errors.New("findMult:v的类型无效")
-	}
-
 	return nil
 }
 
 // 更新一个或多个类型。
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func updateMult(db db, v interface{}) error {
-	rval := reflect.ValueOf(v)
-	if rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
+func updateMult(engine engine, objs ...interface{}) error {
+	for _, obj := range objs {
+		if err := updateOne(engine, obj); err != nil {
+			return err
+		}
 	}
-
-	switch rval.Kind() {
-	case reflect.Struct:
-		return updateOne(db, v)
-	case reflect.Array, reflect.Slice:
-		elemType := rval.Type().Elem() // 数组元素的类型
-
-		if elemType.Kind() == reflect.Ptr {
-			elemType = elemType.Elem()
-		}
-
-		if elemType.Kind() != reflect.Struct {
-			return errors.New("updateMult:数组元素类型不正确")
-		}
-
-		for i := 0; i < rval.Len(); i++ {
-			if err := updateOne(db, rval.Index(i).Interface()); err != nil {
-				return err
-			}
-		}
-	default:
-		return errors.New("updateMult:v的类型无效")
-	}
-
 	return nil
 }
 
 // 删除指定的数据对象。
-func deleteMult(db db, v interface{}) error {
-	rval := reflect.ValueOf(v)
-	if rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
+func deleteMult(engine engine, objs ...interface{}) error {
+	for _, obj := range objs {
+		if err := deleteOne(engine, obj); err != nil {
+			return err
+		}
 	}
-
-	switch rval.Kind() {
-	case reflect.Struct:
-		return deleteOne(db, v)
-	case reflect.Array, reflect.Slice:
-		elemType := rval.Type().Elem() // 数组元素的类型
-
-		if elemType.Kind() == reflect.Ptr {
-			elemType = elemType.Elem()
-		}
-
-		if elemType.Kind() != reflect.Struct {
-			return errors.New("deleteMult:数组元素类型不正确,只能是指针或是struct的指针")
-		}
-
-		for i := 0; i < rval.Len(); i++ {
-			if err := deleteOne(db, rval.Index(i).Interface()); err != nil {
-				return err
-			}
-		}
-	default:
-		return errors.New("deleteMult:v的类型无效")
-	}
-
 	return nil
 }
