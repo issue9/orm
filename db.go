@@ -58,30 +58,12 @@ func (db *DB) Insert(v ...interface{}) error {
 	return insertMult(db, v...)
 }
 
-// 向table表中插入一条或多条数据。
-func (db *DB) InsertMap(table string, values []map[string]interface{}) error {
-	// TODO
-	return nil
-}
-
 func (db *DB) Delete(v ...interface{}) error {
 	return deleteMult(db, v...)
 }
 
-// 删除table表中col字段为vals的所有记录。
-func (db *DB) DeleteCol(table string, col string, vals ...interface{}) error {
-	//TODO
-	return nil
-}
-
 func (db *DB) Update(v ...interface{}) error {
 	return updateMult(db, v...)
-}
-
-// 删除table表中字段col的值为vals的所有记录。
-func (db *DB) UpdateCol(table string, data map[string]interface{}, col string, vals ...interface{}) error {
-	// TODO
-	return nil
 }
 
 func (db *DB) Select(v ...interface{}) error {
