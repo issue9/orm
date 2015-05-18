@@ -24,7 +24,7 @@ type engine interface {
 }
 
 // 将src转换成sql的值，并写入到w中。
-func AsString(w *bytes.Buffer, src interface{}) error {
+func WriteString(w *bytes.Buffer, src interface{}) error {
 	switch v := src.(type) {
 	case string:
 		w.WriteString(v)
@@ -52,6 +52,33 @@ func AsString(w *bytes.Buffer, src interface{}) error {
 	}
 
 	return nil
+}
+
+func AsString(src interface{}) string {
+	switch v := src.(type) {
+	case string:
+		return v
+	case []byte:
+		return string(v)
+	case []rune:
+		return string(v)
+	}
+
+	rv := reflect.ValueOf(src)
+	switch rv.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(rv.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(rv.Uint(), 10)
+	case reflect.Float64:
+		return strconv.FormatFloat(rv.Float(), 'g', -1, 64)
+	case reflect.Float32:
+		return strconv.FormatFloat(rv.Float(), 'g', -1, 32)
+	case reflect.Bool:
+		return strconv.FormatBool(rv.Bool())
+	default:
+		return fmt.Sprint(src)
+	}
 }
 
 // 检测rval中与cols对应的字段都是有效的，且为非零值。
@@ -83,7 +110,7 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 		for _, col := range m.PK {
 			sql.WriteString(col.Name)
 			sql.WriteByte('=')
-			AsString(sql, rval.FieldByName(col.GoName).Interface())
+			WriteString(sql, rval.FieldByName(col.GoName).Interface())
 		}
 		return nil
 	}
@@ -99,7 +126,7 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 			field := rval.FieldByName(col.GoName)
 			sql.WriteString(col.Name)
 			sql.WriteByte('=')
-			AsString(sql, field.Interface())
+			WriteString(sql, field.Interface())
 		}
 		return nil
 	} // end range m.UniqueIndexes
@@ -109,7 +136,7 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 
 // 创建或是更新一个数据表。
 // v为一个结构体或是结构体指针。
-func createOne(engine engine, v interface{}) error {
+func createOne(e engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -124,17 +151,17 @@ func createOne(engine engine, v interface{}) error {
 		return errors.New("createOne:无效的v.Kind()")
 	}
 
-	sql, err := engine.Dialect().CreateTableSQL(m)
+	sql, err := e.Dialect().CreateTableSQL(m)
 	if err != nil {
 		return err
 	}
 
-	_, err = engine.Exec(sql, nil)
+	_, err = e.Exec(sql, nil)
 	return err
 }
 
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
-func findOne(engine engine, v interface{}) error {
+func findOne(e engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -151,13 +178,13 @@ func findOne(engine engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("SELECT * FROM ")
-	engine.Dialect().Quote(sql, m.Name)
+	e.Dialect().Quote(sql, m.Name)
 
 	if err := where(sql, m, rval); err != nil {
 		return err
 	}
 
-	rows, err := engine.Query(sql.String())
+	rows, err := e.Query(sql.String())
 	if err != nil {
 		return err
 	}
@@ -168,7 +195,7 @@ func findOne(engine engine, v interface{}) error {
 // 插入一个对象到数据库
 // 以v中的主键或是唯一索引作为where条件语句。
 // 自增字段，即使指定了值，也不会被添加
-func insertOne(engine engine, v interface{}) error {
+func insertOne(e engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -204,29 +231,29 @@ func insertOne(engine engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("INSERT INTO ")
-	engine.Dialect().Quote(sql, m.Name)
+	e.Dialect().Quote(sql, m.Name)
 
 	sql.WriteByte('(')
 	for _, col := range keys {
-		engine.Dialect().Quote(sql, col)
+		e.Dialect().Quote(sql, col)
 		sql.WriteByte(',')
 	}
 	sql.Truncate(sql.Len() - 1)
 	sql.WriteString(")VALUES(")
 	for _, val := range vals {
-		AsString(sql, val)
+		WriteString(sql, val)
 		sql.WriteByte(',')
 	}
 	sql.Truncate(sql.Len() - 1)
 	sql.WriteByte(')')
 
-	_, err = engine.Exec(sql.String())
+	_, err = e.Exec(sql.String())
 	return err
 }
 
 // 更新一个对象
 // 以v中的主键或是唯一索引作为where条件语句，其它值为更新值
-func updateOne(engine engine, v interface{}) error {
+func updateOne(e engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -243,7 +270,7 @@ func updateOne(engine engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("UPDATE ")
-	engine.Dialect().Quote(sql, m.Name)
+	e.Dialect().Quote(sql, m.Name)
 	sql.WriteString(" SET ")
 
 	for name, col := range m.Cols {
@@ -257,22 +284,22 @@ func updateOne(engine engine, v interface{}) error {
 			continue
 		}
 
-		engine.Dialect().Quote(sql, name)
+		e.Dialect().Quote(sql, name)
 		sql.WriteByte('=')
-		AsString(sql, field.Interface())
+		WriteString(sql, field.Interface())
 	}
 
 	if err := where(sql, m, rval); err != nil {
 		return err
 	}
 
-	_, err = engine.Exec(sql.String())
+	_, err = e.Exec(sql.String())
 	return err
 }
 
 // 删除v表示的单个对象的内容
 // 以v中的主键或是唯一索引作为where条件语句
-func deleteOne(engine engine, v interface{}) error {
+func deleteOne(e engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {
 		return err
@@ -289,20 +316,65 @@ func deleteOne(engine engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("DELETE FROM ")
-	engine.Dialect().Quote(sql, m.Name)
+	e.Dialect().Quote(sql, m.Name)
 
 	if err := where(sql, m, rval); err != nil {
 		return err
 	}
 
-	_, err = engine.Exec(sql.String())
+	_, err = e.Exec(sql.String())
+	return err
+}
+
+// 获取v对象的表名，v可以是一个结构体，也可以是一个字符串。
+func getTableName(e engine, v interface{}) (string, error) {
+	switch tbl := v.(type) {
+	case string:
+		return tbl, nil
+	case []rune:
+		return string(tbl), nil
+	case []byte:
+		return string(tbl), nil
+	}
+
+	m, err := NewModel(v)
+	if err != nil {
+		return "", err
+	}
+	return m.Name, nil
+}
+
+func dropOne(e engine, v interface{}) error {
+	tbl, err := getTableName(e, v)
+	if err != nil {
+		return err
+	}
+
+	sql := bytes.NewBufferString("DROP ")
+	WriteString(sql, tbl)
+	_, err = e.Exec(sql.String())
+	return err
+}
+
+func truncateOne(e engine, v interface{}) error {
+	tbl, err := getTableName(e, v)
+	if err != nil {
+		return err
+	}
+	buf := new(bytes.Buffer)
+	if err := e.Dialect().Quote(buf, tbl); err != nil {
+		return err
+	}
+
+	sql := e.Dialect().TruncateTableSQL(buf.String())
+	_, err = e.Exec(sql)
 	return err
 }
 
 // 创建一个或多个数据表
-func createMult(engine engine, objs ...interface{}) error {
+func createMult(e engine, objs ...interface{}) error {
 	for _, obj := range objs {
-		if err := createOne(engine, obj); err != nil {
+		if err := createOne(e, obj); err != nil {
 			return err
 		}
 	}
@@ -312,9 +384,9 @@ func createMult(engine engine, objs ...interface{}) error {
 
 // 插入一个或多个数据
 // v可以是对象或是对象数组
-func insertMult(engine engine, objs ...interface{}) error {
+func insertMult(e engine, objs ...interface{}) error {
 	for _, obj := range objs {
-		if err := insertOne(engine, obj); err != nil {
+		if err := insertOne(e, obj); err != nil {
 			return err
 		}
 	}
@@ -322,9 +394,9 @@ func insertMult(engine engine, objs ...interface{}) error {
 }
 
 // 查找多个数据
-func findMult(engine engine, objs ...interface{}) error {
+func findMult(e engine, objs ...interface{}) error {
 	for _, obj := range objs {
-		if err := findOne(engine, obj); err != nil {
+		if err := findOne(e, obj); err != nil {
 			return err
 		}
 	}
@@ -334,9 +406,9 @@ func findMult(engine engine, objs ...interface{}) error {
 // 更新一个或多个类型。
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func updateMult(engine engine, objs ...interface{}) error {
+func updateMult(e engine, objs ...interface{}) error {
 	for _, obj := range objs {
-		if err := updateOne(engine, obj); err != nil {
+		if err := updateOne(e, obj); err != nil {
 			return err
 		}
 	}
@@ -344,9 +416,27 @@ func updateMult(engine engine, objs ...interface{}) error {
 }
 
 // 删除指定的数据对象。
-func deleteMult(engine engine, objs ...interface{}) error {
+func deleteMult(e engine, objs ...interface{}) error {
 	for _, obj := range objs {
-		if err := deleteOne(engine, obj); err != nil {
+		if err := deleteOne(e, obj); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func dropMult(e engine, objs ...interface{}) error {
+	for _, obj := range objs {
+		if err := dropOne(e, obj); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func truncateMult(e engine, objs ...interface{}) error {
+	for _, obj := range objs {
+		if err := truncateOne(e, obj); err != nil {
 			return err
 		}
 	}

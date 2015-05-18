@@ -99,12 +99,12 @@ func (db *DB) Create(v ...interface{}) error {
 }
 
 // 删除表
-func (db *DB) Drop(v interface{}) error {
-	return nil
+func (db *DB) Drop(v ...interface{}) error {
+	return dropMult(db, v...)
 }
 
-func (db *DB) Truncate(v interface{}) error {
-	return nil
+func (db *DB) Truncate(v ...interface{}) error {
+	return truncateMult(db, v...)
 }
 
 func (db *DB) Where(cond string, args ...interface{}) *Where {
@@ -177,15 +177,13 @@ func (tx *Tx) Create(v ...interface{}) error {
 }
 
 // 删除表结构及数据。
-func (tx *Tx) Drop(tableName string) error {
-	_, err := tx.Exec("DROP TABLE "+tableName, nil)
-	return err
+func (tx *Tx) Drop(v ...interface{}) error {
+	return dropMult(tx, v...)
 }
 
 // 清除表内容，但保留表结构。
-func (t *Tx) Truncate(tableName string) error {
-	_, err := t.Exec(t.Dialect().TruncateTableSQL(tableName), nil)
-	return err
+func (tx *Tx) Truncate(v ...interface{}) error {
+	return truncateMult(tx, v...)
 }
 
 func (tx *Tx) Where(cond string, args ...interface{}) *Where {

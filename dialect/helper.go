@@ -150,7 +150,7 @@ func mysqlLimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) er
 	if _, err := w.WriteString(" LIMIT "); err != nil {
 		return err
 	}
-	if err := orm.AsString(w, limit); err != nil {
+	if err := orm.WriteString(w, limit); err != nil {
 		return err
 	}
 
@@ -161,7 +161,7 @@ func mysqlLimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) er
 	if _, err := w.WriteString(" OFFSET "); err != nil {
 		return err
 	}
-	return orm.AsString(w, offset[0])
+	return orm.WriteString(w, offset[0])
 }
 
 // oracle系列数据库分页语法的实现。支持以下数据库：
@@ -169,15 +169,15 @@ func mysqlLimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) er
 func oracleLimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
 	if len(offset) == 0 {
 		w.WriteString(" FETCH NEXT ")
-		orm.AsString(w, limit)
+		orm.WriteString(w, limit)
 		w.WriteString(" ROWS ONLY ")
 		return nil
 	}
 
 	w.WriteString(" OFFSET ")
-	orm.AsString(w, offset[0])
+	orm.WriteString(w, offset[0])
 	w.WriteString(" ROWS FETCH NEXT ")
-	orm.AsString(w, limit)
+	orm.WriteString(w, limit)
 	w.WriteString(" ROWS ONLY ")
 	return nil
 }

@@ -20,5 +20,5 @@ type Dialect interface {
 	CreateTableSQL(m *Model) (sql string, err error)
 
 	// 清空表内容，重置AI。
-	TruncateTableSQL(tableName string) (sql string)
+	TruncateTableSQL(tableName string) string
 }

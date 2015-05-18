@@ -87,7 +87,7 @@ func (w *Where) Update(data map[string]interface{}) error {
 	for k, v := range data {
 		w.e.Dialect().Quote(sql, k)
 		sql.WriteByte('=')
-		AsString(sql, v)
+		WriteString(sql, v)
 		sql.WriteByte(',')
 	}
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
