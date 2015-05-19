@@ -13,7 +13,6 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/issue9/conv"
 	"github.com/issue9/encoding/tag"
 )
 
@@ -126,11 +125,11 @@ func (c *Column) setNullable(vals []string) (err error) {
 		return fmt.Errorf("setNullable:自增列[%v]不能为nullable", c.Name)
 	}
 
-	switch {
-	case len(vals) == 0:
+	switch len(vals) {
+	case 0:
 		c.Nullable = true
-	case len(vals) == 1:
-		if c.Nullable, err = conv.Bool(vals[0]); err != nil {
+	case 1:
+		if c.Nullable, err = strconv.ParseBool(vals[0]); err != nil {
 			return err
 		}
 	default:

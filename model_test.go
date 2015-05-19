@@ -37,6 +37,21 @@ func TestColumn_SetLen(t *testing.T) {
 	a.Error(col.setLen([]string{"1", "one"}))
 }
 
+func TestColumn_SetNullable(t *testing.T) {
+	a := assert.New(t)
+
+	col := &Column{}
+
+	a.False(col.Nullable)
+	a.NotError(col.setNullable([]string{})).True(col.Nullable)
+	a.NotError(col.setNullable([]string{"false"})).False(col.Nullable)
+	a.NotError(col.setNullable([]string{"T"})).True(col.Nullable)
+	a.NotError(col.setNullable([]string{"0"})).False(col.Nullable)
+
+	a.Error(col.setNullable([]string{"1", "2"}))
+	a.Error(col.setNullable([]string{"T1"}))
+}
+
 type modelGroup struct {
 	Group int `orm:"name(group);fk(fk_name,table.group,id,NO ACTION,)"`
 }
