@@ -11,7 +11,7 @@ import (
 	"github.com/issue9/assert"
 )
 
-func TestConTypeString(t *testing.T) {
+func TestConType_String(t *testing.T) {
 	a := assert.New(t)
 
 	a.Equal("<none>", none.String()).
@@ -25,6 +25,16 @@ func TestConTypeString(t *testing.T) {
 
 	c1 = 100
 	a.Equal("<unknown>", c1.String())
+}
+
+func TestColumn_SetLen(t *testing.T) {
+	a := assert.New(t)
+	col := &Column{}
+
+	a.NotError(col.setLen([]string{})).Equal(col.Len1, 0).Equal(col.Len2, 0)
+	a.NotError(col.setLen([]string{"1", "2"})).Equal(col.Len1, 1).Equal(col.Len2, 2)
+	a.Error(col.setLen([]string{"1", "2", "3"}))
+	a.Error(col.setLen([]string{"1", "one"}))
 }
 
 type modelGroup struct {

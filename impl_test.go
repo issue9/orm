@@ -7,7 +7,6 @@ package orm
 import (
 	"bytes"
 	"testing"
-	"time"
 
 	"github.com/issue9/assert"
 )
