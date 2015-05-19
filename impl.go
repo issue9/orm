@@ -74,8 +74,7 @@ func checkCols(cols []*Column, rval reflect.Value) bool {
 }
 
 // 根据model中的主键或是唯一索引为sql产生where语句，
-// 若两者都不存在，则返回错误信息。
-// rval为struct的reflect.Value
+// 若两者都不存在，则返回错误信息。rval为struct的reflect.Value
 func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 	if checkCols(m.PK, rval) {
 		sql.WriteString(" WHERE ")
@@ -106,8 +105,7 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 	return errors.New("where:无法产生where部分语句")
 }
 
-// 创建或是更新一个数据表。
-// v为一个结构体或是结构体指针。
+// 创建一个数据表。v为一个结构体或是结构体指针。
 func createOne(e engine, v interface{}) error {
 	m, err := NewModel(v)
 	if err != nil {

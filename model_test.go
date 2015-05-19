@@ -59,7 +59,7 @@ type modelGroup struct {
 type modelUser struct {
 	modelGroup
 
-	Id       int    `orm:"name(id);ai;"`
+	ID       int    `orm:"name(id);ai;"`
 	Email    string `orm:"unique(unique_name);index(index_name);nullable;"`
 	Username string `orm:"index(index_name);len(50)"`
 
@@ -68,6 +68,16 @@ type modelUser struct {
 
 func (m *modelUser) Meta() string {
 	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
+}
+
+func newNotEmptyModelUser() *modelUser {
+	return &modelUser{
+		ID:         1,
+		Email:      "email@test.com",
+		Username:   "username",
+		Regdate:    19700111011,
+		modelGroup: modelGroup{Group: 5},
+	}
 }
 
 func TestModels(t *testing.T) {
