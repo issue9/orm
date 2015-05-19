@@ -98,7 +98,9 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 			sql.WriteString(col.Name)
 			sql.WriteByte('=')
 			WriteString(sql, field.Interface())
+			sql.WriteString(" AND ")
 		}
+		sql.Truncate(sql.Len() - 5) // 去掉最后的" AND "五个字符
 		return nil
 	} // end range m.UniqueIndexes
 

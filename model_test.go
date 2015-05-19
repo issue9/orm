@@ -52,53 +52,25 @@ func TestColumn_SetNullable(t *testing.T) {
 	a.Error(col.setNullable([]string{"T1"}))
 }
 
-type modelGroup struct {
-	Group int `orm:"name(group);fk(fk_name,table.group,id,NO ACTION,)"`
-}
-
-type modelUser struct {
-	modelGroup
-
-	ID       int    `orm:"name(id);ai;"`
-	Email    string `orm:"unique(unique_name);index(index_name);nullable;"`
-	Username string `orm:"index(index_name);len(50)"`
-
-	Regdate int `orm:"-"`
-}
-
-func (m *modelUser) Meta() string {
-	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
-}
-
-func newNotEmptyModelUser() *modelUser {
-	return &modelUser{
-		ID:         1,
-		Email:      "email@test.com",
-		Username:   "username",
-		Regdate:    19700111011,
-		modelGroup: modelGroup{Group: 5},
-	}
-}
-
 func TestModels(t *testing.T) {
 	a := assert.New(t)
 
 	ClearModels()
 	a.Equal(0, len(models.items))
 
-	m, err := NewModel(&modelUser{})
+	m, err := NewModel(&user{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 相同的model实例，不会增加数量
-	m, err = NewModel(&modelUser{})
+	m, err = NewModel(&user{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 添加新的model
-	m, err = NewModel(&modelGroup{})
+	m, err = NewModel(&admin{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(2, len(models.items))
@@ -112,32 +84,26 @@ func TestModel(t *testing.T) {
 	ClearModels()
 	a := assert.New(t)
 
-	// todo 正确声明第二个参数！！
-	m, err := NewModel(&modelUser{})
+	m, err := NewModel(&admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols
 	idCol, found := m.Cols["id"] // 指定名称为小写
 	a.True(found)
 
-	emailCol, found := m.Cols["Email"] // 未指定别名，与字段名相同
-	a.True(found).True(emailCol.Nullable, "emailCol.Nullable==false")
-
-	usernameCol, found := m.Cols["Username"]
-	a.True(found)
-
-	groupCol, found := m.Cols["group"]
-	a.True(found)
+	usernameCol, found := m.Cols["Username"] // 未指定别名，与字段名相同
+	a.True(found).False(usernameCol.Nullable)
 
 	// 通过struct tag过滤掉的列
 	regdate, found := m.Cols["Regdate"]
 	a.False(found).Nil(regdate)
 
+	groupCol, found := m.Cols["group"]
+	a.True(found)
+
 	// index
 	index, found := m.KeyIndexes["index_name"]
-	a.True(found).
-		Equal(emailCol, index[0]).
-		Equal(usernameCol, index[1])
+	a.True(found).Equal(usernameCol, index[0])
 
 	// ai
 	a.Equal(m.AI, idCol)
@@ -146,8 +112,8 @@ func TestModel(t *testing.T) {
 	a.NotNil(m.PK).Equal(m.PK[0], idCol)
 
 	// unique_name
-	unique, found := m.UniqueIndexes["unique_name"]
-	a.True(found).Equal(unique[0], emailCol)
+	unique, found := m.UniqueIndexes["unique_username"]
+	a.True(found).Equal(unique[0], usernameCol)
 
 	fk, found := m.FK["fk_name"]
 	a.True(found).
@@ -159,7 +125,7 @@ func TestModel(t *testing.T) {
 
 	// check
 	chk, found := m.Check["chk_name"]
-	a.True(found).Equal(chk, "id>5")
+	a.True(found).Equal(chk, "id>0")
 
 	// meta
 	a.Equal(m.Meta, map[string][]string{
@@ -168,5 +134,5 @@ func TestModel(t *testing.T) {
 	})
 
 	// Meta返回的name属性
-	a.Equal(m.Name, "user")
+	a.Equal(m.Name, "administrators")
 }
