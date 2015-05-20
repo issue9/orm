@@ -17,6 +17,7 @@ const (
 	or
 )
 
+// 用于产生条件语句。
 type Where struct {
 	e     engine
 	table string
@@ -48,19 +49,24 @@ func (w *Where) where(op int, cond string, args ...interface{}) *Where {
 	return w
 }
 
+// 将之后的语句以and的形式与当前的语句进行连接
 func (w *Where) And(cond string, args ...interface{}) *Where {
 	return w.where(and, cond, args...)
 }
 
+// 将之后的语句以or的形式与当前的语句进行连接
 func (w *Where) Or(cond string, args ...interface{}) *Where {
 	return w.where(or, cond, args...)
 }
 
+// 指定表名。
 func (w *Where) Table(tableName string) *Where {
 	w.table = tableName
 	return w
 }
 
+// 将符合当前条件的所有记录删除。
+// replace，是否需将对语句的占位符进行替换。
 func (w *Where) Delete(replace bool) error {
 	if len(w.table) == 0 {
 		return errors.New("Where:Delete:未指定表名")
@@ -73,6 +79,8 @@ func (w *Where) Delete(replace bool) error {
 	return err
 }
 
+// 更新符合当前条件的所有记录。
+// replace，是否需将对语句的占位符进行替换。
 func (w *Where) Update(replace bool, data map[string]interface{}) error {
 	if len(w.table) == 0 {
 		return errors.New("Where:Update:未指定表名")
@@ -98,6 +106,8 @@ func (w *Where) Update(replace bool, data map[string]interface{}) error {
 	return err
 }
 
+// 将符合当前条件的所有记录依次写入objs中。
+// replace，是否需将对语句的占位符进行替换。
 func (w *Where) Select(replace bool, objs interface{}) error {
 	rows, err := w.buildSelectSQL(replace)
 	if err != nil {
@@ -106,6 +116,8 @@ func (w *Where) Select(replace bool, objs interface{}) error {
 	return fetch.Obj(objs, rows)
 }
 
+// 返回符合当前条件的所有记录。
+// replace，是否需将对语句的占位符进行替换。
 func (w *Where) SelectMap(replace bool, cols ...string) ([]map[string]interface{}, error) {
 	rows, err := w.buildSelectSQL(replace, cols...)
 	if err != nil {

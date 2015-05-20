@@ -9,8 +9,10 @@ import (
 )
 
 type Dialect interface {
+	// 返回符合当前数据库规范的引号对。
 	QuoteTuple() (openQuote, closeQuote byte)
 
+	// 给一个关键字加引号
 	Quote(w *bytes.Buffer, colName string) error
 
 	// 生成LIMIT N OFFSET M 或是相同的语意的语句。
