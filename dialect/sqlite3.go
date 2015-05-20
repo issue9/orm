@@ -33,7 +33,7 @@ func (s *Sqlite3) Quote(w *bytes.Buffer, name string) error {
 }
 
 // implement orm.Dialect.LimitSQL()
-func (s *Sqlite3) LimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
+func (s *Sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
 }
 

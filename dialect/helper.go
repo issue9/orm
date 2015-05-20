@@ -146,38 +146,29 @@ func createConstraints(b base, buf *bytes.Buffer, model *orm.Model) {
 
 // mysq系列数据库分页语法的实现。支持以下数据库：
 // MySQL, H2, HSQLDB, Postgres, SQLite3
-func mysqlLimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
-	if _, err := w.WriteString(" LIMIT "); err != nil {
-		return err
-	}
-	if err := orm.WriteString(w, limit); err != nil {
-		return err
+func mysqlLimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
+	if _, err := w.WriteString(" LIMIT ? "); err != nil {
+		return nil, err
 	}
 
 	if len(offset) == 0 {
-		return nil
+		return []int{limit}, nil
 	}
 
-	if _, err := w.WriteString(" OFFSET "); err != nil {
-		return err
+	if _, err := w.WriteString(" OFFSET ? "); err != nil {
+		return nil, err
 	}
-	return orm.WriteString(w, offset[0])
+	return []int{limit, offset[0]}, nil
 }
 
 // oracle系列数据库分页语法的实现。支持以下数据库：
 // Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
-func oracleLimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
+func oracleLimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	if len(offset) == 0 {
-		w.WriteString(" FETCH NEXT ")
-		orm.WriteString(w, limit)
-		w.WriteString(" ROWS ONLY ")
-		return nil
+		w.WriteString(" FETCH NEXT ? ROWS ONLY ")
+		return []int{limit}, nil
 	}
 
-	w.WriteString(" OFFSET ")
-	orm.WriteString(w, offset[0])
-	w.WriteString(" ROWS FETCH NEXT ")
-	orm.WriteString(w, limit)
-	w.WriteString(" ROWS ONLY ")
-	return nil
+	w.WriteString(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ")
+	return []int{offset[0], limit}, nil
 }

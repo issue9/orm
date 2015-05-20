@@ -35,7 +35,7 @@ func (m *Mysql) Quote(w *bytes.Buffer, name string) error {
 }
 
 // implement orm.Dialect.Limit()
-func (m *Mysql) LimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
+func (m *Mysql) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
 }
 

@@ -34,7 +34,7 @@ func (p *Postgres) Quote(w *bytes.Buffer, name string) error {
 }
 
 // implement orm.Dialect.LimitSQL()
-func (p *Postgres) LimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
+func (p *Postgres) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
 }
 

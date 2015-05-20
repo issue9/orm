@@ -8,6 +8,8 @@ import (
 	"bytes"
 )
 
+var _ Dialect = &sqlite3{}
+
 type sqlite3 struct {
 }
 
@@ -21,16 +23,15 @@ func (s *sqlite3) Quote(w *bytes.Buffer, name string) error {
 	return w.WriteByte('`')
 }
 
-func (s *sqlite3) LimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error {
-	w.WriteString(" LIMIT ")
-	WriteString(w, limit)
+func (s *sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
+	w.WriteString(" LIMIT ?")
 
 	if len(offset) == 0 {
-		return nil
+		return []int{limit}, nil
 	}
 
-	w.WriteString(" OFFSET ")
-	return WriteString(w, offset[0])
+	w.WriteString(" OFFSET ?")
+	return []int{limit, offset[0]}, nil
 }
 
 func (s *sqlite3) CreateTableSQL(m *Model) (string, error) {
