@@ -5,27 +5,26 @@
 package orm
 
 import (
-	"bytes"
 	"database/sql"
 	"strings"
 )
 
 const (
-	prefixPlaceholder     = "#"
-	openQuotePlaceholder  = "{"
-	closeQuotePlaceholder = "}"
+	tablePrefixPlaceholder = "#"
+	openQuotePlaceholder   = "{"
+	closeQuotePlaceholder  = "}"
 )
 
 // 可以以对象的方式存取数据库。
 type DB struct {
-	stdDB    *sql.DB
-	dialect  Dialect
-	prefix   string
-	replacer *strings.Replacer
+	stdDB       *sql.DB
+	dialect     Dialect
+	tablePrefix string
+	replacer    *strings.Replacer
 }
 
 // 声明一个新的DB实例。
-func NewDB(driverName, dataSourceName, prefix string, dialect Dialect) (*DB, error) {
+func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
@@ -33,11 +32,11 @@ func NewDB(driverName, dataSourceName, prefix string, dialect Dialect) (*DB, err
 
 	l, r := dialect.QuoteTuple()
 	return &DB{
-		stdDB:   db,
-		dialect: dialect,
-		prefix:  prefix,
+		stdDB:       db,
+		dialect:     dialect,
+		tablePrefix: tablePrefix,
 		replacer: strings.NewReplacer(
-			prefixPlaceholder, prefix,
+			tablePrefixPlaceholder, tablePrefix,
 			openQuotePlaceholder, string(l),
 			closeQuotePlaceholder, string(r),
 		),
@@ -117,8 +116,8 @@ func (db *DB) Where(cond string, args ...interface{}) *Where {
 	return w.And(cond, args...)
 }
 
-func (db *DB) writeTable(w *bytes.Buffer, tableName string) error {
-	return db.Dialect().Quote(w, db.prefix+tableName)
+func (db *DB) prefix() string {
+	return db.tablePrefix
 }
 
 // 事务对象
@@ -209,6 +208,6 @@ func (tx *Tx) Where(cond string, args ...interface{}) *Where {
 	return w.And(cond, args...)
 }
 
-func (tx *Tx) writeTable(w *bytes.Buffer, tableName string) error {
-	return tx.db.Dialect().Quote(w, tx.db.prefix+tableName)
+func (tx *Tx) prefix() string {
+	return tx.db.tablePrefix
 }

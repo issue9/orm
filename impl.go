@@ -21,9 +21,7 @@ type engine interface {
 	Query(replace bool, query string, args ...interface{}) (*sql.Rows, error)
 	Exec(replace bool, query string, args ...interface{}) (sql.Result, error)
 	Prepare(replace bool, query string) (*sql.Stmt, error)
-
-	// 将表名写入w中，会给表名加上前缀和引号
-	writeTable(w *bytes.Buffer, table string) error
+	prefix() string
 }
 
 // 将src转换成sql的值，并写入到w中。
@@ -155,7 +153,7 @@ func findOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("SELECT * FROM ")
-	e.writeTable(sql, m.Name)
+	e.Dialect().Quote(sql, e.prefix()+m.Name)
 
 	vals, err := where(e, sql, m, rval)
 	if err != nil {
@@ -166,6 +164,7 @@ func findOne(e engine, v interface{}) error {
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 
 	return fetch.Obj(v, rows)
 }
@@ -199,6 +198,11 @@ func insertOne(e engine, v interface{}) error {
 		if !field.IsValid() {
 			return fmt.Errorf("insertOne:未找到该名称[%v]的值", col.GoName)
 		}
+
+		// 存在默认值，且其值为0值的（无论是否是手动设置的）
+		if reflect.Zero(col.GoType).Interface() == field.Interface() && col.HasDefault {
+			continue
+		}
 		keys = append(keys, name)
 		vals = append(vals, field.Interface())
 	}
@@ -208,7 +212,7 @@ func insertOne(e engine, v interface{}) error {
 	}
 
 	sql := bytes.NewBufferString("INSERT INTO ")
-	e.writeTable(sql, m.Name)
+	e.Dialect().Quote(sql, e.prefix()+m.Name)
 
 	sql.WriteByte('(')
 	for _, col := range keys {
@@ -246,7 +250,7 @@ func updateOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("UPDATE ")
-	e.writeTable(sql, m.Name)
+	e.Dialect().Quote(sql, e.prefix()+m.Name)
 	sql.WriteString(" SET ")
 	vals := make([]interface{}, 0, len(m.Cols))
 
@@ -296,7 +300,7 @@ func deleteOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("DELETE FROM ")
-	e.writeTable(sql, m.Name)
+	e.Dialect().Quote(sql, e.prefix()+m.Name)
 
 	vals, err := where(e, sql, m, rval)
 	if err != nil {
@@ -331,8 +335,9 @@ func dropOne(e engine, v interface{}) error {
 		return err
 	}
 
-	sql := bytes.NewBufferString("DROP ")
-	sql.WriteString(tbl)
+	sql := bytes.NewBufferString("DROP TABLE IF EXISTS ")
+	//sql.WriteString(e.prefix() + tbl)
+	e.Dialect().Quote(sql, e.prefix()+tbl)
 	_, err = e.Exec(false, sql.String())
 	return err
 }
@@ -342,12 +347,8 @@ func truncateOne(e engine, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	buf := new(bytes.Buffer)
-	if err := e.Dialect().Quote(buf, tbl); err != nil {
-		return err
-	}
 
-	sql := e.Dialect().TruncateTableSQL(buf.String())
+	sql := e.Dialect().TruncateTableSQL(e.prefix() + tbl)
 	_, err = e.Exec(false, sql)
 	return err
 }

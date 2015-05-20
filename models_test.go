@@ -13,9 +13,9 @@ var createdSQL = map[string]string{
 	)`,
 	"user_info": `CREATE TABLE sqlite3_user_info(
 		uid INTEGER PRIMARY KEY,
-		FirstName TEXT,
-		LastName TEXT,
-		Sex TEXT DEFAULT 'male',
+		firstName TEXT,
+		lastName TEXT,
+		sex TEXT DEFAULT male,
 		CONSTRAINT unique_name UNIQUE(firstName,lastName)
 
 	)`,
