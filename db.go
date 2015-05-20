@@ -5,6 +5,7 @@
 package orm
 
 import (
+	"bytes"
 	"database/sql"
 	"strings"
 )
@@ -43,15 +44,18 @@ func NewDB(driverName, dataSourceName, prefix string, dialect Dialect) (*DB, err
 	}, nil
 }
 
+// 关闭当前数据库，释放所有的链接。
+// 关闭之后，之前通过db.StdDB()返回的实例也将失效。
 func (db *DB) Close() error {
-	return db.Close()
+	return db.stdDB.Close()
 }
 
-// 返回标准包中的sql.DB指针
+// 返回标准包中的sql.DB指针。
 func (db *DB) StdDB() *sql.DB {
 	return db.stdDB
 }
 
+// 返回对应的Dialect接口实例。
 func (db *DB) Dialect() Dialect {
 	return db.dialect
 }
@@ -95,12 +99,6 @@ func (db *DB) Select(v ...interface{}) error {
 	return findMult(db, v...)
 }
 
-// 查询table表中字段col的值为vals的所有记录
-func (db *DB) Find(table string, col string, vals ...interface{}) ([]map[string]interface{}, error) {
-	//TODO
-	return nil, nil
-}
-
 func (db *DB) Create(v ...interface{}) error {
 	return createMult(db, v...)
 }
@@ -117,6 +115,10 @@ func (db *DB) Truncate(v ...interface{}) error {
 func (db *DB) Where(cond string, args ...interface{}) *Where {
 	w := newWhere(db)
 	return w.And(cond, args...)
+}
+
+func (db *DB) writeTable(w *bytes.Buffer, tableName string) error {
+	return db.Dialect().Quote(w, db.prefix+tableName)
 }
 
 // 事务对象
@@ -205,4 +207,8 @@ func (tx *Tx) Truncate(v ...interface{}) error {
 func (tx *Tx) Where(cond string, args ...interface{}) *Where {
 	w := newWhere(tx)
 	return w.And(cond, args...)
+}
+
+func (tx *Tx) writeTable(w *bytes.Buffer, tableName string) error {
+	return tx.db.Dialect().Quote(w, tx.db.prefix+tableName)
 }

@@ -21,9 +21,13 @@ type engine interface {
 	Query(replace bool, query string, args ...interface{}) (*sql.Rows, error)
 	Exec(replace bool, query string, args ...interface{}) (sql.Result, error)
 	Prepare(replace bool, query string) (*sql.Stmt, error)
+
+	// 将表名写入w中，会给表名加上前缀和引号
+	writeTable(w *bytes.Buffer, table string) error
 }
 
 // 将src转换成sql的值，并写入到w中。
+// TODO 删除该函数
 func WriteString(w *bytes.Buffer, src interface{}) error {
 	switch v := src.(type) {
 	case string:
@@ -75,15 +79,17 @@ func checkCols(cols []*Column, rval reflect.Value) bool {
 
 // 根据model中的主键或是唯一索引为sql产生where语句，
 // 若两者都不存在，则返回错误信息。rval为struct的reflect.Value
-func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
+func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interface{}, error) {
+	ret := []interface{}{}
+
 	if checkCols(m.PK, rval) {
 		sql.WriteString(" WHERE ")
 		for _, col := range m.PK {
-			sql.WriteString(col.Name)
-			sql.WriteByte('=')
-			WriteString(sql, rval.FieldByName(col.GoName).Interface())
+			e.Dialect().Quote(sql, col.Name)
+			sql.WriteString("=?")
+			ret = append(ret, rval.FieldByName(col.GoName).Interface())
 		}
-		return nil
+		return ret, nil
 	}
 
 	// 若不存在pk，也不存在唯一约束
@@ -94,17 +100,16 @@ func where(sql *bytes.Buffer, m *Model, rval reflect.Value) error {
 
 		sql.WriteString(" WHERE ")
 		for _, col := range cols {
-			field := rval.FieldByName(col.GoName)
-			sql.WriteString(col.Name)
-			sql.WriteByte('=')
-			WriteString(sql, field.Interface())
+			e.Dialect().Quote(sql, col.Name)
+			sql.WriteString("=?")
+			ret = append(ret, rval.FieldByName(col.GoName).Interface())
 			sql.WriteString(" AND ")
 		}
 		sql.Truncate(sql.Len() - 5) // 去掉最后的" AND "五个字符
-		return nil
+		return ret, nil
 	} // end range m.UniqueIndexes
 
-	return errors.New("where:无法产生where部分语句")
+	return nil, errors.New("where:无法产生where部分语句")
 }
 
 // 创建一个数据表。v为一个结构体或是结构体指针。
@@ -150,13 +155,14 @@ func findOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("SELECT * FROM ")
-	e.Dialect().Quote(sql, m.Name)
+	e.writeTable(sql, m.Name)
 
-	if err := where(sql, m, rval); err != nil {
+	vals, err := where(e, sql, m, rval)
+	if err != nil {
 		return err
 	}
 
-	rows, err := e.Query(false, sql.String())
+	rows, err := e.Query(false, sql.String(), vals...)
 	if err != nil {
 		return err
 	}
@@ -201,9 +207,8 @@ func insertOne(e engine, v interface{}) error {
 		return errors.New("insertOne:未指定任何插入的列数据")
 	}
 
-	sql := new(bytes.Buffer)
-	sql.WriteString("INSERT INTO ")
-	e.Dialect().Quote(sql, m.Name)
+	sql := bytes.NewBufferString("INSERT INTO ")
+	e.writeTable(sql, m.Name)
 
 	sql.WriteByte('(')
 	for _, col := range keys {
@@ -212,14 +217,13 @@ func insertOne(e engine, v interface{}) error {
 	}
 	sql.Truncate(sql.Len() - 1)
 	sql.WriteString(")VALUES(")
-	for _, val := range vals {
-		WriteString(sql, val)
-		sql.WriteByte(',')
+	for range vals {
+		sql.WriteString("?,")
 	}
 	sql.Truncate(sql.Len() - 1)
 	sql.WriteByte(')')
 
-	_, err = e.Exec(false, sql.String())
+	_, err = e.Exec(false, sql.String(), vals...)
 	return err
 }
 
@@ -242,8 +246,9 @@ func updateOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("UPDATE ")
-	e.Dialect().Quote(sql, m.Name)
+	e.writeTable(sql, m.Name)
 	sql.WriteString(" SET ")
+	vals := make([]interface{}, 0, len(m.Cols))
 
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
@@ -257,15 +262,18 @@ func updateOne(e engine, v interface{}) error {
 		}
 
 		e.Dialect().Quote(sql, name)
-		sql.WriteByte('=')
-		WriteString(sql, field.Interface())
+		sql.WriteString("=?,")
+		vals = append(vals, field.Interface())
 	}
+	sql.Truncate(sql.Len() - 1)
 
-	if err := where(sql, m, rval); err != nil {
+	whereVals, err := where(e, sql, m, rval)
+	if err != nil {
 		return err
 	}
+	vals = append(vals, whereVals...)
 
-	_, err = e.Exec(false, sql.String())
+	_, err = e.Exec(false, sql.String(), vals...)
 	return err
 }
 
@@ -288,13 +296,14 @@ func deleteOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("DELETE FROM ")
-	e.Dialect().Quote(sql, m.Name)
+	e.writeTable(sql, m.Name)
 
-	if err := where(sql, m, rval); err != nil {
+	vals, err := where(e, sql, m, rval)
+	if err != nil {
 		return err
 	}
 
-	_, err = e.Exec(false, sql.String())
+	_, err = e.Exec(false, sql.String(), vals...)
 	return err
 }
 
@@ -323,7 +332,7 @@ func dropOne(e engine, v interface{}) error {
 	}
 
 	sql := bytes.NewBufferString("DROP ")
-	WriteString(sql, tbl)
+	sql.WriteString(tbl)
 	_, err = e.Exec(false, sql.String())
 	return err
 }

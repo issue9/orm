@@ -34,7 +34,7 @@ func (s *sqlite3) LimitSQL(w *bytes.Buffer, limit interface{}, offset ...interfa
 }
 
 func (s *sqlite3) CreateTableSQL(m *Model) (string, error) {
-	return "CREATE TABLE ", nil
+	return createdSQL[m.Name], nil
 }
 
 func (s *sqlite3) TruncateTableSQL(tableName string) string {

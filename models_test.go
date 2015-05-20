@@ -4,6 +4,32 @@
 
 package orm
 
+var createdSQL = map[string]string{
+	"users": `CREATE TABLE sqlite3_users(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		Username TEXT,
+		password TEXT,
+		CONSTRAINT unique_username UNIQUE(Username)
+	)`,
+	"user_info": `CREATE TABLE sqlite3_user_info(
+		uid INTEGER PRIMARY KEY,
+		FirstName TEXT,
+		LastName TEXT,
+		Sex TEXT DEFAULT 'male',
+		CONSTRAINT unique_name UNIQUE(firstName,lastName)
+
+	)`,
+	"administrators": `CREATE TABLE sqlite3_administrators(
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		Username TEXT,
+		password TEXT,
+		email TEXT,
+		"group" INTEGER,
+		CONSTRAINT unique_username UNIQUE(Username),
+		CONSTRAINT unique_email UNIQUE(email)
+	)`,
+}
+
 type user struct {
 	ID       int    `orm:"name(id);ai;"`
 	Username string `orm:"unique(unique_username);index(index_name);len(50)"`
@@ -30,7 +56,7 @@ type admin struct {
 	user
 
 	Email string `orm:"name(email);unique(unique_email)"`
-	Group int    `orm:"name(group);fk(fk_name,table.group,id,NO ACTION,)"`
+	Group int    `orm:"name(group);fk(fk_name,table_group,id,NO ACTION,)"`
 }
 
 func (m *admin) Meta() string {

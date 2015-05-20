@@ -45,8 +45,12 @@ func TestWriteString(t *testing.T) {
 
 func TestWhere(t *testing.T) {
 	a := assert.New(t)
+	db := newDB(a)
+	defer func() {
+		a.NotError(db.Close())
+	}()
 
-	fn := func(obj interface{}, sql string) {
+	fn := func(obj interface{}, sql string, vals []interface{}) {
 		w := new(bytes.Buffer)
 		m, err := NewModel(obj)
 		a.NotError(err).NotNil(m)
@@ -55,21 +59,25 @@ func TestWhere(t *testing.T) {
 		for rval.Kind() == reflect.Ptr {
 			rval = rval.Elem()
 		}
-		a.NotError(where(w, m, rval)).Equal(w.String(), sql)
+
+		ret, err := where(db, w, m, rval)
+		a.NotError(err).
+			Equal(w.String(), sql).
+			Equal(ret, vals)
 	}
 
 	// 测试有PK的情况
-	fn(&user{ID: 1}, " WHERE id=1")
+	fn(&user{ID: 1}, " WHERE `id`=?", []interface{}{1})
 
 	// 测试只指定唯一索引的情况
 	fn(&userInfo{
 		LastName:  "l",
 		FirstName: "f",
-	}, " WHERE firstName=f AND lastName=l")
+	}, " WHERE `firstName`=? AND `lastName`=?", []interface{}{"f", "l"})
 
 	// 同时存在pk和唯一约束，以PK优先
 	fn(&admin{
 		user:  user{ID: 1},
 		Email: "email@test.com",
-	}, " WHERE id=1")
+	}, " WHERE `id`=?", []interface{}{1})
 }
