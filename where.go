@@ -84,17 +84,17 @@ func (w *Where) Update(replace bool, data map[string]interface{}) error {
 
 	sql := bytes.NewBufferString("UPDATE ")
 	w.e.Dialect().Quote(sql, w.table)
+	vals := make([]interface{}, 0, len(data))
 	sql.WriteString(" SET ")
 	for k, v := range data {
 		w.e.Dialect().Quote(sql, k)
-		sql.WriteByte('=')
-		WriteString(sql, v)
-		sql.WriteByte(',')
+		sql.WriteString("=?,")
+		vals = append(vals, v)
 	}
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
 
 	sql.WriteString(w.cond.String())
-	_, err := w.e.Exec(replace, sql.String(), w.args...)
+	_, err := w.e.Exec(replace, sql.String(), append(vals, w.args)...)
 	return err
 }
 
