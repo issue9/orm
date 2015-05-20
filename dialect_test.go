@@ -38,5 +38,5 @@ func (s *sqlite3) CreateTableSQL(m *Model) (string, error) {
 }
 
 func (s *sqlite3) TruncateTableSQL(tableName string) string {
-	return "DELETE FROM " + tableName
+	return "DELETE FROM " + tableName + ";update sqlite_sequence set seq=0 where name='" + tableName + "'"
 }

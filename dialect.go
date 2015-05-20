@@ -18,7 +18,7 @@ type Dialect interface {
 	// 返回的是对应数据库的limit语句以及语句中占位符对应的值。
 	LimitSQL(w *bytes.Buffer, limit interface{}, offset ...interface{}) error
 
-	// 根据数据模型，创建表。
+	// 根据参数m，返回创建该模型的SQL语句
 	CreateTableSQL(m *Model) (sql string, err error)
 
 	// 清空表内容，重置AI。

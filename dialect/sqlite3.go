@@ -73,7 +73,8 @@ func (s *Sqlite3) CreateTableSQL(model *orm.Model) (string, error) {
 
 // implement orm.Dialect.TruncateTableSQL()
 func (s *Sqlite3) TruncateTableSQL(tableName string) string {
-	return "DELETE FROM " + tableName
+	return "DELETE FROM " + tableName +
+		";update sqlite_sequence set seq=0 where name='" + tableName + "';"
 }
 
 // implement base.sqlType()

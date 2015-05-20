@@ -35,7 +35,7 @@ func hasCount(db *DB, a *assert.Assertion, table string, size int) {
 
 	data, err := fetch.Map(true, rows)
 	a.NotError(err).NotNil(data)
-	a.Equal(size, data[0]["cnt"])
+	a.Equal(data[0]["cnt"], size)
 
 }
 
@@ -192,6 +192,11 @@ func TestDB_Truncate(t *testing.T) {
 	a.NotError(db.Truncate(&admin{}, "user_info"))
 	hasCount(db, a, "administrators", 0)
 	hasCount(db, a, "user_info", 0)
+
+	a.NotError(db.Insert(&admin{Group: 1, Email: "email1"}))
+	a1 := &admin{Email: "email1"}
+	a.NotError(db.Select(a1))
+	a.Equal(1, a1.ID)
 }
 
 func TestDB_Drop(t *testing.T) {
@@ -204,6 +209,35 @@ func TestDB_Drop(t *testing.T) {
 
 	a.NotError(db.Drop(&admin{}, "user_info"))
 	a.Error(db.Insert(&admin{}))
+}
+
+func TestTX(t *testing.T) {
+	a := assert.New(t)
+
+	db := newDB(a)
+	defer func() {
+		a.NotError(db.Close())
+	}()
+
+	a.NotError(db.Create(&user{}, &userInfo{}))
+
+	// 回滚事务
+	tx, err := db.Begin()
+	a.NotError(err).NotNil(tx)
+	a.NotError(tx.Insert(&user{Username: "u1"}))
+	a.NotError(tx.Insert(&user{Username: "u2"}))
+	a.NotError(tx.Insert(&user{Username: "u3"}))
+	a.NotError(tx.Rollback())
+	hasCount(db, a, "users", 0)
+
+	// 正常提交
+	tx, err = db.Begin()
+	a.NotError(err).NotNil(tx)
+	a.NotError(tx.Insert(&user{Username: "u1"}))
+	a.NotError(tx.Insert(&user{Username: "u2"}))
+	a.NotError(tx.Insert(&user{Username: "u3"}))
+	a.NotError(tx.Commit())
+	hasCount(db, a, "users", 3)
 }
 
 // 放在最后，仅用于删除数据库文件

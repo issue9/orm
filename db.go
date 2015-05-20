@@ -116,6 +116,19 @@ func (db *DB) Where(cond string, args ...interface{}) *Where {
 	return w.And(cond, args...)
 }
 
+// 开始一个新的事务
+func (db *DB) Begin() (*Tx, error) {
+	tx, err := db.stdDB.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Tx{
+		db:    db,
+		stdTx: tx,
+	}, nil
+}
+
 func (db *DB) prefix() string {
 	return db.tablePrefix
 }
