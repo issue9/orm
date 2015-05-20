@@ -21,7 +21,7 @@ type engine interface {
 	Query(replace bool, query string, args ...interface{}) (*sql.Rows, error)
 	Exec(replace bool, query string, args ...interface{}) (sql.Result, error)
 	Prepare(replace bool, query string) (*sql.Stmt, error)
-	prefix() string
+	Prefix() string
 }
 
 // 将src转换成sql的值，并写入到w中。
@@ -153,7 +153,7 @@ func findOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("SELECT * FROM ")
-	e.Dialect().Quote(sql, e.prefix()+m.Name)
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
 
 	vals, err := where(e, sql, m, rval)
 	if err != nil {
@@ -212,7 +212,7 @@ func insertOne(e engine, v interface{}) error {
 	}
 
 	sql := bytes.NewBufferString("INSERT INTO ")
-	e.Dialect().Quote(sql, e.prefix()+m.Name)
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
 
 	sql.WriteByte('(')
 	for _, col := range keys {
@@ -250,7 +250,7 @@ func updateOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("UPDATE ")
-	e.Dialect().Quote(sql, e.prefix()+m.Name)
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
 	sql.WriteString(" SET ")
 	vals := make([]interface{}, 0, len(m.Cols))
 
@@ -300,7 +300,7 @@ func deleteOne(e engine, v interface{}) error {
 
 	sql := new(bytes.Buffer)
 	sql.WriteString("DELETE FROM ")
-	e.Dialect().Quote(sql, e.prefix()+m.Name)
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
 
 	vals, err := where(e, sql, m, rval)
 	if err != nil {
@@ -336,8 +336,8 @@ func dropOne(e engine, v interface{}) error {
 	}
 
 	sql := bytes.NewBufferString("DROP TABLE IF EXISTS ")
-	//sql.WriteString(e.prefix() + tbl)
-	e.Dialect().Quote(sql, e.prefix()+tbl)
+	//sql.WriteString(e.Prefix() + tbl)
+	e.Dialect().Quote(sql, e.Prefix()+tbl)
 	_, err = e.Exec(false, sql.String())
 	return err
 }
@@ -348,7 +348,7 @@ func truncateOne(e engine, v interface{}) error {
 		return err
 	}
 
-	sql := e.Dialect().TruncateTableSQL(e.prefix() + tbl)
+	sql := e.Dialect().TruncateTableSQL(e.Prefix() + tbl)
 	_, err = e.Exec(false, sql)
 	return err
 }

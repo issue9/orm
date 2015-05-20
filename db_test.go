@@ -47,7 +47,7 @@ func TestNewDB(t *testing.T) {
 		a.NotError(db.Close())
 	}()
 
-	a.Equal(db.prefix(), "sqlite3_")
+	a.Equal(db.Prefix(), "sqlite3_")
 	a.NotNil(db.stdDB).NotNil(db.dialect).NotNil(db.replacer)
 	a.Equal(db.stdDB, db.StdDB()).Equal(db.dialect, db.Dialect())
 

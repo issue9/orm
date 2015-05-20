@@ -129,7 +129,8 @@ func (db *DB) Begin() (*Tx, error) {
 	}, nil
 }
 
-func (db *DB) prefix() string {
+// 获取当前实例的表名前缀
+func (db *DB) Prefix() string {
 	return db.tablePrefix
 }
 
@@ -221,6 +222,7 @@ func (tx *Tx) Where(cond string, args ...interface{}) *Where {
 	return w.And(cond, args...)
 }
 
-func (tx *Tx) prefix() string {
+// 获取当前实例的表名前缀
+func (tx *Tx) Prefix() string {
 	return tx.db.tablePrefix
 }
