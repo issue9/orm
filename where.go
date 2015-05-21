@@ -46,6 +46,8 @@ func (w *Where) where(op int, cond string, args ...interface{}) *Where {
 	}
 	w.cond.WriteString(cond)
 	w.cond.WriteByte(')')
+	w.args = append(w.args, args...)
+
 	return w
 }
 
@@ -83,16 +85,16 @@ func (w *Where) Delete(replace bool) error {
 // replace，是否需将对语句的占位符进行替换。
 func (w *Where) Update(replace bool, data map[string]interface{}) error {
 	if len(w.table) == 0 {
-		return errors.New("Where:Update:未指定表名")
+		return errors.New("Where.Update:未指定表名")
 	}
 
 	if len(data) == 0 {
-		return errors.New("Where:Update:未指定需要更新的数据")
+		return errors.New("Where.Update:未指定需要更新的数据")
 	}
 
 	sql := bytes.NewBufferString("UPDATE ")
 	w.e.Dialect().Quote(sql, w.table)
-	vals := make([]interface{}, 0, len(data))
+	vals := make([]interface{}, 0, len(data)+len(w.args))
 	sql.WriteString(" SET ")
 	for k, v := range data {
 		w.e.Dialect().Quote(sql, k)
@@ -102,7 +104,7 @@ func (w *Where) Update(replace bool, data map[string]interface{}) error {
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
 
 	sql.WriteString(w.cond.String())
-	_, err := w.e.Exec(replace, sql.String(), append(vals, w.args)...)
+	_, err := w.e.Exec(replace, sql.String(), append(vals, w.args...)...)
 	return err
 }
 
@@ -131,16 +133,17 @@ func (w *Where) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) 
 		return nil, errors.New("Where:Select:未指定表名")
 	}
 
-	if len(cols) == 0 {
-		cols = append(cols, "*")
-	}
-
 	sql := bytes.NewBufferString("SELECT ")
-	for _, v := range cols {
-		w.e.Dialect().Quote(sql, v)
-		sql.WriteByte(',')
+
+	if len(cols) == 0 {
+		sql.WriteString(" * ")
+	} else {
+		for _, v := range cols {
+			w.e.Dialect().Quote(sql, v)
+			sql.WriteByte(',')
+		}
+		sql.Truncate(sql.Len() - 1)
 	}
-	sql.Truncate(sql.Len() - 1)
 
 	sql.WriteString(" FROM ")
 	w.e.Dialect().Quote(sql, w.table)

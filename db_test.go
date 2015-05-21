@@ -13,6 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// 删除数据库文件。
 func closeDB(a *assert.Assertion) {
 	if _, err := os.Stat("./test.db"); err == nil || os.IsExist(err) {
 		a.NotError(os.Remove("./test.db"))
@@ -207,7 +208,7 @@ func TestDB_Drop(t *testing.T) {
 		a.NotError(db.Close())
 	}()
 
-	a.NotError(db.Drop(&admin{}, "user_info"))
+	a.NotError(db.Drop(&admin{}, []byte("user_info"))) // []byte应该能正常转换成string
 	a.Error(db.Insert(&admin{}))
 }
 
@@ -242,7 +243,5 @@ func TestTX(t *testing.T) {
 
 // 放在最后，仅用于删除数据库文件
 func TestDB_Close(t *testing.T) {
-	a := assert.New(t)
-
-	closeDB(a)
+	closeDB(assert.New(t))
 }
