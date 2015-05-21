@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm"
 )
 
 var replacer = strings.NewReplacer(")", " ) ", "(", " ( ", ",", " , ")
@@ -40,7 +40,7 @@ func TestCreatColSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &Mysql{}
 	buf := bytes.NewBufferString("")
-	col := &core.Column{}
+	col := &orm.Column{}
 
 	col.Name = "id"
 	col.GoType = reflect.TypeOf(1)
@@ -69,9 +69,9 @@ func TestCreatePKSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &Mysql{}
 	buf := bytes.NewBufferString("")
-	col1 := &core.Column{Name: "id"}
-	col2 := &core.Column{Name: "username"}
-	cols := []*core.Column{col1, col2}
+	col1 := &orm.Column{Name: "id"}
+	col2 := &orm.Column{Name: "username"}
+	cols := []*orm.Column{col1, col2}
 
 	createPKSQL(dialect, buf, cols, "pkname")
 	wont := "CONSTRAINT pkname PRIMARY KEY(id,username)"
@@ -87,9 +87,9 @@ func TestCreateUniqueSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &Mysql{}
 	buf := bytes.NewBufferString("")
-	col1 := &core.Column{Name: "id"}
-	col2 := &core.Column{Name: "username"}
-	cols := []*core.Column{col1, col2}
+	col1 := &orm.Column{Name: "id"}
+	col2 := &orm.Column{Name: "username"}
+	cols := []*orm.Column{col1, col2}
 
 	createUniqueSQL(dialect, buf, cols, "pkname")
 	wont := "CONSTRAINT pkname UNIQUE(id,username)"
@@ -105,8 +105,8 @@ func TestCreateFKSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &Mysql{}
 	buf := bytes.NewBufferString("")
-	fk := &core.ForeignKey{
-		Col:          &core.Column{Name: "id"},
+	fk := &orm.ForeignKey{
+		Col:          &orm.Column{Name: "id"},
 		RefTableName: "refTable",
 		RefColName:   "refCol",
 		UpdateRule:   "NO ACTION",
@@ -129,20 +129,28 @@ func TestCreateCheckSQL(t *testing.T) {
 
 func TestMysqlLimitSQL(t *testing.T) {
 	a := assert.New(t)
+	w := new(bytes.Buffer)
 
-	sql := mysqlLimitSQL(5, 0)
-	chkSQLEqual(a, sql, " LIMIT 5 OFFSET 0 ")
+	ret, err := mysqlLimitSQL(w, 5, 0)
+	a.NotError(err).Equal(ret, []int{5, 0})
+	chkSQLEqual(a, w.String(), " LIMIT ? OFFSET ? ")
 
-	sql = mysqlLimitSQL(5)
-	chkSQLEqual(a, sql, "LIMIT 5")
+	w.Reset()
+	ret, err = mysqlLimitSQL(w, 5)
+	a.NotError(err).Equal(ret, []int{5})
+	chkSQLEqual(a, w.String(), "LIMIT ?")
 }
 
 func TestOracleLimitSQL(t *testing.T) {
 	a := assert.New(t)
+	w := new(bytes.Buffer)
 
-	sql := oracleLimitSQL(5, 0)
-	chkSQLEqual(a, sql, " OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY ")
+	ret, err := oracleLimitSQL(w, 5, 0)
+	a.NotError(err).Equal(ret, []int{0, 5})
+	chkSQLEqual(a, w.String(), " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ")
 
-	sql = oracleLimitSQL(5)
-	chkSQLEqual(a, sql, "FETCH NEXT 5 ROWS ONLY ")
+	w.Reset()
+	ret, err = oracleLimitSQL(w, 5)
+	a.NotError(err).Equal(ret, []int{5})
+	chkSQLEqual(a, w.String(), "FETCH NEXT ? ROWS ONLY ")
 }

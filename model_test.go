@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package core
+package orm
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/issue9/assert"
 )
 
-func TestConTypeString(t *testing.T) {
+func TestConType_String(t *testing.T) {
 	a := assert.New(t)
 
 	a.Equal("<none>", none.String()).
@@ -27,22 +27,29 @@ func TestConTypeString(t *testing.T) {
 	a.Equal("<unknown>", c1.String())
 }
 
-type modelGroup struct {
-	Group int `orm:"name(group);fk(fk_name,table.group,id,NO ACTION,)"`
+func TestColumn_SetLen(t *testing.T) {
+	a := assert.New(t)
+	col := &Column{}
+
+	a.NotError(col.setLen([]string{})).Equal(col.Len1, 0).Equal(col.Len2, 0)
+	a.NotError(col.setLen([]string{"1", "2"})).Equal(col.Len1, 1).Equal(col.Len2, 2)
+	a.Error(col.setLen([]string{"1", "2", "3"}))
+	a.Error(col.setLen([]string{"1", "one"}))
 }
 
-type modelUser struct {
-	modelGroup
+func TestColumn_SetNullable(t *testing.T) {
+	a := assert.New(t)
 
-	Id       int    `orm:"name(id);ai;"`
-	Email    string `orm:"unique(unique_name);index(index_name);nullable;"`
-	Username string `orm:"index(index_name);len(50)"`
+	col := &Column{}
 
-	Regdate int `orm:"-"`
-}
+	a.False(col.Nullable)
+	a.NotError(col.setNullable([]string{})).True(col.Nullable)
+	a.NotError(col.setNullable([]string{"false"})).False(col.Nullable)
+	a.NotError(col.setNullable([]string{"T"})).True(col.Nullable)
+	a.NotError(col.setNullable([]string{"0"})).False(col.Nullable)
 
-func (m *modelUser) Meta() string {
-	return "check(chk_name,id>5);engine(innodb);charset(utf-8);name(user)"
+	a.Error(col.setNullable([]string{"1", "2"}))
+	a.Error(col.setNullable([]string{"T1"}))
 }
 
 func TestModels(t *testing.T) {
@@ -51,19 +58,19 @@ func TestModels(t *testing.T) {
 	ClearModels()
 	a.Equal(0, len(models.items))
 
-	m, err := NewModel(&modelUser{})
+	m, err := NewModel(&user{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 相同的model实例，不会增加数量
-	m, err = NewModel(&modelUser{})
+	m, err = NewModel(&user{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 添加新的model
-	m, err = NewModel(&modelGroup{})
+	m, err = NewModel(&admin{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(2, len(models.items))
@@ -77,32 +84,26 @@ func TestModel(t *testing.T) {
 	ClearModels()
 	a := assert.New(t)
 
-	// todo 正确声明第二个参数！！
-	m, err := NewModel(&modelUser{})
+	m, err := NewModel(&admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols
 	idCol, found := m.Cols["id"] // 指定名称为小写
 	a.True(found)
 
-	emailCol, found := m.Cols["Email"] // 未指定别名，与字段名相同
-	a.True(found).True(emailCol.Nullable, "emailCol.Nullable==false")
-
-	usernameCol, found := m.Cols["Username"]
-	a.True(found)
-
-	groupCol, found := m.Cols["group"]
-	a.True(found)
+	usernameCol, found := m.Cols["Username"] // 未指定别名，与字段名相同
+	a.True(found).False(usernameCol.Nullable)
 
 	// 通过struct tag过滤掉的列
 	regdate, found := m.Cols["Regdate"]
 	a.False(found).Nil(regdate)
 
+	groupCol, found := m.Cols["group"]
+	a.True(found)
+
 	// index
 	index, found := m.KeyIndexes["index_name"]
-	a.True(found).
-		Equal(emailCol, index[0]).
-		Equal(usernameCol, index[1])
+	a.True(found).Equal(usernameCol, index[0])
 
 	// ai
 	a.Equal(m.AI, idCol)
@@ -111,20 +112,20 @@ func TestModel(t *testing.T) {
 	a.NotNil(m.PK).Equal(m.PK[0], idCol)
 
 	// unique_name
-	unique, found := m.UniqueIndexes["unique_name"]
-	a.True(found).Equal(unique[0], emailCol)
+	unique, found := m.UniqueIndexes["unique_username"]
+	a.True(found).Equal(unique[0], usernameCol)
 
 	fk, found := m.FK["fk_name"]
 	a.True(found).
 		Equal(fk.Col, groupCol).
-		Equal(fk.RefTableName, "table.group").
+		Equal(fk.RefTableName, "table_group").
 		Equal(fk.RefColName, "id").
 		Equal(fk.UpdateRule, "NO ACTION").
 		Equal(fk.DeleteRule, "")
 
 	// check
 	chk, found := m.Check["chk_name"]
-	a.True(found).Equal(chk, "id>5")
+	a.True(found).Equal(chk, "id>0")
 
 	// meta
 	a.Equal(m.Meta, map[string][]string{
@@ -133,5 +134,5 @@ func TestModel(t *testing.T) {
 	})
 
 	// Meta返回的name属性
-	a.Equal(m.Name, "user")
+	a.Equal(m.Name, "administrators")
 }

@@ -11,27 +11,17 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm"
 )
 
 var _ base = &Mysql{}
 
 var m = &Mysql{}
 
-func TestMysql_GetDBName(t *testing.T) {
-	a := assert.New(t)
-
-	a.Equal(m.GetDBName("root:password@/dbname"), "dbname")
-	a.Equal(m.GetDBName("root:@/dbname"), "dbname")
-	a.Equal(m.GetDBName("root:password@tcp(localhost:3066)/dbname"), "dbname")
-	a.Equal(m.GetDBName("root:password@unix(/tmp/mysql.lock)/dbname?loc=Local"), "dbname")
-	a.Equal(m.GetDBName("root:/"), "")
-}
-
 func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
 	buf := bytes.NewBufferString("")
-	col := &core.Column{}
+	col := &orm.Column{}
 
 	// col == nil
 	a.Error(m.sqlType(buf, nil))

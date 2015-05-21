@@ -11,28 +11,17 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm"
 )
 
 var _ base = &Sqlite3{}
-
-func TestSqlite3_GetDBName(t *testing.T) {
-	a := assert.New(t)
-	var s = &Sqlite3{}
-
-	a.Equal(s.GetDBName("./dbname.db"), "dbname")
-	a.Equal(s.GetDBName("./dbname"), "dbname")
-	a.Equal(s.GetDBName("abc/dbname.abc"), "dbname")
-	a.Equal(s.GetDBName("dbname"), "dbname")
-	a.Equal(s.GetDBName(""), "")
-}
 
 func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
 	var s = &Sqlite3{}
 
 	buf := bytes.NewBufferString("")
-	col := &core.Column{}
+	col := &orm.Column{}
 	a.Error(s.sqlType(buf, col))
 
 	col.GoType = reflect.TypeOf(1)

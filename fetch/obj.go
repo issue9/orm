@@ -18,12 +18,12 @@ import (
 // 键值为字段的值。支持匿名字段，不会转换不可导出(小写字母开头)的
 // 字段，也不会转换struct tag以-开头的字段。
 func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
-	for v.Kind() == reflect.Ptr {
+	for v.Kind() == reflect.Ptr { // 嵌套类型可能为指针
 		v = v.Elem()
 	}
 
 	if v.Kind() != reflect.Struct {
-		return fmt.Errorf("v参数的类型只能是reflect.Struct或是struct的指针,当前为[%v]", v.Kind())
+		return fmt.Errorf("parseObj:v参数的类型只能是reflect.Struct或是struct的指针,当前为[%v]", v.Kind())
 	}
 
 	vt := v.Type()
@@ -47,7 +47,7 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 
 		if name, found := tag.Get(tagTxt, "name"); found {
 			if _, found := (*ret)[name[0]]; found {
-				return fmt.Errorf("已存在相同名字的字段[%v]", field.Name)
+				return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
 			}
 			(*ret)[name[0]] = v.Field(i)
 			continue
@@ -56,11 +56,12 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 	FIELD_NAME:
 		if unicode.IsUpper(rune(field.Name[0])) {
 			if _, found := (*ret)[field.Name]; found {
-				return fmt.Errorf("已存在相同名字的字段[%v]", field.Name)
+				return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
 			}
 			(*ret)[field.Name] = v.Field(i)
 		}
 	} // end for
+
 	return nil
 }
 

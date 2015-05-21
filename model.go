@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package core
+package orm
 
 import (
 	"errors"
@@ -13,7 +13,6 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/issue9/conv"
 	"github.com/issue9/encoding/tag"
 )
 
@@ -69,7 +68,7 @@ type Model struct {
 	FK            map[string]*ForeignKey // 外键
 	PK            []*Column              // 主键
 	AI            *Column                // 自增列
-	Check         map[string]string      // Check
+	Check         map[string]string      // Check 键名为约束名，键值为约束表达式
 	Meta          map[string][]string    // 表级别的数据，如存储引擎，表名和字符集等。
 
 	constraints map[string]conType // 约束名缓存
@@ -86,9 +85,9 @@ type ForeignKey struct {
 type Column struct {
 	model *Model
 
-	Name     string // 数据库的字段名
-	Len1     int
-	Len2     int
+	Name     string       // 数据库的字段名
+	Len1     int          // 长度1，仅对部分类型启作用
+	Len2     int          // 长度2，仅对部分类型启作用
 	Nullable bool         // 是否可以为NULL
 	GoType   reflect.Type // Go语言中的数据类型
 	GoName   string       // 结构字段名
@@ -110,6 +109,7 @@ func (c *Column) setLen(vals []string) (err error) {
 	case 1:
 		c.Len1, err = strconv.Atoi(vals[0])
 	case 2:
+		c.Len1, err = strconv.Atoi(vals[0])
 		c.Len2, err = strconv.Atoi(vals[1])
 	default:
 		err = fmt.Errorf("setLen:[%v]字段的len属性指定了过多的参数:[%v]", c.Name, vals)
@@ -125,11 +125,11 @@ func (c *Column) setNullable(vals []string) (err error) {
 		return fmt.Errorf("setNullable:自增列[%v]不能为nullable", c.Name)
 	}
 
-	switch {
-	case len(vals) == 0:
+	switch len(vals) {
+	case 0:
 		c.Nullable = true
-	case len(vals) == 1:
-		if c.Nullable, err = conv.Bool(vals[0]); err != nil {
+	case 1:
+		if c.Nullable, err = strconv.ParseBool(vals[0]); err != nil {
 			return err
 		}
 	default:

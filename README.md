@@ -15,18 +15,17 @@ e.Create(&User{})
 
 // 更新id为1的记录
 e.Update(&User{Id:1,FirstName:"abc"})
-e.Where("id=1").Table("#tbl_name").Add("FirstName", "abc").Update()
+e.Where("id=?", 1).Table("#tbl_name").Update(true, "FirstName", "abc")
 
 // 删除id为1的记录
 e.Delete(&User{Id:1})
-e.Where("id=@id").Table("#tbl_name").Delete(map[string]interface{}{"id":1})
+e.Where("id=?", 1).Table("#tbl_name").Delete(true, []interface{}{"id":1})
 
 // 插入数据
 e.Insert(&User{FirstName:"abc"})
-e.SQL().Table("#tbl_name").Columns("FirstName","LastName").Insert("firstName", "lastName")
 
 // 查找数据
-maps,err := e.Where("id<5").Table("#tbl_name").FetchMaps()
+maps,err := e.Where("id<?", 5).Table("#tbl_name").SelectMap(true, "*")
 ```
 
 ### 安装

@@ -8,8 +8,7 @@
 //  1. sqlite3:  github.com/mattn/go-sqlite3
 //  2. mysql:    github.com/go-sql-driver/mysql
 //  3. postgres: github.com/lib/pq
-// 其它数据库，用户可以通过实现orm/core.Dialect接口，来实现相应的支持。
-// 具体操作参照后面的如何实现Dialect章节。
+// 其它数据库，用户可以通过实现Dialect接口，来实现相应的支持。
 //
 //
 //
@@ -17,18 +16,15 @@
 //
 // 默认情况下，orm包并不会加载任何数据库的实例。所以想要用哪个数据库，需要手动初始化：
 //  import (
-//      github.com/issue9/orm/core
-//      _ github.com/mattn/go-sqlite3  // 加载数据库驱动
+//      _ github.com/mattn/go-sqlite3    // 加载数据库驱动
+//      _ github.com/issue9/orm/dialect  // sqlite3的dialect声明在此处
 //  )
 //
-//  // 注册dialect
-//  core.Register("sqlite3", &dialect.Sqlite3{})
+//  // 初始化一个DB，表前缀为prefix_
+//  db1 := orm.New("sqlite3", "./db1", "prefix_", &dialect.Sqlite3{})
 //
-//  // 初始化一个Engine，表前缀为prefix_
-//  db1 := orm.New("sqlite3", "./db1", "db1", "prefix_")
-//
-//  // 另一个Engine
-//  db2 := orm.New("sqlite3", "./db2", "db2", "db2_")
+//  // 另一个DB实例
+//  db2 := orm.New("sqlite3", "./db2", "db2_", &dialect.Sqlite3{})
 //
 //
 //
@@ -41,7 +37,7 @@
 //      LastName    string     `orm:"name(first_name);index(index_name)"`
 //  }
 //
-//  // 通过orm/core.Metaer接口，指定表的额外数据。若不需要，可不用实现该接口
+//  // 通过orm.Metaer接口，指定表的额外数据。若不需要，可不用实现该接口
 //  func(u *User) Meta() string {
 //      return "name(user);engine(innodb);charset(utf-8)"
 //  }
@@ -102,20 +98,18 @@
 // Update:
 //  // 将id为1的记录的FirstName更改为abc；对象中的零值不会被提交。
 //  e.Update(&User{Id:1,FirstName:"abc"})
-//  e.Where("id=1").Table("#table").Set("FirstName", "abc").Update(nil)
-//  e.Where("id=@id").Table("#table").Data(map[string]interface{"FirstName":"abc"}).Update(map[string]interface{"id":1})
+//  e.Where("id=?",1).Table("#table").Set("FirstName", "abc").Update(nil)
 //
 // Delete:
 //  // 删除id为1的记录
 //  e.Delete(&User{Id:1})
-//  e.Where("id=@id").Table("#table").Delte(map[string]interface{"id":1})
-//  e.Where("id=1").Table("#table").Delete(nil)
+//  e.Where("id=?",1).Table("#table").Delete(nil)
 //
 // Insert:
-//  // 一次性插入一条数据
+//  // 插入一条数据
 //  e.Insert(&User{Id:1,FirstName:"abc"})
 //  // 一次性插入多条数据
-//  e.Insert([]*User{&User{Id:1,FirstName:"abc"},&User{Id:1,FirstName:"abc"}})
+//  e.Insert(&User{Id:1,FirstName:"abc"},&User{Id:1,FirstName:"abc"})
 //
 // Select:
 //  // 导出id=1的数据
@@ -123,28 +117,20 @@
 //  // 导出id为1的数据，并回填到user实例中
 //  user := &User{Id:1}
 //  err := e.Find(u)
-//  // 导出id<5的所有数据
-//  m, err := e.Where("id<@id").Table("#table").FetchMaps(map[string]interface{"id":5})
 //
 //  Query/Exec:
 //  // Query返回参数与sql.Query是相同的
-//  sql := "select * from #tbl_name where id=@id"
-//  rows, err := e.Query(sql, map[string]interface{}{"id":5})
+//  sql := "select * from #tbl_name where id=?"
+//  rows, err := e.Query(true, sql, []interface{}{5})
 //  // Exec返回参数与sql.Exec是相同的
-//  sql = "update #tbl_name set name=@name where id=@id"
-//  r, err := e.Exec(sql, map[string]interface{}{"name":"name5", "id": 2})
+//  sql = "update #tbl_name set name=? where id=?"
+//  r, err := e.Exec(true, sql, []interface{}{"name1", 5})
 //
 // 事务：
 //
-// 默认的Engine是不支持事务的，若需要事务支持，则需要调用Engine.Begin()
+// 默认的DB是不支持事务的，若需要事务支持，则需要调用DB.Begin()
 // 返回事务对象Tx，当然并不是所有的数据库都支持事务操作的。
-// Tx拥有与Engine相似的接口。
-//
-//
-// 如何实现自定义Dialect:
-//
-// 实现core.Dialect接口，需要使用时，加载数据库驱动，然后向core.Register()函数注册实例，
-// 即可正常使用。具体的实现可以参照dialect子包的相关代码。
+// Tx拥有与DB相似的接口。
 package orm
 
 // 数据表的更改，涉及到很多方面：
@@ -155,4 +141,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.9.23.150505"
+const Version = "0.11.25.150520"

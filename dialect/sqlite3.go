@@ -7,43 +7,38 @@ package dialect
 import (
 	"bytes"
 	"errors"
-	"os"
 	"reflect"
-	"runtime"
-	"strings"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm"
 )
 
 type Sqlite3 struct{}
 
-// implement core.Dialect.QuoteStr()
-func (s *Sqlite3) QuoteStr() (l, r string) {
-	return "[", "]"
+// implement orm.Dialect.QuoteTuple()
+func (m *Sqlite3) QuoteTuple() (byte, byte) {
+	return '`', '`'
 }
 
-// implement core.Dialect.GetDBName()
-func (s *Sqlite3) GetDBName(dataSource string) string {
-	start := strings.LastIndex(dataSource, string(os.PathSeparator))
-	if start < 0 && runtime.GOOS == "windows" { // windows下可以使用/
-		start = strings.LastIndex(dataSource, "/")
+// implement orm.Dialect.Quote()
+func (s *Sqlite3) Quote(w *bytes.Buffer, name string) error {
+	if err := w.WriteByte('`'); err != nil {
+		return err
 	}
-	start++ // 去掉分隔符
-	end := strings.LastIndex(dataSource, ".")
 
-	if end < start { // 不存在扩展名，取全部文件名
-		return dataSource[start:]
+	if _, err := w.WriteString(name); err != nil {
+		return err
 	}
-	return dataSource[start:end]
+
+	return w.WriteByte('`')
 }
 
-// implement core.Dialect.LimitSQL()
-func (s *Sqlite3) LimitSQL(limit interface{}, offset ...interface{}) string {
-	return mysqlLimitSQL(limit, offset...)
+// implement orm.Dialect.LimitSQL()
+func (s *Sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
+	return mysqlLimitSQL(w, limit, offset...)
 }
 
-// implement core.Dialect.CreateTableSQL()
-func (s *Sqlite3) CreateTableSQL(model *core.Model) (string, error) {
+// implement orm.Dialect.CreateTableSQL()
+func (s *Sqlite3) CreateTableSQL(model *orm.Model) (string, error) {
 	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
 	buf.Grow(300)
 
@@ -76,14 +71,15 @@ func (s *Sqlite3) CreateTableSQL(model *core.Model) (string, error) {
 	return buf.String(), nil
 }
 
-// implement core.Dialect.TruncateTableSQL()
+// implement orm.Dialect.TruncateTableSQL()
 func (s *Sqlite3) TruncateTableSQL(tableName string) string {
-	return "DELETE FROM " + tableName
+	return "DELETE FROM " + tableName +
+		";update sqlite_sequence set seq=0 where name='" + tableName + "';"
 }
 
 // implement base.sqlType()
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *core.Column) error {
+func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

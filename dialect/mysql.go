@@ -10,38 +10,37 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm"
 )
 
 type Mysql struct{}
 
-// implement core.Dialect.GetDBName()
-func (m *Mysql) GetDBName(dataSource string) string {
-	start := strings.LastIndex(dataSource, "/")
+// implement orm.Dialect.QuoteTuple()
+func (m *Mysql) QuoteTuple() (byte, byte) {
+	return '`', '`'
+}
 
-	start++
-	end := strings.LastIndex(dataSource, "?")
-	if start > end { // 不存在参数
-		return dataSource[start:]
+// implement orm.Dialect.Quote
+func (m *Mysql) Quote(w *bytes.Buffer, name string) error {
+	if err := w.WriteByte('`'); err != nil {
+		return err
 	}
 
-	return dataSource[start:end]
+	if _, err := w.WriteString(name); err != nil {
+		return err
+	}
+
+	return w.WriteByte('`')
 }
 
-// implement core.Dialect.Quote
-func (m *Mysql) QuoteStr() (string, string) {
-	return "`", "`"
+// implement orm.Dialect.Limit()
+func (m *Mysql) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
+	return mysqlLimitSQL(w, limit, offset...)
 }
 
-// implement core.Dialect.Limit()
-func (m *Mysql) LimitSQL(limit interface{}, offset ...interface{}) string {
-	return mysqlLimitSQL(limit, offset...)
-}
-
-// implement core.Dialect.CreateTableSQL()
-func (m *Mysql) CreateTableSQL(model *core.Model) (string, error) {
+// implement orm.Dialect.CreateTableSQL()
+func (m *Mysql) CreateTableSQL(model *orm.Model) (string, error) {
 	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
 	buf.Grow(300)
 
@@ -89,13 +88,13 @@ func (m *Mysql) CreateTableSQL(model *core.Model) (string, error) {
 	return buf.String(), nil
 }
 
-// implement core.Dialect.TruncateTableSQL()
+// implement orm.Dialect.TruncateTableSQL()
 func (m *Mysql) TruncateTableSQL(tableName string) string {
 	return "TRUNCATE TABLE " + tableName
 }
 
 // implement base.sqlType()
-func (m *Mysql) sqlType(buf *bytes.Buffer, col *core.Column) error {
+func (m *Mysql) sqlType(buf *bytes.Buffer, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

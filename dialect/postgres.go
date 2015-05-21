@@ -9,47 +9,37 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"regexp"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm"
 )
 
 type Postgres struct{}
 
-// implement core.Dialect.QuoteStr()
-func (p *Postgres) QuoteStr() (l, r string) {
-	return `"`, `"`
+// implement orm.Dialect.QuoteTuple()
+func (m *Postgres) QuoteTuple() (byte, byte) {
+	return '`', '`'
 }
 
-// 匹配dbname=dbname 或是dbname =dbname等格式
-var dbnamePrefix = regexp.MustCompile(`\s*=\s*|\s+`)
-
-// implement core.Dialect.GetDBName()
-func (p *Postgres) GetDBName(dataSource string) string {
-	// dataSource样式：user=user dbname = db password=
-	words := dbnamePrefix.Split(dataSource, -1)
-	for index, word := range words {
-		if word != "dbname" {
-			continue
-		}
-
-		if index+1 >= len(words) {
-			return ""
-		}
-
-		return words[index+1]
+// implement orm.Dialect.Quote()
+func (p *Postgres) Quote(w *bytes.Buffer, name string) error {
+	if err := w.WriteByte('`'); err != nil {
+		return err
 	}
 
-	return ""
+	if _, err := w.WriteString(name); err != nil {
+		return err
+	}
+
+	return w.WriteByte('`')
 }
 
-// implement core.Dialect.LimitSQL()
-func (p *Postgres) LimitSQL(limit interface{}, offset ...interface{}) string {
-	return mysqlLimitSQL(limit, offset...)
+// implement orm.Dialect.LimitSQL()
+func (p *Postgres) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
+	return mysqlLimitSQL(w, limit, offset...)
 }
 
-// implement core.Dialect.CreateTableSQL()
-func (p *Postgres) CreateTableSQL(model *core.Model) (string, error) {
+// implement orm.Dialect.CreateTableSQL()
+func (p *Postgres) CreateTableSQL(model *orm.Model) (string, error) {
 	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
 	buf.Grow(300)
 
@@ -78,14 +68,14 @@ func (p *Postgres) CreateTableSQL(model *core.Model) (string, error) {
 	return buf.String(), nil
 }
 
-// implement core.Dialect.TruncateTableSQL()
+// implement orm.Dialect.TruncateTableSQL()
 func (p *Postgres) TruncateTableSQL(tableName string) string {
 	return "TRUNCATE TABLE " + tableName
 }
 
 // implement base.sqlType
 // 将col转换成sql类型，并写入buf中。
-func (p *Postgres) sqlType(buf *bytes.Buffer, col *core.Column) error {
+func (p *Postgres) sqlType(buf *bytes.Buffer, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}
