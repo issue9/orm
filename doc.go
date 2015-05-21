@@ -21,10 +21,26 @@
 //  )
 //
 //  // 初始化一个DB，表前缀为prefix_
-//  db1 := orm.New("sqlite3", "./db1", "prefix_", &dialect.Sqlite3{})
+//  db1 := orm.NewDB("sqlite3", "./db1", "prefix_", &dialect.Sqlite3{})
 //
 //  // 另一个DB实例
-//  db2 := orm.New("sqlite3", "./db2", "db2_", &dialect.Sqlite3{})
+//  db2 := orm.NewDB("sqlite3", "./db2", "db2_", &dialect.Sqlite3{})
+//
+//
+//
+// 占位符
+//
+//
+// SQL语句可以使用'#'字符在语句中暂替真实的表名前缀，也可以使用{}
+// 包含一个关键字，使其它成为普通列名，如：
+//  select * from #user where {group}=1
+// 在实际执行时，如DB.Query()，将第一个参数replace指定为true，
+// 相关的占位符就会被替换成与当前环境想容的实例，如在表名前缀为p_，
+// 数据库为mysql时，会被替换成以下语句，然后再执行：
+//  select * from p_user where `group`=1
+// DB.Query(),DB.Exec(),DB.Prepare().DB.Where()及Tx与之对应的函数都可以使用占位符。
+//
+// Model无需指定占位符，它们默认总会使用占位符，且无法取消。
 //
 //
 //
@@ -35,9 +51,13 @@
 //      Id          int64      `orm:"name(id);ai;"`
 //      FirstName   string     `orm:"name(first_name);index(index_name)"`
 //      LastName    string     `orm:"name(first_name);index(index_name)"`
+//
+//      // 此处group会自动加上引号，无须担心是否为关键字
+//      Group       string	   `orm:"name(group)"`
 //  }
 //
 //  // 通过orm.Metaer接口，指定表的额外数据。若不需要，可不用实现该接口
+//  // 表名user会被自动加上表名前缀。
 //  func(u *User) Meta() string {
 //      return "name(user);engine(innodb);charset(utf-8)"
 //  }
@@ -141,4 +161,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.11.25.150520"
+const Version = "0.11.25.150521"
