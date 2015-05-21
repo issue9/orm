@@ -58,19 +58,19 @@ func TestModels(t *testing.T) {
 	ClearModels()
 	a.Equal(0, len(models.items))
 
-	m, err := NewModel(&user{})
+	m, err := newModel(&user{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 相同的model实例，不会增加数量
-	m, err = NewModel(&user{})
+	m, err = newModel(&user{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 添加新的model
-	m, err = NewModel(&admin{})
+	m, err = newModel(&admin{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(2, len(models.items))
@@ -79,12 +79,12 @@ func TestModels(t *testing.T) {
 	a.Equal(0, len(models.items))
 }
 
-// 传递给NewModel是一个指针时的各种情况
+// 传递给newModel是一个指针时的各种情况
 func TestModel(t *testing.T) {
 	ClearModels()
 	a := assert.New(t)
 
-	m, err := NewModel(&admin{})
+	m, err := newModel(&admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols

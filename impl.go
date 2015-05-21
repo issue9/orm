@@ -80,7 +80,7 @@ func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interfa
 
 // 创建一个数据表。v为一个结构体或是结构体指针。
 func createOne(e engine, v interface{}) error {
-	m, err := NewModel(v)
+	m, err := newModel(v)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func createOne(e engine, v interface{}) error {
 
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
 func findOne(e engine, v interface{}) error {
-	m, err := NewModel(v)
+	m, err := newModel(v)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func findOne(e engine, v interface{}) error {
 // 以v中的主键或是唯一索引作为where条件语句。
 // 自增字段，即使指定了值，也不会被添加
 func insertOne(e engine, v interface{}) error {
-	m, err := NewModel(v)
+	m, err := newModel(v)
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func insertOne(e engine, v interface{}) error {
 // 更新一个对象
 // 以v中的主键或是唯一索引作为where条件语句，其它值为更新值
 func updateOne(e engine, v interface{}) error {
-	m, err := NewModel(v)
+	m, err := newModel(v)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func updateOne(e engine, v interface{}) error {
 // 删除v表示的单个对象的内容
 // 以v中的主键或是唯一索引作为where条件语句
 func deleteOne(e engine, v interface{}) error {
-	m, err := NewModel(v)
+	m, err := newModel(v)
 	if err != nil {
 		return err
 	}
@@ -290,7 +290,7 @@ func getTableName(e engine, v interface{}) (string, error) {
 		return string(tbl), nil
 	}
 
-	m, err := NewModel(v)
+	m, err := newModel(v)
 	if err != nil {
 		return "", err
 	}

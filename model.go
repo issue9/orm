@@ -141,7 +141,7 @@ func (c *Column) setNullable(vals []string) (err error) {
 
 // 从一个obj声明一个Model实例。
 // obj可以是一个struct实例或是指针。
-func NewModel(obj interface{}) (*Model, error) {
+func newModel(obj interface{}) (*Model, error) {
 	models.Lock()
 	defer models.Unlock()
 
@@ -152,7 +152,7 @@ func NewModel(obj interface{}) (*Model, error) {
 	rtype := rval.Type()
 
 	if rtype.Kind() != reflect.Struct {
-		return nil, errors.New("NewModel:obj参数只能是struct或是struct指针")
+		return nil, errors.New("newModel:obj参数只能是struct或是struct指针")
 	}
 
 	// 是否已经缓存的数组

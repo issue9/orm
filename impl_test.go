@@ -24,7 +24,7 @@ func TestWhere(t *testing.T) {
 
 	fn := func(obj interface{}, sql string, vals []interface{}) {
 		w := new(bytes.Buffer)
-		m, err := NewModel(obj)
+		m, err := newModel(obj)
 		a.NotError(err).NotNil(m)
 
 		rval := reflect.ValueOf(obj)
