@@ -82,6 +82,9 @@
 //  index(index_name): 普通的关键字索引，同unique一样会将名称相同的索引定义为一个联合索引。
 //
 //  default(value): 指定默认值。相当于定义表结构时的DEFAULT。
+//  当一个字段如果是个零值(reflect.Zero())时，将会使用它的默认值，
+//  但是系统无法判断该零值是人为指定，还是未指定被默认初始化零值的，
+//  所以在需要用到零值的字段，最好不要用default的struct tag。
 //
 //  fk(fk_name,refTable,refColName,updateRule,deleteRule):
 //  定义物理外键，最少需要指定fk_name,refTabl,refColName三个值。分别对应约束名，
@@ -161,4 +164,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.11.25.150521"
+const Version = "0.11.26.150521"
