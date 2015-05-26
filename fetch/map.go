@@ -11,6 +11,13 @@ import (
 
 // 将rows中的所有或一行数据导出到map[string]interface{}中。
 // 若once值为true，则只导出第一条数据。
+//
+// NOTE:
+// 每个数据对数据的处理方式是不一样的，比如如下语句
+//  SELECT COUNT(*) as cnt FROM tbl1
+// 将使用Map()导出到[]map[string]interface{}中时，
+// 在mysql中，cnt有可能被处理成一个[]byte(打印输出时，像一个数组，容易造成困惑)，
+// 而在sqlite3就有可能是个int。
 func Map(once bool, rows *sql.Rows) ([]map[string]interface{}, error) {
 	cols, err := rows.Columns()
 	if err != nil {

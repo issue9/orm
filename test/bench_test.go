@@ -18,9 +18,9 @@ func BenchmarkDB_Insert(b *testing.B) {
 		Pass: "pass",
 	}
 
-	db := newDB("./bench.db", a)
+	db := newDB(a)
 	defer func() {
-		closeDB("./bench.db", a)
+		closeDB(a)
 	}()
 
 	a.NotError(db.Create(&bench{}))
@@ -44,9 +44,9 @@ func BenchmarkDB_MultInsert(b *testing.B) {
 		ms = append(ms, m)
 	}
 
-	db := newDB("./bench.db", a)
+	db := newDB(a)
 	defer func() {
-		closeDB("./bench.db", a)
+		closeDB(a)
 	}()
 
 	b.ResetTimer()

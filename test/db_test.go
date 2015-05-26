@@ -5,59 +5,27 @@
 package test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm"
-	"github.com/issue9/orm/dialect"
-	"github.com/issue9/orm/fetch"
-	_ "github.com/mattn/go-sqlite3"
 )
-
-// 删除数据库文件。
-func closeDB(dbFile string, a *assert.Assertion) {
-	if _, err := os.Stat(dbFile); err == nil || os.IsExist(err) {
-		a.NotError(os.Remove(dbFile))
-	}
-}
-
-func newDB(dbFile string, a *assert.Assertion) *orm.DB {
-	db, err := orm.NewDB("sqlite3", dbFile, "sqlite3_", &dialect.Sqlite3{})
-	a.NotError(err).NotNil(db)
-	return db
-}
-
-// table表中是否存在size记录，若不是，则触发error
-func hasCount(db *orm.DB, a *assert.Assertion, table string, size int) {
-	rows, err := db.Query(true, "SELECT COUNT(*) as cnt FROM #"+table)
-	a.NotError(err).NotNil(rows)
-	defer func() {
-		a.NotError(rows.Close())
-	}()
-
-	data, err := fetch.Map(true, rows)
-	a.NotError(err).NotNil(data)
-	a.Equal(data[0]["cnt"], size)
-
-}
 
 func TestNewDB(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB("./test.db", a)
+	db := newDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
 
-	a.Equal(db.Prefix(), "sqlite3_")
+	a.Equal(db.Prefix(), prefix)
 	a.NotNil(db.StdDB()).NotNil(db.Dialect())
 }
 
 func TestDB_Create(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB("./test.db", a)
+	db := newDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -69,7 +37,7 @@ func TestDB_Create(t *testing.T) {
 func TestDB_Insert(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB("./test.db", a)
+	db := newDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -103,7 +71,7 @@ func TestDB_Insert(t *testing.T) {
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB("./test.db", a)
+	db := newDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -132,7 +100,7 @@ func TestDB_Update(t *testing.T) {
 func TestDB_Delete(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB("./test.db", a)
+	db := newDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -162,7 +130,7 @@ func TestDB_Delete(t *testing.T) {
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB("./test.db", a)
+	db := newDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -204,7 +172,7 @@ func TestDB_Truncate(t *testing.T) {
 func TestDB_Drop(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB("./test.db", a)
+	db := newDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -216,7 +184,7 @@ func TestDB_Drop(t *testing.T) {
 func TestTX(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB("./test.db", a)
+	db := newDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -244,5 +212,5 @@ func TestTX(t *testing.T) {
 
 // 放在最后，仅用于删除数据库文件
 func TestDB_Close(t *testing.T) {
-	closeDB("./test.db", assert.New(t))
+	closeDB(assert.New(t))
 }
