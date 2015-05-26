@@ -94,12 +94,18 @@ func createOne(e engine, v interface{}) error {
 		return errors.New("createOne:无效的v.Kind()")
 	}
 
-	sql, err := e.Dialect().CreateTableSQL(m)
-	if err != nil {
-		return err
-	}
+	d := e.Dialect()
+	sql := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
+	d.Quote(sql, e.Prefix()+m.Name)
+	sql.WriteByte('(')
+	d.AIColSQL(sql, m)
+	d.NoAIColSQL(sql, m)
+	d.ConstraintsSQL(sql, m)
+	sql.Truncate(sql.Len() - 1)
+	sql.WriteByte(')')
 
-	_, err = e.Exec(false, sql, nil)
+	println(sql.String())
+	_, err = e.Exec(false, sql.String(), nil)
 	return err
 }
 
@@ -119,8 +125,7 @@ func findOne(e engine, v interface{}) error {
 		return errors.New("findOne:无效的v.Kind()")
 	}
 
-	sql := new(bytes.Buffer)
-	sql.WriteString("SELECT * FROM ")
+	sql := bytes.NewBufferString("SELECT * FROM ")
 	e.Dialect().Quote(sql, e.Prefix()+m.Name)
 
 	vals, err := where(e, sql, m, rval)

@@ -5,6 +5,11 @@
 package orm
 
 var createdSQL = map[string]string{
+	"bench": ` CREATE TABLE sqlite3_bench(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT,
+		pass TEXT
+	)`,
 	"users": `CREATE TABLE sqlite3_users(
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		Username TEXT,
@@ -28,6 +33,16 @@ var createdSQL = map[string]string{
 		CONSTRAINT unique_username UNIQUE(Username),
 		CONSTRAINT unique_email UNIQUE(email)
 	)`,
+}
+
+type bench struct {
+	ID   int    `orm:"name(id);ai"`
+	Name string `orm:"name(name)"`
+	Pass string `orm:"name(pass)"`
+}
+
+func (b *bench) Meta() string {
+	return "name(bench)"
 }
 
 type user struct {

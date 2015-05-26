@@ -13,7 +13,7 @@ import (
 func TestWhere_Update_Delete_Select(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	a.NotError(db.Create(&userInfo{}))
 	a.NotError(db.Insert(
 		&userInfo{UID: 1, FirstName: "f1", LastName: "l1"},
@@ -74,5 +74,5 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 
 // 放在最后，仅用于删除数据库文件
 func TestWhere_Close(t *testing.T) {
-	closeDB(assert.New(t))
+	closeDB("./test.db", assert.New(t))
 }

@@ -15,7 +15,7 @@ import (
 type Sqlite3 struct{}
 
 // implement orm.Dialect.QuoteTuple()
-func (m *Sqlite3) QuoteTuple() (byte, byte) {
+func (s *Sqlite3) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
@@ -37,38 +37,45 @@ func (s *Sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, er
 	return mysqlLimitSQL(w, limit, offset...)
 }
 
-// implement orm.Dialect.CreateTableSQL()
-func (s *Sqlite3) CreateTableSQL(model *orm.Model) (string, error) {
-	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
-	buf.Grow(300)
+// implement orm.Dialect.AIColSQL()
+func (s *Sqlite3) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+	if model.AI == nil {
+		return nil
+	}
 
-	buf.WriteString(model.Name)
-	buf.WriteByte('(')
+	if err := createColSQL(s, w, model.AI); err != nil {
+		return err
+	}
 
-	// 写入字段信息
+	_, err := w.WriteString(" PRIMARY KEY AUTOINCREMENT,")
+	return err
+}
+
+// implement orm.Dialect.NoAIColSQL()
+func (s *Sqlite3) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	for _, col := range model.Cols {
-		if err := createColSQL(s, buf, col); err != nil {
-			return "", err
+		if col.IsAI() { // 忽略AI列
+			continue
 		}
 
-		if col.IsAI() {
-			buf.WriteString(" PRIMARY KEY AUTOINCREMENT")
+		if err := createColSQL(s, w, col); err != nil {
+			return err
 		}
-		buf.WriteByte(',')
+		w.WriteByte(',')
 	}
+	return nil
+}
 
+// implement orm.Dialect.ConstraintsSQL()
+func (s *Sqlite3) ConstraintsSQL(w *bytes.Buffer, m *orm.Model) error {
 	// PK，若有自增，则已经在上面指定
-	if len(model.PK) > 0 && !model.PK[0].IsAI() {
-		createPKSQL(s, buf, model.PK, pkName)
-		buf.WriteByte(',')
+	if len(m.PK) > 0 && !m.PK[0].IsAI() {
+		createPKSQL(s, w, m.PK, pkName)
+		w.WriteByte(',')
 	}
 
-	createConstraints(s, buf, model)
-
-	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
-	buf.WriteByte(')')          // end CreateTable
-
-	return buf.String(), nil
+	createConstraints(s, w, m)
+	return nil
 }
 
 // implement orm.Dialect.TruncateTableSQL()

@@ -20,8 +20,17 @@ type Dialect interface {
 	// 返回的是对应数据库的limit语句以及语句中占位符对应的值。
 	LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error)
 
+	// 输出非AI列的定义，必须包含末尾的分号
+	NoAIColSQL(w *bytes.Buffer, m *Model) error
+
+	// 输出AI列，必须包含末尾的分号
+	AIColSQL(w *bytes.Buffer, m *Model) error
+
+	// 输出所有的约束定义，必须包含末尾的分号
+	ConstraintsSQL(w *bytes.Buffer, m *Model) error
+
 	// 根据参数m，返回创建该模型的SQL语句
-	CreateTableSQL(m *Model) (sql string, err error)
+	//CreateTableSQL(m *Model) (sql string, err error)
 
 	// 清空表内容，重置AI。
 	TruncateTableSQL(tableName string) string

@@ -14,14 +14,14 @@ import (
 )
 
 // 删除数据库文件。
-func closeDB(a *assert.Assertion) {
-	if _, err := os.Stat("./test.db"); err == nil || os.IsExist(err) {
-		a.NotError(os.Remove("./test.db"))
+func closeDB(dbFile string, a *assert.Assertion) {
+	if _, err := os.Stat(dbFile); err == nil || os.IsExist(err) {
+		a.NotError(os.Remove(dbFile))
 	}
 }
 
-func newDB(a *assert.Assertion) *DB {
-	db, err := NewDB("sqlite3", "./test.db", "sqlite3_", &sqlite3{})
+func newDB(dbFile string, a *assert.Assertion) *DB {
+	db, err := NewDB("sqlite3", dbFile, "sqlite3_", &sqlite3{})
 	a.NotError(err).NotNil(db)
 	return db
 }
@@ -43,7 +43,7 @@ func hasCount(db *DB, a *assert.Assertion, table string, size int) {
 func TestNewDB(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -57,18 +57,19 @@ func TestNewDB(t *testing.T) {
 func TestDB_Create(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
 
+	a.NotError(db.Drop(&admin{}, &userInfo{}))
 	a.NotError(db.Create(&admin{}, &userInfo{}))
 }
 
 func TestDB_Insert(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -102,7 +103,7 @@ func TestDB_Insert(t *testing.T) {
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -131,7 +132,7 @@ func TestDB_Update(t *testing.T) {
 func TestDB_Delete(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -161,7 +162,7 @@ func TestDB_Delete(t *testing.T) {
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -203,7 +204,7 @@ func TestDB_Truncate(t *testing.T) {
 func TestDB_Drop(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -215,7 +216,7 @@ func TestDB_Drop(t *testing.T) {
 func TestTX(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -243,5 +244,5 @@ func TestTX(t *testing.T) {
 
 // 放在最后，仅用于删除数据库文件
 func TestDB_Close(t *testing.T) {
-	closeDB(assert.New(t))
+	closeDB("./test.db", assert.New(t))
 }

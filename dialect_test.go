@@ -34,6 +34,18 @@ func (s *sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, er
 	return []int{limit, offset[0]}, nil
 }
 
+func (s *sqlite3) AIColSQL(w *bytes.Buffer, m *Model) error {
+	return nil
+}
+
+func (s *sqlite3) NoAIColSQL(w *bytes.Buffer, m *Model) error {
+	return nil
+}
+
+func (s *sqlite3) ConstraintsSQL(w *bytes.Buffer, m *Model) error {
+	return nil
+}
+
 func (s *sqlite3) CreateTableSQL(m *Model) (string, error) {
 	return createdSQL[m.Name], nil
 }

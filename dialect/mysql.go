@@ -39,6 +39,46 @@ func (m *Mysql) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, erro
 	return mysqlLimitSQL(w, limit, offset...)
 }
 
+// implement orm.Dialect.AIColSQL()
+func (m *Mysql) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+	if model.AI == nil {
+		return nil
+	}
+
+	if err := createColSQL(m, w, model.AI); err != nil {
+		return err
+	}
+	_, err := w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
+	return err
+}
+
+// implement orm.Dialect.NoAIColSQL()
+func (m *Mysql) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
+	for _, col := range model.Cols {
+		if col.IsAI() { // 忽略AI列
+			continue
+		}
+
+		if err := createColSQL(m, w, col); err != nil {
+			return err
+		}
+		w.WriteByte(',')
+	}
+	return nil
+}
+
+// implement orm.Dialect.ConstraintsSQL()
+func (m *Mysql) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
+	// PK，若有自增，则已经在上面指定
+	if len(model.PK) > 0 && !model.PK[0].IsAI() {
+		createPKSQL(m, w, model.PK, pkName)
+		w.WriteByte(',')
+	}
+
+	createConstraints(m, w, model)
+	return nil
+}
+
 // implement orm.Dialect.CreateTableSQL()
 func (m *Mysql) CreateTableSQL(model *orm.Model) (string, error) {
 	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")

@@ -16,7 +16,7 @@ import (
 type Postgres struct{}
 
 // implement orm.Dialect.QuoteTuple()
-func (m *Postgres) QuoteTuple() (byte, byte) {
+func (p *Postgres) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
@@ -36,6 +36,36 @@ func (p *Postgres) Quote(w *bytes.Buffer, name string) error {
 // implement orm.Dialect.LimitSQL()
 func (p *Postgres) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
+}
+
+// implement orm.Dialect.AIColSQL()
+func (p *Postgres) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+	return nil
+}
+
+// implement orm.Dialect.NoAIColSQL()
+func (p *Postgres) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
+	for _, col := range model.Cols {
+		if col.IsAI() { // 忽略AI列
+			continue
+		}
+		if err := createColSQL(p, w, col); err != nil {
+			return err
+		}
+		w.WriteByte(',')
+	}
+	return nil
+}
+
+// implement orm.Dialect.ConstraintsSQL()
+func (p *Postgres) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
+	if len(model.PK) > 0 {
+		createPKSQL(p, w, model.PK, pkName)
+		w.WriteByte(',')
+	}
+
+	createConstraints(p, w, model)
+	return nil
 }
 
 // implement orm.Dialect.CreateTableSQL()

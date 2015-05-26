@@ -17,7 +17,7 @@ var _ engine = &Tx{}
 
 func TestWhere(t *testing.T) {
 	a := assert.New(t)
-	db := newDB(a)
+	db := newDB("./test.db", a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
