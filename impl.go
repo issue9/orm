@@ -104,7 +104,6 @@ func createOne(e engine, v interface{}) error {
 	sql.Truncate(sql.Len() - 1)
 	sql.WriteByte(')')
 
-	println(sql.String())
 	_, err = e.Exec(false, sql.String(), nil)
 	return err
 }
