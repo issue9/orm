@@ -11,6 +11,28 @@ import (
 	"github.com/issue9/assert"
 )
 
+type user struct {
+	ID       int    `orm:"name(id);ai;"`
+	Username string `orm:"unique(unique_username);index(index_name);len(50)"`
+	Password string `orm:"name(password)"`
+	Regdate  int    `orm:"-"`
+}
+
+func (m *user) Meta() string {
+	return "check(chk_name,id>0);engine(innodb);charset(utf-8);name(users)"
+}
+
+type admin struct {
+	user
+
+	Email string `orm:"name(email);unique(unique_email)"`
+	Group int    `orm:"name(group);fk(fk_name,table_group,id,NO ACTION)"`
+}
+
+func (m *admin) Meta() string {
+	return "check(chk_name,id>0);engine(innodb);charset(utf-8);name(administrators)"
+}
+
 func TestConType_String(t *testing.T) {
 	a := assert.New(t)
 
