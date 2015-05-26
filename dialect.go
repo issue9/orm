@@ -23,14 +23,11 @@ type Dialect interface {
 	// 输出非AI列的定义，必须包含末尾的分号
 	NoAIColSQL(w *bytes.Buffer, m *Model) error
 
-	// 输出AI列，必须包含末尾的分号
+	// 输出AI列的定义，必须包含末尾的分号
 	AIColSQL(w *bytes.Buffer, m *Model) error
 
 	// 输出所有的约束定义，必须包含末尾的分号
 	ConstraintsSQL(w *bytes.Buffer, m *Model) error
-
-	// 根据参数m，返回创建该模型的SQL语句
-	//CreateTableSQL(m *Model) (sql string, err error)
 
 	// 清空表内容，重置AI。
 	TruncateTableSQL(tableName string) string

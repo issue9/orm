@@ -40,15 +40,13 @@ func (p *Postgres) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, e
 
 // implement orm.Dialect.AIColSQL()
 func (p *Postgres) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+	// Potgres的AI仅仅是类型不同，可直接使用NoAiColSQL输出
 	return nil
 }
 
 // implement orm.Dialect.NoAIColSQL()
 func (p *Postgres) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	for _, col := range model.Cols {
-		if col.IsAI() { // 忽略AI列
-			continue
-		}
 		if err := createColSQL(p, w, col); err != nil {
 			return err
 		}
