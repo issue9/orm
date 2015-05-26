@@ -79,55 +79,6 @@ func (m *Mysql) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 	return nil
 }
 
-// implement orm.Dialect.CreateTableSQL()
-func (m *Mysql) CreateTableSQL(model *orm.Model) (string, error) {
-	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
-	buf.Grow(300)
-
-	buf.WriteString(model.Name)
-	buf.WriteByte('(')
-
-	// 写入字段信息
-	for _, col := range model.Cols {
-		if err := createColSQL(m, buf, col); err != nil {
-			return "", err
-		}
-
-		if col.IsAI() {
-			buf.WriteString(" PRIMARY KEY AUTO_INCREMENT")
-		}
-		buf.WriteByte(',')
-	}
-
-	// PK，若有自增，则已经在上面指定
-	if len(model.PK) > 0 && !model.PK[0].IsAI() {
-		createPKSQL(m, buf, model.PK, pkName)
-		buf.WriteByte(',')
-	}
-
-	createConstraints(m, buf, model)
-
-	// key index不存在CONSTRAINT形式的语句
-	if len(model.KeyIndexes) == 0 {
-		for name, index := range model.KeyIndexes {
-			buf.WriteString("INDEX ")
-			buf.WriteString(name)
-			buf.WriteByte('(')
-			for _, col := range index {
-				buf.WriteString(col.Name)
-				buf.WriteByte(',')
-			}
-			buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
-			buf.WriteString("),")
-		}
-	}
-
-	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
-	buf.WriteByte(')')          // end CreateTable
-
-	return buf.String(), nil
-}
-
 // implement orm.Dialect.TruncateTableSQL()
 func (m *Mysql) TruncateTableSQL(tableName string) string {
 	return "TRUNCATE TABLE " + tableName

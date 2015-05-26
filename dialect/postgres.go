@@ -68,36 +68,6 @@ func (p *Postgres) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 	return nil
 }
 
-// implement orm.Dialect.CreateTableSQL()
-func (p *Postgres) CreateTableSQL(model *orm.Model) (string, error) {
-	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
-	buf.Grow(300)
-
-	buf.WriteString(model.Name)
-	buf.WriteByte('(')
-
-	// 写入字段信息
-	for _, col := range model.Cols {
-		if err := createColSQL(p, buf, col); err != nil {
-			return "", err
-		}
-		buf.WriteByte(',')
-	}
-
-	// PK
-	if len(model.PK) > 0 {
-		createPKSQL(p, buf, model.PK, pkName)
-		buf.WriteByte(',')
-	}
-
-	createConstraints(p, buf, model)
-
-	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
-	buf.WriteByte(')')          // end CreateTable
-
-	return buf.String(), nil
-}
-
 // implement orm.Dialect.TruncateTableSQL()
 func (p *Postgres) TruncateTableSQL(tableName string) string {
 	return "TRUNCATE TABLE " + tableName
