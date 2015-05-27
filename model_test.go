@@ -158,3 +158,24 @@ func TestModel(t *testing.T) {
 	// Meta返回的name属性
 	a.Equal(m.Name, "administrators")
 }
+
+func BenchmarkNewModel1(b *testing.B) {
+	ClearModels()
+	a := assert.New(b)
+
+	for i := 0; i < b.N; i++ {
+		m, err := newModel(&user{})
+		ClearModels()
+		a.NotError(err).NotNil(m)
+	}
+}
+
+func BenchmarkNewModel2(b *testing.B) {
+	ClearModels()
+	a := assert.New(b)
+
+	for i := 0; i < b.N; i++ {
+		m, err := newModel(&user{})
+		a.NotError(err).NotNil(m)
+	}
+}
