@@ -210,7 +210,14 @@ func TestTX(t *testing.T) {
 	hasCount(db, a, "users", 3)
 }
 
-// 放在最后，仅用于删除数据库文件
+// 放在最后，销毁数据库内容。
 func TestDB_Close(t *testing.T) {
-	closeDB(assert.New(t))
+	a := assert.New(t)
+	db := newDB(a)
+	defer func() {
+		a.NotError(db.Close())
+	}()
+
+	db.Drop(&user{}, &userInfo{}, &admin{})
+	closeDB(a)
 }

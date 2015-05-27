@@ -162,19 +162,17 @@ func insertOne(e engine, v interface{}) error {
 	keys := make([]string, 0, len(m.Cols))
 	vals := make([]interface{}, 0, len(m.Cols))
 	for name, col := range m.Cols {
-		if col.IsAI() { // AI过滤
-			continue
-		}
-
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
 			return fmt.Errorf("insertOne:未找到该名称[%v]的值", col.GoName)
 		}
 
-		// 存在默认值，且其值为0值的（无论是否是手动设置的）
-		if reflect.Zero(col.GoType).Interface() == field.Interface() && col.HasDefault {
+		// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
+		if reflect.Zero(col.GoType).Interface() == field.Interface() &&
+			(col.IsAI() || col.HasDefault) {
 			continue
 		}
+
 		keys = append(keys, name)
 		vals = append(vals, field.Interface())
 	}

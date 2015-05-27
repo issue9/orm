@@ -74,5 +74,12 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 
 // 放在最后，仅用于删除数据库文件
 func TestWhere_Close(t *testing.T) {
-	closeDB(assert.New(t))
+	a := assert.New(t)
+	db := newDB(a)
+	defer func() {
+		a.NotError(db.Close())
+	}()
+
+	db.Drop(&user{}, &userInfo{}, &admin{})
+	closeDB(a)
 }

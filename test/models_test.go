@@ -8,6 +8,7 @@ type bench struct {
 	ID   int    `orm:"name(id);ai"`
 	Name string `orm:"name(name);len(20)"`
 	Pass string `orm:"name(pass);len(32)"`
+	Site string `orm:"name(site);len(32)"`
 }
 
 func (b *bench) Meta() string {

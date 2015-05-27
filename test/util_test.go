@@ -18,6 +18,7 @@ import (
 )
 
 var (
+	// 通过修改此值来确定使用哪个数据库驱动来测试
 	driver = "mysql"
 
 	prefix = "prefix_"
@@ -25,7 +26,7 @@ var (
 	d      orm.Dialect
 )
 
-// 删除数据库文件。
+// 销毁数据库。默认仅对Sqlite3启作用，删除该数据库文件。
 func closeDB(a *assert.Assertion) {
 	if driver != "sqlite3" {
 		return
@@ -39,13 +40,13 @@ func closeDB(a *assert.Assertion) {
 func newDB(a *assert.Assertion) *orm.DB {
 	switch driver {
 	case "mysql":
-		dsn = "root@/orm_bench?charset=utf8"
+		dsn = "root@/orm_test?charset=utf8"
 		d = &dialect.Mysql{}
 	case "sqlite3":
-		dsn = "./test.db"
+		dsn = "./orm_test.db"
 		d = &dialect.Sqlite3{}
 	case "postgres":
-		dsn = "" // TODO
+		dsn = "user=pqgotest dbname=orm_test sslmode=disable"
 		d = &dialect.Postgres{}
 	default:
 		panic("仅支持mysql,sqlite3,postgres三种数据库测试")
@@ -67,5 +68,4 @@ func hasCount(db *orm.DB, a *assert.Assertion, table string, size int) {
 	data, err := fetch.Map(true, rows)
 	a.NotError(err).NotNil(data)
 	a.Equal(conv.MustInt(data[0]["cnt"], -1), size)
-
 }
