@@ -218,8 +218,7 @@ func updateOne(e engine, v interface{}) error {
 		return errors.New("updateOne:无效的v.Kind()")
 	}
 
-	sql := new(bytes.Buffer)
-	sql.WriteString("UPDATE ")
+	sql := bytes.NewBufferString("UPDATE ")
 	e.Dialect().Quote(sql, e.Prefix()+m.Name)
 	sql.WriteString(" SET ")
 	vals := make([]interface{}, 0, len(m.Cols))
@@ -268,8 +267,7 @@ func deleteOne(e engine, v interface{}) error {
 		return errors.New("deleteOne:无效的v.Kind()")
 	}
 
-	sql := new(bytes.Buffer)
-	sql.WriteString("DELETE FROM ")
+	sql := bytes.NewBufferString("DELETE FROM ")
 	e.Dialect().Quote(sql, e.Prefix()+m.Name)
 
 	vals, err := where(e, sql, m, rval)
@@ -306,7 +304,6 @@ func dropOne(e engine, v interface{}) error {
 	}
 
 	sql := bytes.NewBufferString("DROP TABLE IF EXISTS ")
-	//sql.WriteString(e.Prefix() + tbl)
 	e.Dialect().Quote(sql, e.Prefix()+tbl)
 	_, err = e.Exec(false, sql.String())
 	return err
