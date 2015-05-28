@@ -16,7 +16,11 @@ import (
 )
 
 var pool = sync.Pool{
-	New: func() interface{} { return new(bytes.Buffer) },
+	New: func() interface{} {
+		ret := new(bytes.Buffer)
+		ret.Grow(500)
+		return ret
+	},
 }
 
 // DB与Tx的共有接口，方便以下方法调用。
