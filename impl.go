@@ -10,9 +10,14 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/issue9/orm/fetch"
 )
+
+var pool = sync.Pool{
+	New: func() interface{} { return new(bytes.Buffer) },
+}
 
 // DB与Tx的共有接口，方便以下方法调用。
 type engine interface {
@@ -99,9 +104,10 @@ func getTableName(e engine, v interface{}) (string, error) {
 // 创建一个或多个数据表
 // 若objs为空，则不发生任何操作。
 func create(e engine, objs ...interface{}) error {
-	sql := new(bytes.Buffer)
-	d := e.Dialect()
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
 
+	d := e.Dialect()
 	for i, v := range objs {
 		m, err := newModel(v)
 		if err != nil {
@@ -139,7 +145,9 @@ func create(e engine, objs ...interface{}) error {
 // v可以是对象或是对象数组
 // 若objs为空，则不发生任何操作。
 func insert(e engine, objs ...interface{}) error {
-	sql := new(bytes.Buffer)
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
 	vals := make([]interface{}, 0, 10)
 
 	for i, v := range objs {
@@ -202,7 +210,8 @@ func insert(e engine, objs ...interface{}) error {
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
 // 若objs为空，则不发生任何操作。
 func find(e engine, objs ...interface{}) error {
-	sql := new(bytes.Buffer)
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
 
 	for i, v := range objs {
 		m, err := newModel(v)
@@ -246,7 +255,9 @@ func find(e engine, objs ...interface{}) error {
 // 若不存在此两个类型的字段，则返回错误信息。
 // 若objs为空，则不发生任何操作。
 func update(e engine, objs ...interface{}) error {
-	sql := new(bytes.Buffer)
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
 	vals := make([]interface{}, 0, 10)
 
 	for i, v := range objs {
@@ -305,7 +316,9 @@ func update(e engine, objs ...interface{}) error {
 // 以objs中每个元素的主键或是唯一索引作为where条件语句。
 // 若objs为空，则不发生任何操作。
 func del(e engine, objs ...interface{}) error {
-	sql := new(bytes.Buffer)
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
 	for i, v := range objs {
 		m, err := newModel(v)
 		if err != nil {
@@ -342,7 +355,9 @@ func del(e engine, objs ...interface{}) error {
 // 系统会默认给表名加上表名前缀。
 // 若objs为空，则不发生任何操作。
 func drop(e engine, objs ...interface{}) error {
-	sql := new(bytes.Buffer)
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
 	for _, v := range objs {
 		tbl, err := getTableName(e, v)
 		if err != nil {
@@ -350,7 +365,7 @@ func drop(e engine, objs ...interface{}) error {
 		}
 
 		sql.Reset()
-		sql := bytes.NewBufferString("DROP TABLE IF EXISTS ")
+		sql.WriteString("DROP TABLE IF EXISTS ")
 		e.Dialect().Quote(sql, e.Prefix()+tbl)
 		if _, err = e.Exec(false, sql.String()); err != nil {
 			return err
@@ -385,6 +400,9 @@ func truncate(e engine, objs ...interface{}) error {
 // NOTE:在go中不能将[]int展开成v...interface{}，
 // 所以此处不用...interface{}形式的参数反而会更方便调用者。
 func insertMany(e engine, v interface{}) error {
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
 	rval := reflect.ValueOf(v)
 	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
@@ -399,7 +417,8 @@ func insertMany(e engine, v interface{}) error {
 	}
 
 	l := rval.Len()
-	sql := bytes.NewBufferString("INSERT INTO ")
+	sql.Reset()
+	sql.WriteString("INSERT INTO ")
 	vals := make([]interface{}, 0, 10)
 	keys := []string{}
 	var firstType reflect.Type
@@ -409,6 +428,7 @@ func insertMany(e engine, v interface{}) error {
 		for irval.Kind() == reflect.Ptr {
 			irval = irval.Elem()
 		}
+
 		if irval.Kind() != reflect.Struct {
 			return fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针，当前实际为:[%v]", i, irval.Kind())
 		}
@@ -418,8 +438,11 @@ func insertMany(e engine, v interface{}) error {
 			return err
 		}
 
-		if i == 0 { // 第一个元素，需要从只获取列信息。
-			vs := new(bytes.Buffer)
+		if i == 0 { // 第一个元素，需要从中获取列信息。
+			vs := pool.Get().(*bytes.Buffer)
+			defer pool.Put(vs)
+			vs.Reset()
+
 			firstType = irval.Type()
 			e.Dialect().Quote(sql, e.Prefix()+m.Name) // 指定表名
 			sql.WriteByte('(')
