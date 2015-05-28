@@ -171,55 +171,6 @@ func insertOne(e engine, v interface{}) error {
 	return err
 }
 
-// 更新一个对象
-// 以v中的主键或是唯一索引作为where条件语句，其它值为更新值
-func updateOne(e engine, v interface{}) error {
-	m, err := newModel(v)
-	if err != nil {
-		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return errors.New("updateOne:无效的v.Kind()")
-	}
-
-	sql := bytes.NewBufferString("UPDATE ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-	sql.WriteString(" SET ")
-	vals := make([]interface{}, 0, len(m.Cols))
-
-	for name, col := range m.Cols {
-		field := rval.FieldByName(col.GoName)
-		if !field.IsValid() {
-			return fmt.Errorf("updateOne:未找到该名称[%v]的值", col.GoName)
-		}
-
-		// 忽略零值，TODO:还需要对比默认值
-		if reflect.Zero(col.GoType).Interface() == field.Interface() {
-			continue
-		}
-
-		e.Dialect().Quote(sql, name)
-		sql.WriteString("=?,")
-		vals = append(vals, field.Interface())
-	}
-	sql.Truncate(sql.Len() - 1)
-
-	whereVals, err := where(e, sql, m, rval)
-	if err != nil {
-		return err
-	}
-	vals = append(vals, whereVals...)
-
-	_, err = e.Exec(false, sql.String(), vals...)
-	return err
-}
-
 // 获取v对象的表名，v可以是一个结构体，也可以是一个字符串。
 func getTableName(e engine, v interface{}) (string, error) {
 	switch tbl := v.(type) {
@@ -301,8 +252,55 @@ func findMult(e engine, objs ...interface{}) error {
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
 func updateMult(e engine, objs ...interface{}) error {
-	for _, obj := range objs {
-		if err := updateOne(e, obj); err != nil {
+	sql := new(bytes.Buffer)
+	vals := make([]interface{}, 0, 10)
+
+	for i, v := range objs {
+		m, err := newModel(v)
+		if err != nil {
+			return err
+		}
+
+		rval := reflect.ValueOf(v)
+		for rval.Kind() == reflect.Ptr {
+			rval = rval.Elem()
+		}
+
+		if rval.Kind() != reflect.Struct {
+			return fmt.Errorf("updateMult:objs[%v]类型必须为结构体或是结构体指针", i)
+		}
+
+		sql.Reset()
+		vals = vals[:0]
+
+		sql.WriteString("UPDATE ")
+		e.Dialect().Quote(sql, e.Prefix()+m.Name)
+		sql.WriteString(" SET ")
+
+		for name, col := range m.Cols {
+			field := rval.FieldByName(col.GoName)
+			if !field.IsValid() {
+				return fmt.Errorf("updateMult:未找到该名称[%v]的值", col.GoName)
+			}
+
+			// 忽略零值，TODO:还需要对比默认值
+			if reflect.Zero(col.GoType).Interface() == field.Interface() {
+				continue
+			}
+
+			e.Dialect().Quote(sql, name)
+			sql.WriteString("=?,")
+			vals = append(vals, field.Interface())
+		}
+		sql.Truncate(sql.Len() - 1)
+
+		whereVals, err := where(e, sql, m, rval)
+		if err != nil {
+			return err
+		}
+		vals = append(vals, whereVals...)
+
+		if _, err = e.Exec(false, sql.String(), vals...); err != nil {
 			return err
 		}
 	}
