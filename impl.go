@@ -140,7 +140,6 @@ func create(e engine, objs ...interface{}) error {
 // 若objs为空，则不发生任何操作。
 func insert(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
-	keys := make([]string, 0, 10)
 	vals := make([]interface{}, 0, 10)
 
 	for i, v := range objs {
@@ -158,8 +157,11 @@ func insert(e engine, objs ...interface{}) error {
 			return fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针", i)
 		}
 
-		keys = keys[:0]
 		vals = vals[:0]
+		sql.Reset()
+		sql.WriteString("INSERT INTO ")
+		e.Dialect().Quote(sql, e.Prefix()+m.Name)
+		sql.WriteByte('(')
 		for name, col := range m.Cols {
 			field := rval.FieldByName(col.GoName)
 			if !field.IsValid() {
@@ -172,23 +174,15 @@ func insert(e engine, objs ...interface{}) error {
 				continue
 			}
 
-			keys = append(keys, name)
+			e.Dialect().Quote(sql, name)
+			sql.WriteByte(',')
 			vals = append(vals, field.Interface())
 		}
 
-		if len(keys) == 0 {
+		if len(vals) == 0 {
 			return errors.New("insert:未指定任何插入的列数据")
 		}
 
-		sql.Reset()
-		sql.WriteString("INSERT INTO ")
-		e.Dialect().Quote(sql, e.Prefix()+m.Name)
-
-		sql.WriteByte('(')
-		for _, col := range keys {
-			e.Dialect().Quote(sql, col)
-			sql.WriteByte(',')
-		}
 		sql.Truncate(sql.Len() - 1)
 		sql.WriteString(")VALUES(")
 		for range vals {
