@@ -93,7 +93,7 @@ func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	return db.stdDB.Prepare(query)
 }
 
-// 插入一个或是多个数据。v可以是多个不同类型的结构指针，
+// 插入一个或是多个数据。v可以是多个不同类型的结构指针。
 func (db *DB) Insert(v ...interface{}) error {
 	return insert(db, v...)
 }

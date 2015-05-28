@@ -16,6 +16,11 @@ import (
 
 type Mysql struct{}
 
+// implement orm.Dialect.SupportInsertMany()
+func (m *Mysql) SupportInsertMany() bool {
+	return true
+}
+
 // implement orm.Dialect.QuoteTuple()
 func (m *Mysql) QuoteTuple() (byte, byte) {
 	return '`', '`'

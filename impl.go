@@ -97,6 +97,7 @@ func getTableName(e engine, v interface{}) (string, error) {
 }
 
 // 创建一个或多个数据表
+// 若objs为空，则不发生任何操作。
 func create(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	d := e.Dialect()
@@ -136,6 +137,7 @@ func create(e engine, objs ...interface{}) error {
 
 // 插入一个或多个数据
 // v可以是对象或是对象数组
+// 若objs为空，则不发生任何操作。
 func insert(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	keys := make([]string, 0, 10)
@@ -153,7 +155,7 @@ func insert(e engine, objs ...interface{}) error {
 		}
 
 		if rval.Kind() != reflect.Struct {
-			return errors.New("insertOne:无效的v.Kind()")
+			return fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针", i)
 		}
 
 		keys = keys[:0]
@@ -161,7 +163,7 @@ func insert(e engine, objs ...interface{}) error {
 		for name, col := range m.Cols {
 			field := rval.FieldByName(col.GoName)
 			if !field.IsValid() {
-				return fmt.Errorf("insertOne:未找到该名称[%v]的值", col.GoName)
+				return fmt.Errorf("insert:未找到该名称[%v]的值", col.GoName)
 			}
 
 			// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
@@ -175,7 +177,7 @@ func insert(e engine, objs ...interface{}) error {
 		}
 
 		if len(keys) == 0 {
-			return errors.New("insertOne:未指定任何插入的列数据")
+			return errors.New("insert:未指定任何插入的列数据")
 		}
 
 		sql.Reset()
@@ -204,6 +206,7 @@ func insert(e engine, objs ...interface{}) error {
 
 // 查找多个数据
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
+// 若objs为空，则不发生任何操作。
 func find(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 
@@ -219,7 +222,7 @@ func find(e engine, objs ...interface{}) error {
 		}
 
 		if rval.Kind() != reflect.Struct {
-			return fmt.Errorf("findMult:objs[%v]类型必须为结构体或是结构体指针", i)
+			return fmt.Errorf("find:objs[%v]类型必须为结构体或是结构体指针", i)
 		}
 
 		sql.Reset()
@@ -247,6 +250,7 @@ func find(e engine, objs ...interface{}) error {
 // 更新一个或多个类型。
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
+// 若objs为空，则不发生任何操作。
 func update(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	vals := make([]interface{}, 0, 10)
@@ -263,7 +267,7 @@ func update(e engine, objs ...interface{}) error {
 		}
 
 		if rval.Kind() != reflect.Struct {
-			return fmt.Errorf("updateMult:objs[%v]类型必须为结构体或是结构体指针", i)
+			return fmt.Errorf("update:objs[%v]类型必须为结构体或是结构体指针", i)
 		}
 
 		sql.Reset()
@@ -276,7 +280,7 @@ func update(e engine, objs ...interface{}) error {
 		for name, col := range m.Cols {
 			field := rval.FieldByName(col.GoName)
 			if !field.IsValid() {
-				return fmt.Errorf("updateMult:未找到该名称[%v]的值", col.GoName)
+				return fmt.Errorf("update:未找到该名称[%v]的值", col.GoName)
 			}
 
 			// 忽略零值，TODO:还需要对比默认值
@@ -305,6 +309,7 @@ func update(e engine, objs ...interface{}) error {
 
 // 删除objs每个元素表示的数据。
 // 以objs中每个元素的主键或是唯一索引作为where条件语句。
+// 若objs为空，则不发生任何操作。
 func del(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for i, v := range objs {
@@ -319,7 +324,7 @@ func del(e engine, objs ...interface{}) error {
 		}
 
 		if rval.Kind() != reflect.Struct {
-			return fmt.Errorf("deleteMult:objs[%v]类型必须为结构体或是结构体指针", i)
+			return fmt.Errorf("del:objs[%v]类型必须为结构体或是结构体指针", i)
 		}
 
 		sql.Reset()
@@ -341,6 +346,7 @@ func del(e engine, objs ...interface{}) error {
 // 删除objs中指定的表名。
 // objs可以是字符串表名，或是一个表示model的实例。
 // 系统会默认给表名加上表名前缀。
+// 若objs为空，则不发生任何操作。
 func drop(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for _, v := range objs {
@@ -363,6 +369,7 @@ func drop(e engine, objs ...interface{}) error {
 // 清空表，并重置AI计数。
 // objs可以是字符串表名，或是一个表示model的实例。
 // 系统会默认给表名加上表名前缀。
+// 若objs为空，则不发生任何操作。
 func truncate(e engine, objs ...interface{}) error {
 	for _, v := range objs {
 		tbl, err := getTableName(e, v)

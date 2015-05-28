@@ -31,4 +31,7 @@ type Dialect interface {
 
 	// 清空表内容，重置AI。
 	TruncateTableSQL(tableName string) string
+
+	// 是否支持一次性插入多条语句
+	SupportInsertMany() bool
 }

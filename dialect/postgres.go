@@ -15,6 +15,11 @@ import (
 
 type Postgres struct{}
 
+// implement orm.Dialect.SupportInsertMany()
+func (p *Postgres) SupportInsertMany() bool {
+	return true
+}
+
 // implement orm.Dialect.QuoteTuple()
 func (p *Postgres) QuoteTuple() (byte, byte) {
 	return '`', '`'

@@ -14,6 +14,11 @@ import (
 
 type Sqlite3 struct{}
 
+// implement orm.Dialect.SupportInsertMany()
+func (s *Sqlite3) SupportInsertMany() bool {
+	return true
+}
+
 // implement orm.Dialect.QuoteTuple()
 func (s *Sqlite3) QuoteTuple() (byte, byte) {
 	return '`', '`'
