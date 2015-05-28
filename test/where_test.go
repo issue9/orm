@@ -14,6 +14,12 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 	a := assert.New(t)
 
 	db := newDB(a)
+	defer func() {
+		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
+		a.NotError(db.Close())
+		closeDB(a)
+	}()
+
 	a.NotError(db.Create(&userInfo{}))
 	a.NotError(db.Insert(
 		&userInfo{UID: 1, FirstName: "f1", LastName: "l1"},
@@ -70,16 +76,4 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 
 	// 确认Where.Delete()起作用
 	hasCount(db, a, "user_info", 2)
-}
-
-// 放在最后，仅用于删除数据库文件
-func TestWhere_Close(t *testing.T) {
-	a := assert.New(t)
-	db := newDB(a)
-	defer func() {
-		a.NotError(db.Close())
-	}()
-
-	db.Drop(&user{}, &userInfo{}, &admin{})
-	closeDB(a)
 }

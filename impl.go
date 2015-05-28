@@ -407,18 +407,19 @@ func insertMany(e engine, v interface{}) error {
 	l := rval.Len()
 	sql := bytes.NewBufferString("INSERT INTO ")
 	vals := make([]interface{}, 0, 10)
+	keys := []string{}
 	var firstType reflect.Type
 
 	for i := 0; i < l; i++ {
-		irval := reflect.ValueOf(v)
+		irval := rval.Index(i)
 		for irval.Kind() == reflect.Ptr {
 			irval = irval.Elem()
 		}
 		if irval.Kind() != reflect.Struct {
-			return fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针", i)
+			return fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针，当前实际为:[%v]", i, irval.Kind())
 		}
 
-		m, err := newModel(v)
+		m, err := newModel(irval.Interface())
 		if err != nil {
 			return err
 		}
@@ -426,7 +427,8 @@ func insertMany(e engine, v interface{}) error {
 		if i == 0 { // 第一个元素，需要从只获取列信息。
 			vs := new(bytes.Buffer)
 			firstType = irval.Type()
-			e.Dialect().Quote(sql, e.Prefix()+m.Name)
+			e.Dialect().Quote(sql, e.Prefix()+m.Name) // 指定表名
+			sql.WriteByte('(')
 			for name, col := range m.Cols {
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
@@ -444,6 +446,7 @@ func insertMany(e engine, v interface{}) error {
 
 				vs.WriteString("?,")
 				vals = append(vals, field.Interface())
+				keys = append(keys, name) // 记录列的顺序
 			}
 			sql.Truncate(sql.Len() - 1)
 			vs.Truncate(vs.Len() - 1)
@@ -456,7 +459,8 @@ func insertMany(e engine, v interface{}) error {
 			}
 
 			sql.WriteString(",(")
-			for _, col := range m.Cols {
+			for _, name := range keys {
+				col := m.Cols[name]
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
 					return fmt.Errorf("insert:未找到该名称[%v]的值", col.GoName)

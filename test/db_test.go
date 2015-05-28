@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm"
 )
 
 func TestNewDB(t *testing.T) {
@@ -22,25 +23,11 @@ func TestNewDB(t *testing.T) {
 	a.NotNil(db.StdDB()).NotNil(db.Dialect())
 }
 
-func TestDB_Create(t *testing.T) {
-	a := assert.New(t)
-
-	db := newDB(a)
-	defer func() {
-		a.NotError(db.Close())
-	}()
-
-	a.NotError(db.Drop(&admin{}, &userInfo{}))
+// 初始化测试数据，同时可用于DB.Inert的测试
+// 清空其它数据，初始化成原始的测试数据
+func initData(db *orm.DB, a *assert.Assertion) {
+	a.NotError(db.Drop(&admin{}, &userInfo{}, &user{}))
 	a.NotError(db.Create(&admin{}, &userInfo{}))
-}
-
-func TestDB_Insert(t *testing.T) {
-	a := assert.New(t)
-
-	db := newDB(a)
-	defer func() {
-		a.NotError(db.Close())
-	}()
 
 	a.NotError(db.Insert(&admin{
 		user:  user{Username: "username1", Password: "password1"},
@@ -73,10 +60,14 @@ func TestDB_InsertMany(t *testing.T) {
 
 	db := newDB(a)
 	defer func() {
+		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
 		a.NotError(db.Close())
+		closeDB(a)
 	}()
 
-	a.NotError(db.Insert(
+	a.NotError(db.Create(&userInfo{}))
+
+	a.NotError(db.InsertMany([]*userInfo{
 		&userInfo{
 			UID:       1,
 			FirstName: "f1",
@@ -89,7 +80,7 @@ func TestDB_InsertMany(t *testing.T) {
 			UID:       3,
 			FirstName: "f3",
 			LastName:  "l3",
-		}))
+		}}))
 
 	// select
 	u1 := &userInfo{UID: 1}
@@ -107,8 +98,12 @@ func TestDB_Update(t *testing.T) {
 
 	db := newDB(a)
 	defer func() {
+		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
 		a.NotError(db.Close())
+		closeDB(a)
 	}()
+
+	initData(db, a)
 
 	// update
 	a.NotError(db.Update(&userInfo{
@@ -136,8 +131,12 @@ func TestDB_Delete(t *testing.T) {
 
 	db := newDB(a)
 	defer func() {
+		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
 		a.NotError(db.Close())
+		closeDB(a)
 	}()
+
+	initData(db, a)
 
 	// delete
 	a.NotError(db.Delete(
@@ -145,8 +144,8 @@ func TestDB_Delete(t *testing.T) {
 			UID: 1,
 		},
 		&userInfo{
-			LastName:  "lastName2",
-			FirstName: "firstName2",
+			LastName:  "l2",
+			FirstName: "f2",
 		},
 		&admin{Email: "email1"},
 	))
@@ -166,28 +165,13 @@ func TestDB_Truncate(t *testing.T) {
 
 	db := newDB(a)
 	defer func() {
+		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
 		a.NotError(db.Close())
+		closeDB(a)
 	}()
 
-	a.NotError(db.Truncate(&admin{}, "user_info"))
-	hasCount(db, a, "administrators", 0)
-	hasCount(db, a, "user_info", 0)
-
 	// 插入数据
-	a.NotError(db.Insert(&admin{
-		user:  user{Username: "username1", Password: "password1"},
-		Email: "email1",
-		Group: 1,
-	}, &userInfo{
-		UID:       1,
-		FirstName: "f1",
-		LastName:  "l1",
-		Sex:       "female",
-	}, &userInfo{ // sex使用默认值
-		UID:       2,
-		FirstName: "f2",
-		LastName:  "l2",
-	}))
+	initData(db, a)
 
 	hasCount(db, a, "administrators", 1)
 	hasCount(db, a, "user_info", 2)
@@ -208,8 +192,12 @@ func TestDB_Drop(t *testing.T) {
 
 	db := newDB(a)
 	defer func() {
+		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
 		a.NotError(db.Close())
+		closeDB(a)
 	}()
+
+	initData(db, a)
 
 	a.NotError(db.Drop(&admin{}, []byte("user_info"))) // []byte应该能正常转换成string
 	a.Error(db.Insert(&admin{}))
@@ -220,7 +208,9 @@ func TestTX(t *testing.T) {
 
 	db := newDB(a)
 	defer func() {
+		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
 		a.NotError(db.Close())
+		closeDB(a)
 	}()
 
 	a.NotError(db.Create(&user{}, &userInfo{}))
@@ -242,16 +232,4 @@ func TestTX(t *testing.T) {
 	a.NotError(tx.Insert(&user{Username: "u3"}))
 	a.NotError(tx.Commit())
 	hasCount(db, a, "users", 3)
-}
-
-// 放在最后，销毁数据库内容。
-func TestDB_Close(t *testing.T) {
-	a := assert.New(t)
-	db := newDB(a)
-	defer func() {
-		a.NotError(db.Close())
-	}()
-
-	db.Drop(&user{}, &userInfo{}, &admin{})
-	closeDB(a)
 }

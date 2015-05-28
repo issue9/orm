@@ -152,7 +152,7 @@ func newModel(obj interface{}) (*Model, error) {
 	rtype := rval.Type()
 
 	if rtype.Kind() != reflect.Struct {
-		return nil, errors.New("newModel:obj参数只能是struct或是struct指针")
+		return nil, fmt.Errorf("newModel:obj参数只能是struct或是struct指针，当前为:[%v]", rval.Kind())
 	}
 
 	// 是否已经缓存的数组

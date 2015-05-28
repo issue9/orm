@@ -59,6 +59,32 @@ func BenchmarkDB_MultInsert(b *testing.B) {
 	}
 }
 
+// mysql: BenchmarkDB_InsertMany	     500	   2349282 ns/op
+func BenchmarkDB_InsertMany(b *testing.B) {
+	a := assert.New(b)
+
+	ms := make([]*bench, 0, 100)
+	for i := 0; i < cap(ms); i++ {
+		ms = append(ms, &bench{
+			Name: "name",
+			Pass: "pass",
+			Site: "http://www.github.com/issue9/orm",
+		})
+	}
+
+	db := newDB(a)
+	defer func() {
+		db.Drop(&bench{})
+		closeDB(a)
+	}()
+
+	a.NotError(db.Create(&bench{}))
+
+	for i := 0; i < b.N; i++ {
+		a.NotError(db.InsertMany(ms))
+	}
+}
+
 // mysql: BenchmarkDB_Update	    5000	    290209 ns/op
 func BenchmarkDB_Update(b *testing.B) {
 	a := assert.New(b)
