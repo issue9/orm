@@ -220,35 +220,6 @@ func updateOne(e engine, v interface{}) error {
 	return err
 }
 
-// 删除v表示的单个对象的内容
-// 以v中的主键或是唯一索引作为where条件语句
-func deleteOne(e engine, v interface{}) error {
-	m, err := newModel(v)
-	if err != nil {
-		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return errors.New("deleteOne:无效的v.Kind()")
-	}
-
-	sql := bytes.NewBufferString("DELETE FROM ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-
-	vals, err := where(e, sql, m, rval)
-	if err != nil {
-		return err
-	}
-
-	_, err = e.Exec(false, sql.String(), vals...)
-	return err
-}
-
 // 获取v对象的表名，v可以是一个结构体，也可以是一个字符串。
 func getTableName(e engine, v interface{}) (string, error) {
 	switch tbl := v.(type) {
@@ -361,10 +332,35 @@ func updateMult(e engine, objs ...interface{}) error {
 	return nil
 }
 
-// 删除指定的数据对象。
+// 删除objs每个元素表示的数据。
+// 以objs中每个元素的主键或是唯一索引作为where条件语句。
 func deleteMult(e engine, objs ...interface{}) error {
-	for _, obj := range objs {
-		if err := deleteOne(e, obj); err != nil {
+	sql := new(bytes.Buffer)
+	for i, v := range objs {
+		m, err := newModel(v)
+		if err != nil {
+			return err
+		}
+
+		rval := reflect.ValueOf(v)
+		for rval.Kind() == reflect.Ptr {
+			rval = rval.Elem()
+		}
+
+		if rval.Kind() != reflect.Struct {
+			return fmt.Errorf("deleteMult:objs[%v]类型必须为结构体或是结构体指针", i)
+		}
+
+		sql.Reset()
+		sql.WriteString("DELETE FROM ")
+		e.Dialect().Quote(sql, e.Prefix()+m.Name)
+
+		vals, err := where(e, sql, m, rval)
+		if err != nil {
+			return err
+		}
+
+		if _, err = e.Exec(false, sql.String(), vals...); err != nil {
 			return err
 		}
 	}
