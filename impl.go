@@ -78,39 +78,6 @@ func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interfa
 	return nil, errors.New("where:无法产生where部分语句")
 }
 
-// 根据v的pk或中唯一索引列查找一行数据，并赋值给v
-func findOne(e engine, v interface{}) error {
-	m, err := newModel(v)
-	if err != nil {
-		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return errors.New("findOne:无效的v.Kind()")
-	}
-
-	sql := bytes.NewBufferString("SELECT * FROM ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-
-	vals, err := where(e, sql, m, rval)
-	if err != nil {
-		return err
-	}
-
-	rows, err := e.Query(false, sql.String(), vals...)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	return fetch.Obj(v, rows)
-}
-
 // 插入一个对象到数据库
 // 以v中的主键或是唯一索引作为where条件语句。
 // 自增字段，即使指定了值，也不会被添加
@@ -239,9 +206,41 @@ func insertMult(e engine, objs ...interface{}) error {
 }
 
 // 查找多个数据
+// 根据v的pk或中唯一索引列查找一行数据，并赋值给v
 func findMult(e engine, objs ...interface{}) error {
-	for _, obj := range objs {
-		if err := findOne(e, obj); err != nil {
+	sql := new(bytes.Buffer)
+
+	for i, v := range objs {
+		m, err := newModel(v)
+		if err != nil {
+			return err
+		}
+
+		rval := reflect.ValueOf(v)
+		for rval.Kind() == reflect.Ptr {
+			rval = rval.Elem()
+		}
+
+		if rval.Kind() != reflect.Struct {
+			return fmt.Errorf("findMult:objs[%v]类型必须为结构体或是结构体指针", i)
+		}
+
+		sql.Reset()
+		sql.WriteString("SELECT * FROM ")
+		e.Dialect().Quote(sql, e.Prefix()+m.Name)
+
+		vals, err := where(e, sql, m, rval)
+		if err != nil {
+			return err
+		}
+
+		rows, err := e.Query(false, sql.String(), vals...)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+
+		if err := fetch.Obj(v, rows); err != nil {
 			return err
 		}
 	}
