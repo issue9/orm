@@ -238,29 +238,6 @@ func getTableName(e engine, v interface{}) (string, error) {
 	return m.Name, nil
 }
 
-func dropOne(e engine, v interface{}) error {
-	tbl, err := getTableName(e, v)
-	if err != nil {
-		return err
-	}
-
-	sql := bytes.NewBufferString("DROP TABLE IF EXISTS ")
-	e.Dialect().Quote(sql, e.Prefix()+tbl)
-	_, err = e.Exec(false, sql.String())
-	return err
-}
-
-func truncateOne(e engine, v interface{}) error {
-	tbl, err := getTableName(e, v)
-	if err != nil {
-		return err
-	}
-
-	sql := e.Dialect().TruncateTableSQL(e.Prefix() + tbl)
-	_, err = e.Exec(false, sql)
-	return err
-}
-
 // 创建一个或多个数据表
 func createMult(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
@@ -367,20 +344,43 @@ func deleteMult(e engine, objs ...interface{}) error {
 	return nil
 }
 
+// 删除objs中指定的表名。
+// objs可以是字符串表名，或是一个表示model的实例。
+// 系统会默认给表名加上表名前缀。
 func dropMult(e engine, objs ...interface{}) error {
-	for _, obj := range objs {
-		if err := dropOne(e, obj); err != nil {
+	sql := new(bytes.Buffer)
+	for _, v := range objs {
+		tbl, err := getTableName(e, v)
+		if err != nil {
+			return err
+		}
+
+		sql.Reset()
+		sql := bytes.NewBufferString("DROP TABLE IF EXISTS ")
+		e.Dialect().Quote(sql, e.Prefix()+tbl)
+		if _, err = e.Exec(false, sql.String()); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
+// 清空表，并重置AI计数。
+// objs可以是字符串表名，或是一个表示model的实例。
+// 系统会默认给表名加上表名前缀。
 func truncateMult(e engine, objs ...interface{}) error {
-	for _, obj := range objs {
-		if err := truncateOne(e, obj); err != nil {
+	for _, v := range objs {
+		tbl, err := getTableName(e, v)
+		if err != nil {
+			return err
+		}
+
+		sql := e.Dialect().TruncateTableSQL(e.Prefix() + tbl)
+		if _, err = e.Exec(false, sql); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
