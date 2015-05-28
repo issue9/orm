@@ -78,66 +78,6 @@ func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interfa
 	return nil, errors.New("where:无法产生where部分语句")
 }
 
-// 插入一个对象到数据库
-// 以v中的主键或是唯一索引作为where条件语句。
-// 自增字段，即使指定了值，也不会被添加
-func insertOne(e engine, v interface{}) error {
-	m, err := newModel(v)
-	if err != nil {
-		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return errors.New("insertOne:无效的v.Kind()")
-	}
-
-	keys := make([]string, 0, len(m.Cols))
-	vals := make([]interface{}, 0, len(m.Cols))
-	for name, col := range m.Cols {
-		field := rval.FieldByName(col.GoName)
-		if !field.IsValid() {
-			return fmt.Errorf("insertOne:未找到该名称[%v]的值", col.GoName)
-		}
-
-		// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if reflect.Zero(col.GoType).Interface() == field.Interface() &&
-			(col.IsAI() || col.HasDefault) {
-			continue
-		}
-
-		keys = append(keys, name)
-		vals = append(vals, field.Interface())
-	}
-
-	if len(keys) == 0 {
-		return errors.New("insertOne:未指定任何插入的列数据")
-	}
-
-	sql := bytes.NewBufferString("INSERT INTO ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-
-	sql.WriteByte('(')
-	for _, col := range keys {
-		e.Dialect().Quote(sql, col)
-		sql.WriteByte(',')
-	}
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteString(")VALUES(")
-	for range vals {
-		sql.WriteString("?,")
-	}
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteByte(')')
-
-	_, err = e.Exec(false, sql.String(), vals...)
-	return err
-}
-
 // 获取v对象的表名，v可以是一个结构体，也可以是一个字符串。
 func getTableName(e engine, v interface{}) (string, error) {
 	switch tbl := v.(type) {
@@ -197,8 +137,65 @@ func createMult(e engine, objs ...interface{}) error {
 // 插入一个或多个数据
 // v可以是对象或是对象数组
 func insertMult(e engine, objs ...interface{}) error {
-	for _, obj := range objs {
-		if err := insertOne(e, obj); err != nil {
+	sql := new(bytes.Buffer)
+	keys := make([]string, 0, 10)
+	vals := make([]interface{}, 0, 10)
+
+	for _, v := range objs {
+		m, err := newModel(v)
+		if err != nil {
+			return err
+		}
+
+		rval := reflect.ValueOf(v)
+		for rval.Kind() == reflect.Ptr {
+			rval = rval.Elem()
+		}
+
+		if rval.Kind() != reflect.Struct {
+			return errors.New("insertOne:无效的v.Kind()")
+		}
+
+		keys = keys[:0]
+		vals = vals[:0]
+		for name, col := range m.Cols {
+			field := rval.FieldByName(col.GoName)
+			if !field.IsValid() {
+				return fmt.Errorf("insertOne:未找到该名称[%v]的值", col.GoName)
+			}
+
+			// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
+			if reflect.Zero(col.GoType).Interface() == field.Interface() &&
+				(col.IsAI() || col.HasDefault) {
+				continue
+			}
+
+			keys = append(keys, name)
+			vals = append(vals, field.Interface())
+		}
+
+		if len(keys) == 0 {
+			return errors.New("insertOne:未指定任何插入的列数据")
+		}
+
+		sql.Reset()
+		sql.WriteString("INSERT INTO ")
+		e.Dialect().Quote(sql, e.Prefix()+m.Name)
+
+		sql.WriteByte('(')
+		for _, col := range keys {
+			e.Dialect().Quote(sql, col)
+			sql.WriteByte(',')
+		}
+		sql.Truncate(sql.Len() - 1)
+		sql.WriteString(")VALUES(")
+		for range vals {
+			sql.WriteString("?,")
+		}
+		sql.Truncate(sql.Len() - 1)
+		sql.WriteByte(')')
+
+		if _, err = e.Exec(false, sql.String(), vals...); err != nil {
 			return err
 		}
 	}
