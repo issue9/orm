@@ -98,6 +98,20 @@ func (db *DB) Insert(v ...interface{}) error {
 	return insert(db, v...)
 }
 
+// 插入多条相同的数据。若需要向某张表中插入多条记录，
+// InsertMany()会比Insert()性能上好很多。
+// 与DB::Insert()方法最大的不同在于:
+//  // Insert()可以每个参数的类型都不一样：
+//  vs := []interface{}{&user{...}, &userInfo{...}}
+//  db.Insert(vs...)
+//  // db.InsertMany(vs) // 这里将出错，数组的元素的类型必须相同。
+//  us := []*users{&user{}, &user{}}
+//  db.InsertMany(us)
+//  db.Insert(us...) // 这样也行，但是性能会差好多
+func (db *DB) InsertMany(v interface{}) error {
+	return insertMany(db, v)
+}
+
 // 删除一个或是多个数据。v可以是多个不同类型的结构指针，
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
@@ -213,6 +227,11 @@ func (tx *Tx) Rollback() error {
 // 插入一个或多个数据。
 func (tx *Tx) Insert(v ...interface{}) error {
 	return insert(tx, v...)
+}
+
+// 插入多样结构相同的数据。具体说明可参考DB中的同名函数:DB.InsertMany()
+func (tx *Tx) InsertMany(v interface{}) error {
+	return insertMany(tx, v)
 }
 
 // 更新一个或多个类型。

@@ -68,6 +68,40 @@ func TestDB_Insert(t *testing.T) {
 	a.Equal(a1.Username, "username1")
 }
 
+func TestDB_InsertMany(t *testing.T) {
+	a := assert.New(t)
+
+	db := newDB(a)
+	defer func() {
+		a.NotError(db.Close())
+	}()
+
+	a.NotError(db.Insert(
+		&userInfo{
+			UID:       1,
+			FirstName: "f1",
+			LastName:  "l1",
+		}, &userInfo{
+			UID:       2,
+			FirstName: "f2",
+			LastName:  "l2",
+		}, &userInfo{
+			UID:       3,
+			FirstName: "f3",
+			LastName:  "l3",
+		}))
+
+	// select
+	u1 := &userInfo{UID: 1}
+	u2 := &userInfo{LastName: "l2", FirstName: "f2"}
+	u3 := &userInfo{UID: 3}
+
+	a.NotError(db.Select(u1, u2, u3))
+	a.Equal(u1, &userInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "male"})
+	a.Equal(u2, &userInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
+	a.Equal(u3, &userInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
+}
+
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t)
 
