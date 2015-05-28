@@ -97,7 +97,7 @@ func getTableName(e engine, v interface{}) (string, error) {
 }
 
 // 创建一个或多个数据表
-func createMult(e engine, objs ...interface{}) error {
+func create(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	d := e.Dialect()
 
@@ -136,7 +136,7 @@ func createMult(e engine, objs ...interface{}) error {
 
 // 插入一个或多个数据
 // v可以是对象或是对象数组
-func insertMult(e engine, objs ...interface{}) error {
+func insert(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	keys := make([]string, 0, 10)
 	vals := make([]interface{}, 0, 10)
@@ -204,7 +204,7 @@ func insertMult(e engine, objs ...interface{}) error {
 
 // 查找多个数据
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
-func findMult(e engine, objs ...interface{}) error {
+func find(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 
 	for i, v := range objs {
@@ -247,7 +247,7 @@ func findMult(e engine, objs ...interface{}) error {
 // 更新一个或多个类型。
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func updateMult(e engine, objs ...interface{}) error {
+func update(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	vals := make([]interface{}, 0, 10)
 
@@ -305,7 +305,7 @@ func updateMult(e engine, objs ...interface{}) error {
 
 // 删除objs每个元素表示的数据。
 // 以objs中每个元素的主键或是唯一索引作为where条件语句。
-func deleteMult(e engine, objs ...interface{}) error {
+func del(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for i, v := range objs {
 		m, err := newModel(v)
@@ -341,7 +341,7 @@ func deleteMult(e engine, objs ...interface{}) error {
 // 删除objs中指定的表名。
 // objs可以是字符串表名，或是一个表示model的实例。
 // 系统会默认给表名加上表名前缀。
-func dropMult(e engine, objs ...interface{}) error {
+func drop(e engine, objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for _, v := range objs {
 		tbl, err := getTableName(e, v)
@@ -363,7 +363,7 @@ func dropMult(e engine, objs ...interface{}) error {
 // 清空表，并重置AI计数。
 // objs可以是字符串表名，或是一个表示model的实例。
 // 系统会默认给表名加上表名前缀。
-func truncateMult(e engine, objs ...interface{}) error {
+func truncate(e engine, objs ...interface{}) error {
 	for _, v := range objs {
 		tbl, err := getTableName(e, v)
 		if err != nil {
