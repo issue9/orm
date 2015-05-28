@@ -312,6 +312,12 @@ func (m *Model) setDefault(col *Column, vals []string) error {
 		return errors.New("setDefault:自增列不能设置默认值")
 	}
 
+	for _, c := range m.PK {
+		if c == col {
+			return errors.New("setDefault:不能为主键设置默认值")
+		}
+	}
+
 	if len(vals) != 1 {
 		return fmt.Errorf("setDefault:[%v]字段的default属性指定了太多的参数：[%v]", col.Name, vals)
 	}
@@ -341,6 +347,10 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 // 通过vals设置字段的primark key约束
 // pk
 func (m *Model) setPK(col *Column, vals []string) error {
+	if col.HasDefault {
+		return fmt.Errorf("setPK:不能将一个含有默认值的列[%v]设置为主键", col.Name)
+	}
+
 	if len(vals) != 0 {
 		return fmt.Errorf("setPK:[%v]字段的pk属性指定了太多的参数:[%v]", col.Name, vals)
 	}
@@ -406,6 +416,10 @@ func (m *Model) setFK(col *Column, vals []string) error {
 // 通过vals设置Model的自增列。
 // ai(colName,start,step)
 func (m *Model) setAI(col *Column, vals []string) (err error) {
+	if col.HasDefault {
+		return fmt.Errorf("setAI:不能将一个含有默认值的列[%v]设置为自增", col.Name)
+	}
+
 	if len(vals) != 0 {
 		return fmt.Errorf("setAI:[%v]字段的ai属性指定了太多的参数:[%v]", col.Name, vals)
 	}
