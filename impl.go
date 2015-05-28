@@ -78,36 +78,6 @@ func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interfa
 	return nil, errors.New("where:无法产生where部分语句")
 }
 
-// 创建一个数据表。v为一个结构体或是结构体指针。
-func createOne(e engine, v interface{}) error {
-	m, err := newModel(v)
-	if err != nil {
-		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return errors.New("createOne:无效的v.Kind()")
-	}
-
-	d := e.Dialect()
-	sql := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
-	d.Quote(sql, e.Prefix()+m.Name)
-	sql.WriteByte('(')
-	d.AIColSQL(sql, m)
-	d.NoAIColSQL(sql, m)
-	d.ConstraintsSQL(sql, m)
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteByte(')')
-
-	_, err = e.Exec(false, sql.String())
-	return err
-}
-
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
 func findOne(e engine, v interface{}) error {
 	m, err := newModel(v)
@@ -322,8 +292,35 @@ func truncateOne(e engine, v interface{}) error {
 
 // 创建一个或多个数据表
 func createMult(e engine, objs ...interface{}) error {
-	for _, obj := range objs {
-		if err := createOne(e, obj); err != nil {
+	sql := new(bytes.Buffer)
+	d := e.Dialect()
+
+	for i, v := range objs {
+		m, err := newModel(v)
+		if err != nil {
+			return err
+		}
+
+		rval := reflect.ValueOf(v)
+		for rval.Kind() == reflect.Ptr {
+			rval = rval.Elem()
+		}
+
+		if rval.Kind() != reflect.Struct {
+			return fmt.Errorf("createMult:objs[%v]类型必须为结构体或是结构体指针", i)
+		}
+
+		sql.Reset()
+		sql.WriteString("CREATE TABLE IF NOT EXISTS ")
+		d.Quote(sql, e.Prefix()+m.Name)
+		sql.WriteByte('(')
+		d.AIColSQL(sql, m)
+		d.NoAIColSQL(sql, m)
+		d.ConstraintsSQL(sql, m)
+		sql.Truncate(sql.Len() - 1)
+		sql.WriteByte(')')
+
+		if _, err = e.Exec(false, sql.String()); err != nil {
 			return err
 		}
 	}
