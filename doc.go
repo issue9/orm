@@ -40,7 +40,7 @@
 //  select * from p_user where `group`=1
 // DB.Query(),DB.Exec(),DB.Prepare().DB.Where()及Tx与之对应的函数都可以使用占位符。
 //
-// Model无需指定占位符，它们默认总会使用占位符，且无法取消。
+// Model不能指定占位符，它们默认总会使用占位符，且无法取消。
 //
 //
 //
@@ -101,7 +101,6 @@
 // 在core.Metaer中除了可以指定name(table_name)和check(name,expr)两个属性之外，
 // 还可指定一些自定义的属性，这些属性都将会被保存到Model.Meta中。
 //
-// NOTE:一定要注意receive的类型是值还是指针。
 //
 // 约束名：
 //
