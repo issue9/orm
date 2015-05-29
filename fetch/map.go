@@ -87,5 +87,3 @@ func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) 
 	}
 	return data, nil
 }
-
-// 在mysql中，cnt有可能被处理成一个[]byte打印输出时，像一个数组，容易造成困惑)，
