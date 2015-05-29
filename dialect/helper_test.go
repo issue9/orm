@@ -38,7 +38,7 @@ func chkSQLEqual(a *assert.Assertion, s1, s2 string) {
 
 func TestCreatColSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &Mysql{}
+	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
 	col := &orm.Column{}
 
@@ -67,7 +67,7 @@ func TestCreatColSQL(t *testing.T) {
 
 func TestCreatePKSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &Mysql{}
+	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
 	col1 := &orm.Column{Name: "id"}
 	col2 := &orm.Column{Name: "username"}
@@ -85,7 +85,7 @@ func TestCreatePKSQL(t *testing.T) {
 
 func TestCreateUniqueSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &Mysql{}
+	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
 	col1 := &orm.Column{Name: "id"}
 	col2 := &orm.Column{Name: "username"}
@@ -103,7 +103,7 @@ func TestCreateUniqueSQL(t *testing.T) {
 
 func TestCreateFKSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &Mysql{}
+	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
 	fk := &orm.ForeignKey{
 		Col:          &orm.Column{Name: "id"},
@@ -119,7 +119,7 @@ func TestCreateFKSQL(t *testing.T) {
 
 func TestCreateCheckSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &Mysql{}
+	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
 
 	createCheckSQL(dialect, buf, "id>5", "chkname")

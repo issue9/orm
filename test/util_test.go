@@ -41,13 +41,13 @@ func newDB(a *assert.Assertion) *orm.DB {
 	switch driver {
 	case "mysql":
 		dsn = "root@/orm_test?charset=utf8"
-		d = &dialect.Mysql{}
+		d = dialect.Mysql()
 	case "sqlite3":
 		dsn = "./orm_test.db"
-		d = &dialect.Sqlite3{}
+		d = dialect.Sqlite3()
 	case "postgres":
 		dsn = "user=pqgotest dbname=orm_test sslmode=disable"
-		d = &dialect.Postgres{}
+		d = dialect.Postgres()
 	default:
 		panic("仅支持mysql,sqlite3,postgres三种数据库测试")
 	}

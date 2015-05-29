@@ -14,11 +14,11 @@ import (
 	"github.com/issue9/orm"
 )
 
-var _ base = &Sqlite3{}
+var _ base = &sqlite3{}
 
-func TestSqlite3_SQLType(t *testing.T) {
+func Testsqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
-	var s = &Sqlite3{}
+	var s = &sqlite3{}
 
 	buf := bytes.NewBufferString("")
 	col := &orm.Column{}

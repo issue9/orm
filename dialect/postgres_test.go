@@ -14,11 +14,11 @@ import (
 	"github.com/issue9/orm"
 )
 
-var _ base = &Postgres{}
+var _ base = &postgres{}
 
-var p = &Postgres{}
+var p = &postgres{}
 
-func TestPostgres_SQLType(t *testing.T) {
+func Testpostgres_SQLType(t *testing.T) {
 	a := assert.New(t)
 	buf := bytes.NewBufferString("")
 	col := &orm.Column{}

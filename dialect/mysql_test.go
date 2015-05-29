@@ -14,9 +14,9 @@ import (
 	"github.com/issue9/orm"
 )
 
-var _ base = &Mysql{}
+var _ base = &mysql{}
 
-var m = &Mysql{}
+var m = &mysql{}
 
 func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)

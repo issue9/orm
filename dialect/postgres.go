@@ -13,20 +13,25 @@ import (
 	"github.com/issue9/orm"
 )
 
-type Postgres struct{}
+// 返回一个适配postgresql的orm.Dialect接口
+func Postgres() orm.Dialect {
+	return &postgres{}
+}
+
+type postgres struct{}
 
 // implement orm.Dialect.SupportInsertMany()
-func (p *Postgres) SupportInsertMany() bool {
+func (p *postgres) SupportInsertMany() bool {
 	return true
 }
 
 // implement orm.Dialect.QuoteTuple()
-func (p *Postgres) QuoteTuple() (byte, byte) {
+func (p *postgres) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
 // implement orm.Dialect.Quote()
-func (p *Postgres) Quote(w *bytes.Buffer, name string) error {
+func (p *postgres) Quote(w *bytes.Buffer, name string) error {
 	if err := w.WriteByte('`'); err != nil {
 		return err
 	}
@@ -39,18 +44,18 @@ func (p *Postgres) Quote(w *bytes.Buffer, name string) error {
 }
 
 // implement orm.Dialect.LimitSQL()
-func (p *Postgres) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
+func (p *postgres) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
 }
 
 // implement orm.Dialect.AIColSQL()
-func (p *Postgres) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+func (p *postgres) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	// Potgres的AI仅仅是类型不同，可直接使用NoAiColSQL输出
 	return nil
 }
 
 // implement orm.Dialect.NoAIColSQL()
-func (p *Postgres) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
+func (p *postgres) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	for _, col := range model.Cols {
 		if err := createColSQL(p, w, col); err != nil {
 			return err
@@ -61,7 +66,7 @@ func (p *Postgres) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 }
 
 // implement orm.Dialect.ConstraintsSQL()
-func (p *Postgres) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
+func (p *postgres) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 	if len(model.PK) > 0 {
 		createPKSQL(p, w, model.PK, pkName)
 		w.WriteByte(',')
@@ -72,13 +77,13 @@ func (p *Postgres) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 }
 
 // implement orm.Dialect.TruncateTableSQL()
-func (p *Postgres) TruncateTableSQL(tableName string) string {
+func (p *postgres) TruncateTableSQL(tableName string) string {
 	return "TRUNCATE TABLE " + tableName
 }
 
 // implement base.sqlType
 // 将col转换成sql类型，并写入buf中。
-func (p *Postgres) sqlType(buf *bytes.Buffer, col *orm.Column) error {
+func (p *postgres) sqlType(buf *bytes.Buffer, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

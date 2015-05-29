@@ -14,20 +14,25 @@ import (
 	"github.com/issue9/orm"
 )
 
-type Mysql struct{}
+// 返回一个适配mysql的orm.Dialect接口
+func Mysql() orm.Dialect {
+	return &mysql{}
+}
+
+type mysql struct{}
 
 // implement orm.Dialect.SupportInsertMany()
-func (m *Mysql) SupportInsertMany() bool {
+func (m *mysql) SupportInsertMany() bool {
 	return true
 }
 
 // implement orm.Dialect.QuoteTuple()
-func (m *Mysql) QuoteTuple() (byte, byte) {
+func (m *mysql) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
 // implement orm.Dialect.Quote
-func (m *Mysql) Quote(w *bytes.Buffer, name string) error {
+func (m *mysql) Quote(w *bytes.Buffer, name string) error {
 	if err := w.WriteByte('`'); err != nil {
 		return err
 	}
@@ -40,12 +45,12 @@ func (m *Mysql) Quote(w *bytes.Buffer, name string) error {
 }
 
 // implement orm.Dialect.Limit()
-func (m *Mysql) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
+func (m *mysql) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
 }
 
 // implement orm.Dialect.AIColSQL()
-func (m *Mysql) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+func (m *mysql) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	if model.AI == nil {
 		return nil
 	}
@@ -58,7 +63,7 @@ func (m *Mysql) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
 }
 
 // implement orm.Dialect.NoAIColSQL()
-func (m *Mysql) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
+func (m *mysql) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	for _, col := range model.Cols {
 		if col.IsAI() { // 忽略AI列
 			continue
@@ -73,7 +78,7 @@ func (m *Mysql) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 }
 
 // implement orm.Dialect.ConstraintsSQL()
-func (m *Mysql) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
+func (m *mysql) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 	// PK，若有自增，则已经在上面指定
 	if len(model.PK) > 0 && !model.PK[0].IsAI() {
 		createPKSQL(m, w, model.PK, pkName)
@@ -85,12 +90,12 @@ func (m *Mysql) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 }
 
 // implement orm.Dialect.TruncateTableSQL()
-func (m *Mysql) TruncateTableSQL(tableName string) string {
+func (m *mysql) TruncateTableSQL(tableName string) string {
 	return "TRUNCATE TABLE " + tableName
 }
 
 // implement base.sqlType()
-func (m *Mysql) sqlType(buf *bytes.Buffer, col *orm.Column) error {
+func (m *mysql) sqlType(buf *bytes.Buffer, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

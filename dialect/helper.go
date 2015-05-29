@@ -123,7 +123,7 @@ func createCheckSQL(b base, buf *bytes.Buffer, expr, chkName string) {
 	buf.WriteByte(')')
 }
 
-// 创建标准的几种约束：unique, foreign key, check
+// 创建标准的几种约束(除PK约束，该约束有专门的函数createPKSQL()产生)：unique, foreign key, check
 func createConstraints(b base, buf *bytes.Buffer, model *orm.Model) {
 	// Unique Index
 	for name, index := range model.UniqueIndexes {
