@@ -33,61 +33,50 @@ type engine interface {
 	Prefix() string
 }
 
-// 检测rval中与cols对应的字段都是有效的，且为非零值。
-// 若cols的长度为0，返回false。
-func checkCols(cols []*Column, rval reflect.Value) bool {
-	if len(cols) == 0 {
-		return false
-	}
-
-	for _, col := range cols {
-		field := rval.FieldByName(col.GoName)
-		if !field.IsValid() {
-			return false
-		}
-
-		if reflect.Zero(col.GoType).Interface() == field.Interface() {
-			return false
-		}
-	}
-	return true
-}
-
 // 根据model中的主键或是唯一索引为sql产生where语句，
 // 若两者都不存在，则返回错误信息。rval为struct的reflect.Value
 func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interface{}, error) {
-	ret := []interface{}{}
+	vals := make([]interface{}, 0, 3)
+	keys := make([]string, 0, 3)
 
-	if checkCols(m.PK, rval) {
-		sql.WriteString(" WHERE ")
-		for _, col := range m.PK {
-			e.Dialect().Quote(sql, col.Name)
-			sql.WriteString("=?")
-			ret = append(ret, rval.FieldByName(col.GoName).Interface())
-			sql.WriteString(" AND ")
+	// 获取构成where的键名和键值
+	getKV := func(cols []*Column) bool {
+		for _, col := range cols {
+			field := rval.FieldByName(col.GoName)
+
+			if !field.IsValid() ||
+				reflect.Zero(col.GoType).Interface() == field.Interface() {
+				vals = vals[:0]
+				keys = keys[:0]
+				return false
+			}
+
+			keys = append(keys, col.Name)
+			vals = append(vals, field.Interface())
 		}
-		sql.Truncate(sql.Len() - 5) // 去掉最后的" AND "五个字符
-		return ret, nil
+		return true
 	}
 
-	// 若不存在pk，也不存在唯一约束
-	for _, cols := range m.UniqueIndexes {
-		if !checkCols(cols, rval) {
-			continue
+	if !getKV(m.PK) { // 没有主键，则尝试唯一约束
+		for _, cols := range m.UniqueIndexes {
+			if getKV(cols) {
+				break
+			}
 		}
+	}
 
-		sql.WriteString(" WHERE ")
-		for _, col := range cols {
-			e.Dialect().Quote(sql, col.Name)
-			sql.WriteString("=?")
-			ret = append(ret, rval.FieldByName(col.GoName).Interface())
-			sql.WriteString(" AND ")
-		}
-		sql.Truncate(sql.Len() - 5) // 去掉最后的" AND "五个字符
-		return ret, nil
-	} // end range m.UniqueIndexes
+	if len(keys) == 0 {
+		return nil, fmt.Errorf("where:无法为[%v]模块产生where部分语句", m.Name)
+	}
 
-	return nil, errors.New("where:无法产生where部分语句")
+	sql.WriteString(" WHERE ")
+	for _, key := range keys {
+		e.Dialect().Quote(sql, key)
+		sql.WriteString("=? AND ")
+	}
+	sql.Truncate(sql.Len() - 5) // 去掉最后5个字符" AND "
+
+	return vals, nil
 }
 
 // 获取v对象的表名，v可以是一个结构体，也可以是一个字符串。
