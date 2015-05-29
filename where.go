@@ -42,7 +42,7 @@ func (w *Where) where(op int, cond string, args ...interface{}) *Where {
 	case op == or:
 		w.cond.WriteString(" OR(")
 	default:
-		panic("Where:where:错误的参数op")
+		panic("where:错误的参数op")
 	}
 	w.cond.WriteString(cond)
 	w.cond.WriteByte(')')
@@ -71,10 +71,14 @@ func (w *Where) Table(tableName string) *Where {
 // replace，是否需将对语句的占位符进行替换。
 func (w *Where) Delete(replace bool) error {
 	if len(w.table) == 0 {
-		return errors.New("Where:Delete:未指定表名")
+		return errors.New("Where.Delete:未指定表名")
 	}
 
-	sql := bytes.NewBufferString("DELETE FROM ")
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
+	sql.Reset()
+	sql.WriteString("DELETE FROM ")
 	w.e.Dialect().Quote(sql, w.table)
 	sql.WriteString(w.cond.String())
 	_, err := w.e.Exec(replace, sql.String(), w.args...)
@@ -92,7 +96,11 @@ func (w *Where) Update(replace bool, data map[string]interface{}) error {
 		return errors.New("Where.Update:未指定需要更新的数据")
 	}
 
-	sql := bytes.NewBufferString("UPDATE ")
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
+	sql.Reset()
+	sql.WriteString("UPDATE ")
 	w.e.Dialect().Quote(sql, w.table)
 	vals := make([]interface{}, 0, len(data)+len(w.args))
 	sql.WriteString(" SET ")
@@ -130,11 +138,14 @@ func (w *Where) SelectMap(replace bool, cols ...string) ([]map[string]interface{
 
 func (w *Where) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
 	if len(w.table) == 0 {
-		return nil, errors.New("Where:Select:未指定表名")
+		return nil, errors.New("Where:buildSelectSQL:未指定表名")
 	}
 
-	sql := bytes.NewBufferString("SELECT ")
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
 
+	sql.Reset()
+	sql.WriteString("SELECT ")
 	if len(cols) == 0 {
 		sql.WriteString(" * ")
 	} else {
@@ -147,7 +158,6 @@ func (w *Where) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) 
 
 	sql.WriteString(" FROM ")
 	w.e.Dialect().Quote(sql, w.table)
-	sql.WriteByte(' ')
 	sql.WriteString(w.cond.String())
 
 	return w.e.Query(replace, sql.String(), w.args...)
