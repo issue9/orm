@@ -13,7 +13,7 @@ import (
 // 若once值为true，则只导出第一条数据。
 //
 // NOTE:
-// 每个数据对数据的处理方式是不一样的，比如如下语句
+// 每个数据库对数据的处理方式是不一样的，比如如下语句
 //  SELECT COUNT(*) as cnt FROM tbl1
 // 将使用Map()导出到[]map[string]interface{}中时，
 // 在mysql中，cnt有可能被处理成一个[]byte(打印输出时，像一个数组，容易造成困惑)，
@@ -87,3 +87,5 @@ func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) 
 	}
 	return data, nil
 }
+
+// 在mysql中，cnt有可能被处理成一个[]byte打印输出时，像一个数组，容易造成困惑)，

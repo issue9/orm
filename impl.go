@@ -15,6 +15,7 @@ import (
 	"github.com/issue9/orm/fetch"
 )
 
+// 用于管理bytes.Buffer
 var pool = sync.Pool{
 	New: func() interface{} {
 		ret := new(bytes.Buffer)
@@ -63,7 +64,9 @@ func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interfa
 			e.Dialect().Quote(sql, col.Name)
 			sql.WriteString("=?")
 			ret = append(ret, rval.FieldByName(col.GoName).Interface())
+			sql.WriteString(" AND ")
 		}
+		sql.Truncate(sql.Len() - 5) // 去掉最后的" AND "五个字符
 		return ret, nil
 	}
 
