@@ -17,6 +17,16 @@ const (
 	or
 )
 
+const (
+	Equal = iota
+	NotEqual
+	GreatThan
+	LessThan
+	Like
+	In
+	Between
+)
+
 // 用于产生条件语句。
 type Where struct {
 	e     engine

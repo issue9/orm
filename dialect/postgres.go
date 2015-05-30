@@ -27,12 +27,12 @@ func (p *postgres) SupportInsertMany() bool {
 
 // implement orm.Dialect.QuoteTuple()
 func (p *postgres) QuoteTuple() (byte, byte) {
-	return '`', '`'
+	return '"', '"'
 }
 
 // implement orm.Dialect.Quote()
 func (p *postgres) Quote(w *bytes.Buffer, name string) error {
-	if err := w.WriteByte('`'); err != nil {
+	if err := w.WriteByte('"'); err != nil {
 		return err
 	}
 
@@ -40,7 +40,7 @@ func (p *postgres) Quote(w *bytes.Buffer, name string) error {
 		return err
 	}
 
-	return w.WriteByte('`')
+	return w.WriteByte('"')
 }
 
 // implement orm.Dialect.LimitSQL()

@@ -14,12 +14,13 @@ import (
 	"github.com/issue9/orm/fetch"
 
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
 	// 通过修改此值来确定使用哪个数据库驱动来测试
-	driver = "sqlite3"
+	driver = "mysql"
 
 	prefix = "prefix_"
 	dsn    string
@@ -46,7 +47,7 @@ func newDB(a *assert.Assertion) *orm.DB {
 		dsn = "./orm_test.db"
 		d = dialect.Sqlite3()
 	case "postgres":
-		dsn = "user=pqgotest dbname=orm_test sslmode=disable"
+		dsn = "user=caixw dbname=orm_test sslmode=disable"
 		d = dialect.Postgres()
 	default:
 		panic("仅支持mysql,sqlite3,postgres三种数据库测试")

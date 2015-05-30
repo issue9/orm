@@ -408,8 +408,16 @@ func insertMany(e engine, v interface{}) error {
 	case reflect.Struct: // 单个元素
 		return insert(e, v)
 	case reflect.Array, reflect.Slice:
+		if !e.Dialect().SupportInsertMany() {
+			for i := 0; i < rval.Len(); i++ {
+				if err := insert(e, rval.Index(i).Interface()); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
 	default:
-		return errors.New("参数v的类型只能是struct或是数组")
+		return errors.New("inert:参数v的类型只能是struct或是数组")
 	}
 
 	l := rval.Len()
@@ -468,7 +476,7 @@ func insertMany(e engine, v interface{}) error {
 			sql.WriteByte(')')
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
-				return errors.New("参数v中包含了不同类型的元素")
+				return errors.New("insert:参数v中包含了不同类型的元素")
 			}
 
 			sql.WriteString(",(")
