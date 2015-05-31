@@ -2,5 +2,5 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// 提供了部分数据库对orm.Dialect接口的实现。
-package dialect
+// 这是一个针对orm和orm/dialect的测试包。
+package test

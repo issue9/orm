@@ -21,10 +21,26 @@
 //  )
 //
 //  // 初始化一个DB，表前缀为prefix_
-//  db1 := orm.New("sqlite3", "./db1", "prefix_", &dialect.Sqlite3{})
+//  db1 := orm.NewDB("sqlite3", "./db1", "prefix_", &dialect.Sqlite3{})
 //
 //  // 另一个DB实例
-//  db2 := orm.New("sqlite3", "./db2", "db2_", &dialect.Sqlite3{})
+//  db2 := orm.NewDB("sqlite3", "./db2", "db2_", &dialect.Sqlite3{})
+//
+//
+//
+// 占位符
+//
+//
+// SQL语句可以使用'#'字符在语句中暂替真实的表名前缀，也可以使用{}
+// 包含一个关键字，使其它成为普通列名，如：
+//  select * from #user where {group}=1
+// 在实际执行时，如DB.Query()，将第一个参数replace指定为true，
+// 相关的占位符就会被替换成与当前环境想容的实例，如在表名前缀为p_，
+// 数据库为mysql时，会被替换成以下语句，然后再执行：
+//  select * from p_user where `group`=1
+// DB.Query(),DB.Exec(),DB.Prepare().DB.Where()及Tx与之对应的函数都可以使用占位符。
+//
+// Model不能指定占位符，它们默认总会使用占位符，且无法取消。
 //
 //
 //
@@ -35,9 +51,13 @@
 //      Id          int64      `orm:"name(id);ai;"`
 //      FirstName   string     `orm:"name(first_name);index(index_name)"`
 //      LastName    string     `orm:"name(first_name);index(index_name)"`
+//
+//      // 此处group会自动加上引号，无须担心是否为关键字
+//      Group       string	   `orm:"name(group)"`
 //  }
 //
 //  // 通过orm.Metaer接口，指定表的额外数据。若不需要，可不用实现该接口
+//  // 表名user会被自动加上表名前缀。
 //  func(u *User) Meta() string {
 //      return "name(user);engine(innodb);charset(utf-8)"
 //  }
@@ -47,7 +67,8 @@
 //  name(fieldName): 将当前的字段映射到数据表中的fieldName字段。
 //
 //  len(l1, l2): 指定字段的长度，比如mysql中的int(5),varchar(255),double(1,2),
-//  仅部分数据库支持，比如sqlite3不支持该属性。
+//  仅部分数据库支持，比如sqlite3不支持该属性，会被自动忽略。
+//  mysql中的字符串类型必须指定该类型。
 //
 //  nullable(true|false): 相当于定义表结构时的NULL，建议尽量少用该属性，
 //  若非用不可的话，与之对应的Go属性必须声明为NullString之类的结构。
@@ -55,6 +76,7 @@
 //  pk: 主键，支持联合主键，给多个字段加上pk的struct tag即可。
 //
 //  ai: 自增，若指定了自增列，则将自动取消其它的pk设置。无法指定起始值和步长。
+//  可手动设置一个非零值来更改某条数据的AI行为。
 //
 //  unique(index_name): 唯一索引，支持联合索引，index_name为约束名，
 //  会将index_name为一样的字段定义为一个联合索引。
@@ -62,6 +84,9 @@
 //  index(index_name): 普通的关键字索引，同unique一样会将名称相同的索引定义为一个联合索引。
 //
 //  default(value): 指定默认值。相当于定义表结构时的DEFAULT。
+//  当一个字段如果是个零值(reflect.Zero())时，将会使用它的默认值，
+//  但是系统无法判断该零值是人为指定，还是未指定被默认初始化零值的，
+//  所以在需要用到零值的字段，最好不要用default的struct tag。
 //
 //  fk(fk_name,refTable,refColName,updateRule,deleteRule):
 //  定义物理外键，最少需要指定fk_name,refTabl,refColName三个值。分别对应约束名，
@@ -76,7 +101,6 @@
 // 在core.Metaer中除了可以指定name(table_name)和check(name,expr)两个属性之外，
 // 还可指定一些自定义的属性，这些属性都将会被保存到Model.Meta中。
 //
-// NOTE:一定要注意receive的类型是值还是指针。
 //
 // 约束名：
 //
@@ -141,4 +165,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.11.25.150520"
+const Version = "0.13.30.150531"

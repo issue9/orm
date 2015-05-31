@@ -12,15 +12,25 @@ import (
 	"github.com/issue9/orm"
 )
 
-type Sqlite3 struct{}
+// 返回一个适配sqlite3的orm.Dialect接口
+func Sqlite3() orm.Dialect {
+	return &sqlite3{}
+}
+
+type sqlite3 struct{}
+
+// implement orm.Dialect.SupportInsertMany()
+func (s *sqlite3) SupportInsertMany() bool {
+	return true
+}
 
 // implement orm.Dialect.QuoteTuple()
-func (m *Sqlite3) QuoteTuple() (byte, byte) {
+func (s *sqlite3) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
 // implement orm.Dialect.Quote()
-func (s *Sqlite3) Quote(w *bytes.Buffer, name string) error {
+func (s *sqlite3) Quote(w *bytes.Buffer, name string) error {
 	if err := w.WriteByte('`'); err != nil {
 		return err
 	}
@@ -32,54 +42,70 @@ func (s *Sqlite3) Quote(w *bytes.Buffer, name string) error {
 	return w.WriteByte('`')
 }
 
+// implement orm.Dialect.ReplaceMarks()
+func (s *sqlite3) ReplaceMarks(sql *string) error {
+	return nil
+}
+
 // implement orm.Dialect.LimitSQL()
-func (s *Sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
+func (s *sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
 }
 
-// implement orm.Dialect.CreateTableSQL()
-func (s *Sqlite3) CreateTableSQL(model *orm.Model) (string, error) {
-	buf := bytes.NewBufferString("CREATE TABLE IF NOT EXISTS ")
-	buf.Grow(300)
+// implement orm.Dialect.AIColSQL()
+func (s *sqlite3) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+	if model.AI == nil {
+		return nil
+	}
 
-	buf.WriteString(model.Name)
-	buf.WriteByte('(')
+	if err := createColSQL(s, w, model.AI); err != nil {
+		return err
+	}
 
-	// 写入字段信息
+	_, err := w.WriteString(" PRIMARY KEY AUTOINCREMENT,")
+	return err
+}
+
+// implement orm.Dialect.NoAIColSQL()
+func (s *sqlite3) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	for _, col := range model.Cols {
-		if err := createColSQL(s, buf, col); err != nil {
-			return "", err
+		if col.IsAI() { // 忽略AI列
+			continue
 		}
 
-		if col.IsAI() {
-			buf.WriteString(" PRIMARY KEY AUTOINCREMENT")
+		if err := createColSQL(s, w, col); err != nil {
+			return err
 		}
-		buf.WriteByte(',')
+		w.WriteByte(',')
 	}
+	return nil
+}
 
+// implement orm.Dialect.ConstraintsSQL()
+func (s *sqlite3) ConstraintsSQL(w *bytes.Buffer, m *orm.Model) error {
 	// PK，若有自增，则已经在上面指定
-	if len(model.PK) > 0 && !model.PK[0].IsAI() {
-		createPKSQL(s, buf, model.PK, pkName)
-		buf.WriteByte(',')
+	if len(m.PK) > 0 && !m.PK[0].IsAI() {
+		createPKSQL(s, w, m.PK, pkName)
+		w.WriteByte(',')
 	}
 
-	createConstraints(s, buf, model)
-
-	buf.Truncate(buf.Len() - 1) // 去掉最后的逗号
-	buf.WriteByte(')')          // end CreateTable
-
-	return buf.String(), nil
+	createConstraints(s, w, m)
+	return nil
 }
 
 // implement orm.Dialect.TruncateTableSQL()
-func (s *Sqlite3) TruncateTableSQL(tableName string) string {
-	return "DELETE FROM " + tableName +
-		";update sqlite_sequence set seq=0 where name='" + tableName + "';"
+func (s *sqlite3) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
+	w.WriteString("DELETE FROM ")
+	w.WriteString(tableName)
+	w.WriteString(";update sqlite_sequence set seq=0 where name='")
+	w.WriteString(tableName)
+	_, err := w.WriteString("';")
+	return err
 }
 
 // implement base.sqlType()
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *Sqlite3) sqlType(buf *bytes.Buffer, col *orm.Column) error {
+func (s *sqlite3) sqlType(buf *bytes.Buffer, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

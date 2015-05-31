@@ -30,6 +30,10 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB
 		return nil, err
 	}
 
+	return NewDBWithStdDB(db, tablePrefix, dialect)
+}
+
+func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{
 		stdDB:       db,
@@ -72,6 +76,11 @@ func (db *DB) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	if replace {
 		query = db.replacer.Replace(query)
 	}
+
+	if err := db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return db.stdDB.Query(query, args...)
 }
 
@@ -81,6 +90,11 @@ func (db *DB) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	if replace {
 		query = db.replacer.Replace(query)
 	}
+
+	if err := db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return db.stdDB.Exec(query, args...)
 }
 
@@ -90,48 +104,67 @@ func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
 		query = db.replacer.Replace(query)
 	}
+
+	if err := db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return db.stdDB.Prepare(query)
 }
 
-// 插入一个或是多个数据。v可以是多个不同类型的结构指针，
+// 插入一个或是多个数据。v可以是多个不同类型的结构指针。
 func (db *DB) Insert(v ...interface{}) error {
-	return insertMult(db, v...)
+	return insert(db, v...)
+}
+
+// 插入多条相同的数据。若需要向某张表中插入多条记录，
+// InsertMany()会比Insert()性能上好很多。
+// 与DB::Insert()方法最大的不同在于:
+//  // Insert()可以每个参数的类型都不一样：
+//  vs := []interface{}{&user{...}, &userInfo{...}}
+//  db.Insert(vs...)
+//  // db.InsertMany(vs) // 这里将出错，数组的元素的类型必须相同。
+//  us := []*users{&user{}, &user{}}
+//  db.InsertMany(us)
+//  db.Insert(us...) // 这样也行，但是性能会差好多
+func (db *DB) InsertMany(v interface{}) error {
+	return insertMany(db, v)
 }
 
 // 删除一个或是多个数据。v可以是多个不同类型的结构指针，
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Delete(v ...interface{}) error {
-	return deleteMult(db, v...)
+	return del(db, v...)
 }
 
 // 更新一个或是多个数据。v可以是多个不同类型的结构指针，
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Update(v ...interface{}) error {
-	return updateMult(db, v...)
+	return update(db, v...)
 }
 
 // 查询一个或是多个数据。v可以是多个不同类型的结构指针，
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Select(v ...interface{}) error {
-	return findMult(db, v...)
+	return find(db, v...)
 }
 
 // 创建一张或是多张表。v可以是多个不同类型的结构指针。
 func (db *DB) Create(v ...interface{}) error {
-	return createMult(db, v...)
+	return create(db, v...)
 }
 
-// 删除一张或是多张表。v可以是结构体指针或是表名字符串
+// 删除一张或是多张表。v可以是多个不同类型的结构指针。
 func (db *DB) Drop(v ...interface{}) error {
-	return dropMult(db, v...)
+	return drop(db, v...)
 }
 
-// 清空一张或是多张表。v可以是结构体指针或是表名字符串
+// 清空一张或是多张表。v可以是多个不同类型的结构指针。
 func (db *DB) Truncate(v ...interface{}) error {
-	return truncateMult(db, v...)
+	return truncate(db, v...)
 }
 
 // 通过一组where()语句来定位数据。
@@ -174,6 +207,11 @@ func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	if replace {
 		query = tx.db.replacer.Replace(query)
 	}
+
+	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return tx.stdTx.Query(query, args...)
 }
 
@@ -182,6 +220,11 @@ func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	if replace {
 		query = tx.db.replacer.Replace(query)
 	}
+
+	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return tx.stdTx.Exec(query, args...)
 }
 
@@ -190,6 +233,11 @@ func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
 		query = tx.db.replacer.Replace(query)
 	}
+
+	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return tx.stdTx.Prepare(query)
 }
 
@@ -212,32 +260,37 @@ func (tx *Tx) Rollback() error {
 
 // 插入一个或多个数据。
 func (tx *Tx) Insert(v ...interface{}) error {
-	return insertMult(tx, v...)
+	return insert(tx, v...)
+}
+
+// 插入多样结构相同的数据。具体说明可参考DB中的同名函数:DB.InsertMany()
+func (tx *Tx) InsertMany(v interface{}) error {
+	return insertMany(tx, v)
 }
 
 // 更新一个或多个类型。
 func (tx *Tx) Update(v ...interface{}) error {
-	return updateMult(tx, v...)
+	return update(tx, v...)
 }
 
 // 删除一个或是多个数据。
 func (tx *Tx) Delete(v ...interface{}) error {
-	return deleteMult(tx, v...)
+	return del(tx, v...)
 }
 
 // 创建数据表。
 func (tx *Tx) Create(v ...interface{}) error {
-	return createMult(tx, v...)
+	return create(tx, v...)
 }
 
 // 删除表结构及数据。
 func (tx *Tx) Drop(v ...interface{}) error {
-	return dropMult(tx, v...)
+	return drop(tx, v...)
 }
 
 // 清除表内容，但保留表结构。
 func (tx *Tx) Truncate(v ...interface{}) error {
-	return truncateMult(tx, v...)
+	return truncate(tx, v...)
 }
 
 // 返回Where实例。

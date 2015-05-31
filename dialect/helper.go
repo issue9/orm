@@ -35,7 +35,7 @@ type base interface {
 // 用于产生在createTable中使用的普通列信息表达式，不包含autoincrement和primary key的关键字。
 func createColSQL(b base, buf *bytes.Buffer, col *orm.Column) error {
 	// col_name VARCHAR(100) NOT NULL DEFAULT 'abc'
-	buf.WriteString(col.Name)
+	b.Quote(buf, col.Name)
 	buf.WriteByte(' ')
 
 	// 写入字段类型
@@ -63,7 +63,7 @@ func createPKSQL(b base, buf *bytes.Buffer, cols []*orm.Column, pkName string) {
 	buf.WriteString(pkName)
 	buf.WriteString(" PRIMARY KEY(")
 	for _, col := range cols {
-		buf.WriteString(col.Name)
+		b.Quote(buf, col.Name)
 		buf.WriteByte(',')
 	}
 	buf.Truncate(buf.Len() - 1) // 去掉最后一个逗号
@@ -78,7 +78,7 @@ func createUniqueSQL(b base, buf *bytes.Buffer, cols []*orm.Column, indexName st
 	buf.WriteString(indexName)
 	buf.WriteString(" UNIQUE(")
 	for _, col := range cols {
-		buf.WriteString(col.Name)
+		b.Quote(buf, col.Name)
 		buf.WriteByte(',')
 	}
 	buf.Truncate(buf.Len() - 1) // 去掉最后一个逗号
@@ -93,13 +93,13 @@ func createFKSQL(b base, buf *bytes.Buffer, fk *orm.ForeignKey, fkName string) {
 	buf.WriteString(fkName)
 
 	buf.WriteString(" FOREIGN KEY(")
-	buf.WriteString(fk.Col.Name)
+	b.Quote(buf, fk.Col.Name)
 
 	buf.WriteString(") REFERENCES ")
 	buf.WriteString(fk.RefTableName)
 
 	buf.WriteByte('(')
-	buf.WriteString(fk.RefColName)
+	b.Quote(buf, fk.RefColName)
 	buf.WriteByte(')')
 
 	if len(fk.UpdateRule) > 0 {
@@ -123,7 +123,7 @@ func createCheckSQL(b base, buf *bytes.Buffer, expr, chkName string) {
 	buf.WriteByte(')')
 }
 
-// 创建标准的几种约束：unique, foreign key, check
+// 创建标准的几种约束(除PK约束，该约束有专门的函数createPKSQL()产生)：unique, foreign key, check
 func createConstraints(b base, buf *bytes.Buffer, model *orm.Model) {
 	// Unique Index
 	for name, index := range model.UniqueIndexes {
