@@ -177,7 +177,7 @@ func TestDB_Truncate(t *testing.T) {
 	hasCount(db, a, "user_info", 2)
 
 	// truncate之后，会重置AI
-	a.NotError(db.Truncate(&admin{}, "user_info"))
+	a.NotError(db.Truncate(&admin{}, &userInfo{}))
 	hasCount(db, a, "administrators", 0)
 	hasCount(db, a, "user_info", 0)
 
@@ -199,7 +199,7 @@ func TestDB_Drop(t *testing.T) {
 
 	initData(db, a)
 
-	a.NotError(db.Drop(&admin{}, []byte("user_info"))) // []byte应该能正常转换成string
+	a.NotError(db.Drop(&admin{}, &userInfo{}))
 	a.Error(db.Insert(&admin{}))
 }
 

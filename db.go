@@ -72,6 +72,11 @@ func (db *DB) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	if replace {
 		query = db.replacer.Replace(query)
 	}
+
+	if err := db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return db.stdDB.Query(query, args...)
 }
 
@@ -81,6 +86,11 @@ func (db *DB) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	if replace {
 		query = db.replacer.Replace(query)
 	}
+
+	if err := db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return db.stdDB.Exec(query, args...)
 }
 
@@ -90,6 +100,11 @@ func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
 		query = db.replacer.Replace(query)
 	}
+
+	if err := db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return db.stdDB.Prepare(query)
 }
 
@@ -138,12 +153,12 @@ func (db *DB) Create(v ...interface{}) error {
 	return create(db, v...)
 }
 
-// 删除一张或是多张表。v可以是结构体指针或是表名字符串
+// 删除一张或是多张表。v可以是多个不同类型的结构指针。
 func (db *DB) Drop(v ...interface{}) error {
 	return drop(db, v...)
 }
 
-// 清空一张或是多张表。v可以是结构体指针或是表名字符串
+// 清空一张或是多张表。v可以是多个不同类型的结构指针。
 func (db *DB) Truncate(v ...interface{}) error {
 	return truncate(db, v...)
 }
@@ -188,6 +203,11 @@ func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	if replace {
 		query = tx.db.replacer.Replace(query)
 	}
+
+	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return tx.stdTx.Query(query, args...)
 }
 
@@ -196,6 +216,11 @@ func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	if replace {
 		query = tx.db.replacer.Replace(query)
 	}
+
+	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return tx.stdTx.Exec(query, args...)
 }
 
@@ -204,6 +229,11 @@ func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
 		query = tx.db.replacer.Replace(query)
 	}
+
+	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+		return nil, err
+	}
+
 	return tx.stdTx.Prepare(query)
 }
 

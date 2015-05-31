@@ -94,9 +94,13 @@ func (s *sqlite3) ConstraintsSQL(w *bytes.Buffer, m *orm.Model) error {
 }
 
 // implement orm.Dialect.TruncateTableSQL()
-func (s *sqlite3) TruncateTableSQL(tableName string) string {
-	return "DELETE FROM " + tableName +
-		";update sqlite_sequence set seq=0 where name='" + tableName + "';"
+func (s *sqlite3) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
+	w.WriteString("DELETE FROM ")
+	w.WriteString(tableName)
+	w.WriteString(";update sqlite_sequence set seq=0 where name='")
+	w.WriteString(tableName)
+	_, err := w.WriteString("';")
+	return err
 }
 
 // implement base.sqlType()

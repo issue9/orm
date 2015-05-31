@@ -97,7 +97,7 @@ func (p *postgres) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 // implement orm.Dialect.ConstraintsSQL()
 func (p *postgres) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 	if len(model.PK) > 0 {
-		createPKSQL(p, w, model.PK, pkName)
+		createPKSQL(p, w, model.PK, model.Name+pkName) // postgres主键名需要全局唯一？
 		w.WriteByte(',')
 	}
 
@@ -106,8 +106,19 @@ func (p *postgres) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 }
 
 // implement orm.Dialect.TruncateTableSQL()
-func (p *postgres) TruncateTableSQL(tableName string) string {
-	return "TRUNCATE TABLE " + tableName
+func (p *postgres) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
+	w.WriteString("TRUNCATE TABLE ")
+	w.WriteString(tableName)
+	if len(aiColumn) == 0 {
+		return nil
+	}
+
+	w.WriteString("; ALTER SEQUENCE ")
+	w.WriteString(tableName)
+	w.WriteByte('_')
+	w.WriteString(aiColumn)
+	_, err := w.WriteString("_seq RESTART WITH 1")
+	return err
 }
 
 // implement base.sqlType

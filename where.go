@@ -17,19 +17,26 @@ const (
 	or
 )
 
+const (
+	asc = iota
+	desc
+)
+
 // 用于产生条件语句。
 type Where struct {
 	e     engine
 	table string
 	cond  *bytes.Buffer
 	args  []interface{}
+	order *bytes.Buffer
 }
 
 func newWhere(engine engine) *Where {
 	return &Where{
-		e:    engine,
-		cond: new(bytes.Buffer),
-		args: []interface{}{},
+		e:     engine,
+		cond:  new(bytes.Buffer),
+		args:  []interface{}{},
+		order: new(bytes.Buffer),
 	}
 }
 
@@ -59,6 +66,34 @@ func (w *Where) And(cond string, args ...interface{}) *Where {
 // 将之后的语句以or的形式与当前的语句进行连接
 func (w *Where) Or(cond string, args ...interface{}) *Where {
 	return w.where(or, cond, args...)
+}
+
+func (w *Where) Asc(cols ...string) *Where {
+	if len(cols) == 0 {
+		return w
+	}
+
+	for _, col := range cols {
+		w.order.WriteString(col)
+		w.order.WriteByte(',')
+	}
+	w.order.Truncate(w.order.Len() - 1)
+	w.order.WriteString(" ASC,")
+	return w
+}
+
+func (w *Where) Desc(cols ...string) *Where {
+	if len(cols) == 0 {
+		return w
+	}
+
+	for _, col := range cols {
+		w.order.WriteString(col)
+		w.order.WriteByte(',')
+	}
+	w.order.Truncate(w.order.Len() - 1)
+	w.order.WriteString(" DESC,")
+	return w
 }
 
 // 指定表名。
@@ -156,9 +191,19 @@ func (w *Where) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) 
 		sql.Truncate(sql.Len() - 1)
 	}
 
+	// from
 	sql.WriteString(" FROM ")
 	w.e.Dialect().Quote(sql, w.table)
+
+	// where
 	sql.WriteString(w.cond.String())
+
+	// order
+	if w.order.Len() > 0 {
+		sql.WriteString(" ORDER BY ")
+		w.order.WriteTo(sql)
+		sql.Truncate(sql.Len() - 1)
+	}
 
 	return w.e.Query(replace, sql.String(), w.args...)
 }

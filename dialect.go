@@ -33,7 +33,8 @@ type Dialect interface {
 	ConstraintsSQL(w *bytes.Buffer, m *Model) error
 
 	// 清空表内容，重置AI。
-	TruncateTableSQL(tableName string) string
+	// aiColumn 需要被重置的自增列列名
+	TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error
 
 	// 是否支持一次性插入多条语句
 	SupportInsertMany() bool

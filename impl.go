@@ -376,14 +376,22 @@ func drop(e engine, objs ...interface{}) error {
 // 系统会默认给表名加上表名前缀。
 // 若objs为空，则不发生任何操作。
 func truncate(e engine, objs ...interface{}) error {
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
 	for _, v := range objs {
-		tbl, err := getTableName(e, v)
+		m, err := newModel(v)
 		if err != nil {
 			return err
 		}
 
-		sql := e.Dialect().TruncateTableSQL(e.Prefix() + tbl)
-		if _, err = e.Exec(false, sql); err != nil {
+		sql.Reset()
+		aiName := ""
+		if m.AI != nil {
+			aiName = m.AI.Name
+		}
+		e.Dialect().TruncateTableSQL(sql, e.Prefix()+m.Name, aiName)
+		if _, err = e.Exec(false, sql.String()); err != nil {
 			return err
 		}
 	}

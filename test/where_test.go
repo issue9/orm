@@ -51,8 +51,19 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 	// Where.SelectMap
 	m, err := db.Where("uid<?", 4).
 		Table("#user_info").
+		Asc("uid").
 		SelectMap(true, "uid", "firstName", "lastName")
 	a.NotError(err).NotError(m)
+	for _, item := range m {
+		if v, ok := item["firstName"].([]byte); ok {
+			item["firstName"] = string(v)
+		}
+
+		if v, ok := item["lastName"].([]byte); ok {
+			item["lastName"] = string(v)
+		}
+
+	}
 	a.Equal(m, []map[string]interface{}{
 		map[string]interface{}{"uid": 1, "firstName": "firstName1", "lastName": "lastName1"},
 		map[string]interface{}{"uid": 2, "firstName": "firstName2", "lastName": "lastName2"},
@@ -63,6 +74,7 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 	objs := []*userInfo{&userInfo{}, &userInfo{}, &userInfo{}}
 	err = db.Where("uid<?", 4).
 		Table("#user_info").
+		Asc("uid").
 		Select(true, objs)
 	a.NotError(err)
 	a.Equal(objs, []*userInfo{

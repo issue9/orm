@@ -95,8 +95,10 @@ func (m *mysql) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 }
 
 // implement orm.Dialect.TruncateTableSQL()
-func (m *mysql) TruncateTableSQL(tableName string) string {
-	return "TRUNCATE TABLE " + tableName
+func (m *mysql) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
+	w.WriteString("TRUNCATE TABLE ")
+	_, err := w.WriteString(tableName)
+	return err
 }
 
 // implement base.sqlType()
