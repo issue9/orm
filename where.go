@@ -68,6 +68,7 @@ func (w *Where) Or(cond string, args ...interface{}) *Where {
 	return w.where(or, cond, args...)
 }
 
+// order by ... asc
 func (w *Where) Asc(cols ...string) *Where {
 	if len(cols) == 0 {
 		return w
@@ -82,6 +83,7 @@ func (w *Where) Asc(cols ...string) *Where {
 	return w
 }
 
+// order by ... desc
 func (w *Where) Desc(cols ...string) *Where {
 	if len(cols) == 0 {
 		return w
