@@ -42,6 +42,11 @@ func (s *sqlite3) Quote(w *bytes.Buffer, name string) error {
 	return w.WriteByte('`')
 }
 
+// implement orm.Dialect.ReplaceMarks()
+func (s *sqlite3) ReplaceMarks(sql *string) error {
+	return nil
+}
+
 // implement orm.Dialect.LimitSQL()
 func (s *sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)

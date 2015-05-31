@@ -44,6 +44,11 @@ func (m *mysql) Quote(w *bytes.Buffer, name string) error {
 	return w.WriteByte('`')
 }
 
+// implement orm.Dialect.ReplaceMarks()
+func (m *mysql) ReplaceMarks(sql *string) error {
+	return nil
+}
+
 // implement orm.Dialect.Limit()
 func (m *mysql) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)

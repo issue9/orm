@@ -16,9 +16,9 @@ import (
 
 var _ base = &postgres{}
 
-var p = &postgres{}
+func TestPostgres_SQLType(t *testing.T) {
+	p := &postgres{}
 
-func Testpostgres_SQLType(t *testing.T) {
 	a := assert.New(t)
 	buf := bytes.NewBufferString("")
 	col := &orm.Column{}
@@ -54,4 +54,43 @@ func Testpostgres_SQLType(t *testing.T) {
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
 	chkSQLEqual(a, buf.String(), "BIGINT")
+}
+
+func TestPostgres_ReplaceMarks(t *testing.T) {
+	a := assert.New(t)
+	p := Postgres()
+	a.NotNil(p)
+
+	eq := func(s1, s2 string) {
+		a.NotError(p.ReplaceMarks(&s1))
+		a.Equal(s1, s2)
+	}
+
+	err := func(s1 string) {
+		a.Error(p.ReplaceMarks(&s1))
+	}
+
+	eq("abc", "abc")
+	eq("abc$", "abc$") // 未包含?的情况下，不会触发ReplaceMarks，可以有$
+	eq("abc?abc", "abc$1abc")
+	eq("?abc?abc?", "$1abc$2abc$3")
+	eq("abc?abc?def", "abc$1abc$2def")
+	eq("中文?abc?def", "中文$1abc$2def")
+
+	err("$a?bc")
+	err("?$abc$")
+	err("a?bc$abc$abc")
+	err("?中$文")
+}
+
+func BenchmarkPostgres_ReplaceMarks(b *testing.B) {
+	a := assert.New(b)
+	p := Postgres()
+	a.NotNil(p)
+
+	s1 := "SELECT * FROM tbl WHERE uid>? AND group=? AND username LIKE ?"
+
+	for i := 0; i < b.N; i++ {
+		p.ReplaceMarks(&s1)
+	}
 }

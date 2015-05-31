@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/issue9/orm"
 )
@@ -41,6 +43,33 @@ func (p *postgres) Quote(w *bytes.Buffer, name string) error {
 	}
 
 	return w.WriteByte('"')
+}
+
+// implement orm.Dialect.ReplaceMarks()
+// 在有?占位符的情况下，语句中不能包含$字符串
+func (p *postgres) ReplaceMarks(sql *string) error {
+	s := *sql
+	if strings.IndexByte(s, '?') < 0 {
+		return nil
+	}
+
+	num := 1
+	ret := make([]rune, 0, len(s))
+	for _, c := range s {
+		switch c {
+		case '?':
+			ret = append(ret, '$')
+			ret = append(ret, []rune(strconv.Itoa(num))...)
+			num++
+		case '$':
+			return errors.New("语句中包含非法的字符串:$")
+		default:
+			ret = append(ret, c)
+		}
+	}
+
+	*sql = string(ret)
+	return nil
 }
 
 // implement orm.Dialect.LimitSQL()
