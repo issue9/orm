@@ -79,24 +79,6 @@ func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interfa
 	return vals, nil
 }
 
-// 获取v对象的表名，v可以是一个结构体，也可以是一个字符串。
-func getTableName(e engine, v interface{}) (string, error) {
-	switch tbl := v.(type) {
-	case string:
-		return tbl, nil
-	case []rune:
-		return string(tbl), nil
-	case []byte:
-		return string(tbl), nil
-	}
-
-	m, err := newModel(v)
-	if err != nil {
-		return "", err
-	}
-	return m.Name, nil
-}
-
 // 创建一个或多个数据表
 // 若objs为空，则不发生任何操作。
 func create(e engine, objs ...interface{}) error {
@@ -355,14 +337,14 @@ func drop(e engine, objs ...interface{}) error {
 	defer pool.Put(sql)
 
 	for _, v := range objs {
-		tbl, err := getTableName(e, v)
+		m, err := newModel(v)
 		if err != nil {
 			return err
 		}
 
 		sql.Reset()
 		sql.WriteString("DROP TABLE IF EXISTS ")
-		e.Dialect().Quote(sql, e.Prefix()+tbl)
+		e.Dialect().Quote(sql, e.Prefix()+m.Name)
 		if _, err = e.Exec(false, sql.String()); err != nil {
 			return err
 		}
