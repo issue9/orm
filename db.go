@@ -30,6 +30,10 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB
 		return nil, err
 	}
 
+	return NewDBWithStdDB(db, tablePrefix, dialect)
+}
+
+func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{
 		stdDB:       db,
