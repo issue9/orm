@@ -146,7 +146,7 @@ func NewModel(obj interface{}) (*Model, error) {
 	defer models.Unlock()
 
 	rval := reflect.ValueOf(obj)
-	if rval.Kind() == reflect.Ptr {
+	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
 	}
 	rtype := rval.Type()
