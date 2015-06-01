@@ -7,6 +7,8 @@ package orm
 import (
 	"database/sql"
 	"strings"
+
+	"github.com/issue9/orm/forward"
 )
 
 const (
@@ -18,13 +20,13 @@ const (
 // 数据库操作实例。
 type DB struct {
 	stdDB       *sql.DB
-	dialect     Dialect
+	dialect     forward.Dialect
 	tablePrefix string
 	replacer    *strings.Replacer
 }
 
 // 声明一个新的DB实例。
-func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB, error) {
+func NewDB(driverName, dataSourceName, tablePrefix string, dialect forward.Dialect) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
@@ -33,7 +35,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB
 	return NewDBWithStdDB(db, tablePrefix, dialect)
 }
 
-func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
+func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect forward.Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{
 		stdDB:       db,
@@ -60,7 +62,7 @@ func (db *DB) StdDB() *sql.DB {
 }
 
 // 返回对应的Dialect接口实例。
-func (db *DB) Dialect() Dialect {
+func (db *DB) Dialect() forward.Dialect {
 	return db.dialect
 }
 
@@ -242,7 +244,7 @@ func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
 }
 
 // 返回对应的Dialect实例
-func (tx *Tx) Dialect() Dialect {
+func (tx *Tx) Dialect() forward.Dialect {
 	return tx.db.Dialect()
 }
 

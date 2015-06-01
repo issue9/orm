@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm"
+	"github.com/issue9/orm/forward"
 )
 
 var _ base = &sqlite3{}
@@ -21,7 +21,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 	var s = &sqlite3{}
 
 	buf := bytes.NewBufferString("")
-	col := &orm.Column{}
+	col := &forward.Column{}
 	a.Error(s.sqlType(buf, col))
 
 	col.GoType = reflect.TypeOf(1)

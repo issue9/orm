@@ -2,16 +2,16 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package test
+package orm
 
 import (
 	"os"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/conv"
-	"github.com/issue9/orm"
 	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/fetch"
+	"github.com/issue9/orm/forward"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -24,7 +24,7 @@ var (
 
 	prefix = "prefix_"
 	dsn    string
-	d      orm.Dialect
+	d      forward.Dialect
 )
 
 // 销毁数据库。默认仅对Sqlite3启作用，删除该数据库文件。
@@ -38,7 +38,7 @@ func closeDB(a *assert.Assertion) {
 	}
 }
 
-func newDB(a *assert.Assertion) *orm.DB {
+func newDB(a *assert.Assertion) *DB {
 	switch driver {
 	case "mysql":
 		dsn = "root@/orm_test?charset=utf8"
@@ -53,13 +53,13 @@ func newDB(a *assert.Assertion) *orm.DB {
 		panic("仅支持mysql,sqlite3,postgres三种数据库测试")
 	}
 
-	db, err := orm.NewDB(driver, dsn, prefix, d)
+	db, err := NewDB(driver, dsn, prefix, d)
 	a.NotError(err).NotNil(db)
 	return db
 }
 
 // table表中是否存在size条记录，若不是，则触发error
-func hasCount(db *orm.DB, a *assert.Assertion, table string, size int) {
+func hasCount(db *DB, a *assert.Assertion, table string, size int) {
 	rows, err := db.Query(true, "SELECT COUNT(*) as cnt FROM #"+table)
 	a.NotError(err).NotNil(rows)
 	defer func() {

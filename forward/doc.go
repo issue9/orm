@@ -2,5 +2,5 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// 这是一个针对orm和orm/dialect的测试包。
-package test
+// 这是orm包中的一些接口的前置声明。
+package forward

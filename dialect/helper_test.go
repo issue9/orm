@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm"
+	"github.com/issue9/orm/forward"
 )
 
 var replacer = strings.NewReplacer(")", " ) ", "(", " ( ", ",", " , ")
@@ -40,7 +40,7 @@ func TestCreatColSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
-	col := &orm.Column{}
+	col := &forward.Column{}
 
 	col.Name = "id"
 	col.GoType = reflect.TypeOf(1)
@@ -69,9 +69,9 @@ func TestCreatePKSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
-	col1 := &orm.Column{Name: "id"}
-	col2 := &orm.Column{Name: "username"}
-	cols := []*orm.Column{col1, col2}
+	col1 := &forward.Column{Name: "id"}
+	col2 := &forward.Column{Name: "username"}
+	cols := []*forward.Column{col1, col2}
 
 	createPKSQL(dialect, buf, cols, "pkname")
 	wont := "CONSTRAINT pkname PRIMARY KEY(`id`,`username`)"
@@ -87,9 +87,9 @@ func TestCreateUniqueSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
-	col1 := &orm.Column{Name: "id"}
-	col2 := &orm.Column{Name: "username"}
-	cols := []*orm.Column{col1, col2}
+	col1 := &forward.Column{Name: "id"}
+	col2 := &forward.Column{Name: "username"}
+	cols := []*forward.Column{col1, col2}
 
 	createUniqueSQL(dialect, buf, cols, "pkname")
 	wont := "CONSTRAINT pkname UNIQUE(`id`,`username`)"
@@ -105,8 +105,8 @@ func TestCreateFKSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
 	buf := bytes.NewBufferString("")
-	fk := &orm.ForeignKey{
-		Col:          &orm.Column{Name: "id"},
+	fk := &forward.ForeignKey{
+		Col:          &forward.Column{Name: "id"},
 		RefTableName: "refTable",
 		RefColName:   "refCol",
 		UpdateRule:   "NO ACTION",

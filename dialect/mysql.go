@@ -11,27 +11,27 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/issue9/orm"
+	"github.com/issue9/orm/forward"
 )
 
-// 返回一个适配mysql的orm.Dialect接口
-func Mysql() orm.Dialect {
+// 返回一个适配mysql的forward.Dialect接口
+func Mysql() forward.Dialect {
 	return &mysql{}
 }
 
 type mysql struct{}
 
-// implement orm.Dialect.SupportInsertMany()
+// implement forward.Dialect.SupportInsertMany()
 func (m *mysql) SupportInsertMany() bool {
 	return true
 }
 
-// implement orm.Dialect.QuoteTuple()
+// implement forward.Dialect.QuoteTuple()
 func (m *mysql) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
-// implement orm.Dialect.Quote
+// implement forward.Dialect.Quote
 func (m *mysql) Quote(w *bytes.Buffer, name string) error {
 	if err := w.WriteByte('`'); err != nil {
 		return err
@@ -44,18 +44,18 @@ func (m *mysql) Quote(w *bytes.Buffer, name string) error {
 	return w.WriteByte('`')
 }
 
-// implement orm.Dialect.ReplaceMarks()
+// implement forward.Dialect.ReplaceMarks()
 func (m *mysql) ReplaceMarks(sql *string) error {
 	return nil
 }
 
-// implement orm.Dialect.Limit()
+// implement forward.Dialect.Limit()
 func (m *mysql) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
 }
 
-// implement orm.Dialect.AIColSQL()
-func (m *mysql) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+// implement forward.Dialect.AIColSQL()
+func (m *mysql) AIColSQL(w *bytes.Buffer, model *forward.Model) error {
 	if model.AI == nil {
 		return nil
 	}
@@ -67,8 +67,8 @@ func (m *mysql) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	return err
 }
 
-// implement orm.Dialect.NoAIColSQL()
-func (m *mysql) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
+// implement forward.Dialect.NoAIColSQL()
+func (m *mysql) NoAIColSQL(w *bytes.Buffer, model *forward.Model) error {
 	for _, col := range model.Cols {
 		if col.IsAI() { // 忽略AI列
 			continue
@@ -82,8 +82,8 @@ func (m *mysql) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	return nil
 }
 
-// implement orm.Dialect.ConstraintsSQL()
-func (m *mysql) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
+// implement forward.Dialect.ConstraintsSQL()
+func (m *mysql) ConstraintsSQL(w *bytes.Buffer, model *forward.Model) error {
 	// PK，若有自增，则已经在上面指定
 	if len(model.PK) > 0 && !model.PK[0].IsAI() {
 		createPKSQL(m, w, model.PK, pkName)
@@ -94,7 +94,7 @@ func (m *mysql) ConstraintsSQL(w *bytes.Buffer, model *orm.Model) error {
 	return nil
 }
 
-// implement orm.Dialect.TruncateTableSQL()
+// implement forward.Dialect.TruncateTableSQL()
 func (m *mysql) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
 	w.WriteString("TRUNCATE TABLE ")
 	_, err := w.WriteString(tableName)
@@ -102,7 +102,7 @@ func (m *mysql) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) er
 }
 
 // implement base.sqlType()
-func (m *mysql) sqlType(buf *bytes.Buffer, col *orm.Column) error {
+func (m *mysql) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

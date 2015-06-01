@@ -2,13 +2,12 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package test
+package orm
 
 import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm"
 )
 
 func TestNewDB(t *testing.T) {
@@ -25,7 +24,7 @@ func TestNewDB(t *testing.T) {
 
 // 初始化测试数据，同时可用于DB.Inert的测试
 // 清空其它数据，初始化成原始的测试数据
-func initData(db *orm.DB, a *assert.Assertion) {
+func initData(db *DB, a *assert.Assertion) {
 	a.NotError(db.Drop(&admin{}, &userInfo{}, &user{}))
 	a.NotError(db.Create(&admin{}, &userInfo{}))
 
