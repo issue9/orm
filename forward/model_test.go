@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package orm
+package forward
 
 import (
 	"fmt"
@@ -80,19 +80,19 @@ func TestModels(t *testing.T) {
 	ClearModels()
 	a.Equal(0, len(models.items))
 
-	m, err := newModel(&user{})
+	m, err := NewModel(&user{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 相同的model实例，不会增加数量
-	m, err = newModel(&user{})
+	m, err = NewModel(&user{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 添加新的model
-	m, err = newModel(&admin{})
+	m, err = NewModel(&admin{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(2, len(models.items))
@@ -101,12 +101,12 @@ func TestModels(t *testing.T) {
 	a.Equal(0, len(models.items))
 }
 
-// 传递给newModel是一个指针时的各种情况
+// 传递给NewModel是一个指针时的各种情况
 func TestModel(t *testing.T) {
 	ClearModels()
 	a := assert.New(t)
 
-	m, err := newModel(&admin{})
+	m, err := NewModel(&admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols
@@ -164,7 +164,7 @@ func BenchmarkNewModel1(b *testing.B) {
 	a := assert.New(b)
 
 	for i := 0; i < b.N; i++ {
-		m, err := newModel(&user{})
+		m, err := NewModel(&user{})
 		ClearModels()
 		a.NotError(err).NotNil(m)
 	}
@@ -175,7 +175,7 @@ func BenchmarkNewModel2(b *testing.B) {
 	a := assert.New(b)
 
 	for i := 0; i < b.N; i++ {
-		m, err := newModel(&user{})
+		m, err := NewModel(&user{})
 		a.NotError(err).NotNil(m)
 	}
 }

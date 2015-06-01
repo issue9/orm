@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/issue9/orm/fetch"
+	"github.com/issue9/orm/forward"
 )
 
 // 用于管理bytes.Buffer
@@ -26,7 +27,7 @@ var pool = sync.Pool{
 
 // DB与Tx的共有接口，方便以下方法调用。
 type engine interface {
-	Dialect() Dialect
+	Dialect() forward.Dialect
 	Query(replace bool, query string, args ...interface{}) (*sql.Rows, error)
 	Exec(replace bool, query string, args ...interface{}) (sql.Result, error)
 	Prepare(replace bool, query string) (*sql.Stmt, error)
@@ -35,12 +36,12 @@ type engine interface {
 
 // 根据model中的主键或是唯一索引为sql产生where语句，
 // 若两者都不存在，则返回错误信息。rval为struct的reflect.Value
-func where(e engine, sql *bytes.Buffer, m *Model, rval reflect.Value) ([]interface{}, error) {
+func where(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([]interface{}, error) {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
 	// 获取构成where的键名和键值
-	getKV := func(cols []*Column) bool {
+	getKV := func(cols []*forward.Column) bool {
 		for _, col := range cols {
 			field := rval.FieldByName(col.GoName)
 
@@ -87,7 +88,7 @@ func create(e engine, objs ...interface{}) error {
 
 	d := e.Dialect()
 	for i, v := range objs {
-		m, err := newModel(v)
+		m, err := forward.NewModel(v)
 		if err != nil {
 			return err
 		}
@@ -129,7 +130,7 @@ func insert(e engine, objs ...interface{}) error {
 	vals := make([]interface{}, 0, 10)
 
 	for i, v := range objs {
-		m, err := newModel(v)
+		m, err := forward.NewModel(v)
 		if err != nil {
 			return err
 		}
@@ -192,7 +193,7 @@ func find(e engine, objs ...interface{}) error {
 	defer pool.Put(sql)
 
 	for i, v := range objs {
-		m, err := newModel(v)
+		m, err := forward.NewModel(v)
 		if err != nil {
 			return err
 		}
@@ -239,7 +240,7 @@ func update(e engine, objs ...interface{}) error {
 	vals := make([]interface{}, 0, 10)
 
 	for i, v := range objs {
-		m, err := newModel(v)
+		m, err := forward.NewModel(v)
 		if err != nil {
 			return err
 		}
@@ -298,7 +299,7 @@ func del(e engine, objs ...interface{}) error {
 	defer pool.Put(sql)
 
 	for i, v := range objs {
-		m, err := newModel(v)
+		m, err := forward.NewModel(v)
 		if err != nil {
 			return err
 		}
@@ -337,7 +338,7 @@ func drop(e engine, objs ...interface{}) error {
 	defer pool.Put(sql)
 
 	for _, v := range objs {
-		m, err := newModel(v)
+		m, err := forward.NewModel(v)
 		if err != nil {
 			return err
 		}
@@ -362,7 +363,7 @@ func truncate(e engine, objs ...interface{}) error {
 	defer pool.Put(sql)
 
 	for _, v := range objs {
-		m, err := newModel(v)
+		m, err := forward.NewModel(v)
 		if err != nil {
 			return err
 		}
@@ -427,7 +428,7 @@ func insertMany(e engine, v interface{}) error {
 			return fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针，当前实际为:[%v]", i, irval.Kind())
 		}
 
-		m, err := newModel(irval.Interface())
+		m, err := forward.NewModel(irval.Interface())
 		if err != nil {
 			return err
 		}

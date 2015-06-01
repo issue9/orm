@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/issue9/orm"
+	"github.com/issue9/orm/forward"
 )
 
 const (
@@ -26,14 +26,14 @@ var (
 )
 
 type base interface {
-	orm.Dialect
+	forward.Dialect
 
 	// 将col转换成sql类型，并写入buf中。
-	sqlType(buf *bytes.Buffer, col *orm.Column) error
+	sqlType(buf *bytes.Buffer, col *forward.Column) error
 }
 
 // 用于产生在createTable中使用的普通列信息表达式，不包含autoincrement和primary key的关键字。
-func createColSQL(b base, buf *bytes.Buffer, col *orm.Column) error {
+func createColSQL(b base, buf *bytes.Buffer, col *forward.Column) error {
 	// col_name VARCHAR(100) NOT NULL DEFAULT 'abc'
 	b.Quote(buf, col.Name)
 	buf.WriteByte(' ')
@@ -57,7 +57,7 @@ func createColSQL(b base, buf *bytes.Buffer, col *orm.Column) error {
 }
 
 // create table语句中pk约束的语句
-func createPKSQL(b base, buf *bytes.Buffer, cols []*orm.Column, pkName string) {
+func createPKSQL(b base, buf *bytes.Buffer, cols []*forward.Column, pkName string) {
 	//CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 	buf.WriteString(" CONSTRAINT ")
 	buf.WriteString(pkName)
@@ -72,7 +72,7 @@ func createPKSQL(b base, buf *bytes.Buffer, cols []*orm.Column, pkName string) {
 }
 
 // create table语句中的unique约束部分的语句。
-func createUniqueSQL(b base, buf *bytes.Buffer, cols []*orm.Column, indexName string) {
+func createUniqueSQL(b base, buf *bytes.Buffer, cols []*forward.Column, indexName string) {
 	//CONSTRAINT unique_name UNIQUE (id,lastName)
 	buf.WriteString(" CONSTRAINT ")
 	buf.WriteString(indexName)
@@ -87,7 +87,7 @@ func createUniqueSQL(b base, buf *bytes.Buffer, cols []*orm.Column, indexName st
 }
 
 // create table语句中fk的约束部分的语句
-func createFKSQL(b base, buf *bytes.Buffer, fk *orm.ForeignKey, fkName string) {
+func createFKSQL(b base, buf *bytes.Buffer, fk *forward.ForeignKey, fkName string) {
 	//CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ")
 	buf.WriteString(fkName)
@@ -124,7 +124,7 @@ func createCheckSQL(b base, buf *bytes.Buffer, expr, chkName string) {
 }
 
 // 创建标准的几种约束(除PK约束，该约束有专门的函数createPKSQL()产生)：unique, foreign key, check
-func createConstraints(b base, buf *bytes.Buffer, model *orm.Model) {
+func createConstraints(b base, buf *bytes.Buffer, model *forward.Model) {
 	// Unique Index
 	for name, index := range model.UniqueIndexes {
 		createUniqueSQL(b, buf, index, name)

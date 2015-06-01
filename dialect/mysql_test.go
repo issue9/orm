@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm"
+	"github.com/issue9/orm/forward"
 )
 
 var _ base = &mysql{}
@@ -21,7 +21,7 @@ var m = &mysql{}
 func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
 	buf := bytes.NewBufferString("")
-	col := &orm.Column{}
+	col := &forward.Column{}
 
 	// col == nil
 	a.Error(m.sqlType(buf, nil))

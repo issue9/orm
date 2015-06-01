@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm"
+	"github.com/issue9/orm/forward"
 )
 
 var _ base = &postgres{}
@@ -21,7 +21,7 @@ func TestPostgres_SQLType(t *testing.T) {
 
 	a := assert.New(t)
 	buf := bytes.NewBufferString("")
-	col := &orm.Column{}
+	col := &forward.Column{}
 	a.Error(p.sqlType(buf, col))
 
 	col.GoType = reflect.TypeOf(1)

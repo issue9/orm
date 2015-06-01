@@ -9,27 +9,27 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/issue9/orm"
+	"github.com/issue9/orm/forward"
 )
 
-// 返回一个适配sqlite3的orm.Dialect接口
-func Sqlite3() orm.Dialect {
+// 返回一个适配sqlite3的forward.Dialect接口
+func Sqlite3() forward.Dialect {
 	return &sqlite3{}
 }
 
 type sqlite3 struct{}
 
-// implement orm.Dialect.SupportInsertMany()
+// implement forward.Dialect.SupportInsertMany()
 func (s *sqlite3) SupportInsertMany() bool {
 	return true
 }
 
-// implement orm.Dialect.QuoteTuple()
+// implement forward.Dialect.QuoteTuple()
 func (s *sqlite3) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
-// implement orm.Dialect.Quote()
+// implement forward.Dialect.Quote()
 func (s *sqlite3) Quote(w *bytes.Buffer, name string) error {
 	if err := w.WriteByte('`'); err != nil {
 		return err
@@ -42,18 +42,18 @@ func (s *sqlite3) Quote(w *bytes.Buffer, name string) error {
 	return w.WriteByte('`')
 }
 
-// implement orm.Dialect.ReplaceMarks()
+// implement forward.Dialect.ReplaceMarks()
 func (s *sqlite3) ReplaceMarks(sql *string) error {
 	return nil
 }
 
-// implement orm.Dialect.LimitSQL()
+// implement forward.Dialect.LimitSQL()
 func (s *sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
 	return mysqlLimitSQL(w, limit, offset...)
 }
 
-// implement orm.Dialect.AIColSQL()
-func (s *sqlite3) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
+// implement forward.Dialect.AIColSQL()
+func (s *sqlite3) AIColSQL(w *bytes.Buffer, model *forward.Model) error {
 	if model.AI == nil {
 		return nil
 	}
@@ -66,8 +66,8 @@ func (s *sqlite3) AIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	return err
 }
 
-// implement orm.Dialect.NoAIColSQL()
-func (s *sqlite3) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
+// implement forward.Dialect.NoAIColSQL()
+func (s *sqlite3) NoAIColSQL(w *bytes.Buffer, model *forward.Model) error {
 	for _, col := range model.Cols {
 		if col.IsAI() { // 忽略AI列
 			continue
@@ -81,8 +81,8 @@ func (s *sqlite3) NoAIColSQL(w *bytes.Buffer, model *orm.Model) error {
 	return nil
 }
 
-// implement orm.Dialect.ConstraintsSQL()
-func (s *sqlite3) ConstraintsSQL(w *bytes.Buffer, m *orm.Model) error {
+// implement forward.Dialect.ConstraintsSQL()
+func (s *sqlite3) ConstraintsSQL(w *bytes.Buffer, m *forward.Model) error {
 	// PK，若有自增，则已经在上面指定
 	if len(m.PK) > 0 && !m.PK[0].IsAI() {
 		createPKSQL(s, w, m.PK, pkName)
@@ -93,7 +93,7 @@ func (s *sqlite3) ConstraintsSQL(w *bytes.Buffer, m *orm.Model) error {
 	return nil
 }
 
-// implement orm.Dialect.TruncateTableSQL()
+// implement forward.Dialect.TruncateTableSQL()
 func (s *sqlite3) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
 	w.WriteString("DELETE FROM ")
 	w.WriteString(tableName)
@@ -105,7 +105,7 @@ func (s *sqlite3) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) 
 
 // implement base.sqlType()
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) sqlType(buf *bytes.Buffer, col *orm.Column) error {
+func (s *sqlite3) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

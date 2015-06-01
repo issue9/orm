@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package orm
+package forward
 
 import (
 	"errors"
@@ -141,7 +141,7 @@ func (c *Column) setNullable(vals []string) (err error) {
 
 // 从一个obj声明一个Model实例。
 // obj可以是一个struct实例或是指针。
-func newModel(obj interface{}) (*Model, error) {
+func NewModel(obj interface{}) (*Model, error) {
 	models.Lock()
 	defer models.Unlock()
 
