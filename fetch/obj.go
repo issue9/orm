@@ -71,7 +71,7 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) error {
 		return err
 	}
 
-	objItem := make(map[string]reflect.Value, 0)
+	objItem := make(map[string]reflect.Value, len(mapped[0]))
 	if err = parseObj(val, &objItem); err != nil {
 		return err
 	}
