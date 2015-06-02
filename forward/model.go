@@ -146,7 +146,7 @@ func NewModel(obj interface{}) (*Model, error) {
 	defer models.Unlock()
 
 	rval := reflect.ValueOf(obj)
-	if rval.Kind() == reflect.Ptr {
+	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
 	}
 	rtype := rval.Type()
@@ -383,12 +383,12 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 // 通过vals设置字段的foregin key约束
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
 func (m *Model) setFK(col *Column, vals []string) error {
-	if typ := m.hasConstraint(vals[0], fk); typ != none {
-		return fmt.Errorf("setFK:已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
-	}
-
 	if len(vals) < 3 {
 		return errors.New("setFK:fk参数必须大于3个")
+	}
+
+	if typ := m.hasConstraint(vals[0], fk); typ != none {
+		return fmt.Errorf("setFK:已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
 	}
 
 	if _, found := m.FK[vals[0]]; found {

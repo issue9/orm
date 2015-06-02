@@ -92,6 +92,11 @@
 //  定义物理外键，最少需要指定fk_name,refTabl,refColName三个值。分别对应约束名，
 //  引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
 //
+//  check(chk_name, expr): check约束。chk_name为约束名，expr为该约束的表达式。
+//  check约束只能在core.Metaer接口中指定，而不是像其它约束一样，通过字段的struct tag指定。
+//  因为check约束的表达式可以通过and或是or等符号连接多条基本表达式，
+//  在字段struct tag中指定会显得有点怪异。
+//
 // 关于core.Metaer接口。
 //
 // 在go不能将struct tag作用于结构体，所以为了指定一些表级别的属性，
@@ -165,4 +170,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.14.31.150601"
+const Version = "0.14.31.150602"

@@ -159,7 +159,8 @@ func TestModel(t *testing.T) {
 	a.Equal(m.Name, "administrators")
 }
 
-func BenchmarkNewModel1(b *testing.B) {
+// BenchmarkNewModelNoCached	  100000	     23724 ns/op
+func BenchmarkNewModelNoCached(b *testing.B) {
 	ClearModels()
 	a := assert.New(b)
 
@@ -170,7 +171,8 @@ func BenchmarkNewModel1(b *testing.B) {
 	}
 }
 
-func BenchmarkNewModel2(b *testing.B) {
+// BenchmarkNewModelCached	 3000000	       480 ns/op
+func BenchmarkNewModelCached(b *testing.B) {
 	ClearModels()
 	a := assert.New(b)
 
