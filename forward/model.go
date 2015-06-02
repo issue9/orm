@@ -90,6 +90,7 @@ type Column struct {
 	Len2     int          // 长度2，仅对部分类型启作用
 	Nullable bool         // 是否可以为NULL
 	GoType   reflect.Type // Go语言中的数据类型
+	Zero     interface{}  // GoType的零值
 	GoName   string       // 结构字段名
 
 	HasDefault bool
@@ -152,7 +153,7 @@ func NewModel(obj interface{}) (*Model, error) {
 	rtype := rval.Type()
 
 	if rtype.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("newModel:obj参数只能是struct或是struct指针，当前为:[%v]", rval.Kind())
+		return nil, fmt.Errorf("NewModel:obj参数只能是struct或是struct指针，当前为:[%v]", rval.Kind())
 	}
 
 	// 是否已经缓存的数组
@@ -214,7 +215,13 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 
 	// 没有附加的struct tag，直接取得几个关键信息返回。
 	if len(tagTxt) == 0 {
-		m.Cols[field.Name] = &Column{GoType: field.Type, Name: field.Name, model: m, GoName: field.Name}
+		m.Cols[field.Name] = &Column{
+			GoType: field.Type,
+			Zero:   reflect.Zero(field.Type).Interface(),
+			Name:   field.Name,
+			model:  m,
+			GoName: field.Name,
+		}
 		return nil
 	}
 
@@ -224,7 +231,13 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 		return nil
 	}
 
-	col := &Column{GoType: field.Type, Name: field.Name, model: m, GoName: field.Name}
+	col := &Column{
+		GoType: field.Type,
+		Zero:   reflect.Zero(field.Type).Interface(),
+		Name:   field.Name,
+		model:  m,
+		GoName: field.Name,
+	}
 	tags := tag.Parse(tagTxt)
 	for k, v := range tags {
 		switch k {
@@ -425,7 +438,7 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 	}
 
 	if col.Nullable {
-		return fmt.Errorf("setAI:自增列[%v]不能为nullable", col.Name)
+		return fmt.Errorf("setAI:nullable列不能为自增列[%v]", col.Name)
 	}
 
 	switch col.GoType.Kind() {
