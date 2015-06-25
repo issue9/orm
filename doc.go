@@ -21,10 +21,10 @@
 //  )
 //
 //  // 初始化一个DB，表前缀为prefix_
-//  db1 := orm.NewDB("sqlite3", "./db1", "prefix_", &dialect.Sqlite3{})
+//  db1 := orm.NewDB("sqlite3", "./db1", "prefix_", dialect.Sqlite3())
 //
 //  // 另一个DB实例
-//  db2 := orm.NewDB("sqlite3", "./db2", "db2_", &dialect.Sqlite3{})
+//  db2 := orm.NewDB("sqlite3", "./db2", "db2_", dialect.Sqlite3())
 //
 //
 //
@@ -170,4 +170,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.14.31.150602"
+const Version = "0.14.31.150625"
