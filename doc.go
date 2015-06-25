@@ -66,9 +66,10 @@
 //
 //  name(fieldName): 将当前的字段映射到数据表中的fieldName字段。
 //
-//  len(l1, l2): 指定字段的长度，比如mysql中的int(5),varchar(255),double(1,2),
-//  仅部分数据库支持，比如sqlite3不支持该属性，会被自动忽略。
-//  mysql中的字符串类型必须指定该类型。
+//  len(l1, l2): 指定字段的长度。比如mysql中的int(5),varchar(255),double(1,2),
+//  不支持该特性的数据，将会忽略该标签的内容，比如sqlite3。
+//  NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了-1，
+//  想使用类似于TEXT等不定长的形式表达。
 //
 //  nullable(true|false): 相当于定义表结构时的NULL，建议尽量少用该属性，
 //  若非用不可的话，与之对应的Go属性必须声明为NullString之类的结构。
@@ -170,4 +171,4 @@ package orm
 // 在没有比较完美的方法之前，不准备实现这个功能。
 
 // 版本号
-const Version = "0.14.31.150625"
+const Version = "0.14.32.150625"

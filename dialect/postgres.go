@@ -156,10 +156,10 @@ func (p *postgres) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 	case reflect.Float32, reflect.Float64:
 		buf.WriteString(fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2))
 	case reflect.String:
-		if col.Len1 < 65533 {
-			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
-		} else {
+		if col.Len1 == -1 || col.Len1 > 65533 {
 			buf.WriteString("TEXT")
+		} else {
+			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 		}
 	case reflect.Slice, reflect.Array: // []rune,[]byte当作字符串处理
 		k := col.GoType.Elem().Kind()
@@ -167,10 +167,10 @@ func (p *postgres) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 			return errors.New("sqlType:不支持数组类型")
 		}
 
-		if col.Len1 < 65533 {
-			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
-		} else {
+		if col.Len1 == -1 || col.Len1 > 65533 {
 			buf.WriteString("TEXT")
+		} else {
+			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 		}
 	case reflect.Struct:
 		switch col.GoType {
@@ -185,10 +185,11 @@ func (p *postgres) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 				buf.WriteString("BIGINT")
 			}
 		case nullString:
-			if col.Len1 < 65533 {
+			if col.Len1 == -1 || col.Len1 > 65533 {
+				buf.WriteString("TEXT")
+			} else {
 				buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 			}
-			buf.WriteString("TEXT")
 		case timeType:
 			buf.WriteString("TIME")
 		}
