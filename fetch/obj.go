@@ -71,6 +71,10 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) error {
 		return err
 	}
 
+	if len(mapped) == 0 { // 没有导出的数据
+		return nil
+	}
+
 	objItem := make(map[string]reflect.Value, len(mapped[0]))
 	if err = parseObj(val, &objItem); err != nil {
 		return err
@@ -181,8 +185,10 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 }
 
 // 将rows中的数据导出到obj中。obj只有在类型为slice指针时，
-// 才有可能随着rows的长度变化，否则其长度是固定的，
-// 具体可以为以下四种类型：
+// 才有可能随着rows的长度变化，否则其长度是固定的，若查询结果为空值，
+// 则不会对obj的内容做任何更改。
+//
+// obj参数可以为以下四种类型：
 //
 // struct指针：
 // 将rows中的第一条记录转换成obj对象。
