@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	ErrEmptyTableName = errors.New("SQL.Update:未指定表名")
+	ErrEmptyTableName = errors.New("未指定表名")
 )
 
 // 以函数链的方式产生SQL语句。
