@@ -159,6 +159,53 @@ func TestDB_Delete(t *testing.T) {
 	a.Equal(a1.ID, 2) // a1.ID为一个自增列,不会在delete中被重置
 }
 
+func TestDB_Count(t *testing.T) {
+	a := assert.New(t)
+
+	db := newDB(a)
+	defer func() {
+		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
+		a.NotError(db.Close())
+		closeDB(a)
+	}()
+
+	initData(db, a)
+
+	// 单条件
+	count, err := db.Count(
+		&userInfo{
+			UID: 1,
+		},
+	)
+	a.NotError(err).Equal(1, count)
+
+	// 多条件
+	count, err = db.Count(
+		&userInfo{
+			UID: 1,
+		},
+		&userInfo{
+			LastName:  "l2",
+			FirstName: "f2",
+		},
+		&admin{Email: "email1"},
+	)
+	a.NotError(err).Equal(3, count)
+
+	// 多条件，部分条件不存在
+	count, err = db.Count(
+		&userInfo{
+			UID: 1,
+		},
+		&admin{Email: "email1-1000"}, // 该条件不存在
+		&userInfo{
+			LastName:  "l2",
+			FirstName: "f2",
+		},
+	)
+	a.NotError(err).Equal(2, count)
+}
+
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t)
 

@@ -156,6 +156,12 @@ func (db *DB) Select(v ...interface{}) error {
 	return find(db, v...)
 }
 
+// 查询符合v条件的记录数量。
+// v中的所有非零字段都将参与查询。
+func (db *DB) Count(v ...interface{}) (int, error) {
+	return count(db, v...)
+}
+
 // 创建一张或是多张表。v可以是多个不同类型的结构指针。
 func (db *DB) Create(v ...interface{}) error {
 	return create(db, v...)
@@ -280,6 +286,12 @@ func (tx *Tx) Update(v ...interface{}) error {
 // 删除一个或是多个数据。
 func (tx *Tx) Delete(v ...interface{}) error {
 	return del(tx, v...)
+}
+
+// 查询符合v条件的记录数量。
+// v中的所有非零字段都将参与查询。
+func (tx *Tx) Count(v ...interface{}) (int, error) {
+	return count(tx, v...)
 }
 
 // 创建数据表。

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"sync"
 
 	"github.com/issue9/orm/fetch"
@@ -64,6 +65,36 @@ func where(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([
 				break
 			}
 		}
+	}
+
+	if len(keys) == 0 {
+		return nil, fmt.Errorf("where:无法为[%v]模块产生where部分语句", m.Name)
+	}
+
+	sql.WriteString(" WHERE ")
+	for _, key := range keys {
+		e.Dialect().Quote(sql, key)
+		sql.WriteString("=? AND ")
+	}
+	sql.Truncate(sql.Len() - 5) // 去掉最后5个字符" AND "
+
+	return vals, nil
+}
+
+// 根据rval中任意非零值产生where语句
+func whereAny(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([]interface{}, error) {
+	vals := make([]interface{}, 0, 3)
+	keys := make([]string, 0, 3)
+
+	for _, col := range m.Cols {
+		field := rval.FieldByName(col.GoName)
+
+		if !field.IsValid() || col.Zero == field.Interface() {
+			continue
+		}
+
+		keys = append(keys, col.Name)
+		vals = append(vals, field.Interface())
 	}
 
 	if len(keys) == 0 {
@@ -381,6 +412,57 @@ func truncate(e engine, objs ...interface{}) error {
 	}
 
 	return nil
+}
+
+// 统计符合obj条件的记录数量。
+func count(e engine, objs ...interface{}) (int, error) {
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+	count := 0
+
+	for _, v := range objs {
+		sql.Reset()
+
+		m, err := forward.NewModel(v)
+		if err != nil {
+			return 0, err
+		}
+
+		rval := reflect.ValueOf(v)
+		for rval.Kind() == reflect.Ptr {
+			rval = rval.Elem()
+		}
+
+		if rval.Kind() != reflect.Struct {
+			return 0, errors.New("del:参数v类型必须为结构体或是结构体指针")
+		}
+
+		sql.WriteString("SELECT COUNT(*) AS count FROM ")
+		e.Dialect().Quote(sql, e.Prefix()+m.Name)
+		vals, err := whereAny(e, sql, m, rval)
+		if err != nil {
+			return 0, err
+		}
+
+		rows, err := e.Query(false, sql.String(), vals...)
+		if err != nil {
+			rows.Close() // 错误时关闭rows
+			return 0, err
+		}
+		data, err := fetch.ColumnString(true, "count", rows)
+		rows.Close() // 及时关闭rows
+		if err != nil {
+			return 0, err
+		}
+
+		cnt, err := strconv.Atoi(data[0])
+		if err != nil {
+			return 0, err
+		}
+		count += cnt
+	}
+
+	return count, nil
 }
 
 // 插入多条同一model表示的不同数据。
