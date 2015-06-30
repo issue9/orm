@@ -35,6 +35,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect forward.Diale
 	return NewDBWithStdDB(db, tablePrefix, dialect)
 }
 
+// 从sql.DB构建一个DB实例。
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect forward.Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{
@@ -150,6 +151,7 @@ func (db *DB) Update(v ...interface{}) error {
 // 查询一个或是多个数据。v可以是多个不同类型的结构指针，
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
+// 若没有符合条件的数据，将不会对参数v做任何变动。
 func (db *DB) Select(v ...interface{}) error {
 	return find(db, v...)
 }
