@@ -200,8 +200,8 @@ type Tx struct {
 }
 
 // 返回标准库的*sql.Tx对象。
-func (t *Tx) StdTx() *sql.Tx {
-	return t.stdTx
+func (tx *Tx) StdTx() *sql.Tx {
+	return tx.stdTx
 }
 
 // 执行一条查询语句，具体功能参考DB::Query()

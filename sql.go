@@ -22,22 +22,43 @@ const (
 	desc
 )
 
+var (
+	ErrEmptyTableName = errors.New("SQL.Update:未指定表名")
+)
+
 // 以函数链的方式产生SQL语句。
 type SQL struct {
-	e     engine
-	table string
-	cond  *bytes.Buffer
-	args  []interface{}
-	order *bytes.Buffer
+	e        engine
+	table    string
+	cond     *bytes.Buffer
+	condArgs []interface{}
+	order    *bytes.Buffer
+	limit    []int // 元素0为limit，元素1为offset
 }
 
 func newSQL(engine engine) *SQL {
 	return &SQL{
-		e:     engine,
-		cond:  new(bytes.Buffer),
-		args:  []interface{}{},
-		order: new(bytes.Buffer),
+		e:        engine,
+		cond:     new(bytes.Buffer),
+		condArgs: []interface{}{},
+		order:    new(bytes.Buffer),
+		limit:    make([]int, 0, 2), // 最长2个，同时保存limit和offset
 	}
+}
+
+// 指定Limit相关的值。
+func (s *SQL) Limit(limit int, offset ...int) *SQL {
+	if len(offset) > 1 {
+		panic("offset参数指定了太多的值")
+	}
+
+	s.limit = append(s.limit, limit)
+
+	if len(offset) > 0 {
+		s.limit = append(s.limit, offset[0])
+	}
+
+	return s
 }
 
 func (s *SQL) where(op int, cond string, args ...interface{}) *SQL {
@@ -53,7 +74,7 @@ func (s *SQL) where(op int, cond string, args ...interface{}) *SQL {
 	}
 	s.cond.WriteString(cond)
 	s.cond.WriteByte(')')
-	s.args = append(s.args, args...)
+	s.condArgs = append(s.condArgs, args...)
 
 	return s
 }
@@ -110,7 +131,7 @@ func (s *SQL) Table(tableName string) *SQL {
 // replace，是否需将对语句的占位符进行替换。
 func (s *SQL) Delete(replace bool) error {
 	if len(s.table) == 0 {
-		return errors.New("SQL.Delete:未指定表名")
+		return ErrEmptyTableName
 	}
 
 	sql := pool.Get().(*bytes.Buffer)
@@ -120,7 +141,47 @@ func (s *SQL) Delete(replace bool) error {
 	sql.WriteString("DELETE FROM ")
 	s.e.Dialect().Quote(sql, s.table)
 	sql.WriteString(s.cond.String())
-	_, err := s.e.Exec(replace, sql.String(), s.args...)
+	_, err := s.e.Exec(replace, sql.String(), s.condArgs...)
+	return err
+}
+
+func (s *SQL) Insert(replace bool, data map[string]interface{}) error {
+	if len(s.table) == 0 {
+		return ErrEmptyTableName
+	}
+
+	if len(data) == 0 {
+		return errors.New("SQL.Update:未指定需要更新的数据")
+	}
+
+	keys := make([]string, len(data))
+	vals := make([]interface{}, len(data))
+	for k, v := range data {
+		keys = append(keys, k)
+		vals = append(vals, v)
+	}
+
+	sql := pool.Get().(*bytes.Buffer)
+	defer pool.Put(sql)
+
+	sql.Reset()
+	sql.WriteString("INSERT INTO ")
+	s.e.Dialect().Quote(sql, s.table)
+
+	sql.WriteByte('(')
+	for _, k := range keys {
+		sql.WriteString(k)
+		sql.WriteByte(',')
+	}
+	sql.Truncate(sql.Len() - 1)
+	sql.WriteString(")(")
+	for range vals {
+		sql.WriteString("?,")
+	}
+	sql.Truncate(sql.Len() - 1)
+	sql.WriteByte(')')
+
+	_, err := s.e.Exec(true, sql.String(), vals...)
 	return err
 }
 
@@ -128,7 +189,7 @@ func (s *SQL) Delete(replace bool) error {
 // replace，是否需将对语句的占位符进行替换。
 func (s *SQL) Update(replace bool, data map[string]interface{}) error {
 	if len(s.table) == 0 {
-		return errors.New("SQL.Update:未指定表名")
+		return ErrEmptyTableName
 	}
 
 	if len(data) == 0 {
@@ -141,7 +202,7 @@ func (s *SQL) Update(replace bool, data map[string]interface{}) error {
 	sql.Reset()
 	sql.WriteString("UPDATE ")
 	s.e.Dialect().Quote(sql, s.table)
-	vals := make([]interface{}, 0, len(data)+len(s.args))
+	vals := make([]interface{}, 0, len(data)+len(s.condArgs))
 	sql.WriteString(" SET ")
 	for k, v := range data {
 		s.e.Dialect().Quote(sql, k)
@@ -151,7 +212,7 @@ func (s *SQL) Update(replace bool, data map[string]interface{}) error {
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
 
 	sql.WriteString(s.cond.String())
-	_, err := s.e.Exec(replace, sql.String(), append(vals, s.args...)...)
+	_, err := s.e.Exec(replace, sql.String(), append(vals, s.condArgs...)...)
 	return err
 }
 
@@ -177,12 +238,13 @@ func (s *SQL) SelectMap(replace bool, cols ...string) ([]map[string]interface{},
 
 func (s *SQL) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
 	if len(s.table) == 0 {
-		return nil, errors.New("SQL:buildSelectSQL:未指定表名")
+		return nil, ErrEmptyTableName
 	}
 
 	sql := pool.Get().(*bytes.Buffer)
 	defer pool.Put(sql)
 
+	args := make([]interface{}, 0, len(s.condArgs)) // Query对应的参数
 	sql.Reset()
 	sql.WriteString("SELECT ")
 	if len(cols) == 0 {
@@ -201,6 +263,7 @@ func (s *SQL) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
 
 	// where
 	sql.WriteString(s.cond.String())
+	args = append(args, s.condArgs...)
 
 	// order
 	if s.order.Len() > 0 {
@@ -209,5 +272,18 @@ func (s *SQL) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
 		sql.Truncate(sql.Len() - 1)
 	}
 
-	return s.e.Query(replace, sql.String(), s.args...)
+	// limit
+	if len(s.limit) > 0 {
+		vals, err := s.e.Dialect().LimitSQL(sql, s.limit[0], s.limit[1:]...)
+		if err != nil {
+			return nil, err
+		}
+
+		args = append(args, vals[0])
+		if len(vals) > 1 {
+			args = append(args, vals[1])
+		}
+	}
+
+	return s.e.Query(replace, sql.String(), args...)
 }
