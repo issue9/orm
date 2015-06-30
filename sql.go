@@ -155,45 +155,6 @@ func (s *SQL) Delete(replace bool) (sql.Result, error) {
 	return s.e.Exec(replace, sql.String(), s.condArgs...)
 }
 
-func (s *SQL) Insert(replace bool, data map[string]interface{}) (sql.Result, error) {
-	if len(s.table) == 0 {
-		return nil, ErrEmptyTableName
-	}
-
-	if len(data) == 0 {
-		return nil, errors.New("SQL.Update:未指定需要更新的数据")
-	}
-
-	keys := make([]string, len(data))
-	vals := make([]interface{}, len(data))
-	for k, v := range data {
-		keys = append(keys, k)
-		vals = append(vals, v)
-	}
-
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	sql.Reset()
-	sql.WriteString("INSERT INTO ")
-	s.e.Dialect().Quote(sql, s.table)
-
-	sql.WriteByte('(')
-	for _, k := range keys {
-		sql.WriteString(k)
-		sql.WriteByte(',')
-	}
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteString(")(")
-	for range vals {
-		sql.WriteString("?,")
-	}
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteByte(')')
-
-	return s.e.Exec(true, sql.String(), vals...)
-}
-
 // 更新符合当前条件的所有记录。
 // replace，是否需将对语句的占位符进行替换。
 func (s *SQL) Update(replace bool, data map[string]interface{}) (sql.Result, error) {
