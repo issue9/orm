@@ -28,23 +28,23 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 	))
 
 	// Where.Update
-	err := db.Where("uid=?", 1).
+	r, err := db.Where("uid=?", 1).
 		Table("#user_info").
 		Update(true, map[string]interface{}{
 		"firstName": "firstName1",
 		"lastName":  "lastName1",
 	})
-	a.NotError(err)
+	a.NotError(err).NotNil(r)
 
 	// Where.Update
-	err = db.Where("{lastName}=?", "l2").
+	r, err = db.Where("{lastName}=?", "l2").
 		And("{firstName}=?", "f2").
 		Table("#user_info").
 		Update(true, map[string]interface{}{
 		"firstName": "firstName2",
 		"lastName":  "lastName2",
 	})
-	a.NotError(err)
+	a.NotError(err).NotNil(r)
 
 	// 验证修改
 

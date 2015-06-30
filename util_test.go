@@ -20,7 +20,7 @@ import (
 
 var (
 	// 通过修改此值来确定使用哪个数据库驱动来测试
-	driver = "sqlite3"
+	driver = "mysql"
 
 	prefix = "prefix_"
 	dsn    string
