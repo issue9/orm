@@ -69,6 +69,7 @@ func (w *Where) Or(cond string, args ...interface{}) *Where {
 }
 
 // order by ... asc
+// 当cols参数为空时，不产生任何操作。
 func (w *Where) Asc(cols ...string) *Where {
 	if len(cols) == 0 {
 		return w
@@ -84,6 +85,7 @@ func (w *Where) Asc(cols ...string) *Where {
 }
 
 // order by ... desc
+// 当cols参数为空时，不产生任何操作。
 func (w *Where) Desc(cols ...string) *Where {
 	if len(cols) == 0 {
 		return w

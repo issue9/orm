@@ -46,7 +46,7 @@ func where(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([
 			field := rval.FieldByName(col.GoName)
 
 			if !field.IsValid() ||
-				reflect.Zero(col.GoType).Interface() == field.Interface() {
+				col.Zero == field.Interface() {
 				vals = vals[:0]
 				keys = keys[:0]
 				return false
@@ -156,7 +156,7 @@ func insert(e engine, objs ...interface{}) error {
 			}
 
 			// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-			if reflect.Zero(col.GoType).Interface() == field.Interface() &&
+			if col.Zero == field.Interface() &&
 				(col.IsAI() || col.HasDefault) {
 				continue
 			}
@@ -220,11 +220,12 @@ func find(e engine, objs ...interface{}) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
 
 		if err := fetch.Obj(v, rows); err != nil {
+			rows.Close()
 			return err
 		}
+		rows.Close()
 	}
 	return nil
 }
@@ -268,7 +269,7 @@ func update(e engine, objs ...interface{}) error {
 			}
 
 			// 忽略零值，TODO:还需要对比默认值
-			if reflect.Zero(col.GoType).Interface() == field.Interface() {
+			if col.Zero == field.Interface() {
 				continue
 			}
 
@@ -434,9 +435,7 @@ func insertMany(e engine, v interface{}) error {
 		}
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
-			vs := pool.Get().(*bytes.Buffer)
-			defer pool.Put(vs)
-			vs.Reset()
+			vs := new(bytes.Buffer)
 
 			firstType = irval.Type()
 			e.Dialect().Quote(sql, e.Prefix()+m.Name) // 指定表名
@@ -448,7 +447,7 @@ func insertMany(e engine, v interface{}) error {
 				}
 
 				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-				if reflect.Zero(col.GoType).Interface() == field.Interface() &&
+				if col.Zero == field.Interface() &&
 					(col.IsAI() || col.HasDefault) {
 					continue
 				}
@@ -479,7 +478,7 @@ func insertMany(e engine, v interface{}) error {
 				}
 
 				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-				if reflect.Zero(col.GoType).Interface() == field.Interface() &&
+				if col.Zero == field.Interface() &&
 					(col.IsAI() || col.HasDefault) {
 					continue
 				}

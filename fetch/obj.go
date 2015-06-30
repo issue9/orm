@@ -36,24 +36,22 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 			continue
 		}
 
-		tagTxt := field.Tag.Get("orm")
-		if len(tagTxt) == 0 { // 不存在struct tag
-			goto FIELD_NAME
-		}
-
-		if tagTxt[0] == '-' { // 该字段被标记为忽略
-			continue
-		}
-
-		if name, found := tag.Get(tagTxt, "name"); found {
-			if _, found := (*ret)[name[0]]; found {
-				return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
+		tags := field.Tag.Get("orm")
+		if len(tags) > 0 { // 存在struct tag
+			if tags[0] == '-' { // 该字段被标记为忽略
+				continue
 			}
-			(*ret)[name[0]] = v.Field(i)
-			continue
+
+			if name, found := tag.Get(tags, "name"); found {
+				if _, found := (*ret)[name[0]]; found {
+					return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
+				}
+				(*ret)[name[0]] = v.Field(i)
+				continue
+			}
 		}
 
-	FIELD_NAME:
+		// 未指定struct tag，则尝试直接使用字段名。
 		if unicode.IsUpper(rune(field.Name[0])) {
 			if _, found := (*ret)[field.Name]; found {
 				return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
@@ -73,7 +71,7 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) error {
 		return err
 	}
 
-	objItem := make(map[string]reflect.Value, 0)
+	objItem := make(map[string]reflect.Value, len(mapped[0]))
 	if err = parseObj(val, &objItem); err != nil {
 		return err
 	}
@@ -115,7 +113,7 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) error {
 	}
 
 	for i := 0; i < l; i++ {
-		objItem := make(map[string]reflect.Value, 0)
+		objItem := make(map[string]reflect.Value, len(mapped[i]))
 		if err = parseObj(val.Index(i), &objItem); err != nil {
 			return err
 		}
@@ -163,7 +161,7 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 	}
 
 	for i := 0; i < len(mapped); i++ {
-		objItem := make(map[string]reflect.Value, 0)
+		objItem := make(map[string]reflect.Value, len(mapped[i]))
 		if err = parseObj(elem.Index(i), &objItem); err != nil {
 			return err
 		}
