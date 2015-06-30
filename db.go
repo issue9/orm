@@ -169,9 +169,9 @@ func (db *DB) Truncate(v ...interface{}) error {
 	return truncate(db, v...)
 }
 
-// 通过一组where()语句来定位数据。
-func (db *DB) Where(cond string, args ...interface{}) *Where {
-	w := newWhere(db)
+// 通过SQL实例。
+func (db *DB) Where(cond string, args ...interface{}) *SQL {
+	w := newSQL(db)
 	return w.And(cond, args...)
 }
 
@@ -295,9 +295,9 @@ func (tx *Tx) Truncate(v ...interface{}) error {
 	return truncate(tx, v...)
 }
 
-// 返回Where实例。
-func (tx *Tx) Where(cond string, args ...interface{}) *Where {
-	w := newWhere(tx)
+// 返回SQL实例。
+func (tx *Tx) Where(cond string, args ...interface{}) *SQL {
+	w := newSQL(tx)
 	return w.And(cond, args...)
 }
 

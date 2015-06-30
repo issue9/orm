@@ -22,8 +22,8 @@ const (
 	desc
 )
 
-// 用于产生条件语句。
-type Where struct {
+// 以函数链的方式产生SQL语句。
+type SQL struct {
 	e     engine
 	table string
 	cond  *bytes.Buffer
@@ -31,8 +31,8 @@ type Where struct {
 	order *bytes.Buffer
 }
 
-func newWhere(engine engine) *Where {
-	return &Where{
+func newSQL(engine engine) *SQL {
+	return &SQL{
 		e:     engine,
 		cond:  new(bytes.Buffer),
 		args:  []interface{}{},
@@ -40,77 +40,77 @@ func newWhere(engine engine) *Where {
 	}
 }
 
-func (w *Where) where(op int, cond string, args ...interface{}) *Where {
+func (s *SQL) where(op int, cond string, args ...interface{}) *SQL {
 	switch {
-	case w.cond.Len() == 0:
-		w.cond.WriteString(" WHERE(")
+	case s.cond.Len() == 0:
+		s.cond.WriteString(" WHERE(")
 	case op == and:
-		w.cond.WriteString(" AND(")
+		s.cond.WriteString(" AND(")
 	case op == or:
-		w.cond.WriteString(" OR(")
+		s.cond.WriteString(" OR(")
 	default:
 		panic("where:错误的参数op")
 	}
-	w.cond.WriteString(cond)
-	w.cond.WriteByte(')')
-	w.args = append(w.args, args...)
+	s.cond.WriteString(cond)
+	s.cond.WriteByte(')')
+	s.args = append(s.args, args...)
 
-	return w
+	return s
 }
 
 // 将之后的语句以and的形式与当前的语句进行连接
-func (w *Where) And(cond string, args ...interface{}) *Where {
-	return w.where(and, cond, args...)
+func (s *SQL) And(cond string, args ...interface{}) *SQL {
+	return s.where(and, cond, args...)
 }
 
 // 将之后的语句以or的形式与当前的语句进行连接
-func (w *Where) Or(cond string, args ...interface{}) *Where {
-	return w.where(or, cond, args...)
+func (s *SQL) Or(cond string, args ...interface{}) *SQL {
+	return s.where(or, cond, args...)
 }
 
 // order by ... asc
 // 当cols参数为空时，不产生任何操作。
-func (w *Where) Asc(cols ...string) *Where {
+func (s *SQL) Asc(cols ...string) *SQL {
 	if len(cols) == 0 {
-		return w
+		return s
 	}
 
 	for _, col := range cols {
-		w.order.WriteString(col)
-		w.order.WriteByte(',')
+		s.order.WriteString(col)
+		s.order.WriteByte(',')
 	}
-	w.order.Truncate(w.order.Len() - 1)
-	w.order.WriteString(" ASC,")
-	return w
+	s.order.Truncate(s.order.Len() - 1)
+	s.order.WriteString(" ASC,")
+	return s
 }
 
 // order by ... desc
 // 当cols参数为空时，不产生任何操作。
-func (w *Where) Desc(cols ...string) *Where {
+func (s *SQL) Desc(cols ...string) *SQL {
 	if len(cols) == 0 {
-		return w
+		return s
 	}
 
 	for _, col := range cols {
-		w.order.WriteString(col)
-		w.order.WriteByte(',')
+		s.order.WriteString(col)
+		s.order.WriteByte(',')
 	}
-	w.order.Truncate(w.order.Len() - 1)
-	w.order.WriteString(" DESC,")
-	return w
+	s.order.Truncate(s.order.Len() - 1)
+	s.order.WriteString(" DESC,")
+	return s
 }
 
 // 指定表名。
-func (w *Where) Table(tableName string) *Where {
-	w.table = tableName
-	return w
+func (s *SQL) Table(tableName string) *SQL {
+	s.table = tableName
+	return s
 }
 
 // 将符合当前条件的所有记录删除。
 // replace，是否需将对语句的占位符进行替换。
-func (w *Where) Delete(replace bool) error {
-	if len(w.table) == 0 {
-		return errors.New("Where.Delete:未指定表名")
+func (s *SQL) Delete(replace bool) error {
+	if len(s.table) == 0 {
+		return errors.New("SQL.Delete:未指定表名")
 	}
 
 	sql := pool.Get().(*bytes.Buffer)
@@ -118,21 +118,21 @@ func (w *Where) Delete(replace bool) error {
 
 	sql.Reset()
 	sql.WriteString("DELETE FROM ")
-	w.e.Dialect().Quote(sql, w.table)
-	sql.WriteString(w.cond.String())
-	_, err := w.e.Exec(replace, sql.String(), w.args...)
+	s.e.Dialect().Quote(sql, s.table)
+	sql.WriteString(s.cond.String())
+	_, err := s.e.Exec(replace, sql.String(), s.args...)
 	return err
 }
 
 // 更新符合当前条件的所有记录。
 // replace，是否需将对语句的占位符进行替换。
-func (w *Where) Update(replace bool, data map[string]interface{}) error {
-	if len(w.table) == 0 {
-		return errors.New("Where.Update:未指定表名")
+func (s *SQL) Update(replace bool, data map[string]interface{}) error {
+	if len(s.table) == 0 {
+		return errors.New("SQL.Update:未指定表名")
 	}
 
 	if len(data) == 0 {
-		return errors.New("Where.Update:未指定需要更新的数据")
+		return errors.New("SQL.Update:未指定需要更新的数据")
 	}
 
 	sql := pool.Get().(*bytes.Buffer)
@@ -140,25 +140,25 @@ func (w *Where) Update(replace bool, data map[string]interface{}) error {
 
 	sql.Reset()
 	sql.WriteString("UPDATE ")
-	w.e.Dialect().Quote(sql, w.table)
-	vals := make([]interface{}, 0, len(data)+len(w.args))
+	s.e.Dialect().Quote(sql, s.table)
+	vals := make([]interface{}, 0, len(data)+len(s.args))
 	sql.WriteString(" SET ")
 	for k, v := range data {
-		w.e.Dialect().Quote(sql, k)
+		s.e.Dialect().Quote(sql, k)
 		sql.WriteString("=?,")
 		vals = append(vals, v)
 	}
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
 
-	sql.WriteString(w.cond.String())
-	_, err := w.e.Exec(replace, sql.String(), append(vals, w.args...)...)
+	sql.WriteString(s.cond.String())
+	_, err := s.e.Exec(replace, sql.String(), append(vals, s.args...)...)
 	return err
 }
 
 // 将符合当前条件的所有记录依次写入objs中。
 // replace，是否需将对语句的占位符进行替换。
-func (w *Where) Select(replace bool, objs interface{}) error {
-	rows, err := w.buildSelectSQL(replace)
+func (s *SQL) Select(replace bool, objs interface{}) error {
+	rows, err := s.buildSelectSQL(replace)
 	if err != nil {
 		return err
 	}
@@ -167,17 +167,17 @@ func (w *Where) Select(replace bool, objs interface{}) error {
 
 // 返回符合当前条件的所有记录。
 // replace，是否需将对语句的占位符进行替换。
-func (w *Where) SelectMap(replace bool, cols ...string) ([]map[string]interface{}, error) {
-	rows, err := w.buildSelectSQL(replace, cols...)
+func (s *SQL) SelectMap(replace bool, cols ...string) ([]map[string]interface{}, error) {
+	rows, err := s.buildSelectSQL(replace, cols...)
 	if err != nil {
 		return nil, err
 	}
 	return fetch.Map(false, rows)
 }
 
-func (w *Where) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
-	if len(w.table) == 0 {
-		return nil, errors.New("Where:buildSelectSQL:未指定表名")
+func (s *SQL) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
+	if len(s.table) == 0 {
+		return nil, errors.New("SQL:buildSelectSQL:未指定表名")
 	}
 
 	sql := pool.Get().(*bytes.Buffer)
@@ -189,7 +189,7 @@ func (w *Where) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) 
 		sql.WriteString(" * ")
 	} else {
 		for _, v := range cols {
-			w.e.Dialect().Quote(sql, v)
+			s.e.Dialect().Quote(sql, v)
 			sql.WriteByte(',')
 		}
 		sql.Truncate(sql.Len() - 1)
@@ -197,17 +197,17 @@ func (w *Where) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) 
 
 	// from
 	sql.WriteString(" FROM ")
-	w.e.Dialect().Quote(sql, w.table)
+	s.e.Dialect().Quote(sql, s.table)
 
 	// where
-	sql.WriteString(w.cond.String())
+	sql.WriteString(s.cond.String())
 
 	// order
-	if w.order.Len() > 0 {
+	if s.order.Len() > 0 {
 		sql.WriteString(" ORDER BY ")
-		w.order.WriteTo(sql)
+		s.order.WriteTo(sql)
 		sql.Truncate(sql.Len() - 1)
 	}
 
-	return w.e.Query(replace, sql.String(), w.args...)
+	return s.e.Query(replace, sql.String(), s.args...)
 }
