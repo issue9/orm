@@ -46,6 +46,16 @@ func newSQL(engine engine) *SQL {
 	}
 }
 
+func (s *SQL) Reset() *SQL {
+	s.table = ""
+	s.cond.Reset()
+	s.condArgs = s.condArgs[:0]
+	s.order.Reset()
+	s.limit = s.limit[:0]
+
+	return s
+}
+
 // 指定Limit相关的值。
 func (s *SQL) Limit(limit int, offset ...int) *SQL {
 	if len(offset) > 1 {
