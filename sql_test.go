@@ -83,6 +83,12 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 		&userInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"},
 	})
 
+	// Where.Count
+	cnt, err := db.Where("uid<?", 4).
+		Table("#user_info").
+		Count(true)
+	a.NotError(err).Equal(3, cnt)
+
 	// Where.Delete
 	a.NotError(db.Where("uid=?", 3).Table("#user_info").Delete(true))
 

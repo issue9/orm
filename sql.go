@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/issue9/orm/fetch"
@@ -183,6 +184,27 @@ func (s *SQL) Update(replace bool, data map[string]interface{}) (sql.Result, err
 
 	sql.WriteString(s.cond.String())
 	return s.e.Exec(replace, sql.String(), append(vals, s.condArgs...)...)
+}
+
+// 返回符合条件的记录数量。
+// 若指定了Limit，则相应的条件也会计算在内。
+func (s *SQL) Count(replace bool) (int, error) {
+	rows, err := s.query(replace, "COUNT(*) AS cnt")
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	cols, err := fetch.ColumnString(true, "cnt", rows)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(cols) == 0 {
+		return 0, nil
+	}
+
+	return strconv.Atoi(cols[0])
 }
 
 // 将符合当前条件的所有记录依次写入objs中。
