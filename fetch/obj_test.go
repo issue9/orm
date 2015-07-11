@@ -170,7 +170,8 @@ func TestObj(t *testing.T) {
 	array := [1]*FetchUser{
 		&FetchUser{},
 	}
-	a.Error(Obj(array, rows)) // 非指针传递，出错
+	cnt, err := Obj(array, rows)
+	a.Error(err).Equal(cnt, 0) // 非指针传递，出错
 	a.NotError(rows.Close())
 
 	// test6:数组指针传递，不会增长数组长度。
@@ -194,7 +195,8 @@ func TestObj(t *testing.T) {
 	// test8:obj为一个struct。这将返回错误信息
 	rows, err = db.Query(sql)
 	obj = FetchUser{}
-	a.Error(Obj(obj, rows))
+	cnt, err = Obj(obj, rows)
+	a.Error(err).Equal(0, cnt)
 	a.NotError(rows.Close())
 }
 
@@ -227,7 +229,8 @@ func TestObjNotFound(t *testing.T) {
 	array := [1]*FetchUser{
 		&FetchUser{},
 	}
-	a.Error(Obj(array, rows)) // 非指针传递，出错
+	cnt, err := Obj(array, rows)
+	a.Error(err).Equal(0, cnt) // 非指针传递，出错
 	a.NotError(rows.Close())
 
 	// test3:数组指针传递。

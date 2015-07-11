@@ -72,11 +72,11 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 
 	// Where.Select
 	objs := []*userInfo{&userInfo{}, &userInfo{}, &userInfo{}}
-	err = db.Where("uid<?", 4).
+	cnt, err := db.Where("uid<?", 4).
 		Table("#user_info").
 		Asc("uid").
 		Select(true, objs)
-	a.NotError(err)
+	a.NotError(err).Equal(3, cnt)
 	a.Equal(objs, []*userInfo{
 		&userInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "male"},
 		&userInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "male"},
@@ -84,7 +84,7 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 	})
 
 	// Where.Count
-	cnt, err := db.Where("uid<?", 4).
+	cnt, err = db.Where("uid<?", 4).
 		Table("#user_info").
 		Count(true)
 	a.NotError(err).Equal(3, cnt)

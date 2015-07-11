@@ -209,14 +209,14 @@ func (s *SQL) Count(replace bool) (int, error) {
 
 // 将符合当前条件的所有记录依次写入objs中。
 // replace，是否需将对语句的占位符进行替换。
-func (s *SQL) Select(replace bool, objs interface{}) error {
+func (s *SQL) Select(replace bool, objs interface{}) (int, error) {
 	rows, err := s.query(replace)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	err = fetch.Obj(objs, rows)
+	cnt, err := fetch.Obj(objs, rows)
 	rows.Close()
-	return err
+	return cnt, err
 }
 
 // 返回符合当前条件的所有记录。

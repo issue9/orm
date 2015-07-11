@@ -65,19 +65,19 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 
 // 将rows中的一条记录写入到val中，必须保证val的类型为reflect.Struct。
 // 仅供Obj()调用。
-func fetchOnceObj(val reflect.Value, rows *sql.Rows) error {
+func fetchOnceObj(val reflect.Value, rows *sql.Rows) (int, error) {
 	mapped, err := Map(true, rows)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if len(mapped) == 0 { // 没有导出的数据
-		return nil
+		return 0, nil
 	}
 
 	objItem := make(map[string]reflect.Value, len(mapped[0]))
 	if err = parseObj(val, &objItem); err != nil {
-		return err
+		return 0, err
 	}
 
 	for index, item := range objItem {
@@ -86,29 +86,31 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) error {
 			continue
 		}
 		if err = conv.Value(v, item); err != nil {
-			return err
+			return 0, err
 		}
 	}
 
-	return nil
+	return 1, nil
 }
 
 // 将rows中的记录按obj的长度数量导出到obj中。
 // val的类型必须是reflect.Slice或是reflect.Array.
-func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) error {
+// 可能只有部分数据被成功导入，而后发生error，
+// 此时只能通过第一个返回参数来判断有多少数据是成功导入的。
+func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	itemType := val.Type().Elem()
 	for itemType.Kind() == reflect.Ptr {
 		itemType = itemType.Elem()
 	}
 	// 判断数组元素的类型是否为struct
 	if itemType.Kind() != reflect.Struct {
-		return fmt.Errorf("fetchObjToFixedSlice:元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
+		return 0, fmt.Errorf("fetchObjToFixedSlice:元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
 	}
 
 	// 先导出数据到map中
 	mapped, err := Map(false, rows)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	l := len(mapped)
@@ -119,7 +121,7 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) error {
 	for i := 0; i < l; i++ {
 		objItem := make(map[string]reflect.Value, len(mapped[i]))
 		if err = parseObj(val.Index(i), &objItem); err != nil {
-			return err
+			return 0, err
 		}
 		for index, item := range objItem {
 			v, found := mapped[i][index]
@@ -127,17 +129,19 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) error {
 				continue
 			}
 			if err = conv.Value(v, item); err != nil {
-				return err
+				return i, err // 已经有i条数据被正确导出
 			}
 		} // end for objItem
 	}
 
-	return nil
+	return l, nil
 }
 
 // 将rows中的所有记录导出到val中，val必须为slice的指针。
 // 若val的长度不够，会根据rows中的长度调整。
-func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
+// 可能只有部分数据被成功导入，而后发生error，
+// 此时只能通过第一个返回参数来判断有多少数据是成功导入的。
+func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	elem := val.Elem()
 
 	itemType := elem.Type().Elem()
@@ -146,13 +150,13 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 	}
 	// 判断数组元素的类型是否为struct
 	if itemType.Kind() != reflect.Struct {
-		return fmt.Errorf("元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
+		return 0, fmt.Errorf("元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
 	}
 
 	// 先导出数据到map中
 	mapped, err := Map(false, rows)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// 使elem表示的数组长度最起码和mapped一样。
@@ -167,7 +171,7 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 	for i := 0; i < len(mapped); i++ {
 		objItem := make(map[string]reflect.Value, len(mapped[i]))
 		if err = parseObj(elem.Index(i), &objItem); err != nil {
-			return err
+			return 0, err
 		}
 
 		for index, item := range objItem {
@@ -176,12 +180,12 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 				continue
 			}
 			if err = conv.Value(e, item); err != nil {
-				return err
+				return i, err
 			}
 		} // end for objItem
 	}
 
-	return nil
+	return len(mapped), nil
 }
 
 // 将rows中的数据导出到obj中。obj只有在类型为slice指针时，
@@ -208,7 +212,9 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) error {
 //      age   int `orm:"name(Age)"` // 小写不会被导出。
 //      Count int `orm:"-"`         // 不会匹配与该字段对应的列。
 //  }
-func Obj(obj interface{}, rows *sql.Rows) (err error) {
+//
+// 第一个参数用于表示有多少数据被正确导入到obj中
+func Obj(obj interface{}, rows *sql.Rows) (int, error) {
 	val := reflect.ValueOf(obj)
 
 	switch val.Kind() {
@@ -222,11 +228,11 @@ func Obj(obj interface{}, rows *sql.Rows) (err error) {
 		case reflect.Struct: // 结构指针，只能导出一个
 			return fetchOnceObj(elem, rows)
 		default:
-			return fmt.Errorf("不允许的数据类型：[%v]", val.Kind())
+			return 0, fmt.Errorf("不允许的数据类型：[%v]", val.Kind())
 		}
 	case reflect.Slice: // slice只能按其大小导出。
 		return fetchObjToFixedSlice(val, rows)
 	default:
-		return fmt.Errorf("不允许的数据类型：[%v]", val.Kind())
+		return 0, fmt.Errorf("不允许的数据类型：[%v]", val.Kind())
 	}
 }

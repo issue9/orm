@@ -219,6 +219,7 @@ func insert(e engine, objs ...interface{}) error {
 // 查找多个数据
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
 // 若objs为空，则不发生任何操作。
+// 第一个返回参数用于表示实际有多少数据被导入到objs中。
 func find(e engine, objs ...interface{}) error {
 	sql := pool.Get().(*bytes.Buffer)
 	defer pool.Put(sql)
@@ -252,7 +253,7 @@ func find(e engine, objs ...interface{}) error {
 			return err
 		}
 
-		if err := fetch.Obj(v, rows); err != nil {
+		if cnt, err := fetch.Obj(v, rows); err != nil || cnt <= 0 {
 			rows.Close()
 			return err
 		}
