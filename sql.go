@@ -214,7 +214,9 @@ func (s *SQL) Select(replace bool, objs interface{}) error {
 	if err != nil {
 		return err
 	}
-	return fetch.Obj(objs, rows)
+	err = fetch.Obj(objs, rows)
+	rows.Close()
+	return err
 }
 
 // 返回符合当前条件的所有记录。
@@ -224,7 +226,9 @@ func (s *SQL) SelectMap(replace bool, cols ...string) ([]map[string]interface{},
 	if err != nil {
 		return nil, err
 	}
-	return fetch.Map(false, rows)
+	mapped, err := fetch.Map(false, rows)
+	rows.Close()
+	return mapped, err
 }
 
 func (s *SQL) query(replace bool, cols ...string) (*sql.Rows, error) {
