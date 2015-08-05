@@ -231,6 +231,18 @@ func (s *SQL) SelectMap(replace bool, cols ...string) ([]map[string]interface{},
 	return mapped, err
 }
 
+// 返回符合当前条件的所有记录。
+// replace，是否需将对语句的占位符进行替换。
+func (s *SQL) SelectMapString(replace bool, cols ...string) ([]map[string]string, error) {
+	rows, err := s.query(replace, cols...)
+	if err != nil {
+		return nil, err
+	}
+	mapped, err := fetch.MapString(false, rows)
+	rows.Close()
+	return mapped, err
+}
+
 func (s *SQL) query(replace bool, cols ...string) (*sql.Rows, error) {
 	if len(s.table) == 0 {
 		return nil, ErrEmptyTableName
