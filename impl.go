@@ -68,7 +68,7 @@ func where(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("where:无法为[%v]模块产生where部分语句", m.Name)
+		return nil, fmt.Errorf("where:无法为[%v]产生where部分语句", m.Name)
 	}
 
 	sql.WriteString(" WHERE ")
@@ -98,7 +98,7 @@ func whereAny(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value)
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("where:无法为[%v]模块产生where部分语句", m.Name)
+		return nil, fmt.Errorf("where:无法为[%v]产生where部分语句", m.Name)
 	}
 
 	sql.WriteString(" WHERE ")
