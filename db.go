@@ -183,6 +183,10 @@ func (db *DB) Where(cond string, args ...interface{}) *SQL {
 	return w.And(cond, args...)
 }
 
+func (db *DB) SQL() *SQL {
+	return newSQL(db)
+}
+
 // 开始一个新的事务
 func (db *DB) Begin() (*Tx, error) {
 	tx, err := db.stdDB.Begin()
@@ -318,4 +322,8 @@ func (tx *Tx) Where(cond string, args ...interface{}) *SQL {
 // 获取当前实例的表名前缀
 func (tx *Tx) Prefix() string {
 	return tx.db.tablePrefix
+}
+
+func (tx *Tx) SQL() *SQL {
+	return newSQL(tx)
 }
