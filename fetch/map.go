@@ -76,6 +76,9 @@ func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) 
 
 		line := make(map[string]string, len(cols))
 		for i, v := range cols {
+			if buf[i] == nil {
+				continue
+			}
 			line[v] = *(buf[i].(*string))
 		}
 
