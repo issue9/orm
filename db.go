@@ -35,6 +35,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect forward.Diale
 	return NewDBWithStdDB(db, tablePrefix, dialect)
 }
 
+// 从sql.DB构建一个DB实例。
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect forward.Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{
@@ -150,8 +151,15 @@ func (db *DB) Update(v ...interface{}) error {
 // 查询一个或是多个数据。v可以是多个不同类型的结构指针，
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
+// 若没有符合条件的数据，将不会对参数v做任何变动。
 func (db *DB) Select(v ...interface{}) error {
 	return find(db, v...)
+}
+
+// 查询符合v条件的记录数量。
+// v中的所有非零字段都将参与查询。
+func (db *DB) Count(v ...interface{}) (int, error) {
+	return count(db, v...)
 }
 
 // 创建一张或是多张表。v可以是多个不同类型的结构指针。
@@ -173,6 +181,10 @@ func (db *DB) Truncate(v ...interface{}) error {
 func (db *DB) Where(cond string, args ...interface{}) *SQL {
 	w := newSQL(db)
 	return w.And(cond, args...)
+}
+
+func (db *DB) SQL() *SQL {
+	return newSQL(db)
 }
 
 // 开始一个新的事务
@@ -280,6 +292,12 @@ func (tx *Tx) Delete(v ...interface{}) error {
 	return del(tx, v...)
 }
 
+// 查询符合v条件的记录数量。
+// v中的所有非零字段都将参与查询。
+func (tx *Tx) Count(v ...interface{}) (int, error) {
+	return count(tx, v...)
+}
+
 // 创建数据表。
 func (tx *Tx) Create(v ...interface{}) error {
 	return create(tx, v...)
@@ -304,4 +322,8 @@ func (tx *Tx) Where(cond string, args ...interface{}) *SQL {
 // 获取当前实例的表名前缀
 func (tx *Tx) Prefix() string {
 	return tx.db.tablePrefix
+}
+
+func (tx *Tx) SQL() *SQL {
+	return newSQL(tx)
 }

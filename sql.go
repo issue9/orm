@@ -8,6 +8,8 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/issue9/orm/fetch"
 )
@@ -23,7 +25,7 @@ const (
 )
 
 var (
-	ErrEmptyTableName = errors.New("SQL.Update:未指定表名")
+	ErrEmptyTableName = errors.New("未指定表名")
 )
 
 // 以函数链的方式产生SQL语句。
@@ -139,9 +141,9 @@ func (s *SQL) Table(tableName string) *SQL {
 
 // 将符合当前条件的所有记录删除。
 // replace，是否需将对语句的占位符进行替换。
-func (s *SQL) Delete(replace bool) error {
+func (s *SQL) Delete(replace bool) (sql.Result, error) {
 	if len(s.table) == 0 {
-		return ErrEmptyTableName
+		return nil, ErrEmptyTableName
 	}
 
 	sql := pool.Get().(*bytes.Buffer)
@@ -151,59 +153,18 @@ func (s *SQL) Delete(replace bool) error {
 	sql.WriteString("DELETE FROM ")
 	s.e.Dialect().Quote(sql, s.table)
 	sql.WriteString(s.cond.String())
-	_, err := s.e.Exec(replace, sql.String(), s.condArgs...)
-	return err
-}
-
-func (s *SQL) Insert(replace bool, data map[string]interface{}) error {
-	if len(s.table) == 0 {
-		return ErrEmptyTableName
-	}
-
-	if len(data) == 0 {
-		return errors.New("SQL.Update:未指定需要更新的数据")
-	}
-
-	keys := make([]string, len(data))
-	vals := make([]interface{}, len(data))
-	for k, v := range data {
-		keys = append(keys, k)
-		vals = append(vals, v)
-	}
-
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	sql.Reset()
-	sql.WriteString("INSERT INTO ")
-	s.e.Dialect().Quote(sql, s.table)
-
-	sql.WriteByte('(')
-	for _, k := range keys {
-		sql.WriteString(k)
-		sql.WriteByte(',')
-	}
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteString(")(")
-	for range vals {
-		sql.WriteString("?,")
-	}
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteByte(')')
-
-	_, err := s.e.Exec(true, sql.String(), vals...)
-	return err
+	return s.e.Exec(replace, sql.String(), s.condArgs...)
 }
 
 // 更新符合当前条件的所有记录。
 // replace，是否需将对语句的占位符进行替换。
-func (s *SQL) Update(replace bool, data map[string]interface{}) error {
+func (s *SQL) Update(replace bool, data map[string]interface{}) (sql.Result, error) {
 	if len(s.table) == 0 {
-		return ErrEmptyTableName
+		return nil, ErrEmptyTableName
 	}
 
 	if len(data) == 0 {
-		return errors.New("SQL.Update:未指定需要更新的数据")
+		return nil, errors.New("SQL.Update:未指定需要更新的数据")
 	}
 
 	sql := pool.Get().(*bytes.Buffer)
@@ -222,31 +183,67 @@ func (s *SQL) Update(replace bool, data map[string]interface{}) error {
 	sql.Truncate(sql.Len() - 1) // 去掉最后一个逗号
 
 	sql.WriteString(s.cond.String())
-	_, err := s.e.Exec(replace, sql.String(), append(vals, s.condArgs...)...)
-	return err
+	return s.e.Exec(replace, sql.String(), append(vals, s.condArgs...)...)
+}
+
+// 返回符合条件的记录数量。
+// 若指定了Limit，则相应的条件也会计算在内。
+func (s *SQL) Count(replace bool) (int, error) {
+	rows, err := s.query(replace, "COUNT(*) AS cnt")
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	cols, err := fetch.ColumnString(true, "cnt", rows)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(cols) == 0 {
+		return 0, nil
+	}
+
+	return strconv.Atoi(cols[0])
 }
 
 // 将符合当前条件的所有记录依次写入objs中。
 // replace，是否需将对语句的占位符进行替换。
-func (s *SQL) Select(replace bool, objs interface{}) error {
-	rows, err := s.buildSelectSQL(replace)
+func (s *SQL) Select(replace bool, objs interface{}) (int, error) {
+	rows, err := s.query(replace)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return fetch.Obj(objs, rows)
+	cnt, err := fetch.Obj(objs, rows)
+	rows.Close()
+	return cnt, err
 }
 
 // 返回符合当前条件的所有记录。
 // replace，是否需将对语句的占位符进行替换。
 func (s *SQL) SelectMap(replace bool, cols ...string) ([]map[string]interface{}, error) {
-	rows, err := s.buildSelectSQL(replace, cols...)
+	rows, err := s.query(replace, cols...)
 	if err != nil {
 		return nil, err
 	}
-	return fetch.Map(false, rows)
+	mapped, err := fetch.Map(false, rows)
+	rows.Close()
+	return mapped, err
 }
 
-func (s *SQL) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
+// 返回符合当前条件的所有记录。
+// replace，是否需将对语句的占位符进行替换。
+func (s *SQL) SelectMapString(replace bool, cols ...string) ([]map[string]string, error) {
+	rows, err := s.query(replace, cols...)
+	if err != nil {
+		return nil, err
+	}
+	mapped, err := fetch.MapString(false, rows)
+	rows.Close()
+	return mapped, err
+}
+
+func (s *SQL) query(replace bool, cols ...string) (*sql.Rows, error) {
 	if len(s.table) == 0 {
 		return nil, ErrEmptyTableName
 	}
@@ -260,11 +257,7 @@ func (s *SQL) buildSelectSQL(replace bool, cols ...string) (*sql.Rows, error) {
 	if len(cols) == 0 {
 		sql.WriteString(" * ")
 	} else {
-		for _, v := range cols {
-			s.e.Dialect().Quote(sql, v)
-			sql.WriteByte(',')
-		}
-		sql.Truncate(sql.Len() - 1)
+		sql.WriteString(strings.Join(cols, ","))
 	}
 
 	// from

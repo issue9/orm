@@ -5,6 +5,7 @@
 package orm
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -266,5 +267,73 @@ func BenchmarkDB_WhereSelect(b *testing.B) {
 	}
 	for i := 0; i < b.N; i++ {
 		a.NotError(db.Where("id>?", i).Table("#bench").Select(true, models))
+	}
+}
+
+// mysql: BenchmarkDB_Count	   10000	    168311 ns/op
+func BenchmarkDB_Count(b *testing.B) {
+	a := assert.New(b)
+
+	m := &bench{
+		Name: "name",
+		Pass: "pass",
+		Site: "http://www.github.com/issue9/orm",
+	}
+
+	db := newDB(a)
+	defer func() {
+		db.Drop(&bench{})
+		closeDB(a)
+	}()
+
+	// 构造数据
+	a.NotError(db.Create(&bench{}))
+	a.NotError(db.Insert(m))
+
+	be := &bench{Name: "name"}
+	for i := 0; i < b.N; i++ {
+		count, _ := db.Count(be)
+		if count < 1 {
+			b.Error("count:", count)
+		}
+	}
+}
+
+// mysql: BenchmarkDB_MultCount	      50	  23475370 ns/op
+func BenchmarkDB_MultCount(b *testing.B) {
+	a := assert.New(b)
+
+	ms := make([]interface{}, 0, 100)
+	for i := 0; i < cap(ms); i++ {
+		ms = append(ms, &bench{
+			Name: "name-" + strconv.Itoa(i),
+			Pass: "pass",
+			Site: "http://www.github.com/issue9/orm",
+		})
+	}
+
+	db := newDB(a)
+	defer func() {
+		db.Drop(&bench{})
+		closeDB(a)
+	}()
+
+	// 构造数据
+	a.NotError(db.Create(&bench{}))
+	a.NotError(db.Insert(ms...))
+
+	models := make([]interface{}, 0, 100)
+	for i := 0; i < cap(models); i++ {
+		models = append(models, &bench{
+			Name: "name-" + strconv.Itoa(i),
+			Pass: "pass",
+			Site: "http://www.github.com/issue9/orm",
+		})
+	}
+	for i := 0; i < b.N; i++ {
+		count, _ := db.Count(models...)
+		if count < 1 {
+			b.Error("count:", count)
+		}
 	}
 }

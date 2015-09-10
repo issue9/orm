@@ -28,23 +28,23 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 	))
 
 	// Where.Update
-	err := db.Where("uid=?", 1).
+	r, err := db.Where("uid=?", 1).
 		Table("#user_info").
 		Update(true, map[string]interface{}{
 		"firstName": "firstName1",
 		"lastName":  "lastName1",
 	})
-	a.NotError(err)
+	a.NotError(err).NotNil(r)
 
 	// Where.Update
-	err = db.Where("{lastName}=?", "l2").
+	r, err = db.Where("{lastName}=?", "l2").
 		And("{firstName}=?", "f2").
 		Table("#user_info").
 		Update(true, map[string]interface{}{
 		"firstName": "firstName2",
 		"lastName":  "lastName2",
 	})
-	a.NotError(err)
+	a.NotError(err).NotNil(r)
 
 	// 验证修改
 
@@ -72,16 +72,22 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 
 	// Where.Select
 	objs := []*userInfo{&userInfo{}, &userInfo{}, &userInfo{}}
-	err = db.Where("uid<?", 4).
+	cnt, err := db.Where("uid<?", 4).
 		Table("#user_info").
 		Asc("uid").
 		Select(true, objs)
-	a.NotError(err)
+	a.NotError(err).Equal(3, cnt)
 	a.Equal(objs, []*userInfo{
 		&userInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "male"},
 		&userInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "male"},
 		&userInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"},
 	})
+
+	// Where.Count
+	cnt, err = db.Where("uid<?", 4).
+		Table("#user_info").
+		Count(true)
+	a.NotError(err).Equal(3, cnt)
 
 	// Where.Delete
 	a.NotError(db.Where("uid=?", 3).Table("#user_info").Delete(true))

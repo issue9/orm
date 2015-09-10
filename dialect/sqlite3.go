@@ -115,6 +115,8 @@ func (s *sqlite3) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 	}
 
 	switch col.GoType.Kind() {
+	case reflect.Bool:
+		buf.WriteString("INTEGER")
 	case reflect.String:
 		buf.WriteString("TEXT")
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,

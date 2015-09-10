@@ -68,7 +68,7 @@ func initDB(a *assert.Assertion) *sql.DB {
 
 	/* 创建表 */
 	sql := `create table user (
-        id integer not null primary key, 
+        id integer not null primary key,
         Email text,
         Username text,
         [group] interger)`
@@ -170,7 +170,8 @@ func TestObj(t *testing.T) {
 	array := [1]*FetchUser{
 		&FetchUser{},
 	}
-	a.Error(Obj(array, rows)) // 非指针传递，出错
+	cnt, err := Obj(array, rows)
+	a.Error(err).Equal(cnt, 0) // 非指针传递，出错
 	a.NotError(rows.Close())
 
 	// test6:数组指针传递，不会增长数组长度。
@@ -194,6 +195,59 @@ func TestObj(t *testing.T) {
 	// test8:obj为一个struct。这将返回错误信息
 	rows, err = db.Query(sql)
 	obj = FetchUser{}
-	a.Error(Obj(obj, rows))
+	cnt, err = Obj(obj, rows)
+	a.Error(err).Equal(0, cnt)
+	a.NotError(rows.Close())
+}
+
+func TestObjNotFound(t *testing.T) {
+	a := assert.New(t)
+	db := initDB(a)
+	defer closeDB(db, a)
+
+	sql := `SELECT id,Email FROM user WHERE id>100 ORDER BY id`
+
+	// test1:
+	rows, err := db.Query(sql)
+	a.NotError(err).NotNil(rows)
+
+	objs := []*FetchUser{
+		&FetchUser{},
+		&FetchUser{},
+	}
+
+	a.NotError(Obj(&objs, rows))
+
+	a.Equal([]*FetchUser{
+		&FetchUser{},
+		&FetchUser{},
+	}, objs)
+	a.NotError(rows.Close())
+
+	// test2:非数组指针传递。
+	rows, err = db.Query(sql)
+	array := [1]*FetchUser{
+		&FetchUser{},
+	}
+	cnt, err := Obj(array, rows)
+	a.Error(err).Equal(0, cnt) // 非指针传递，出错
+	a.NotError(rows.Close())
+
+	// test3:数组指针传递。
+	rows, err = db.Query(sql)
+	array = [1]*FetchUser{
+		&FetchUser{},
+	}
+	a.NotError(Obj(&array, rows))
+	a.Equal([1]*FetchUser{
+		&FetchUser{},
+	}, array)
+	a.NotError(rows.Close())
+
+	// test4:obj为一个struct指针。
+	rows, err = db.Query(sql)
+	obj := FetchUser{}
+	a.NotError(Obj(&obj, rows))
+	a.Equal(FetchUser{}, obj)
 	a.NotError(rows.Close())
 }

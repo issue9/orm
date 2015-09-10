@@ -4,6 +4,3 @@
 
 // fetch 包提供了将sql.Rows导出为几种常用数据格式的方法。
 package fetch
-
-// 版本号
-const Version = "0.1.1.150422"
