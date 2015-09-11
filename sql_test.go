@@ -15,7 +15,9 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 
 	db := newDB(a)
 	defer func() {
-		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
+		a.NotError(db.Drop(&admin{}))
+		a.NotError(db.Drop(&user{}))
+		a.NotError(db.Drop(&userInfo{}))
 		a.NotError(db.Close())
 		closeDB(a)
 	}()
@@ -23,7 +25,11 @@ func TestWhere_Update_Delete_Select(t *testing.T) {
 	a.NotError(db.Create(&userInfo{}))
 	a.NotError(db.Insert(
 		&userInfo{UID: 1, FirstName: "f1", LastName: "l1"},
+	))
+	a.NotError(db.Insert(
 		&userInfo{UID: 2, FirstName: "f2", LastName: "l2"},
+	))
+	a.NotError(db.Insert(
 		&userInfo{UID: 3, FirstName: "f3", LastName: "l3"},
 	))
 

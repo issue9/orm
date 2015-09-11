@@ -5,7 +5,6 @@
 package orm
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -35,7 +34,7 @@ func BenchmarkDB_Insert(b *testing.B) {
 }
 
 // mysql: BenchmarkDB_MultInsert	      50	  23436852 ns/op
-func BenchmarkDB_MultInsert(b *testing.B) {
+func BenchmarkTx_MultInsert(b *testing.B) {
 	a := assert.New(b)
 
 	ms := make([]interface{}, 0, 100)
@@ -47,21 +46,22 @@ func BenchmarkDB_MultInsert(b *testing.B) {
 		})
 	}
 
-	db := newDB(a)
+	tx, err := newDB(a).Begin()
+	a.NotError(err)
 	defer func() {
-		db.Drop(&bench{})
+		tx.Drop(&bench{})
 		closeDB(a)
 	}()
 
-	a.NotError(db.Create(&bench{}))
+	a.NotError(tx.Create(&bench{}))
 
 	for i := 0; i < b.N; i++ {
-		a.NotError(db.Insert(ms...))
+		a.NotError(tx.Insert(ms...))
 	}
 }
 
 // mysql: BenchmarkDB_InsertMany	     500	   2349282 ns/op
-func BenchmarkDB_InsertMany(b *testing.B) {
+func BenchmarkTx_InsertMany(b *testing.B) {
 	a := assert.New(b)
 
 	ms := make([]*bench, 0, 100)
@@ -73,16 +73,17 @@ func BenchmarkDB_InsertMany(b *testing.B) {
 		})
 	}
 
-	db := newDB(a)
+	tx, err := newDB(a).Begin()
+	a.NotError(err)
 	defer func() {
-		db.Drop(&bench{})
+		tx.Drop(&bench{})
 		closeDB(a)
 	}()
 
-	a.NotError(db.Create(&bench{}))
+	a.NotError(tx.Create(&bench{}))
 
 	for i := 0; i < b.N; i++ {
-		a.NotError(db.InsertMany(ms))
+		a.NotError(tx.InsertMany(ms))
 	}
 }
 
@@ -113,7 +114,7 @@ func BenchmarkDB_Update(b *testing.B) {
 }
 
 // mysql: BenchmarkDB_MultUpdate	      50	  28662471 ns/op
-func BenchmarkDB_MultUpdate(b *testing.B) {
+func BenchmarkTx_MultUpdate(b *testing.B) {
 	a := assert.New(b)
 
 	ms := make([]interface{}, 0, 100)
@@ -125,15 +126,16 @@ func BenchmarkDB_MultUpdate(b *testing.B) {
 		})
 	}
 
-	db := newDB(a)
+	tx, err := newDB(a).Begin()
+	a.NotError(err)
 	defer func() {
-		db.Drop(&bench{})
+		tx.Drop(&bench{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&bench{}))
-	a.NotError(db.Insert(ms...))
+	a.NotError(tx.Create(&bench{}))
+	a.NotError(tx.Insert(ms...))
 
 	i := 0
 	for _, m := range ms {
@@ -142,7 +144,7 @@ func BenchmarkDB_MultUpdate(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		a.NotError(db.Update(ms...))
+		a.NotError(tx.Update(ms...))
 	}
 }
 
@@ -172,7 +174,7 @@ func BenchmarkDB_Select(b *testing.B) {
 }
 
 // mysql: BenchmarkDB_MultSelect	     100	  18494929 ns/op
-func BenchmarkDB_MultSelect(b *testing.B) {
+func BenchmarkTx_MultSelect(b *testing.B) {
 	a := assert.New(b)
 
 	ms := make([]interface{}, 0, 100)
@@ -184,15 +186,16 @@ func BenchmarkDB_MultSelect(b *testing.B) {
 		})
 	}
 
-	db := newDB(a)
+	tx, err := newDB(a).Begin()
+	a.NotError(err)
 	defer func() {
-		db.Drop(&bench{})
+		tx.Drop(&bench{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&bench{}))
-	a.NotError(db.Insert(ms...))
+	a.NotError(tx.Create(&bench{}))
+	a.NotError(tx.Insert(ms...))
 
 	i := 0
 	for _, m := range ms {
@@ -201,7 +204,7 @@ func BenchmarkDB_MultSelect(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		a.NotError(db.Select(ms...))
+		a.NotError(tx.Select(ms...))
 	}
 }
 
@@ -235,7 +238,7 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 }
 
 // mysql: BenchmarkDB_WhereSelect	   10000	    182159 ns/op
-func BenchmarkDB_WhereSelect(b *testing.B) {
+func BenchmarkTx_WhereSelect(b *testing.B) {
 	a := assert.New(b)
 
 	ms := make([]interface{}, 0, 100)
@@ -247,15 +250,16 @@ func BenchmarkDB_WhereSelect(b *testing.B) {
 		})
 	}
 
-	db := newDB(a)
+	tx, err := newDB(a).Begin()
+	a.NotError(err)
 	defer func() {
-		db.Drop(&bench{})
+		tx.Drop(&bench{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&bench{}))
-	a.NotError(db.Insert(ms...))
+	a.NotError(tx.Create(&bench{}))
+	a.NotError(tx.Insert(ms...))
 
 	models := make([]*bench, 0, 100)
 	for i := 0; i < cap(models); i++ {
@@ -266,7 +270,7 @@ func BenchmarkDB_WhereSelect(b *testing.B) {
 		})
 	}
 	for i := 0; i < b.N; i++ {
-		a.NotError(db.Where("id>?", i).Table("#bench").Select(true, models))
+		a.NotError(tx.Where("id>?", i).Table("#bench").Select(true, models))
 	}
 }
 
@@ -293,45 +297,6 @@ func BenchmarkDB_Count(b *testing.B) {
 	be := &bench{Name: "name"}
 	for i := 0; i < b.N; i++ {
 		count, _ := db.Count(be)
-		if count < 1 {
-			b.Error("count:", count)
-		}
-	}
-}
-
-// mysql: BenchmarkDB_MultCount	      50	  23475370 ns/op
-func BenchmarkDB_MultCount(b *testing.B) {
-	a := assert.New(b)
-
-	ms := make([]interface{}, 0, 100)
-	for i := 0; i < cap(ms); i++ {
-		ms = append(ms, &bench{
-			Name: "name-" + strconv.Itoa(i),
-			Pass: "pass",
-			Site: "http://www.github.com/issue9/orm",
-		})
-	}
-
-	db := newDB(a)
-	defer func() {
-		db.Drop(&bench{})
-		closeDB(a)
-	}()
-
-	// 构造数据
-	a.NotError(db.Create(&bench{}))
-	a.NotError(db.Insert(ms...))
-
-	models := make([]interface{}, 0, 100)
-	for i := 0; i < cap(models); i++ {
-		models = append(models, &bench{
-			Name: "name-" + strconv.Itoa(i),
-			Pass: "pass",
-			Site: "http://www.github.com/issue9/orm",
-		})
-	}
-	for i := 0; i < b.N; i++ {
-		count, _ := db.Count(models...)
 		if count < 1 {
 			b.Error("count:", count)
 		}
