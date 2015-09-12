@@ -33,60 +33,6 @@ func BenchmarkDB_Insert(b *testing.B) {
 	}
 }
 
-// mysql: BenchmarkDB_MultInsert	      50	  23436852 ns/op
-func BenchmarkTx_MultInsert(b *testing.B) {
-	a := assert.New(b)
-
-	ms := make([]interface{}, 0, 100)
-	for i := 0; i < cap(ms); i++ {
-		ms = append(ms, &bench{
-			Name: "name",
-			Pass: "pass",
-			Site: "http://www.github.com/issue9/orm",
-		})
-	}
-
-	tx, err := newDB(a).Begin()
-	a.NotError(err)
-	defer func() {
-		tx.Drop(&bench{})
-		closeDB(a)
-	}()
-
-	a.NotError(tx.Create(&bench{}))
-
-	for i := 0; i < b.N; i++ {
-		a.NotError(tx.Insert(ms...))
-	}
-}
-
-// mysql: BenchmarkDB_InsertMany	     500	   2349282 ns/op
-func BenchmarkTx_InsertMany(b *testing.B) {
-	a := assert.New(b)
-
-	ms := make([]*bench, 0, 100)
-	for i := 0; i < cap(ms); i++ {
-		ms = append(ms, &bench{
-			Name: "name",
-			Pass: "pass",
-			Site: "http://www.github.com/issue9/orm",
-		})
-	}
-
-	tx, err := newDB(a).Begin()
-	a.NotError(err)
-	defer func() {
-		tx.Drop(&bench{})
-		closeDB(a)
-	}()
-
-	a.NotError(tx.Create(&bench{}))
-
-	for i := 0; i < b.N; i++ {
-		a.NotError(tx.InsertMany(ms))
-	}
-}
-
 // mysql: BenchmarkDB_Update	    5000	    290209 ns/op
 func BenchmarkDB_Update(b *testing.B) {
 	a := assert.New(b)
@@ -113,41 +59,6 @@ func BenchmarkDB_Update(b *testing.B) {
 	}
 }
 
-// mysql: BenchmarkDB_MultUpdate	      50	  28662471 ns/op
-func BenchmarkTx_MultUpdate(b *testing.B) {
-	a := assert.New(b)
-
-	ms := make([]interface{}, 0, 100)
-	for i := 0; i < cap(ms); i++ {
-		ms = append(ms, &bench{
-			Name: "name",
-			Pass: "pass",
-			Site: "http://www.github.com/issue9/orm",
-		})
-	}
-
-	tx, err := newDB(a).Begin()
-	a.NotError(err)
-	defer func() {
-		tx.Drop(&bench{})
-		closeDB(a)
-	}()
-
-	// 构造数据
-	a.NotError(tx.Create(&bench{}))
-	a.NotError(tx.Insert(ms...))
-
-	i := 0
-	for _, m := range ms {
-		i++
-		m.(*bench).ID = i
-	}
-
-	for i := 0; i < b.N; i++ {
-		a.NotError(tx.Update(ms...))
-	}
-}
-
 // mysql: BenchmarkDB_Select	   10000	    181897 ns/op
 func BenchmarkDB_Select(b *testing.B) {
 	a := assert.New(b)
@@ -170,41 +81,6 @@ func BenchmarkDB_Select(b *testing.B) {
 	m.ID = 1
 	for i := 0; i < b.N; i++ {
 		a.NotError(db.Select(m))
-	}
-}
-
-// mysql: BenchmarkDB_MultSelect	     100	  18494929 ns/op
-func BenchmarkTx_MultSelect(b *testing.B) {
-	a := assert.New(b)
-
-	ms := make([]interface{}, 0, 100)
-	for i := 0; i < cap(ms); i++ {
-		ms = append(ms, &bench{
-			Name: "name",
-			Pass: "pass",
-			Site: "http://www.github.com/issue9/orm",
-		})
-	}
-
-	tx, err := newDB(a).Begin()
-	a.NotError(err)
-	defer func() {
-		tx.Drop(&bench{})
-		closeDB(a)
-	}()
-
-	// 构造数据
-	a.NotError(tx.Create(&bench{}))
-	a.NotError(tx.Insert(ms...))
-
-	i := 0
-	for _, m := range ms {
-		i++
-		m.(*bench).ID = i
-	}
-
-	for i := 0; i < b.N; i++ {
-		a.NotError(tx.Select(ms...))
 	}
 }
 
@@ -234,43 +110,6 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 			"pass": "p1",
 			"site": "s1",
 		}))
-	}
-}
-
-// mysql: BenchmarkDB_WhereSelect	   10000	    182159 ns/op
-func BenchmarkTx_WhereSelect(b *testing.B) {
-	a := assert.New(b)
-
-	ms := make([]interface{}, 0, 100)
-	for i := 0; i < cap(ms); i++ {
-		ms = append(ms, &bench{
-			Name: "name",
-			Pass: "pass",
-			Site: "http://www.github.com/issue9/orm",
-		})
-	}
-
-	tx, err := newDB(a).Begin()
-	a.NotError(err)
-	defer func() {
-		tx.Drop(&bench{})
-		closeDB(a)
-	}()
-
-	// 构造数据
-	a.NotError(tx.Create(&bench{}))
-	a.NotError(tx.Insert(ms...))
-
-	models := make([]*bench, 0, 100)
-	for i := 0; i < cap(models); i++ {
-		models = append(models, &bench{
-			Name: "name",
-			Pass: "pass",
-			Site: "http://www.github.com/issue9/orm",
-		})
-	}
-	for i := 0; i < b.N; i++ {
-		a.NotError(tx.Where("id>?", i).Table("#bench").Select(true, models))
 	}
 }
 
