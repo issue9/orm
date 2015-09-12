@@ -159,7 +159,7 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		return err
 	}
 
-	if _, err := tx.Exec(false, sql.String(), vals); err != nil {
+	if _, err := tx.Exec(false, sql.String(), vals...); err != nil {
 		return err
 	}
 
