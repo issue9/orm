@@ -126,7 +126,7 @@ func (db *DB) Insert(v interface{}) error {
 	return err
 }
 
-// 删除一个或是多个数据。v可以是多个不同类型的结构指针，
+// 删除符合条件的数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Delete(v interface{}) error {
@@ -140,7 +140,7 @@ func (db *DB) Delete(v interface{}) error {
 	return err
 }
 
-// 更新一个或是多个数据。v可以是多个不同类型的结构指针，
+// 更新数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Update(v interface{}) error {
@@ -151,7 +151,7 @@ func (db *DB) Update(v interface{}) error {
 	return err
 }
 
-// 查询一个或是多个数据。v可以是多个不同类型的结构指针，
+// 查询一个符合条件的数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 // 若没有符合条件的数据，将不会对参数v做任何变动。
