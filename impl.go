@@ -217,7 +217,6 @@ func buildSelectSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 // 若不存在此两个类型的字段，则返回错误信息。
 // 若objs为空，则不发生任何操作。
 func buildUpdateSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
-
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return nil, err
