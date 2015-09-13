@@ -16,6 +16,8 @@ import (
 	"github.com/issue9/orm/forward"
 )
 
+var ErrInvalidKind = errors.New("不支持的reflect.Kind()，只能是结构体或是结构体指针")
+
 // DB与Tx的共有接口，方便以下方法调用。
 type engine interface {
 	Dialect() forward.Dialect
@@ -116,7 +118,7 @@ func buildCreateSQL(sql *bytes.Buffer, e engine, v interface{}) error {
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return fmt.Errorf("orm.buildCreateSQL:类型必须为结构体或是结构体指针")
+		return ErrInvalidKind
 	}
 
 	sql.WriteString("CREATE TABLE IF NOT EXISTS ")
@@ -146,7 +148,7 @@ func buildInsertSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return nil, errors.New("orm.buildInsertSQL:类型必须为结构体或是结构体指针")
+		return nil, ErrInvalidKind
 	}
 
 	sql.WriteString("INSERT INTO ")
@@ -200,7 +202,7 @@ func buildSelectSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return nil, errors.New("orm.buildSelectSQL:类型必须为结构体或是结构体指针")
+		return nil, ErrInvalidKind
 	}
 
 	sql.Reset()
@@ -227,7 +229,7 @@ func buildUpdateSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return nil, errors.New("orm.buildUpdateSQL:类型必须为结构体或是结构体指针")
+		return nil, ErrInvalidKind
 	}
 
 	vals := make([]interface{}, 0, 10)
@@ -272,7 +274,7 @@ func buildDeleteSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("orm.buildDeleteSQL:类型必须为结构体或是结构体指针")
+		return nil, ErrInvalidKind
 	}
 
 	sql.WriteString("DELETE FROM ")
@@ -330,7 +332,7 @@ func count(e engine, v interface{}) (int, error) {
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return 0, errors.New("orm.count:参数v类型必须为结构体或是结构体指针")
+		return 0, ErrInvalidKind
 	}
 
 	sql := bytes.NewBufferString("SELECT COUNT(*) AS count FROM ")
@@ -367,7 +369,7 @@ func buildInsertManySQL(sql *bytes.Buffer, e engine, rval reflect.Value) ([]inte
 		}
 
 		if irval.Kind() != reflect.Struct {
-			return nil, fmt.Errorf("orm.buildInsertManySQL:第[%v]个元素的类型必须为结构体或是结构体指针，当前实际为:[%v]", i, irval.Kind())
+			return nil, ErrInvalidKind
 		}
 
 		m, err := forward.NewModel(irval.Interface())
