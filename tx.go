@@ -81,43 +81,31 @@ func (tx *Tx) Rollback() error {
 }
 
 // 插入一个或多个数据。
-func (tx *Tx) Insert(objs ...interface{}) error {
+func (tx *Tx) Insert(v interface{}) (sql.Result, error) {
 	sql := new(bytes.Buffer)
-	for _, v := range objs {
-		vals, err := buildInsertSQL(sql, tx, v)
-		if err != nil {
-			return err
-		}
-
-		if _, err = tx.Exec(false, sql.String(), vals...); err != nil {
-			return err
-		}
-		sql.Reset()
+	vals, err := buildInsertSQL(sql, tx, v)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	return tx.Exec(false, sql.String(), vals...)
 }
 
-func (tx *Tx) Select(objs ...interface{}) error {
+func (tx *Tx) Select(v interface{}) error {
 	sql := new(bytes.Buffer)
-	for _, v := range objs {
-		vals, err := buildInsertSQL(sql, tx, v)
-		if err != nil {
-			return err
-		}
-
-		rows, err := tx.Query(false, sql.String(), vals...)
-		if err != nil {
-			return err
-		}
-
-		if cnt, err := fetch.Obj(v, rows); err != nil || cnt <= 0 {
-			rows.Close()
-			return err
-		}
-		rows.Close()
-		sql.Reset()
+	vals, err := buildSelectSQL(sql, tx, v)
+	if err != nil {
+		return err
 	}
-	return nil
+
+	rows, err := tx.Query(false, sql.String(), vals...)
+	if err != nil {
+		return err
+	}
+
+	_, err = fetch.Obj(v, rows)
+	rows.Close()
+	return err
 }
 
 // 插入多条相同的数据。若需要向某张表中插入多条记录，
@@ -138,11 +126,12 @@ func (tx *Tx) InsertMany(v interface{}) error {
 
 	switch rval.Kind() {
 	case reflect.Struct: // 单个元素
-		return tx.Insert(v)
+		_, err := tx.Insert(v)
+		return err
 	case reflect.Array, reflect.Slice:
 		if !tx.Dialect().SupportInsertMany() {
 			for i := 0; i < rval.Len(); i++ {
-				if err := tx.Insert(rval.Index(i).Interface()); err != nil {
+				if _, err := tx.Insert(rval.Index(i).Interface()); err != nil {
 					return err
 				}
 			}
@@ -166,7 +155,111 @@ func (tx *Tx) InsertMany(v interface{}) error {
 }
 
 // 更新一个或多个类型。
-func (tx *Tx) Update(objs ...interface{}) error {
+func (tx *Tx) Update(v interface{}) (sql.Result, error) {
+	sql := new(bytes.Buffer)
+
+	vals, err := buildUpdateSQL(sql, tx, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx.Exec(false, sql.String(), vals...)
+}
+
+// 删除一个或是多个数据。
+func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
+	sql := new(bytes.Buffer)
+	vals, err := buildDeleteSQL(sql, tx, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx.Exec(false, sql.String(), vals...)
+}
+
+// 查询符合v条件的记录数量。
+// v中的所有非零字段都将参与查询。
+func (tx *Tx) Count(v interface{}) (int, error) {
+	return count(tx, v)
+}
+
+// 创建数据表。
+func (tx *Tx) Create(v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildCreateSQL(sql, tx, v); err != nil {
+		return err
+	}
+
+	_, err := tx.Exec(false, sql.String())
+	return err
+
+}
+
+// 删除表结构及数据。
+func (tx *Tx) Drop(v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildDropSQL(sql, tx, v); err != nil {
+		return err
+	}
+
+	_, err := tx.Exec(false, sql.String())
+	return err
+
+}
+
+// 清除表内容，重置ai，但保留表结构。
+func (tx *Tx) Truncate(v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildTruncateSQL(sql, tx, v); err != nil {
+		return err
+	}
+
+	_, err := tx.Exec(false, sql.String())
+	return err
+}
+
+// 插入一个或多个数据。
+func (tx *Tx) MultInsert(objs ...interface{}) error {
+	sql := new(bytes.Buffer)
+	for _, v := range objs {
+		vals, err := buildInsertSQL(sql, tx, v)
+		if err != nil {
+			return err
+		}
+
+		if _, err = tx.Exec(false, sql.String(), vals...); err != nil {
+			return err
+		}
+		sql.Reset()
+	}
+	return nil
+}
+
+func (tx *Tx) MultSelect(objs ...interface{}) error {
+	sql := new(bytes.Buffer)
+	for _, v := range objs {
+		vals, err := buildInsertSQL(sql, tx, v)
+		if err != nil {
+			return err
+		}
+
+		rows, err := tx.Query(false, sql.String(), vals...)
+		if err != nil {
+			return err
+		}
+
+		if _, err := fetch.Obj(v, rows); err != nil {
+			rows.Close()
+			return err
+		}
+		rows.Close()
+		sql.Reset()
+	}
+	return nil
+}
+
+// 更新一个或多个类型。
+func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for _, v := range objs {
 		vals, err := buildUpdateSQL(sql, tx, v)
@@ -183,7 +276,7 @@ func (tx *Tx) Update(objs ...interface{}) error {
 }
 
 // 删除一个或是多个数据。
-func (tx *Tx) Delete(objs ...interface{}) error {
+func (tx *Tx) MultDelete(objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for _, v := range objs {
 		vals, err := buildDeleteSQL(sql, tx, v)
@@ -199,14 +292,8 @@ func (tx *Tx) Delete(objs ...interface{}) error {
 	return nil
 }
 
-// 查询符合v条件的记录数量。
-// v中的所有非零字段都将参与查询。
-func (tx *Tx) Count(v interface{}) (int, error) {
-	return count(tx, v)
-}
-
 // 创建数据表。
-func (tx *Tx) Create(objs ...interface{}) error {
+func (tx *Tx) MultCreate(objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for _, v := range objs {
 		if err := buildCreateSQL(sql, tx, v); err != nil {
@@ -223,7 +310,7 @@ func (tx *Tx) Create(objs ...interface{}) error {
 }
 
 // 删除表结构及数据。
-func (tx *Tx) Drop(objs ...interface{}) error {
+func (tx *Tx) MultDrop(objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for _, v := range objs {
 		if err := buildDropSQL(sql, tx, v); err != nil {
@@ -240,7 +327,7 @@ func (tx *Tx) Drop(objs ...interface{}) error {
 }
 
 // 清除表内容，重置ai，但保留表结构。
-func (tx *Tx) Truncate(objs ...interface{}) error {
+func (tx *Tx) MultTruncate(objs ...interface{}) error {
 	sql := new(bytes.Buffer)
 	for _, v := range objs {
 		if err := buildTruncateSQL(sql, tx, v); err != nil {

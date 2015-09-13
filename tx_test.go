@@ -52,6 +52,51 @@ func TestTx_InsertMany(t *testing.T) {
 	a.Equal(u3, &userInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
 }
 
+func TestTx_Insert(t *testing.T) {
+	a := assert.New(t)
+
+	db := newDB(a)
+	defer clearData(db, a)
+
+	tx, err := db.Begin()
+	a.NotError(err)
+	a.NotError(tx.Create(&user{}))
+
+	r, err := tx.Insert(&user{
+		ID:       1,
+		Username: "u1",
+	})
+	a.NotError(err)
+	id, err := r.LastInsertId()
+	a.NotError(err).Equal(id, 1)
+
+	r, err = tx.Insert(&user{
+		ID:       2,
+		Username: "u2",
+	})
+	a.NotError(err)
+	id, err = r.LastInsertId()
+	a.NotError(err).Equal(id, 2)
+
+	r, err = tx.Insert(&user{
+		ID:       3,
+		Username: "u3",
+	})
+	a.NotError(err)
+	id, err = r.LastInsertId()
+	a.NotError(err).Equal(id, 3)
+
+	a.NotError(tx.Commit())
+
+	u1 := &user{ID: 1}
+	a.NotError(db.Select(u1))
+	a.Equal(u1, &user{ID: 1, Username: "u1"})
+
+	u3 := &user{ID: 3}
+	a.NotError(db.Select(u3))
+	a.Equal(u3, &user{ID: 3, Username: "u3"})
+}
+
 func TestTx_Update(t *testing.T) {
 	a := assert.New(t)
 
@@ -63,7 +108,7 @@ func TestTx_Update(t *testing.T) {
 	a.NotError(err).NotNil(tx)
 
 	// update
-	a.NotError(tx.Update(&userInfo{
+	a.NotError(tx.MultUpdate(&userInfo{
 		UID:       1,
 		FirstName: "firstName1",
 		LastName:  "lastName1",
@@ -96,7 +141,7 @@ func TestTx_Delete(t *testing.T) {
 	a.NotError(err)
 
 	// delete
-	a.NotError(tx.Delete(
+	a.NotError(tx.MultDelete(
 		&userInfo{
 			UID: 1,
 		},
@@ -161,7 +206,7 @@ func TestTx_Truncate(t *testing.T) {
 	// truncate之后，会重置AI
 	tx, err := db.Begin()
 	a.NotError(err)
-	a.NotError(tx.Truncate(&admin{}, &userInfo{}))
+	a.NotError(tx.MultTruncate(&admin{}, &userInfo{}))
 	a.NotError(tx.Commit())
 	hasCount(db, a, "administrators", 0)
 	hasCount(db, a, "user_info", 0)
