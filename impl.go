@@ -11,20 +11,10 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"sync"
 
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/forward"
 )
-
-// 用于管理bytes.Buffer
-var pool = sync.Pool{
-	New: func() interface{} {
-		ret := new(bytes.Buffer)
-		ret.Grow(500)
-		return ret
-	},
-}
 
 // DB与Tx的共有接口，方便以下方法调用。
 type engine interface {
@@ -68,7 +58,7 @@ func where(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("where:无法为[%v]产生where部分语句", m.Name)
+		return nil, fmt.Errorf("orm.where:无法为[%v]产生where部分语句", m.Name)
 	}
 
 	sql.WriteString(" WHERE ")
@@ -98,7 +88,7 @@ func whereAny(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value)
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("where:无法为[%v]产生where部分语句", m.Name)
+		return nil, fmt.Errorf("orm.whereAny:无法为[%v]产生where部分语句", m.Name)
 	}
 
 	sql.WriteString(" WHERE ")
@@ -126,7 +116,7 @@ func buildCreateSQL(sql *bytes.Buffer, e engine, v interface{}) error {
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return fmt.Errorf("buildCreateSQL:类型必须为结构体或是结构体指针")
+		return fmt.Errorf("orm.buildCreateSQL:类型必须为结构体或是结构体指针")
 	}
 
 	sql.WriteString("CREATE TABLE IF NOT EXISTS ")
@@ -180,7 +170,7 @@ func buildInsertSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 	}
 
 	if len(vals) == 0 {
-		return nil, errors.New("insert:未指定任何插入的列数据")
+		return nil, errors.New("orm.buildInsertSQL:未指定任何插入的列数据")
 	}
 
 	sql.Truncate(sql.Len() - 1)
@@ -340,7 +330,7 @@ func count(e engine, v interface{}) (int, error) {
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return 0, errors.New("del:参数v类型必须为结构体或是结构体指针")
+		return 0, errors.New("orm.count:参数v类型必须为结构体或是结构体指针")
 	}
 
 	sql := bytes.NewBufferString("SELECT COUNT(*) AS count FROM ")
@@ -377,7 +367,7 @@ func buildInsertManySQL(sql *bytes.Buffer, e engine, rval reflect.Value) ([]inte
 		}
 
 		if irval.Kind() != reflect.Struct {
-			return nil, fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针，当前实际为:[%v]", i, irval.Kind())
+			return nil, fmt.Errorf("orm.buildInsertManySQL:第[%v]个元素的类型必须为结构体或是结构体指针，当前实际为:[%v]", i, irval.Kind())
 		}
 
 		m, err := forward.NewModel(irval.Interface())
@@ -394,7 +384,7 @@ func buildInsertManySQL(sql *bytes.Buffer, e engine, rval reflect.Value) ([]inte
 			for name, col := range m.Cols {
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
-					return nil, fmt.Errorf("insert:未找到该名称[%v]的值", col.GoName)
+					return nil, fmt.Errorf("orm.buildInsertManySQL:未找到该名称[%v]的值", col.GoName)
 				}
 
 				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
@@ -417,7 +407,7 @@ func buildInsertManySQL(sql *bytes.Buffer, e engine, rval reflect.Value) ([]inte
 			sql.WriteByte(')')
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
-				return nil, errors.New("insert:参数v中包含了不同类型的元素")
+				return nil, errors.New("orm.buildInsertManySQL:参数v中包含了不同类型的元素")
 			}
 
 			sql.WriteString(",(")
@@ -425,7 +415,7 @@ func buildInsertManySQL(sql *bytes.Buffer, e engine, rval reflect.Value) ([]inte
 				col := m.Cols[name]
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
-					return nil, fmt.Errorf("insert:未找到该名称[%v]的值", col.GoName)
+					return nil, fmt.Errorf("orm.buildInsertManySQL:未找到该名称[%v]的值", col.GoName)
 				}
 
 				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
