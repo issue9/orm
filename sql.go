@@ -24,9 +24,7 @@ const (
 	desc
 )
 
-var (
-	ErrEmptyTableName = errors.New("未指定表名")
-)
+var ErrEmptyTableName = errors.New("未指定表名")
 
 // 以函数链的方式产生SQL语句。
 type SQL struct {

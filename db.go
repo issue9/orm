@@ -118,37 +118,41 @@ func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
 }
 
 // 插入数据，若需一次性插入多条数据，请使用tx.Insert()。
-func (db *DB) Insert(v interface{}) error {
+func (db *DB) Insert(v interface{}) (sql.Result, error) {
 	sql := new(bytes.Buffer)
 	vals, err := buildInsertSQL(sql, db, v)
+	if err != nil {
+		return nil, err
+	}
 
-	_, err = db.Exec(false, sql.String(), vals...)
-	return err
+	return db.Exec(false, sql.String(), vals...)
 }
 
 // 删除符合条件的数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
-func (db *DB) Delete(v interface{}) error {
+func (db *DB) Delete(v interface{}) (sql.Result, error) {
 	sql := new(bytes.Buffer)
 	vals, err := buildDeleteSQL(sql, db, v)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = db.Exec(false, sql.String(), vals...)
-	return err
+	return db.Exec(false, sql.String(), vals...)
 }
 
 // 更新数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
-func (db *DB) Update(v interface{}) error {
+func (db *DB) Update(v interface{}) (sql.Result, error) {
 	sql := new(bytes.Buffer)
 
 	vals, err := buildUpdateSQL(sql, db, v)
-	_, err = db.Exec(false, sql.String(), vals...)
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return db.Exec(false, sql.String(), vals...)
 }
 
 // 查询一个符合条件的数据。
@@ -158,13 +162,17 @@ func (db *DB) Update(v interface{}) error {
 func (db *DB) Select(v interface{}) error {
 	sql := new(bytes.Buffer)
 	vals, err := buildSelectSQL(sql, db, v)
+	if err != nil {
+		return err
+	}
+
 	rows, err := db.Query(false, sql.String(), vals...)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	_, err = fetch.Obj(v, rows)
+	rows.Close()
 	return err
 }
 

@@ -7,7 +7,6 @@ package orm
 import (
 	"bytes"
 	"database/sql"
-	"errors"
 	"reflect"
 
 	"github.com/issue9/orm/fetch"
@@ -150,7 +149,7 @@ func (tx *Tx) InsertMany(v interface{}) error {
 			return nil
 		}
 	default:
-		return errors.New("inert:参数v的类型只能是struct或是数组")
+		return ErrInvalidKind
 	}
 
 	sql := new(bytes.Buffer)

@@ -31,22 +31,30 @@ func initData(db *DB, a *assert.Assertion) {
 	a.NotError(db.Create(&admin{}))
 	a.NotError(db.Create(&userInfo{}))
 
-	a.NotError(db.Insert(&admin{
+	insert := func(obj interface{}) {
+		r, err := db.Insert(obj)
+		a.NotError(err)
+		cnt, err := r.RowsAffected()
+		a.NotError(err).Equal(cnt, 1)
+	}
+
+	insert(&admin{
 		user:  user{Username: "username1", Password: "password1"},
 		Email: "email1",
 		Group: 1,
-	}))
-	a.NotError(db.Insert(&userInfo{
+	})
+
+	insert(&userInfo{
 		UID:       1,
 		FirstName: "f1",
 		LastName:  "l1",
 		Sex:       "female",
-	}))
-	a.NotError(db.Insert(&userInfo{ // sex使用默认值
+	})
+	insert(&userInfo{ // sex使用默认值
 		UID:       2,
 		FirstName: "f2",
 		LastName:  "l2",
-	}))
+	})
 
 	// select
 	u1 := &userInfo{UID: 1}
@@ -79,18 +87,25 @@ func TestDB_Update(t *testing.T) {
 	defer clearData(db, a)
 
 	// update
-	a.NotError(db.Update(&userInfo{
+	r, err := db.Update(&userInfo{
 		UID:       1,
 		FirstName: "firstName1",
 		LastName:  "lastName1",
 		Sex:       "sex1",
-	}))
-	a.NotError(db.Update(&userInfo{
+	})
+	a.NotError(err)
+	cnt, err := r.RowsAffected()
+	a.NotError(err).Equal(1, cnt)
+
+	r, err = db.Update(&userInfo{
 		UID:       2,
 		FirstName: "firstName2",
 		LastName:  "lastName2",
 		Sex:       "sex2",
-	}))
+	})
+	a.NotError(err)
+	cnt, err = r.RowsAffected()
+	a.NotError(err).Equal(1, cnt)
 
 	u1 := &userInfo{UID: 1}
 	a.NotError(db.Select(u1))
@@ -109,20 +124,31 @@ func TestDB_Delete(t *testing.T) {
 	defer clearData(db, a)
 
 	// delete
-	a.NotError(db.Delete(&userInfo{UID: 1}))
+	r, err := db.Delete(&userInfo{UID: 1})
+	a.NotError(err)
+	cnt, err := r.RowsAffected()
+	a.NotError(err).Equal(cnt, 1)
 
-	a.NotError(db.Delete(
+	r, err = db.Delete(
 		&userInfo{
 			LastName:  "l2",
 			FirstName: "f2",
-		}))
-	a.NotError(db.Delete(&admin{Email: "email1"}))
+		})
+	a.NotError(err)
+	cnt, err = r.RowsAffected()
+	a.NotError(err).Equal(cnt, 1)
+
+	r, err = db.Delete(&admin{Email: "email1"})
+	a.NotError(err)
+	cnt, err = r.RowsAffected()
+	a.NotError(err).Equal(cnt, 1)
 
 	hasCount(db, a, "user_info", 0)
 	hasCount(db, a, "administrators", 0)
 
 	// delete并不会重置ai计数
-	a.NotError(db.Insert(&admin{Group: 1, Email: "email1"}))
+	_, err = db.Insert(&admin{Group: 1, Email: "email1"})
+	a.NotError(err)
 	a1 := &admin{Email: "email1"}
 	a.NotError(db.Select(a1))
 	a.Equal(a1.ID, 2) // a1.ID为一个自增列,不会在delete中被重置
@@ -166,7 +192,9 @@ func TestDB_Truncate(t *testing.T) {
 	hasCount(db, a, "administrators", 0)
 	hasCount(db, a, "user_info", 0)
 
-	a.NotError(db.Insert(&admin{Group: 1, Email: "email1"}))
+	_, err := db.Insert(&admin{Group: 1, Email: "email1"})
+	a.NotError(err)
+
 	a1 := &admin{Email: "email1"}
 	a.NotError(db.Select(a1))
 	a.Equal(1, a1.ID)
@@ -181,5 +209,6 @@ func TestDB_Drop(t *testing.T) {
 
 	a.NotError(db.Drop(&userInfo{}))
 	a.NotError(db.Drop(&admin{}))
-	a.Error(db.Insert(&admin{}))
+	r, err := db.Insert(&admin{})
+	a.Error(err).Nil(r)
 }
