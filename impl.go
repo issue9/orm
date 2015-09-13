@@ -356,6 +356,84 @@ func count(e engine, v interface{}) (int, error) {
 	return strconv.Atoi(data[0])
 }
 
+func create(e engine, v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildCreateSQL(sql, e, v); err != nil {
+		return err
+	}
+
+	_, err := e.Exec(false, sql.String())
+	return err
+}
+
+func drop(e engine, v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildDropSQL(sql, e, v); err != nil {
+		return err
+	}
+
+	_, err := e.Exec(false, sql.String())
+	return err
+}
+
+func truncate(e engine, v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildTruncateSQL(sql, e, v); err != nil {
+		return err
+	}
+
+	_, err := e.Exec(false, sql.String())
+	return err
+}
+
+func insert(e engine, v interface{}) (sql.Result, error) {
+	sql := new(bytes.Buffer)
+	vals, err := buildInsertSQL(sql, e, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.Exec(false, sql.String(), vals...)
+}
+
+func find(e engine, v interface{}) error {
+	sql := new(bytes.Buffer)
+	vals, err := buildSelectSQL(sql, e, v)
+	if err != nil {
+		return err
+	}
+
+	rows, err := e.Query(false, sql.String(), vals...)
+	if err != nil {
+		return err
+	}
+
+	_, err = fetch.Obj(v, rows)
+	rows.Close()
+	return err
+}
+
+func update(e engine, v interface{}) (sql.Result, error) {
+	sql := new(bytes.Buffer)
+
+	vals, err := buildUpdateSQL(sql, e, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.Exec(false, sql.String(), vals...)
+}
+
+func del(e engine, v interface{}) (sql.Result, error) {
+	sql := new(bytes.Buffer)
+	vals, err := buildDeleteSQL(sql, e, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.Exec(false, sql.String(), vals...)
+}
+
 func buildInsertManySQL(sql *bytes.Buffer, e engine, rval reflect.Value) ([]interface{}, error) {
 	sql.WriteString("INSERT INTO ")
 	vals := make([]interface{}, 0, 10)

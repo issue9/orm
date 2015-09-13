@@ -82,30 +82,11 @@ func (tx *Tx) Rollback() error {
 
 // 插入一个或多个数据。
 func (tx *Tx) Insert(v interface{}) (sql.Result, error) {
-	sql := new(bytes.Buffer)
-	vals, err := buildInsertSQL(sql, tx, v)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx.Exec(false, sql.String(), vals...)
+	return insert(tx, v)
 }
 
 func (tx *Tx) Select(v interface{}) error {
-	sql := new(bytes.Buffer)
-	vals, err := buildSelectSQL(sql, tx, v)
-	if err != nil {
-		return err
-	}
-
-	rows, err := tx.Query(false, sql.String(), vals...)
-	if err != nil {
-		return err
-	}
-
-	_, err = fetch.Obj(v, rows)
-	rows.Close()
-	return err
+	return find(tx, v)
 }
 
 // 插入多条相同的数据。若需要向某张表中插入多条记录，
@@ -156,25 +137,12 @@ func (tx *Tx) InsertMany(v interface{}) error {
 
 // 更新一个或多个类型。
 func (tx *Tx) Update(v interface{}) (sql.Result, error) {
-	sql := new(bytes.Buffer)
-
-	vals, err := buildUpdateSQL(sql, tx, v)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx.Exec(false, sql.String(), vals...)
+	return update(tx, v)
 }
 
 // 删除一个或是多个数据。
 func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
-	sql := new(bytes.Buffer)
-	vals, err := buildDeleteSQL(sql, tx, v)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx.Exec(false, sql.String(), vals...)
+	return del(tx, v)
 }
 
 // 查询符合v条件的记录数量。
@@ -185,37 +153,18 @@ func (tx *Tx) Count(v interface{}) (int, error) {
 
 // 创建数据表。
 func (tx *Tx) Create(v interface{}) error {
-	sql := new(bytes.Buffer)
-	if err := buildCreateSQL(sql, tx, v); err != nil {
-		return err
-	}
-
-	_, err := tx.Exec(false, sql.String())
-	return err
+	return create(tx, v)
 
 }
 
 // 删除表结构及数据。
 func (tx *Tx) Drop(v interface{}) error {
-	sql := new(bytes.Buffer)
-	if err := buildDropSQL(sql, tx, v); err != nil {
-		return err
-	}
-
-	_, err := tx.Exec(false, sql.String())
-	return err
-
+	return drop(tx, v)
 }
 
 // 清除表内容，重置ai，但保留表结构。
 func (tx *Tx) Truncate(v interface{}) error {
-	sql := new(bytes.Buffer)
-	if err := buildTruncateSQL(sql, tx, v); err != nil {
-		return err
-	}
-
-	_, err := tx.Exec(false, sql.String())
-	return err
+	return truncate(tx, v)
 }
 
 // 插入一个或多个数据。

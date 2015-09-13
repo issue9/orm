@@ -5,11 +5,9 @@
 package orm
 
 import (
-	"bytes"
 	"database/sql"
 	"strings"
 
-	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/forward"
 )
 
@@ -119,40 +117,21 @@ func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
 
 // 插入数据，若需一次性插入多条数据，请使用tx.Insert()。
 func (db *DB) Insert(v interface{}) (sql.Result, error) {
-	sql := new(bytes.Buffer)
-	vals, err := buildInsertSQL(sql, db, v)
-	if err != nil {
-		return nil, err
-	}
-
-	return db.Exec(false, sql.String(), vals...)
+	return insert(db, v)
 }
 
 // 删除符合条件的数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Delete(v interface{}) (sql.Result, error) {
-	sql := new(bytes.Buffer)
-	vals, err := buildDeleteSQL(sql, db, v)
-	if err != nil {
-		return nil, err
-	}
-
-	return db.Exec(false, sql.String(), vals...)
+	return del(db, v)
 }
 
 // 更新数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Update(v interface{}) (sql.Result, error) {
-	sql := new(bytes.Buffer)
-
-	vals, err := buildUpdateSQL(sql, db, v)
-	if err != nil {
-		return nil, err
-	}
-
-	return db.Exec(false, sql.String(), vals...)
+	return update(db, v)
 }
 
 // 查询一个符合条件的数据。
@@ -160,20 +139,7 @@ func (db *DB) Update(v interface{}) (sql.Result, error) {
 // 若两者都不存在，则将返回error
 // 若没有符合条件的数据，将不会对参数v做任何变动。
 func (db *DB) Select(v interface{}) error {
-	sql := new(bytes.Buffer)
-	vals, err := buildSelectSQL(sql, db, v)
-	if err != nil {
-		return err
-	}
-
-	rows, err := db.Query(false, sql.String(), vals...)
-	if err != nil {
-		return err
-	}
-
-	_, err = fetch.Obj(v, rows)
-	rows.Close()
-	return err
+	return find(db, v)
 }
 
 // 查询符合v条件的记录数量。
@@ -184,36 +150,17 @@ func (db *DB) Count(v interface{}) (int, error) {
 
 // 创建一张或多张表。
 func (db *DB) Create(v interface{}) error {
-	sql := new(bytes.Buffer)
-	if err := buildCreateSQL(sql, db, v); err != nil {
-		return err
-	}
-
-	_, err := db.Exec(false, sql.String())
-	return err
+	return create(db, v)
 }
 
 // 删除一张或多张表。
 func (db *DB) Drop(v interface{}) error {
-	sql := new(bytes.Buffer)
-	if err := buildDropSQL(sql, db, v); err != nil {
-		return err
-	}
-
-	_, err := db.Exec(false, sql.String())
-	return err
+	return drop(db, v)
 }
 
 // 清空一张表。
 func (db *DB) Truncate(v interface{}) error {
-	sql := new(bytes.Buffer)
-
-	if err := buildTruncateSQL(sql, db, v); err != nil {
-		return err
-	}
-
-	_, err := db.Exec(false, sql.String())
-	return err
+	return truncate(db, v)
 }
 
 // 通过SQL实例。
