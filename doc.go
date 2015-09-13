@@ -121,14 +121,14 @@
 // Create:
 // 可以通过Engine.Create()或是Tx.Create()创建一张表。
 //  // 创建表
-//  e.Create(&User{})
-//  // 创建多个表
-//  e.Create(&User{},&Email{})
+//  db.Create(&User{})
+//  // 创建多个表，同时创建多张表，主使用Tx.Create
+//  tx.Create(&User{},&Email{})
 //
 // Update:
 //  // 将id为1的记录的FirstName更改为abc；对象中的零值不会被提交。
-//  e.Update(&User{Id:1,FirstName:"abc"})
-//  e.Where("id=?",1).Table("#table").Set("FirstName", "abc").Update(nil)
+//  db.Update(&User{Id:1,FirstName:"abc"})
+//  db.Where("id=?",1).Table("#table").Set("FirstName", "abc").Update(nil)
 //
 // Delete:
 //  // 删除id为1的记录
@@ -137,9 +137,9 @@
 //
 // Insert:
 //  // 插入一条数据
-//  e.Insert(&User{Id:1,FirstName:"abc"})
+//  db.Insert(&User{Id:1,FirstName:"abc"})
 //  // 一次性插入多条数据
-//  e.Insert(&User{Id:1,FirstName:"abc"},&User{Id:1,FirstName:"abc"})
+//  tx.Insert(&User{Id:1,FirstName:"abc"},&User{Id:1,FirstName:"abc"})
 //
 // Select:
 //  // 导出id=1的数据
@@ -160,7 +160,8 @@
 //
 // 默认的DB是不支持事务的，若需要事务支持，则需要调用DB.Begin()
 // 返回事务对象Tx，当然并不是所有的数据库都支持事务操作的。
-// Tx拥有与DB相似的接口。
+// Tx拥有一组与DB相同的接口，另外还提供了一组以`Mult`开头的函数，
+// 用以同时操作多条记录的。
 package orm
 
 // 数据表的更改，涉及到很多方面：

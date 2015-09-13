@@ -25,103 +25,94 @@ func TestNewDB(t *testing.T) {
 // 初始化测试数据，同时可用于DB.Inert的测试
 // 清空其它数据，初始化成原始的测试数据
 func initData(db *DB, a *assert.Assertion) {
-	a.NotError(db.Drop(&admin{}, &userInfo{}, &user{}))
-	a.NotError(db.Create(&admin{}, &userInfo{}))
+	a.NotError(db.Drop(&user{}))
+	a.NotError(db.Drop(&admin{}))
+	a.NotError(db.Drop(&userInfo{}))
+	a.NotError(db.Create(&admin{}))
+	a.NotError(db.Create(&userInfo{}))
 
-	a.NotError(db.Insert(&admin{
+	insert := func(obj interface{}) {
+		r, err := db.Insert(obj)
+		a.NotError(err)
+		cnt, err := r.RowsAffected()
+		a.NotError(err).Equal(cnt, 1)
+	}
+
+	insert(&admin{
 		user:  user{Username: "username1", Password: "password1"},
 		Email: "email1",
 		Group: 1,
-	}, &userInfo{
+	})
+
+	insert(&userInfo{
 		UID:       1,
 		FirstName: "f1",
 		LastName:  "l1",
 		Sex:       "female",
-	}, &userInfo{ // sex使用默认值
+	})
+	insert(&userInfo{ // sex使用默认值
 		UID:       2,
 		FirstName: "f2",
 		LastName:  "l2",
-	}))
+	})
 
 	// select
 	u1 := &userInfo{UID: 1}
 	u2 := &userInfo{LastName: "l2", FirstName: "f2"}
 	a1 := &admin{Email: "email1"}
 
-	a.NotError(db.Select(u1, u2, a1))
+	a.NotError(db.Select(u1))
 	a.Equal(u1, &userInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "female"})
+
+	a.NotError(db.Select(u2))
 	a.Equal(u2, &userInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
+
+	a.NotError(db.Select(a1))
 	a.Equal(a1.Username, "username1")
 }
 
-func TestDB_InsertMany(t *testing.T) {
-	a := assert.New(t)
-
-	db := newDB(a)
-	defer func() {
-		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
-		a.NotError(db.Close())
-		closeDB(a)
-	}()
-
-	a.NotError(db.Create(&userInfo{}))
-
-	a.NotError(db.InsertMany([]*userInfo{
-		&userInfo{
-			UID:       1,
-			FirstName: "f1",
-			LastName:  "l1",
-		}, &userInfo{
-			UID:       2,
-			FirstName: "f2",
-			LastName:  "l2",
-		}, &userInfo{
-			UID:       3,
-			FirstName: "f3",
-			LastName:  "l3",
-		}}))
-
-	// select
-	u1 := &userInfo{UID: 1}
-	u2 := &userInfo{LastName: "l2", FirstName: "f2"}
-	u3 := &userInfo{UID: 3}
-
-	a.NotError(db.Select(u1, u2, u3))
-	a.Equal(u1, &userInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "male"})
-	a.Equal(u2, &userInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
-	a.Equal(u3, &userInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
+func clearData(db *DB, a *assert.Assertion) {
+	a.NotError(db.Drop(&admin{}))
+	a.NotError(db.Drop(&user{}))
+	a.NotError(db.Drop(&userInfo{}))
+	a.NotError(db.Close())
+	closeDB(a)
 }
 
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t)
 
 	db := newDB(a)
-	defer func() {
-		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
-		a.NotError(db.Close())
-		closeDB(a)
-	}()
-
 	initData(db, a)
+	defer clearData(db, a)
 
 	// update
-	a.NotError(db.Update(&userInfo{
+	r, err := db.Update(&userInfo{
 		UID:       1,
 		FirstName: "firstName1",
 		LastName:  "lastName1",
 		Sex:       "sex1",
-	}, &userInfo{
+	})
+	a.NotError(err)
+	cnt, err := r.RowsAffected()
+	a.NotError(err).Equal(1, cnt)
+
+	r, err = db.Update(&userInfo{
 		UID:       2,
 		FirstName: "firstName2",
 		LastName:  "lastName2",
 		Sex:       "sex2",
-	}))
+	})
+	a.NotError(err)
+	cnt, err = r.RowsAffected()
+	a.NotError(err).Equal(1, cnt)
 
 	u1 := &userInfo{UID: 1}
-	u2 := &userInfo{LastName: "lastName2", FirstName: "firstName2"}
-
-	a.NotError(db.Select(u1, u2))
+	a.NotError(db.Select(u1))
 	a.Equal(u1, &userInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "sex1"})
+
+	u2 := &userInfo{LastName: "lastName2", FirstName: "firstName2"}
+	a.NotError(db.Select(u2))
 	a.Equal(u2, &userInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
 }
 
@@ -129,31 +120,35 @@ func TestDB_Delete(t *testing.T) {
 	a := assert.New(t)
 
 	db := newDB(a)
-	defer func() {
-		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
-		a.NotError(db.Close())
-		closeDB(a)
-	}()
-
 	initData(db, a)
+	defer clearData(db, a)
 
 	// delete
-	a.NotError(db.Delete(
-		&userInfo{
-			UID: 1,
-		},
+	r, err := db.Delete(&userInfo{UID: 1})
+	a.NotError(err)
+	cnt, err := r.RowsAffected()
+	a.NotError(err).Equal(cnt, 1)
+
+	r, err = db.Delete(
 		&userInfo{
 			LastName:  "l2",
 			FirstName: "f2",
-		},
-		&admin{Email: "email1"},
-	))
+		})
+	a.NotError(err)
+	cnt, err = r.RowsAffected()
+	a.NotError(err).Equal(cnt, 1)
+
+	r, err = db.Delete(&admin{Email: "email1"})
+	a.NotError(err)
+	cnt, err = r.RowsAffected()
+	a.NotError(err).Equal(cnt, 1)
 
 	hasCount(db, a, "user_info", 0)
 	hasCount(db, a, "administrators", 0)
 
 	// delete并不会重置ai计数
-	a.NotError(db.Insert(&admin{Group: 1, Email: "email1"}))
+	_, err = db.Insert(&admin{Group: 1, Email: "email1"})
+	a.NotError(err)
 	a1 := &admin{Email: "email1"}
 	a.NotError(db.Select(a1))
 	a.Equal(a1.ID, 2) // a1.ID为一个自增列,不会在delete中被重置
@@ -163,13 +158,8 @@ func TestDB_Count(t *testing.T) {
 	a := assert.New(t)
 
 	db := newDB(a)
-	defer func() {
-		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
-		a.NotError(db.Close())
-		closeDB(a)
-	}()
-
 	initData(db, a)
+	defer clearData(db, a)
 
 	// 单条件
 	count, err := db.Count(
@@ -179,55 +169,32 @@ func TestDB_Count(t *testing.T) {
 	)
 	a.NotError(err).Equal(1, count)
 
-	// 多条件
+	// 条件不存在
 	count, err = db.Count(
-		&userInfo{
-			UID: 1,
-		},
-		&userInfo{
-			LastName:  "l2",
-			FirstName: "f2",
-		},
-		&admin{Email: "email1"},
-	)
-	a.NotError(err).Equal(3, count)
-
-	// 多条件，部分条件不存在
-	count, err = db.Count(
-		&userInfo{
-			UID: 1,
-		},
 		&admin{Email: "email1-1000"}, // 该条件不存在
-		&userInfo{
-			LastName:  "l2",
-			FirstName: "f2",
-		},
 	)
-	a.NotError(err).Equal(2, count)
+	a.NotError(err).Equal(0, count)
 }
 
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t)
 
 	db := newDB(a)
-	defer func() {
-		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
-		a.NotError(db.Close())
-		closeDB(a)
-	}()
-
-	// 插入数据
 	initData(db, a)
+	defer clearData(db, a)
 
 	hasCount(db, a, "administrators", 1)
 	hasCount(db, a, "user_info", 2)
 
 	// truncate之后，会重置AI
-	a.NotError(db.Truncate(&admin{}, &userInfo{}))
+	a.NotError(db.Truncate(&admin{}))
+	a.NotError(db.Truncate(&userInfo{}))
 	hasCount(db, a, "administrators", 0)
 	hasCount(db, a, "user_info", 0)
 
-	a.NotError(db.Insert(&admin{Group: 1, Email: "email1"}))
+	_, err := db.Insert(&admin{Group: 1, Email: "email1"})
+	a.NotError(err)
+
 	a1 := &admin{Email: "email1"}
 	a.NotError(db.Select(a1))
 	a.Equal(1, a1.ID)
@@ -237,45 +204,11 @@ func TestDB_Drop(t *testing.T) {
 	a := assert.New(t)
 
 	db := newDB(a)
-	defer func() {
-		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
-		a.NotError(db.Close())
-		closeDB(a)
-	}()
-
 	initData(db, a)
+	defer clearData(db, a)
 
-	a.NotError(db.Drop(&admin{}, &userInfo{}))
-	a.Error(db.Insert(&admin{}))
-}
-
-func TestTX(t *testing.T) {
-	a := assert.New(t)
-
-	db := newDB(a)
-	defer func() {
-		a.NotError(db.Drop(&admin{}, &user{}, &userInfo{}))
-		a.NotError(db.Close())
-		closeDB(a)
-	}()
-
-	a.NotError(db.Create(&user{}, &userInfo{}))
-
-	// 回滚事务
-	tx, err := db.Begin()
-	a.NotError(err).NotNil(tx)
-	a.NotError(tx.Insert(&user{Username: "u1"}))
-	a.NotError(tx.Insert(&user{Username: "u2"}))
-	a.NotError(tx.Insert(&user{Username: "u3"}))
-	a.NotError(tx.Rollback())
-	hasCount(db, a, "users", 0)
-
-	// 正常提交
-	tx, err = db.Begin()
-	a.NotError(err).NotNil(tx)
-	a.NotError(tx.Insert(&user{Username: "u1"}))
-	a.NotError(tx.Insert(&user{Username: "u2"}))
-	a.NotError(tx.Insert(&user{Username: "u3"}))
-	a.NotError(tx.Commit())
-	hasCount(db, a, "users", 3)
+	a.NotError(db.Drop(&userInfo{}))
+	a.NotError(db.Drop(&admin{}))
+	r, err := db.Insert(&admin{})
+	a.Error(err).Nil(r)
 }

@@ -24,9 +24,7 @@ const (
 	desc
 )
 
-var (
-	ErrEmptyTableName = errors.New("未指定表名")
-)
+var ErrEmptyTableName = errors.New("未指定表名")
 
 // 以函数链的方式产生SQL语句。
 type SQL struct {
@@ -146,11 +144,7 @@ func (s *SQL) Delete(replace bool) (sql.Result, error) {
 		return nil, ErrEmptyTableName
 	}
 
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	sql.Reset()
-	sql.WriteString("DELETE FROM ")
+	sql := bytes.NewBufferString("DELETE FROM ")
 	s.e.Dialect().Quote(sql, s.table)
 	sql.WriteString(s.cond.String())
 	return s.e.Exec(replace, sql.String(), s.condArgs...)
@@ -167,11 +161,7 @@ func (s *SQL) Update(replace bool, data map[string]interface{}) (sql.Result, err
 		return nil, errors.New("SQL.Update:未指定需要更新的数据")
 	}
 
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	sql.Reset()
-	sql.WriteString("UPDATE ")
+	sql := bytes.NewBufferString("UPDATE ")
 	s.e.Dialect().Quote(sql, s.table)
 	vals := make([]interface{}, 0, len(data)+len(s.condArgs))
 	sql.WriteString(" SET ")
@@ -248,12 +238,8 @@ func (s *SQL) query(replace bool, cols ...string) (*sql.Rows, error) {
 		return nil, ErrEmptyTableName
 	}
 
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
 	args := make([]interface{}, 0, len(s.condArgs)) // Query对应的参数
-	sql.Reset()
-	sql.WriteString("SELECT ")
+	sql := bytes.NewBufferString("SELECT ")
 	if len(cols) == 0 {
 		sql.WriteString(" * ")
 	} else {

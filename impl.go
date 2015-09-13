@@ -11,20 +11,12 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"sync"
 
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/forward"
 )
 
-// 用于管理bytes.Buffer
-var pool = sync.Pool{
-	New: func() interface{} {
-		ret := new(bytes.Buffer)
-		ret.Grow(500)
-		return ret
-	},
-}
+var ErrInvalidKind = errors.New("不支持的reflect.Kind()，只能是结构体或是结构体指针")
 
 // DB与Tx的共有接口，方便以下方法调用。
 type engine interface {
@@ -68,7 +60,7 @@ func where(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("where:无法为[%v]产生where部分语句", m.Name)
+		return nil, fmt.Errorf("orm.where:无法为[%v]产生where部分语句", m.Name)
 	}
 
 	sql.WriteString(" WHERE ")
@@ -98,7 +90,7 @@ func whereAny(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value)
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("where:无法为[%v]产生where部分语句", m.Name)
+		return nil, fmt.Errorf("orm.whereAny:无法为[%v]产生where部分语句", m.Name)
 	}
 
 	sql.WriteString(" WHERE ")
@@ -113,408 +105,353 @@ func whereAny(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value)
 
 // 创建一个或多个数据表
 // 若objs为空，则不发生任何操作。
-func create(e engine, objs ...interface{}) error {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
+func buildCreateSQL(sql *bytes.Buffer, e engine, v interface{}) error {
 	d := e.Dialect()
-	for i, v := range objs {
-		m, err := forward.NewModel(v)
-		if err != nil {
-			return err
-		}
-
-		rval := reflect.ValueOf(v)
-		for rval.Kind() == reflect.Ptr {
-			rval = rval.Elem()
-		}
-
-		if rval.Kind() != reflect.Struct {
-			return fmt.Errorf("createMult:objs[%v]类型必须为结构体或是结构体指针", i)
-		}
-
-		sql.Reset()
-		sql.WriteString("CREATE TABLE IF NOT EXISTS ")
-		d.Quote(sql, e.Prefix()+m.Name)
-		sql.WriteByte('(')
-		d.AIColSQL(sql, m)
-		d.NoAIColSQL(sql, m)
-		d.ConstraintsSQL(sql, m)
-		sql.Truncate(sql.Len() - 1)
-		sql.WriteByte(')')
-
-		if _, err = e.Exec(false, sql.String()); err != nil {
-			return err
-		}
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return err
 	}
-
-	return nil
-}
-
-// 插入一个或多个数据
-// v可以是对象或是对象数组
-// 若objs为空，则不发生任何操作。
-func insert(e engine, objs ...interface{}) error {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	vals := make([]interface{}, 0, 10)
-
-	for i, v := range objs {
-		m, err := forward.NewModel(v)
-		if err != nil {
-			return err
-		}
-
-		rval := reflect.ValueOf(v)
-		for rval.Kind() == reflect.Ptr {
-			rval = rval.Elem()
-		}
-
-		if rval.Kind() != reflect.Struct {
-			return fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针", i)
-		}
-
-		vals = vals[:0]
-		sql.Reset()
-		sql.WriteString("INSERT INTO ")
-		e.Dialect().Quote(sql, e.Prefix()+m.Name)
-		sql.WriteByte('(')
-		for name, col := range m.Cols {
-			field := rval.FieldByName(col.GoName)
-			if !field.IsValid() {
-				return fmt.Errorf("insert:未找到该名称[%v]的值", col.GoName)
-			}
-
-			// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-			if col.Zero == field.Interface() &&
-				(col.IsAI() || col.HasDefault) {
-				continue
-			}
-
-			e.Dialect().Quote(sql, name)
-			sql.WriteByte(',')
-			vals = append(vals, field.Interface())
-		}
-
-		if len(vals) == 0 {
-			return errors.New("insert:未指定任何插入的列数据")
-		}
-
-		sql.Truncate(sql.Len() - 1)
-		sql.WriteString(")VALUES(")
-		for range vals {
-			sql.WriteString("?,")
-		}
-		sql.Truncate(sql.Len() - 1)
-		sql.WriteByte(')')
-
-		if _, err = e.Exec(false, sql.String(), vals...); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// 查找多个数据
-// 根据v的pk或中唯一索引列查找一行数据，并赋值给v
-// 若objs为空，则不发生任何操作。
-// 第一个返回参数用于表示实际有多少数据被导入到objs中。
-func find(e engine, objs ...interface{}) error {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	for i, v := range objs {
-		m, err := forward.NewModel(v)
-		if err != nil {
-			return err
-		}
-
-		rval := reflect.ValueOf(v)
-		for rval.Kind() == reflect.Ptr {
-			rval = rval.Elem()
-		}
-
-		if rval.Kind() != reflect.Struct {
-			return fmt.Errorf("find:objs[%v]类型必须为结构体或是结构体指针", i)
-		}
-
-		sql.Reset()
-		sql.WriteString("SELECT * FROM ")
-		e.Dialect().Quote(sql, e.Prefix()+m.Name)
-
-		vals, err := where(e, sql, m, rval)
-		if err != nil {
-			return err
-		}
-
-		rows, err := e.Query(false, sql.String(), vals...)
-		if err != nil {
-			return err
-		}
-
-		if cnt, err := fetch.Obj(v, rows); err != nil || cnt <= 0 {
-			rows.Close()
-			return err
-		}
-		rows.Close()
-	}
-	return nil
-}
-
-// 更新一个或多个类型。
-// 更新依据为每个对象的主键或是唯一索引列。
-// 若不存在此两个类型的字段，则返回错误信息。
-// 若objs为空，则不发生任何操作。
-func update(e engine, objs ...interface{}) error {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	vals := make([]interface{}, 0, 10)
-
-	for i, v := range objs {
-		m, err := forward.NewModel(v)
-		if err != nil {
-			return err
-		}
-
-		rval := reflect.ValueOf(v)
-		for rval.Kind() == reflect.Ptr {
-			rval = rval.Elem()
-		}
-
-		if rval.Kind() != reflect.Struct {
-			return fmt.Errorf("update:objs[%v]类型必须为结构体或是结构体指针", i)
-		}
-
-		sql.Reset()
-		vals = vals[:0]
-
-		sql.WriteString("UPDATE ")
-		e.Dialect().Quote(sql, e.Prefix()+m.Name)
-		sql.WriteString(" SET ")
-
-		for name, col := range m.Cols {
-			field := rval.FieldByName(col.GoName)
-			if !field.IsValid() {
-				return fmt.Errorf("update:未找到该名称[%v]的值", col.GoName)
-			}
-
-			// 忽略零值，TODO:还需要对比默认值
-			if col.Zero == field.Interface() {
-				continue
-			}
-
-			e.Dialect().Quote(sql, name)
-			sql.WriteString("=?,")
-			vals = append(vals, field.Interface())
-		}
-		sql.Truncate(sql.Len() - 1)
-
-		whereVals, err := where(e, sql, m, rval)
-		if err != nil {
-			return err
-		}
-		vals = append(vals, whereVals...)
-
-		if _, err = e.Exec(false, sql.String(), vals...); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// 删除objs每个元素表示的数据。
-// 以objs中每个元素的主键或是唯一索引作为where条件语句。
-// 若objs为空，则不发生任何操作。
-func del(e engine, objs ...interface{}) error {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	for i, v := range objs {
-		m, err := forward.NewModel(v)
-		if err != nil {
-			return err
-		}
-
-		rval := reflect.ValueOf(v)
-		for rval.Kind() == reflect.Ptr {
-			rval = rval.Elem()
-		}
-
-		if rval.Kind() != reflect.Struct {
-			return fmt.Errorf("del:objs[%v]类型必须为结构体或是结构体指针", i)
-		}
-
-		sql.Reset()
-		sql.WriteString("DELETE FROM ")
-		e.Dialect().Quote(sql, e.Prefix()+m.Name)
-
-		vals, err := where(e, sql, m, rval)
-		if err != nil {
-			return err
-		}
-
-		if _, err = e.Exec(false, sql.String(), vals...); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// 删除objs中指定的表名。
-// objs可以是字符串表名，或是一个表示model的实例。
-// 系统会默认给表名加上表名前缀。
-// 若objs为空，则不发生任何操作。
-func drop(e engine, objs ...interface{}) error {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	for _, v := range objs {
-		m, err := forward.NewModel(v)
-		if err != nil {
-			return err
-		}
-
-		sql.Reset()
-		sql.WriteString("DROP TABLE IF EXISTS ")
-		e.Dialect().Quote(sql, e.Prefix()+m.Name)
-		if _, err = e.Exec(false, sql.String()); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// 清空表，并重置AI计数。
-// objs可以是字符串表名，或是一个表示model的实例。
-// 系统会默认给表名加上表名前缀。
-// 若objs为空，则不发生任何操作。
-func truncate(e engine, objs ...interface{}) error {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-
-	for _, v := range objs {
-		m, err := forward.NewModel(v)
-		if err != nil {
-			return err
-		}
-
-		sql.Reset()
-		aiName := ""
-		if m.AI != nil {
-			aiName = m.AI.Name
-		}
-		e.Dialect().TruncateTableSQL(sql, e.Prefix()+m.Name, aiName)
-		if _, err = e.Exec(false, sql.String()); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// 统计符合obj条件的记录数量。
-func count(e engine, objs ...interface{}) (int, error) {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
-	count := 0
-
-	for _, v := range objs {
-		sql.Reset()
-
-		m, err := forward.NewModel(v)
-		if err != nil {
-			return 0, err
-		}
-
-		rval := reflect.ValueOf(v)
-		for rval.Kind() == reflect.Ptr {
-			rval = rval.Elem()
-		}
-
-		if rval.Kind() != reflect.Struct {
-			return 0, errors.New("del:参数v类型必须为结构体或是结构体指针")
-		}
-
-		sql.WriteString("SELECT COUNT(*) AS count FROM ")
-		e.Dialect().Quote(sql, e.Prefix()+m.Name)
-		vals, err := whereAny(e, sql, m, rval)
-		if err != nil {
-			return 0, err
-		}
-
-		rows, err := e.Query(false, sql.String(), vals...)
-		if err != nil {
-			rows.Close() // 错误时关闭rows
-			return 0, err
-		}
-		data, err := fetch.ColumnString(true, "count", rows)
-		rows.Close() // 及时关闭rows
-		if err != nil {
-			return 0, err
-		}
-
-		cnt, err := strconv.Atoi(data[0])
-		if err != nil {
-			return 0, err
-		}
-		count += cnt
-	}
-
-	return count, nil
-}
-
-// 插入多条同一model表示的不同数据。
-// v 可以是数组，数组指针，或是struct
-// NOTE:在go中不能将[]int展开成v...interface{}，
-// 所以此处不用...interface{}形式的参数反而会更方便调用者。
-func insertMany(e engine, v interface{}) error {
-	sql := pool.Get().(*bytes.Buffer)
-	defer pool.Put(sql)
 
 	rval := reflect.ValueOf(v)
 	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
 	}
 
-	switch rval.Kind() {
-	case reflect.Struct: // 单个元素
-		return insert(e, v)
-	case reflect.Array, reflect.Slice:
-		if !e.Dialect().SupportInsertMany() {
-			for i := 0; i < rval.Len(); i++ {
-				if err := insert(e, rval.Index(i).Interface()); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	default:
-		return errors.New("inert:参数v的类型只能是struct或是数组")
+	if rval.Kind() != reflect.Struct {
+		return ErrInvalidKind
 	}
 
-	l := rval.Len()
+	sql.WriteString("CREATE TABLE IF NOT EXISTS ")
+	d.Quote(sql, e.Prefix()+m.Name)
+	sql.WriteByte('(')
+	d.AIColSQL(sql, m)
+	d.NoAIColSQL(sql, m)
+	d.ConstraintsSQL(sql, m)
+	sql.Truncate(sql.Len() - 1)
+	sql.WriteByte(')')
+
+	_, err = e.Exec(false, sql.String())
+	return err
+}
+
+// 将v生成一个insert的sql语句。
+func buildInsertSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
+	vals := make([]interface{}, 0, 10)
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return nil, err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return nil, ErrInvalidKind
+	}
+
+	sql.WriteString("INSERT INTO ")
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
+	sql.WriteByte('(')
+	for name, col := range m.Cols {
+		field := rval.FieldByName(col.GoName)
+		if !field.IsValid() {
+			return nil, fmt.Errorf("orm.buildInsertSQL:未找到该名称[%v]的值", col.GoName)
+		}
+
+		// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
+		if col.Zero == field.Interface() &&
+			(col.IsAI() || col.HasDefault) {
+			continue
+		}
+
+		e.Dialect().Quote(sql, name)
+		sql.WriteByte(',')
+		vals = append(vals, field.Interface())
+	}
+
+	if len(vals) == 0 {
+		return nil, errors.New("orm.buildInsertSQL:未指定任何插入的列数据")
+	}
+
+	sql.Truncate(sql.Len() - 1)
+	sql.WriteString(")VALUES(")
+	for range vals {
+		sql.WriteString("?,")
+	}
+	sql.Truncate(sql.Len() - 1)
+	sql.WriteByte(')')
+
+	return vals, nil
+}
+
+// 查找多个数据
+// 根据v的pk或中唯一索引列查找一行数据，并赋值给v
+// 若objs为空，则不发生任何操作。
+// 第一个返回参数用于表示实际有多少数据被导入到objs中。
+func buildSelectSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return nil, err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return nil, ErrInvalidKind
+	}
+
 	sql.Reset()
+	sql.WriteString("SELECT * FROM ")
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
+
+	return where(e, sql, m, rval)
+}
+
+// 更新一个或多个类型。
+// 更新依据为每个对象的主键或是唯一索引列。
+// 若不存在此两个类型的字段，则返回错误信息。
+// 若objs为空，则不发生任何操作。
+func buildUpdateSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return nil, err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return nil, ErrInvalidKind
+	}
+
+	vals := make([]interface{}, 0, 10)
+	sql.WriteString("UPDATE ")
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
+	sql.WriteString(" SET ")
+
+	for name, col := range m.Cols {
+		field := rval.FieldByName(col.GoName)
+		if !field.IsValid() {
+			return nil, fmt.Errorf("orm.buildUpdateSQL:未找到该名称[%v]的值", col.GoName)
+		}
+
+		// 忽略零值，TODO:还需要对比默认值
+		if col.Zero == field.Interface() {
+			continue
+		}
+
+		e.Dialect().Quote(sql, name)
+		sql.WriteString("=?,")
+		vals = append(vals, field.Interface())
+	}
+	sql.Truncate(sql.Len() - 1)
+
+	whereVals, err := where(e, sql, m, rval)
+	if err != nil {
+		return nil, err
+	}
+	return append(vals, whereVals...), nil
+}
+
+// 将v生成delete的sql语句
+func buildDeleteSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return nil, err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return nil, ErrInvalidKind
+	}
+
+	sql.WriteString("DELETE FROM ")
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
+
+	return where(e, sql, m, rval)
+
+}
+
+// 删除objs中指定的表名。
+// 系统会默认给表名加上表名前缀。
+// 若objs为空，则不发生任何操作。
+func buildDropSQL(sql *bytes.Buffer, e engine, v interface{}) error {
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return err
+	}
+
+	sql.WriteString("DROP TABLE IF EXISTS ")
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
+	_, err = e.Exec(false, sql.String())
+	return err
+}
+
+// 清空表，并重置AI计数。
+// 系统会默认给表名加上表名前缀。
+func buildTruncateSQL(sql *bytes.Buffer, e engine, v interface{}) error {
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return err
+	}
+
+	aiName := ""
+	if m.AI != nil {
+		aiName = m.AI.Name
+	}
+	e.Dialect().TruncateTableSQL(sql, e.Prefix()+m.Name, aiName)
+
+	if _, err = e.Exec(false, sql.String()); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 统计符合v条件的记录数量。
+func count(e engine, v interface{}) (int, error) {
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return 0, err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return 0, ErrInvalidKind
+	}
+
+	sql := bytes.NewBufferString("SELECT COUNT(*) AS count FROM ")
+	e.Dialect().Quote(sql, e.Prefix()+m.Name)
+	vals, err := whereAny(e, sql, m, rval)
+	if err != nil {
+		return 0, err
+	}
+
+	rows, err := e.Query(false, sql.String(), vals...)
+	if err != nil {
+		rows.Close() // 错误时关闭rows
+		return 0, err
+	}
+	data, err := fetch.ColumnString(true, "count", rows)
+	rows.Close() // 及时关闭rows
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.Atoi(data[0])
+}
+
+func create(e engine, v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildCreateSQL(sql, e, v); err != nil {
+		return err
+	}
+
+	_, err := e.Exec(false, sql.String())
+	return err
+}
+
+func drop(e engine, v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildDropSQL(sql, e, v); err != nil {
+		return err
+	}
+
+	_, err := e.Exec(false, sql.String())
+	return err
+}
+
+func truncate(e engine, v interface{}) error {
+	sql := new(bytes.Buffer)
+	if err := buildTruncateSQL(sql, e, v); err != nil {
+		return err
+	}
+
+	_, err := e.Exec(false, sql.String())
+	return err
+}
+
+func insert(e engine, v interface{}) (sql.Result, error) {
+	sql := new(bytes.Buffer)
+	vals, err := buildInsertSQL(sql, e, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.Exec(false, sql.String(), vals...)
+}
+
+func find(e engine, v interface{}) error {
+	sql := new(bytes.Buffer)
+	vals, err := buildSelectSQL(sql, e, v)
+	if err != nil {
+		return err
+	}
+
+	rows, err := e.Query(false, sql.String(), vals...)
+	if err != nil {
+		return err
+	}
+
+	_, err = fetch.Obj(v, rows)
+	rows.Close()
+	return err
+}
+
+func update(e engine, v interface{}) (sql.Result, error) {
+	sql := new(bytes.Buffer)
+
+	vals, err := buildUpdateSQL(sql, e, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.Exec(false, sql.String(), vals...)
+}
+
+func del(e engine, v interface{}) (sql.Result, error) {
+	sql := new(bytes.Buffer)
+	vals, err := buildDeleteSQL(sql, e, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.Exec(false, sql.String(), vals...)
+}
+
+func buildInsertManySQL(sql *bytes.Buffer, e engine, rval reflect.Value) ([]interface{}, error) {
 	sql.WriteString("INSERT INTO ")
 	vals := make([]interface{}, 0, 10)
 	keys := []string{}
 	var firstType reflect.Type
 
-	for i := 0; i < l; i++ {
+	for i := 0; i < rval.Len(); i++ {
 		irval := rval.Index(i)
 		for irval.Kind() == reflect.Ptr {
 			irval = irval.Elem()
 		}
 
 		if irval.Kind() != reflect.Struct {
-			return fmt.Errorf("insert:objs[%v]类型必须为结构体或是结构体指针，当前实际为:[%v]", i, irval.Kind())
+			return nil, ErrInvalidKind
 		}
 
 		m, err := forward.NewModel(irval.Interface())
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
@@ -526,7 +463,7 @@ func insertMany(e engine, v interface{}) error {
 			for name, col := range m.Cols {
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
-					return fmt.Errorf("insert:未找到该名称[%v]的值", col.GoName)
+					return nil, fmt.Errorf("orm.buildInsertManySQL:未找到该名称[%v]的值", col.GoName)
 				}
 
 				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
@@ -549,7 +486,7 @@ func insertMany(e engine, v interface{}) error {
 			sql.WriteByte(')')
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
-				return errors.New("insert:参数v中包含了不同类型的元素")
+				return nil, errors.New("orm.buildInsertManySQL:参数v中包含了不同类型的元素")
 			}
 
 			sql.WriteString(",(")
@@ -557,7 +494,7 @@ func insertMany(e engine, v interface{}) error {
 				col := m.Cols[name]
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
-					return fmt.Errorf("insert:未找到该名称[%v]的值", col.GoName)
+					return nil, fmt.Errorf("orm.buildInsertManySQL:未找到该名称[%v]的值", col.GoName)
 				}
 
 				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
@@ -574,6 +511,5 @@ func insertMany(e engine, v interface{}) error {
 		}
 	} // end for array
 
-	_, err := e.Exec(false, sql.String(), vals...)
-	return err
+	return vals, nil
 }
