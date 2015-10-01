@@ -151,6 +151,9 @@ func (m *mysql) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 		addIntLen()
 		buf.WriteString(" UNSIGNED")
 	case reflect.Float32, reflect.Float64:
+		if col.Len1 == 0 || col.Len2 == 0 {
+			return errors.New("请指定长度")
+		}
 		buf.WriteString(fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2))
 	case reflect.String:
 		if col.Len1 == -1 || col.Len1 > 65533 {

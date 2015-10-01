@@ -177,6 +177,9 @@ func (p *postgres) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 		case nullBool:
 			buf.WriteString("BOOLEAN")
 		case nullFloat64:
+			if col.Len1 == 0 || col.Len2 == 0 {
+				return errors.New("请指定长度")
+			}
 			buf.WriteString(fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2))
 		case nullInt64:
 			if col.IsAI() {
