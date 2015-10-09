@@ -343,7 +343,6 @@ func count(e engine, v interface{}) (int, error) {
 
 	rows, err := e.Query(false, sql.String(), vals...)
 	if err != nil {
-		rows.Close() // 错误时关闭rows
 		return 0, err
 	}
 	data, err := fetch.ColumnString(true, "count", rows)

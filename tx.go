@@ -197,11 +197,11 @@ func (tx *Tx) MultSelect(objs ...interface{}) error {
 			return err
 		}
 
-		if _, err := fetch.Obj(v, rows); err != nil {
-			rows.Close()
+		_, err = fetch.Obj(v, rows)
+		rows.Close()
+		if err != nil {
 			return err
 		}
-		rows.Close()
 		sql.Reset()
 	}
 	return nil
