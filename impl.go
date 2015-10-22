@@ -359,9 +359,36 @@ func create(e engine, v interface{}) error {
 	if err := buildCreateSQL(sql, e, v); err != nil {
 		return err
 	}
+	if _, err := e.Exec(false, sql.String()); err != nil {
+		return err
+	}
 
-	_, err := e.Exec(false, sql.String())
-	return err
+	// CREATE INDEX
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return err
+	}
+	if len(m.KeyIndexes) == 0 {
+		return nil
+	}
+	for name, cols := range m.KeyIndexes {
+		sql.Reset()
+		sql.WriteString("CREATE INDEX ")
+		e.Dialect().Quote(sql, name)
+		sql.WriteString(" ON ")
+		e.Dialect().Quote(sql, e.Prefix()+m.Name)
+		sql.WriteByte('(')
+		for _, col := range cols {
+			e.Dialect().Quote(sql, col.Name)
+			sql.WriteByte(',')
+		}
+		sql.Truncate(sql.Len() - 1)
+		sql.WriteByte(')')
+		if _, err := e.Exec(false, sql.String()); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func drop(e engine, v interface{}) error {

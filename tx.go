@@ -9,7 +9,6 @@ import (
 	"database/sql"
 	"reflect"
 
-	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/forward"
 )
 
@@ -169,107 +168,59 @@ func (tx *Tx) Truncate(v interface{}) error {
 
 // 插入一个或多个数据。
 func (tx *Tx) MultInsert(objs ...interface{}) error {
-	sql := new(bytes.Buffer)
 	for _, v := range objs {
-		vals, err := buildInsertSQL(sql, tx, v)
-		if err != nil {
+		if _, err := tx.Insert(v); err != nil {
 			return err
 		}
-
-		if _, err = tx.Exec(false, sql.String(), vals...); err != nil {
-			return err
-		}
-		sql.Reset()
 	}
 	return nil
 }
 
 func (tx *Tx) MultSelect(objs ...interface{}) error {
-	sql := new(bytes.Buffer)
 	for _, v := range objs {
-		vals, err := buildInsertSQL(sql, tx, v)
-		if err != nil {
+		if err := tx.Select(v); err != nil {
 			return err
 		}
-
-		rows, err := tx.Query(false, sql.String(), vals...)
-		if err != nil {
-			return err
-		}
-
-		_, err = fetch.Obj(v, rows)
-		rows.Close()
-		if err != nil {
-			return err
-		}
-		sql.Reset()
 	}
 	return nil
 }
 
 // 更新一个或多个类型。
 func (tx *Tx) MultUpdate(objs ...interface{}) error {
-	sql := new(bytes.Buffer)
 	for _, v := range objs {
-		vals, err := buildUpdateSQL(sql, tx, v)
-		if err != nil {
+		if _, err := tx.Update(v); err != nil {
 			return err
 		}
-
-		if _, err = tx.Exec(false, sql.String(), vals...); err != nil {
-			return err
-		}
-		sql.Reset()
 	}
 	return nil
 }
 
 // 删除一个或是多个数据。
 func (tx *Tx) MultDelete(objs ...interface{}) error {
-	sql := new(bytes.Buffer)
 	for _, v := range objs {
-		vals, err := buildDeleteSQL(sql, tx, v)
-		if err != nil {
+		if _, err := tx.Delete(v); err != nil {
 			return err
 		}
-
-		if _, err = tx.Exec(false, sql.String(), vals...); err != nil {
-			return err
-		}
-		sql.Reset()
 	}
 	return nil
 }
 
 // 创建数据表。
 func (tx *Tx) MultCreate(objs ...interface{}) error {
-	sql := new(bytes.Buffer)
 	for _, v := range objs {
-		if err := buildCreateSQL(sql, tx, v); err != nil {
+		if err := tx.Create(v); err != nil {
 			return err
 		}
-
-		if _, err := tx.Exec(false, sql.String()); err != nil {
-			return err
-		}
-		sql.Reset()
 	}
-
 	return nil
 }
 
 // 删除表结构及数据。
 func (tx *Tx) MultDrop(objs ...interface{}) error {
-	sql := new(bytes.Buffer)
 	for _, v := range objs {
-		if err := buildDropSQL(sql, tx, v); err != nil {
+		if err := tx.Drop(v); err != nil {
 			return err
 		}
-
-		if _, err := tx.Exec(false, sql.String()); err != nil {
-			return err
-		}
-		sql.Reset()
 	}
 
 	return nil
@@ -277,16 +228,10 @@ func (tx *Tx) MultDrop(objs ...interface{}) error {
 
 // 清除表内容，重置ai，但保留表结构。
 func (tx *Tx) MultTruncate(objs ...interface{}) error {
-	sql := new(bytes.Buffer)
 	for _, v := range objs {
-		if err := buildTruncateSQL(sql, tx, v); err != nil {
+		if err := tx.Truncate(v); err != nil {
 			return err
 		}
-
-		if _, err := tx.Exec(false, sql.String()); err != nil {
-			return err
-		}
-		sql.Reset()
 	}
 	return nil
 }
