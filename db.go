@@ -127,11 +127,16 @@ func (db *DB) Delete(v interface{}) (sql.Result, error) {
 	return del(db, v)
 }
 
-// 更新数据。
+// 更新数据，零值不会被提交。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Update(v interface{}) (sql.Result, error) {
-	return update(db, v)
+	return update(db, v, false)
+}
+
+// 更新数据，包括零值的内容。
+func (db *DB) UpdateZero(v interface{}) (sql.Result, error) {
+	return update(db, v, true)
 }
 
 // 查询一个符合条件的数据。

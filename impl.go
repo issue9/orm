@@ -216,7 +216,8 @@ func buildSelectSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
 // 若objs为空，则不发生任何操作。
-func buildUpdateSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
+// zero 是否提交值为零的内容。
+func buildUpdateSQL(sql *bytes.Buffer, e engine, v interface{}, zero bool) ([]interface{}, error) {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return nil, err
@@ -242,8 +243,7 @@ func buildUpdateSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 			return nil, fmt.Errorf("orm.buildUpdateSQL:未找到该名称[%v]的值", col.GoName)
 		}
 
-		// 忽略零值，TODO:还需要对比默认值
-		if col.Zero == field.Interface() {
+		if !zero && col.Zero == field.Interface() {
 			continue
 		}
 
@@ -438,10 +438,11 @@ func find(e engine, v interface{}) error {
 	return err
 }
 
-func update(e engine, v interface{}) (sql.Result, error) {
+// 更新v到数据库，zero表示是否将零值也更新到数据库。
+func update(e engine, v interface{}, zero bool) (sql.Result, error) {
 	sql := new(bytes.Buffer)
 
-	vals, err := buildUpdateSQL(sql, e, v)
+	vals, err := buildUpdateSQL(sql, e, v, zero)
 	if err != nil {
 		return nil, err
 	}
