@@ -134,17 +134,18 @@ func (tx *Tx) InsertMany(v interface{}) error {
 	return nil
 }
 
-// 更新一个或多个类型。
+// 更新一条类型。
 func (tx *Tx) Update(v interface{}) (sql.Result, error) {
 	return update(tx, v, false)
 }
 
-// 更新一个或多个类型。
+// 更新一条类型。
+// 零值也会被提交。
 func (tx *Tx) UpdateZero(v interface{}) (sql.Result, error) {
 	return update(tx, v, true)
 }
 
-// 删除一个或是多个数据。
+// 删除一条数据。
 func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
 	return del(tx, v)
 }
@@ -181,6 +182,7 @@ func (tx *Tx) MultInsert(objs ...interface{}) error {
 	return nil
 }
 
+// 选择符合要求的一条或是多条记录。
 func (tx *Tx) MultSelect(objs ...interface{}) error {
 	for _, v := range objs {
 		if err := tx.Select(v); err != nil {
@@ -190,7 +192,7 @@ func (tx *Tx) MultSelect(objs ...interface{}) error {
 	return nil
 }
 
-// 更新一个或多个类型。
+// 更新一条或多条类型。
 func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Update(v); err != nil {
@@ -200,7 +202,7 @@ func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	return nil
 }
 
-// 更新一个或多个类型。
+// 更新一条或多条类型。
 func (tx *Tx) MultUpdateZero(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.UpdateZero(v); err != nil {
@@ -210,7 +212,7 @@ func (tx *Tx) MultUpdateZero(objs ...interface{}) error {
 	return nil
 }
 
-// 删除一个或是多个数据。
+// 删除一条或是多条数据。
 func (tx *Tx) MultDelete(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Delete(v); err != nil {

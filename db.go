@@ -153,12 +153,12 @@ func (db *DB) Count(v interface{}) (int, error) {
 	return count(db, v)
 }
 
-// 创建一张或多张表。
+// 创建一张表。
 func (db *DB) Create(v interface{}) error {
 	return create(db, v)
 }
 
-// 删除一张或多张表。
+// 删除一张表。
 func (db *DB) Drop(v interface{}) error {
 	return drop(db, v)
 }

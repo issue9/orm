@@ -285,7 +285,7 @@ func buildDeleteSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 
 // 删除objs中指定的表名。
 // 系统会默认给表名加上表名前缀。
-// 若objs为空，则不发生任何操作。
+// 若v为空，则不发生任何操作。
 func buildDropSQL(sql *bytes.Buffer, e engine, v interface{}) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
