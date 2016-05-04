@@ -18,18 +18,9 @@ import (
 
 var ErrInvalidKind = errors.New("不支持的reflect.Kind()，只能是结构体或是结构体指针")
 
-// DB与Tx的共有接口，方便以下方法调用。
-type engine interface {
-	Dialect() forward.Dialect
-	Query(replace bool, query string, args ...interface{}) (*sql.Rows, error)
-	Exec(replace bool, query string, args ...interface{}) (sql.Result, error)
-	Prepare(replace bool, query string) (*sql.Stmt, error)
-	Prefix() string
-}
-
 // 根据model中的主键或是唯一索引为sql产生where语句，
 // 若两者都不存在，则返回错误信息。rval为struct的reflect.Value
-func where(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([]interface{}, error) {
+func where(e forward.Engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([]interface{}, error) {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -74,7 +65,7 @@ func where(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([
 }
 
 // 根据rval中任意非零值产生where语句
-func whereAny(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([]interface{}, error) {
+func whereAny(e forward.Engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([]interface{}, error) {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -105,7 +96,7 @@ func whereAny(e engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value)
 
 // 创建一个或多个数据表
 // 若objs为空，则不发生任何操作。
-func buildCreateSQL(sql *bytes.Buffer, e engine, v interface{}) error {
+func buildCreateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
 	d := e.Dialect()
 	m, err := forward.NewModel(v)
 	if err != nil {
@@ -135,7 +126,7 @@ func buildCreateSQL(sql *bytes.Buffer, e engine, v interface{}) error {
 }
 
 // 将v生成一个insert的sql语句。
-func buildInsertSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
+func buildInsertSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]interface{}, error) {
 	vals := make([]interface{}, 0, 10)
 	m, err := forward.NewModel(v)
 	if err != nil {
@@ -190,7 +181,7 @@ func buildInsertSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
 // 若objs为空，则不发生任何操作。
 // 第一个返回参数用于表示实际有多少数据被导入到objs中。
-func buildSelectSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
+func buildSelectSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]interface{}, error) {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return nil, err
@@ -217,7 +208,7 @@ func buildSelectSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 // 若不存在此两个类型的字段，则返回错误信息。
 // 若objs为空，则不发生任何操作。
 // zero 是否提交值为零的内容。
-func buildUpdateSQL(sql *bytes.Buffer, e engine, v interface{}, zero bool) ([]interface{}, error) {
+func buildUpdateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}, zero bool) ([]interface{}, error) {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return nil, err
@@ -261,7 +252,7 @@ func buildUpdateSQL(sql *bytes.Buffer, e engine, v interface{}, zero bool) ([]in
 }
 
 // 将v生成delete的sql语句
-func buildDeleteSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, error) {
+func buildDeleteSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]interface{}, error) {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return nil, err
@@ -286,7 +277,7 @@ func buildDeleteSQL(sql *bytes.Buffer, e engine, v interface{}) ([]interface{}, 
 // 删除objs中指定的表名。
 // 系统会默认给表名加上表名前缀。
 // 若v为空，则不发生任何操作。
-func buildDropSQL(sql *bytes.Buffer, e engine, v interface{}) error {
+func buildDropSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return err
@@ -300,7 +291,7 @@ func buildDropSQL(sql *bytes.Buffer, e engine, v interface{}) error {
 
 // 清空表，并重置AI计数。
 // 系统会默认给表名加上表名前缀。
-func buildTruncateSQL(sql *bytes.Buffer, e engine, v interface{}) error {
+func buildTruncateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return err
@@ -319,7 +310,7 @@ func buildTruncateSQL(sql *bytes.Buffer, e engine, v interface{}) error {
 }
 
 // 统计符合v条件的记录数量。
-func count(e engine, v interface{}) (int, error) {
+func count(e forward.Engine, v interface{}) (int, error) {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return 0, err
@@ -354,7 +345,7 @@ func count(e engine, v interface{}) (int, error) {
 	return strconv.Atoi(data[0])
 }
 
-func create(e engine, v interface{}) error {
+func create(e forward.Engine, v interface{}) error {
 	sql := new(bytes.Buffer)
 	if err := buildCreateSQL(sql, e, v); err != nil {
 		return err
@@ -391,7 +382,7 @@ func create(e engine, v interface{}) error {
 	return nil
 }
 
-func drop(e engine, v interface{}) error {
+func drop(e forward.Engine, v interface{}) error {
 	sql := new(bytes.Buffer)
 	if err := buildDropSQL(sql, e, v); err != nil {
 		return err
@@ -401,7 +392,7 @@ func drop(e engine, v interface{}) error {
 	return err
 }
 
-func truncate(e engine, v interface{}) error {
+func truncate(e forward.Engine, v interface{}) error {
 	sql := new(bytes.Buffer)
 	if err := buildTruncateSQL(sql, e, v); err != nil {
 		return err
@@ -411,7 +402,7 @@ func truncate(e engine, v interface{}) error {
 	return err
 }
 
-func insert(e engine, v interface{}) (sql.Result, error) {
+func insert(e forward.Engine, v interface{}) (sql.Result, error) {
 	sql := new(bytes.Buffer)
 	vals, err := buildInsertSQL(sql, e, v)
 	if err != nil {
@@ -421,7 +412,7 @@ func insert(e engine, v interface{}) (sql.Result, error) {
 	return e.Exec(false, sql.String(), vals...)
 }
 
-func find(e engine, v interface{}) error {
+func find(e forward.Engine, v interface{}) error {
 	sql := new(bytes.Buffer)
 	vals, err := buildSelectSQL(sql, e, v)
 	if err != nil {
@@ -439,7 +430,7 @@ func find(e engine, v interface{}) error {
 }
 
 // 更新v到数据库，zero表示是否将零值也更新到数据库。
-func update(e engine, v interface{}, zero bool) (sql.Result, error) {
+func update(e forward.Engine, v interface{}, zero bool) (sql.Result, error) {
 	sql := new(bytes.Buffer)
 
 	vals, err := buildUpdateSQL(sql, e, v, zero)
@@ -450,7 +441,7 @@ func update(e engine, v interface{}, zero bool) (sql.Result, error) {
 	return e.Exec(false, sql.String(), vals...)
 }
 
-func del(e engine, v interface{}) (sql.Result, error) {
+func del(e forward.Engine, v interface{}) (sql.Result, error) {
 	sql := new(bytes.Buffer)
 	vals, err := buildDeleteSQL(sql, e, v)
 	if err != nil {
@@ -460,7 +451,7 @@ func del(e engine, v interface{}) (sql.Result, error) {
 	return e.Exec(false, sql.String(), vals...)
 }
 
-func buildInsertManySQL(sql *bytes.Buffer, e engine, rval reflect.Value) ([]interface{}, error) {
+func buildInsertManySQL(sql *bytes.Buffer, e forward.Engine, rval reflect.Value) ([]interface{}, error) {
 	sql.WriteString("INSERT INTO ")
 	vals := make([]interface{}, 0, 10)
 	keys := []string{}

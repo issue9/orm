@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/issue9/orm/fetch"
+	"github.com/issue9/orm/forward"
 )
 
 const (
@@ -28,7 +29,7 @@ var ErrEmptyTableName = errors.New("未指定表名")
 
 // 以函数链的方式产生SQL语句。
 type SQL struct {
-	e        engine
+	e        forward.Engine
 	table    string
 	cond     *bytes.Buffer
 	condArgs []interface{}
@@ -36,7 +37,7 @@ type SQL struct {
 	limit    []int // 元素0为limit，元素1为offset
 }
 
-func newSQL(engine engine) *SQL {
+func newSQL(engine forward.Engine) *SQL {
 	return &SQL{
 		e:        engine,
 		cond:     new(bytes.Buffer),
