@@ -226,11 +226,17 @@ func (sb *SQLBuilder) Keys(keys ...string) *SQLBuilder {
 }
 
 // 指定插入的数据，需要与 Keys 中的名称一一对应。
+//
+// NOTE: 若数据库支持多行插入，可多次调用，每次指定一行数据。
 func (sb *SQLBuilder) Values(vals ...interface{}) *SQLBuilder {
 	if !sb.isSetFlag(flagValues) {
 		sb.WriteString("VALUES(")
 		sb.setFlag(flagValues)
 	} else {
+		if !sb.engine.Dialect().SupportInsertMany() {
+			sb.errors = append(sb.errors, errors.New("当前数据库不支持多行插入"))
+			return sql
+		}
 		sb.WriteString(",(")
 	}
 
@@ -245,7 +251,8 @@ func (sb *SQLBuilder) Values(vals ...interface{}) *SQLBuilder {
 	return sb
 }
 
-// 指定需要更新的数据
+// 指定需要更新的数据。
+// 仅针对 UPDATE 语句，INSERT 请使用 Keys() 和 Values() 两个函数指定。
 func (sb *SQLBuilder) Set(k string, v interface{}) *SQLBuilder {
 	if !sb.isSetFlag(flagSet) {
 		sb.WriteString(" SET ")
@@ -262,6 +269,7 @@ func (sb *SQLBuilder) Set(k string, v interface{}) *SQLBuilder {
 	return sb
 }
 
+// 拼接 SELECT 语句的 JOIN 部分。
 func (sb *SQLBuilder) Join(typ, table, on string) *SQLBuilder {
 	sb.WriteString(typ)
 	sb.WriteString(" JOIN ")
@@ -295,6 +303,7 @@ func (sb *SQLBuilder) Prepare() (*sql.Stmt, []interface{}, error) {
 	return stmt, sb.args, nil
 }
 
+// 执行 SQL 语句。
 func (sb *SQLBuilder) Exec(replace bool) (sql.Result, error) {
 	query, vals, err := sb.String()
 	if err != nil {
@@ -304,6 +313,7 @@ func (sb *SQLBuilder) Exec(replace bool) (sql.Result, error) {
 	return sb.engine.Exec(replace, query, vals...)
 }
 
+// 执行 SQL 查询语句。仅对 SELECT 启作用。
 func (sb *SQLBuilder) Query(replace bool) (*sql.Rows, error) {
 	query, vals, err := sb.String()
 	if err != nil {
