@@ -59,3 +59,10 @@ func TestSQL_Delete(t *testing.T) {
 	a.NotError(err).Equal(vals, []interface{}{1, "n"})
 	chkSQLEqual(a, str, "DELETE FROM table1 WHERE id=? AND name=?")
 }
+
+func TestSQL_Insert(t *testing.T) {
+	a := assert.New(t)
+
+	sql := NewSQL(nil)
+	a.NotNil(sql)
+}

@@ -13,7 +13,9 @@ import (
 const (
 	flagWhere int8 = 1 << iota
 	flagOrder
-	flagColumn
+	flagColumn // SELECT 的标记
+	flagSet    // UPDATE 的 SET 标记
+	flagValues // INSERT 的 VALUES 标记
 )
 
 var ErrHasErrors = errors.New("语句中包含一个或多个错误")
@@ -51,6 +53,15 @@ func NewSQL(e Engine) *SQL {
 	}
 }
 
+func (sql *SQL) Reset() *SQL {
+	sql.buffer.Reset()
+	sql.args = sql.args[:0]
+	sql.flag = 0
+	sql.errors = sql.errors[:0]
+
+	return sql
+}
+
 func (sql *SQL) isSetFlag(flag int8) bool {
 	return sql.flag&flag > 0
 }
@@ -67,15 +78,6 @@ func (sql *SQL) HasError() bool {
 // 返回所有的错误内容
 func (sql *SQL) Errors() []error {
 	return sql.errors
-}
-
-func (sql *SQL) Reset() *SQL {
-	sql.buffer.Reset()
-	sql.args = sql.args[:0]
-	sql.flag = 0
-	sql.errors = sql.errors[:0]
-
-	return sql
 }
 
 func (sql *SQL) WriteByte(c byte) *SQL {
@@ -193,6 +195,56 @@ func (sql *SQL) Limit(limit, offset int) *SQL {
 	}
 
 	sql.args = append(sql.args, args...)
+
+	return sql
+}
+
+// 指定插入数据时的列名
+func (sql *SQL) Keys(keys ...string) *SQL {
+	sql.WriteByte('(')
+	for _, key := range keys {
+		sql.WriteString(key)
+		sql.WriteByte(',')
+	}
+	sql.TruncateLast(1)
+	sql.WriteByte(')')
+
+	return sql
+}
+
+// 指定插入的数据，需要与 Keys 中的名称一一对应。
+func (sql *SQL) Values(vals ...interface{}) *SQL {
+	if !sql.isSetFlag(flagValues) {
+		sql.WriteString("VALUES(")
+		sql.setFlag(flagValues)
+	} else {
+		sql.WriteString(",(")
+	}
+
+	for _, v := range vals {
+		sql.WriteString("?,")
+		sql.args = append(sql.args, v)
+	}
+	sql.TruncateLast(1)
+
+	sql.WriteByte(')')
+
+	return sql
+}
+
+// 指定需要更新的数据
+func (sql *SQL) Set(k string, v interface{}) *SQL {
+	if !sql.isSetFlag(flagSet) {
+		sql.WriteString(" SET ")
+		sql.setFlag(flagSet)
+	} else {
+		sql.WriteByte(',')
+	}
+
+	sql.WriteString(k)
+	sql.WriteString("=?")
+
+	sql.args = append(sql.args, v)
 
 	return sql
 }
