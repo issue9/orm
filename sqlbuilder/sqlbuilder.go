@@ -2,12 +2,14 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package forward
+package sqlbuilder
 
 import (
 	"bytes"
 	"database/sql"
 	"errors"
+
+	"github.com/issue9/orm/forward"
 )
 
 // 一组标记位，用于标记某些可重复调用的函数，是否是第一次调用。
@@ -23,26 +25,26 @@ const (
 
 var ErrHasErrors = errors.New("语句中包含一个或多个错误")
 
-// SQL 一个简单的 SQL 语句接接工具。
+// SQLBuilder 一个简单的 SQL 语句接接工具。
 // NOTE: 调用顺序必须与 SQL 语句相同。
 //
 // DELETE
-//  sql := NewSQL(engine).
+//  sql := New(engine).
 //      Delete("table1").
 //      Where("id>?", 5).
 //      And("type=?", 2)
 //  query, vals, err := sql.String()
-type SQL struct {
-	engine Engine
+type SQLBuilder struct {
+	engine forward.Engine
 	buffer *bytes.Buffer
 	args   []interface{}
 	flag   int8
 	errors []error
 }
 
-// 声明一个 SQL 实例
-func NewSQL(e Engine) *SQL {
-	return &SQL{
+// 声明一个 SQLBuilder 实例
+func New(e forward.Engine) *SQLBuilder {
+	return &SQLBuilder{
 		engine: e,
 		buffer: new(bytes.Buffer),
 		args:   make([]interface{}, 0, 10),
@@ -51,8 +53,8 @@ func NewSQL(e Engine) *SQL {
 	}
 }
 
-// 重置所有的数据为初始值，这样可以重复利用该 SQL 对象。
-func (sql *SQL) Reset() *SQL {
+// 重置所有的数据为初始值，这样可以重复利用该 SQLBuilder 对象。
+func (sql *SQLBuilder) Reset() *SQLBuilder {
 	sql.buffer.Reset()
 	sql.args = sql.args[:0]
 	sql.flag = 0
@@ -61,25 +63,25 @@ func (sql *SQL) Reset() *SQL {
 	return sql
 }
 
-func (sql *SQL) isSetFlag(flag int8) bool {
+func (sql *SQLBuilder) isSetFlag(flag int8) bool {
 	return sql.flag&flag > 0
 }
 
-func (sql *SQL) setFlag(flag int8) {
+func (sql *SQLBuilder) setFlag(flag int8) {
 	sql.flag |= flag
 }
 
 // 是否在构建过程中触发错误信息
-func (sql *SQL) HasError() bool {
+func (sql *SQLBuilder) HasError() bool {
 	return len(sql.errors) > 0
 }
 
 // 返回所有的错误内容
-func (sql *SQL) Errors() []error {
+func (sql *SQLBuilder) Errors() []error {
 	return sql.errors
 }
 
-func (sql *SQL) WriteByte(c byte) *SQL {
+func (sql *SQLBuilder) WriteByte(c byte) *SQLBuilder {
 	err := sql.buffer.WriteByte(c)
 	if err != nil {
 		sql.errors = append(sql.errors, err)
@@ -88,7 +90,7 @@ func (sql *SQL) WriteByte(c byte) *SQL {
 	return sql
 }
 
-func (sql *SQL) WriteString(s string) *SQL {
+func (sql *SQLBuilder) WriteString(s string) *SQLBuilder {
 	_, err := sql.buffer.WriteString(s)
 	if err != nil {
 		sql.errors = append(sql.errors, err)
@@ -98,17 +100,17 @@ func (sql *SQL) WriteString(s string) *SQL {
 }
 
 // 去掉尾部的 n 个字符
-func (sql *SQL) TruncateLast(n int) *SQL {
+func (sql *SQLBuilder) TruncateLast(n int) *SQLBuilder {
 	sql.buffer.Truncate(sql.buffer.Len() - n)
 	return sql
 }
 
 // 启动一个 DELETE 语名。
-func (sql *SQL) Delete(table string) *SQL {
+func (sql *SQLBuilder) Delete(table string) *SQLBuilder {
 	return sql.WriteString("DELETE FROM ").WriteString(table)
 }
 
-func (sql *SQL) Select(cols ...string) *SQL {
+func (sql *SQLBuilder) Select(cols ...string) *SQLBuilder {
 	if !sql.isSetFlag(flagColumn) {
 		sql.WriteString("SELECT ")
 		sql.setFlag(flagColumn)
@@ -121,22 +123,22 @@ func (sql *SQL) Select(cols ...string) *SQL {
 	return sql.TruncateLast(1)
 }
 
-func (sql *SQL) Insert(table string) *SQL {
+func (sql *SQLBuilder) Insert(table string) *SQLBuilder {
 	return sql.WriteString("INSERT INTO ").WriteString(table)
 }
 
-func (sql *SQL) Update(table string) *SQL {
+func (sql *SQLBuilder) Update(table string) *SQLBuilder {
 	return sql.WriteString("UPDATE ").WriteString(table)
 }
 
 // 拼接表名字符串。
-func (sql *SQL) From(table string) *SQL {
+func (sql *SQLBuilder) From(table string) *SQLBuilder {
 	sql.WriteString(table)
 	return sql
 }
 
 // 构建 WHERE 语句，op 只能是 AND 或是 OR
-func (sql *SQL) where(op string, cond string, args ...interface{}) *SQL {
+func (sql *SQLBuilder) where(op string, cond string, args ...interface{}) *SQLBuilder {
 	if !sql.isSetFlag(flagWhere) {
 		sql.setFlag(flagWhere)
 		op = " WHERE "
@@ -149,19 +151,19 @@ func (sql *SQL) where(op string, cond string, args ...interface{}) *SQL {
 	return sql
 }
 
-func (sql *SQL) Where(cond string, args ...interface{}) *SQL {
+func (sql *SQLBuilder) Where(cond string, args ...interface{}) *SQLBuilder {
 	return sql.And(cond, args...)
 }
 
-func (sql *SQL) And(cond string, args ...interface{}) *SQL {
+func (sql *SQLBuilder) And(cond string, args ...interface{}) *SQLBuilder {
 	return sql.where(" AND ", cond, args...)
 }
 
-func (sql *SQL) Or(cond string, args ...interface{}) *SQL {
+func (sql *SQLBuilder) Or(cond string, args ...interface{}) *SQLBuilder {
 	return sql.where(" OR ", cond, args...)
 }
 
-func (sql *SQL) orderBy(order, col string) *SQL {
+func (sql *SQLBuilder) orderBy(order, col string) *SQLBuilder {
 	if !sql.isSetFlag(flagOrder) {
 		sql.setFlag(flagOrder)
 		sql.WriteString(" ORDER BY ")
@@ -175,15 +177,15 @@ func (sql *SQL) orderBy(order, col string) *SQL {
 	return sql
 }
 
-func (sql *SQL) Desc(col string) *SQL {
+func (sql *SQLBuilder) Desc(col string) *SQLBuilder {
 	return sql.orderBy(" DESC ", col)
 }
 
-func (sql *SQL) Asc(col string) *SQL {
+func (sql *SQLBuilder) Asc(col string) *SQLBuilder {
 	return sql.orderBy(" ASC ", col)
 }
 
-func (sql *SQL) Limit(limit, offset int) *SQL {
+func (sql *SQLBuilder) Limit(limit, offset int) *SQLBuilder {
 	vals, err := sql.engine.Dialect().LimitSQL(sql.buffer, limit, offset)
 	if err != nil {
 		sql.errors = append(sql.errors, err)
@@ -200,7 +202,7 @@ func (sql *SQL) Limit(limit, offset int) *SQL {
 }
 
 // 指定插入数据时的列名
-func (sql *SQL) Keys(keys ...string) *SQL {
+func (sql *SQLBuilder) Keys(keys ...string) *SQLBuilder {
 	sql.WriteByte('(')
 	for _, key := range keys {
 		sql.WriteString(key)
@@ -213,7 +215,7 @@ func (sql *SQL) Keys(keys ...string) *SQL {
 }
 
 // 指定插入的数据，需要与 Keys 中的名称一一对应。
-func (sql *SQL) Values(vals ...interface{}) *SQL {
+func (sql *SQLBuilder) Values(vals ...interface{}) *SQLBuilder {
 	if !sql.isSetFlag(flagValues) {
 		sql.WriteString("VALUES(")
 		sql.setFlag(flagValues)
@@ -233,7 +235,7 @@ func (sql *SQL) Values(vals ...interface{}) *SQL {
 }
 
 // 指定需要更新的数据
-func (sql *SQL) Set(k string, v interface{}) *SQL {
+func (sql *SQLBuilder) Set(k string, v interface{}) *SQLBuilder {
 	if !sql.isSetFlag(flagSet) {
 		sql.WriteString(" SET ")
 		sql.setFlag(flagSet)
@@ -249,7 +251,7 @@ func (sql *SQL) Set(k string, v interface{}) *SQL {
 	return sql
 }
 
-func (sql *SQL) Join(typ, table, on string) *SQL {
+func (sql *SQLBuilder) Join(typ, table, on string) *SQLBuilder {
 	sql.WriteString(typ)
 	sql.WriteString(" JOIN ")
 	sql.WriteString(table)
@@ -259,7 +261,7 @@ func (sql *SQL) Join(typ, table, on string) *SQL {
 	return sql
 }
 
-func (sql *SQL) String() (string, []interface{}, error) {
+func (sql *SQLBuilder) String() (string, []interface{}, error) {
 	if sql.HasError() {
 		return "", nil, ErrHasErrors
 	}
@@ -267,7 +269,7 @@ func (sql *SQL) String() (string, []interface{}, error) {
 	return sql.buffer.String(), sql.args, nil
 }
 
-func (sql *SQL) Prepare() (*sql.Stmt, []interface{}, error) {
+func (sql *SQLBuilder) Prepare() (*sql.Stmt, []interface{}, error) {
 	if sql.HasError() {
 		return nil, nil, ErrHasErrors
 	}

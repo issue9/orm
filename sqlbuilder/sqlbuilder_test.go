@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package forward
+package sqlbuilder
 
 import (
 	"regexp"
@@ -33,10 +33,10 @@ func chkSQLEqual(a *assert.Assertion, s1, s2 string) {
 	a.Equal(s1, s2)
 }
 
-func TestSQL_TruncateLast(t *testing.T) {
+func TestSQLBuilder_TruncateLast(t *testing.T) {
 	a := assert.New(t)
 
-	sql := NewSQL(nil)
+	sql := New(nil)
 	a.NotNil(sql)
 
 	sql.WriteString("123").TruncateLast(1)
@@ -47,10 +47,10 @@ func TestSQL_TruncateLast(t *testing.T) {
 	a.Equal(sql.buffer.String(), "1")
 }
 
-func TestSQL_Delete(t *testing.T) {
+func TestSQLBuilder_Delete(t *testing.T) {
 	a := assert.New(t)
 
-	sql := NewSQL(nil)
+	sql := New(nil)
 	a.NotNil(sql)
 
 	str, vals, err := sql.Delete("table1").
@@ -60,9 +60,9 @@ func TestSQL_Delete(t *testing.T) {
 	chkSQLEqual(a, str, "DELETE FROM table1 WHERE id=? AND name=?")
 }
 
-func TestSQL_Insert(t *testing.T) {
+func TestSQLBuilder_Insert(t *testing.T) {
 	a := assert.New(t)
 
-	sql := NewSQL(nil)
+	sql := New(nil)
 	a.NotNil(sql)
 }
