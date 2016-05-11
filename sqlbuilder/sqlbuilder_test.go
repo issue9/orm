@@ -35,7 +35,6 @@ func chkSQLEqual(a *assert.Assertion, s1, s2 string) {
 
 func TestSQLBuilder_TruncateLast(t *testing.T) {
 	a := assert.New(t)
-
 	sql := New(nil)
 	a.NotNil(sql)
 
@@ -49,7 +48,6 @@ func TestSQLBuilder_TruncateLast(t *testing.T) {
 
 func TestSQLBuilder_Delete(t *testing.T) {
 	a := assert.New(t)
-
 	sql := New(nil)
 	a.NotNil(sql)
 
@@ -64,8 +62,7 @@ func TestSQLBuilder_Delete(t *testing.T) {
 
 func TestSQLBuilder_Insert(t *testing.T) {
 	a := assert.New(t)
-
-	sql := New(nil)
+	sql := New(&engine{dialect: &dialect{}})
 	a.NotNil(sql)
 
 	query, vals, err := sql.Insert("table1").
@@ -81,7 +78,6 @@ func TestSQLBuilder_Insert(t *testing.T) {
 
 func TestSQLBuilder_Update(t *testing.T) {
 	a := assert.New(t)
-
 	sql := New(nil)
 	a.NotNil(sql)
 
@@ -92,4 +88,29 @@ func TestSQLBuilder_Update(t *testing.T) {
 
 	a.NotError(err).Equal(vals, []interface{}{1, "2"})
 	chkSQLEqual(a, query, "UPDATE table1 set col1=?,col2=?")
+}
+
+func TestSQLBuilder_Select(t *testing.T) {
+	a := assert.New(t)
+	e := &engine{dialect: &dialect{}}
+	sql := New(e)
+	a.NotNil(sql)
+
+	query, vals, err := sql.Select("col1,col2").
+		Select("col3 AS c3", "col4").
+		From("table1 AS t1").
+		Join("left", "table2 as t2", "t1.id=t2.uid").
+		Where("t1.id>?", 5).
+		Or("t1.id<?", 3).
+		Asc("t1.id").
+		Desc("t1.type").
+		Asc("t1.name").
+		String()
+
+	a.NotError(err).Equal(vals, []interface{}{5, 3})
+	chkSQLEqual(a, query, `SELECT col1,col2,col3 AS c3,col4 FROM
+	table1 AS t1
+	LEFT JOIN table2 as t2 ON t1.id=t2.uid
+	where t1.id>? or t1.id<?
+	order by t1.id asc,t1.type desc,t1.name asc`)
 }

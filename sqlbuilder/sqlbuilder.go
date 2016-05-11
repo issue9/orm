@@ -123,6 +123,8 @@ func (sb *SQLBuilder) Select(cols ...string) *SQLBuilder {
 	if !sb.isSetFlag(flagColumn) {
 		sb.WriteString("SELECT ")
 		sb.setFlag(flagColumn)
+	} else {
+		sb.WriteByte(',')
 	}
 
 	for _, col := range cols {
@@ -144,6 +146,7 @@ func (sb *SQLBuilder) Update(table string) *SQLBuilder {
 
 // 拼接表名字符串。当调用 Select() 之后，此方法用于指定表名。
 func (sb *SQLBuilder) From(table string) *SQLBuilder {
+	sb.WriteString(" FROM ")
 	sb.WriteString(table)
 	return sb
 }
@@ -272,10 +275,11 @@ func (sb *SQLBuilder) Set(k string, v interface{}) *SQLBuilder {
 
 // 拼接 SELECT 语句的 JOIN 部分。
 func (sb *SQLBuilder) Join(typ, table, on string) *SQLBuilder {
+	sb.WriteByte(' ')
 	sb.WriteString(typ)
 	sb.WriteString(" JOIN ")
 	sb.WriteString(table)
-	sb.WriteByte(' ')
+	sb.WriteString(" ON ")
 	sb.WriteString(on)
 
 	return sb
