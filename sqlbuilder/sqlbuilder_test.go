@@ -53,11 +53,13 @@ func TestSQLBuilder_Delete(t *testing.T) {
 	sql := New(nil)
 	a.NotNil(sql)
 
-	str, vals, err := sql.Delete("table1").
+	query, vals, err := sql.Delete("table1").
 		Where("id=?", 1).
-		And("name=?", "n").String()
-	a.NotError(err).Equal(vals, []interface{}{1, "n"})
-	chkSQLEqual(a, str, "DELETE FROM table1 WHERE id=? AND name=?")
+		And("name=?", "n").
+		String()
+	a.NotError(err).
+		Equal(vals, []interface{}{1, "n"})
+	chkSQLEqual(a, query, "DELETE FROM table1 WHERE id=? AND name=?")
 }
 
 func TestSQLBuilder_Insert(t *testing.T) {
@@ -65,4 +67,29 @@ func TestSQLBuilder_Insert(t *testing.T) {
 
 	sql := New(nil)
 	a.NotNil(sql)
+
+	query, vals, err := sql.Insert("table1").
+		Keys("col1", "col2").
+		Values(1, 1).
+		Values(2, 2).
+		String()
+
+	a.NotError(err).
+		Equal(vals, []interface{}{1, 1, 2, 2})
+	chkSQLEqual(a, query, "INSERT INTO table1 (col1,col2) VALUES(?,?),(?,?)")
+}
+
+func TestSQLBuilder_Update(t *testing.T) {
+	a := assert.New(t)
+
+	sql := New(nil)
+	a.NotNil(sql)
+
+	query, vals, err := sql.Update("table1").
+		Set("col1", 1).
+		Set("col2", "2").
+		String()
+
+	a.NotError(err).Equal(vals, []interface{}{1, "2"})
+	chkSQLEqual(a, query, "UPDATE table1 set col1=?,col2=?")
 }
