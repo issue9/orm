@@ -10,31 +10,28 @@ import (
 	"errors"
 )
 
+// 一组标记位，用于标记某些可重复调用的函数，是否是第一次调用。
+// 比如 OrderBy 在第一次调用时，需要填 `ORDER BY`字符串，之后
+// 的只要跟着列名和相应的排序方式即可。
 const (
-	flagWhere int8 = 1 << iota
-	flagOrder
-	flagColumn // SELECT 的标记
-	flagSet    // UPDATE 的 SET 标记
-	flagValues // INSERT 的 VALUES 标记
+	flagWhere  int8 = 1 << iota
+	flagOrder       // ORDER BY
+	flagColumn      // SELECT
+	flagSet         // UPDATE 的 SET
+	flagValues      // INSERT 的 VALUES
 )
 
 var ErrHasErrors = errors.New("语句中包含一个或多个错误")
 
-// 一个简单的 SQL 语句接接工具。
-//  sql := forward.NewSQL(e)
-//  sql.Prepare().SQLString() // .Exec().Query()   ???
+// SQL 一个简单的 SQL 语句接接工具。
+// NOTE: 调用顺序必须与 SQL 语句相同。
 //
-//  // DELETE
-//  sql.Delete().From("#table1").Where("1=1").And("2=2").Or("3=3")
-//
-//  // UPDATE
-//  sql.Update().Table("#table1").Set("{col}",1).Set("{col2}",2).Date(map[string]interface{}).Where(...)
-//
-//  // INSERT
-//  sql.Insert().Table("table").Set(k,v).Data(map)
-//
-//  // SELECT
-//  sql.Select(c1,c2),Select(c3,c4).From("t1 as t2").Where(...).Asc(...)
+// DELETE
+//  sql := NewSQL(engine).
+//      Delete("table1").
+//      Where("id>?", 5).
+//      And("type=?", 2)
+//  query, vals, err := sql.String()
 type SQL struct {
 	engine Engine
 	buffer *bytes.Buffer
@@ -43,6 +40,7 @@ type SQL struct {
 	errors []error
 }
 
+// 声明一个 SQL 实例
 func NewSQL(e Engine) *SQL {
 	return &SQL{
 		engine: e,
@@ -53,6 +51,7 @@ func NewSQL(e Engine) *SQL {
 	}
 }
 
+// 重置所有的数据为初始值，这样可以重复利用该 SQL 对象。
 func (sql *SQL) Reset() *SQL {
 	sql.buffer.Reset()
 	sql.args = sql.args[:0]
@@ -104,6 +103,7 @@ func (sql *SQL) TruncateLast(n int) *SQL {
 	return sql
 }
 
+// 启动一个 DELETE 语名。
 func (sql *SQL) Delete(table string) *SQL {
 	return sql.WriteString("DELETE FROM ").WriteString(table)
 }
