@@ -33,6 +33,17 @@ func chkSQLEqual(a *assert.Assertion, s1, s2 string) {
 	a.Equal(s1, s2)
 }
 
+func TestSQLBuilder_Reset(t *testing.T) {
+	a := assert.New(t)
+	sql := New(nil)
+	a.NotNil(sql)
+
+	sql.Delete("t1").Where("col1=?", 1)
+	a.True(len(sql.args) > 0).True(sql.flag > 0)
+	sql.Reset()
+	a.Equal(len(sql.args), 0).Equal(sql.flag, 0)
+}
+
 func TestSQLBuilder_TruncateLast(t *testing.T) {
 	a := assert.New(t)
 	sql := New(nil)
