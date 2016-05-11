@@ -19,6 +19,10 @@ func Sqlite3() forward.Dialect {
 
 type sqlite3 struct{}
 
+func (s *sqlite3) Name() string {
+	return "sqlite3"
+}
+
 // implement forward.Dialect.SupportInsertMany()
 func (s *sqlite3) SupportInsertMany() bool {
 	return true

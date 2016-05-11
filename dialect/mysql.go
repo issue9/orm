@@ -21,6 +21,10 @@ func Mysql() forward.Dialect {
 
 type mysql struct{}
 
+func (m *mysql) Name() string {
+	return "mysql"
+}
+
 // implement forward.Dialect.SupportInsertMany()
 func (m *mysql) SupportInsertMany() bool {
 	return true

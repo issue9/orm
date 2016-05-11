@@ -10,6 +10,9 @@ import (
 
 // Dialect接口用于描述与数据库相关的一些语言特性。
 type Dialect interface {
+	// 返回当前数据库的名称。
+	Name() string
+
 	// 返回符合当前数据库规范的引号对。
 	QuoteTuple() (openQuote, closeQuote byte)
 

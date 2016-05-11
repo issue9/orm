@@ -22,6 +22,10 @@ func Postgres() forward.Dialect {
 
 type postgres struct{}
 
+func (p *postgres) Name() string {
+	return "postgres"
+}
+
 // implement forward.Dialect.SupportInsertMany()
 func (p *postgres) SupportInsertMany() bool {
 	return true
