@@ -29,7 +29,7 @@ func (e *engine) Exec(replace bool, query string, args ...interface{}) (sql.Resu
 
 func (e *engine) Prepare(replace bool, query string) (*sql.Stmt, error) { return nil, nil }
 
-func (e *engine) Prefix() string { return "" }
+func (e *engine) Prefix() string { return "engine" }
 
 // forward.Dialect
 
@@ -45,7 +45,19 @@ func (d *dialect) Quote(w *bytes.Buffer, colName string) error { return nil }
 func (d *dialect) ReplaceMarks(*string) error { return nil }
 
 func (d *dialect) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
-	return nil, nil
+	if _, err := w.WriteString(" LIMIT ? "); err != nil {
+		return nil, err
+	}
+
+	if len(offset) == 0 {
+		return []int{limit}, nil
+	}
+
+	if _, err := w.WriteString(" OFFSET ? "); err != nil {
+		return nil, err
+	}
+
+	return []int{limit, offset[0]}, nil
 }
 
 func (d *dialect) NoAIColSQL(w *bytes.Buffer, m *forward.Model) error { return nil }

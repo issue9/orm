@@ -105,12 +105,14 @@ func TestSQLBuilder_Select(t *testing.T) {
 		Asc("t1.id").
 		Desc("t1.type").
 		Asc("t1.name").
+		Limit(20, 5).
 		String()
 
-	a.NotError(err).Equal(vals, []interface{}{5, 3})
+	a.NotError(err).Equal(vals, []interface{}{5, 3, 20, 5})
 	chkSQLEqual(a, query, `SELECT col1,col2,col3 AS c3,col4 FROM
 	table1 AS t1
 	LEFT JOIN table2 as t2 ON t1.id=t2.uid
 	where t1.id>? or t1.id<?
-	order by t1.id asc,t1.type desc,t1.name asc`)
+	order by t1.id asc,t1.type desc,t1.name asc
+	limit ? offset ?`)
 }
