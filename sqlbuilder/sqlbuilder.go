@@ -23,10 +23,13 @@ const (
 	flagValues      // INSERT 的 VALUES
 )
 
+// 当出现此错误时，说明在构建 SQL 语句的过程中出现了错误，
+// 需要调用 SQLBuilder.Errors() 获取详细的错误信息。
 var ErrHasErrors = errors.New("语句中包含一个或多个错误")
 
 // SQLBuilder 一个简单的 SQL 语句接接工具。
-// NOTE: 调用顺序必须与 SQL 语句相同。
+// NOTE: SQLBuilder 的所有函数调用，将直接拼接到字符串，
+// 而不会做缓存，所以调用顺序必须与 SQL 语法相同。
 //
 // DELETE
 //  sql := New(engine).
@@ -71,12 +74,15 @@ func (sql *SQLBuilder) setFlag(flag int8) {
 	sql.flag |= flag
 }
 
-// 是否在构建过程中触发错误信息
+// 是否在构建过程中触发错误信息。
+//
+// NOTE: 在构建完 SQL 语句，准备执行数据库操作之前，
+// 都应该调用此函数确认是否存在错误。
 func (sql *SQLBuilder) HasError() bool {
 	return len(sql.errors) > 0
 }
 
-// 返回所有的错误内容
+// 返回所有的错误内容。
 func (sql *SQLBuilder) Errors() []error {
 	return sql.errors
 }
@@ -99,17 +105,18 @@ func (sql *SQLBuilder) WriteString(s string) *SQLBuilder {
 	return sql
 }
 
-// 去掉尾部的 n 个字符
+// 去掉尾部的 n 个字符。
 func (sql *SQLBuilder) TruncateLast(n int) *SQLBuilder {
 	sql.buffer.Truncate(sql.buffer.Len() - n)
 	return sql
 }
 
-// 启动一个 DELETE 语名。
+// 启动一个 DELETE 语句。
 func (sql *SQLBuilder) Delete(table string) *SQLBuilder {
 	return sql.WriteString("DELETE FROM ").WriteString(table)
 }
 
+// 启动一个 SELECT 语句，并指定列名。可多次调用。
 func (sql *SQLBuilder) Select(cols ...string) *SQLBuilder {
 	if !sql.isSetFlag(flagColumn) {
 		sql.WriteString("SELECT ")
@@ -123,15 +130,17 @@ func (sql *SQLBuilder) Select(cols ...string) *SQLBuilder {
 	return sql.TruncateLast(1)
 }
 
+// 启动一个 INSERT 语句。
 func (sql *SQLBuilder) Insert(table string) *SQLBuilder {
 	return sql.WriteString("INSERT INTO ").WriteString(table)
 }
 
+// 启动一个 UPDATE 语句。
 func (sql *SQLBuilder) Update(table string) *SQLBuilder {
 	return sql.WriteString("UPDATE ").WriteString(table)
 }
 
-// 拼接表名字符串。
+// 拼接表名字符串。当调用 Select() 之后，此方法用于指定表名。
 func (sql *SQLBuilder) From(table string) *SQLBuilder {
 	sql.WriteString(table)
 	return sql
@@ -151,6 +160,7 @@ func (sql *SQLBuilder) where(op string, cond string, args ...interface{}) *SQLBu
 	return sql
 }
 
+// And 的别名。
 func (sql *SQLBuilder) Where(cond string, args ...interface{}) *SQLBuilder {
 	return sql.And(cond, args...)
 }
@@ -261,6 +271,7 @@ func (sql *SQLBuilder) Join(typ, table, on string) *SQLBuilder {
 	return sql
 }
 
+// 返回 SQL 语句和其对应的值。
 func (sql *SQLBuilder) String() (string, []interface{}, error) {
 	if sql.HasError() {
 		return "", nil, ErrHasErrors
@@ -269,6 +280,7 @@ func (sql *SQLBuilder) String() (string, []interface{}, error) {
 	return sql.buffer.String(), sql.args, nil
 }
 
+// 返回预编译的 实例及对应的值。
 func (sql *SQLBuilder) Prepare() (*sql.Stmt, []interface{}, error) {
 	if sql.HasError() {
 		return nil, nil, ErrHasErrors
