@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/forward"
@@ -233,9 +234,9 @@ func (sb *SQLBuilder) Values(vals ...interface{}) *SQLBuilder {
 		sb.WriteString("VALUES(")
 		sb.setFlag(flagValues)
 	} else {
-		if !sb.engine.Dialect().SupportInsertMany() {
-			sb.errors = append(sb.errors, errors.New("当前数据库不支持多行插入"))
-			return sql
+		d := sb.engine.Dialect()
+		if !d.SupportInsertMany() {
+			sb.errors = append(sb.errors, fmt.Errorf("当前数据库[%v]不支持多行插入", d.Name()))
 		}
 		sb.WriteString(",(")
 	}
