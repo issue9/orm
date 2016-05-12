@@ -2,22 +2,20 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlbuilder
+package forward
 
 import (
 	"bytes"
 	"database/sql"
-
-	"github.com/issue9/orm/forward"
 )
 
 // forward.Engine
 
 type engine struct {
-	dialect forward.Dialect
+	dialect Dialect
 }
 
-func (e *engine) Dialect() forward.Dialect { return e.dialect }
+func (e *engine) Dialect() Dialect { return e.dialect }
 
 func (e *engine) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
 	return nil, nil
@@ -51,11 +49,11 @@ func (d *dialect) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return "LIMIT ? OFFSET ? ", []interface{}{limit, offset[0]}
 }
 
-func (d *dialect) NoAIColSQL(w *bytes.Buffer, m *forward.Model) error { return nil }
+func (d *dialect) NoAIColSQL(w *bytes.Buffer, m *Model) error { return nil }
 
-func (d *dialect) AIColSQL(w *bytes.Buffer, m *forward.Model) error { return nil }
+func (d *dialect) AIColSQL(w *bytes.Buffer, m *Model) error { return nil }
 
-func (d *dialect) ConstraintsSQL(w *bytes.Buffer, m *forward.Model) error { return nil }
+func (d *dialect) ConstraintsSQL(w *bytes.Buffer, m *Model) error { return nil }
 
 func (d *dialect) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error { return nil }
 

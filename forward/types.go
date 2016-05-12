@@ -6,7 +6,32 @@ package forward
 
 import (
 	"bytes"
+	"database/sql"
 )
+
+type Errors []error
+
+func (e Errors) Error() string {
+	msg := "发生以下错误："
+	for _, err := range e {
+		msg += err.Error() + "\n"
+	}
+
+	return msg
+}
+
+// DB与Tx的共有接口，方便以下方法调用。
+type Engine interface {
+	Dialect() Dialect
+
+	Query(replace bool, query string, args ...interface{}) (*sql.Rows, error)
+
+	Exec(replace bool, query string, args ...interface{}) (sql.Result, error)
+
+	Prepare(replace bool, query string) (*sql.Stmt, error)
+
+	Prefix() string
+}
 
 // Dialect接口用于描述与数据库相关的一些语言特性。
 type Dialect interface {

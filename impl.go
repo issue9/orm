@@ -14,7 +14,6 @@ import (
 
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/forward"
-	"github.com/issue9/orm/sqlbuilder"
 )
 
 var ErrInvalidKind = errors.New("不支持的reflect.Kind()，只能是结构体或是结构体指针")
@@ -388,7 +387,7 @@ func insert(e forward.Engine, v interface{}) (sql.Result, error) {
 		return nil, errors.New("orm.insert:未指定任何插入的列数据")
 	}
 
-	sql := sqlbuilder.New(e).
+	sql := forward.NewSQL(e).
 		Insert("{#" + m.Name + "}").
 		Keys(keys...).
 		Values(vals...)
@@ -439,8 +438,8 @@ func del(e forward.Engine, v interface{}) (sql.Result, error) {
 }
 
 // rval 为结构体指针组成的数据
-func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*sqlbuilder.SQLBuilder, error) {
-	sql := sqlbuilder.New(e)
+func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*forward.SQL, error) {
+	sql := forward.NewSQL(e)
 	vals := make([]interface{}, 0, 10)
 	keys := []string{}
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同

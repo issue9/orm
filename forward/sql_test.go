@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlbuilder
+package forward
 
 import (
 	"regexp"
@@ -33,9 +33,9 @@ func chkSQLEqual(a *assert.Assertion, s1, s2 string) {
 	a.Equal(s1, s2)
 }
 
-func TestSQLBuilder_Reset(t *testing.T) {
+func TestSQL_Reset(t *testing.T) {
 	a := assert.New(t)
-	sql := New(nil)
+	sql := NewSQL(nil)
 	a.NotNil(sql)
 
 	sql.Delete("t1").Where("col1=?", 1)
@@ -44,9 +44,9 @@ func TestSQLBuilder_Reset(t *testing.T) {
 	a.Equal(len(sql.args), 0).Equal(sql.flag, 0)
 }
 
-func TestSQLBuilder_TruncateLast(t *testing.T) {
+func TestSQL_TruncateLast(t *testing.T) {
 	a := assert.New(t)
-	sql := New(nil)
+	sql := NewSQL(nil)
 	a.NotNil(sql)
 
 	sql.WriteString("123").TruncateLast(1)
@@ -57,9 +57,9 @@ func TestSQLBuilder_TruncateLast(t *testing.T) {
 	a.Equal(sql.buffer.String(), "1")
 }
 
-func TestSQLBuilder_Delete(t *testing.T) {
+func TestSQL_Delete(t *testing.T) {
 	a := assert.New(t)
-	sql := New(nil)
+	sql := NewSQL(nil)
 	a.NotNil(sql)
 
 	query, vals, err := sql.Delete("table1").
@@ -71,9 +71,9 @@ func TestSQLBuilder_Delete(t *testing.T) {
 	chkSQLEqual(a, query, "DELETE FROM table1 WHERE id=? AND name=?")
 }
 
-func TestSQLBuilder_Insert(t *testing.T) {
+func TestSQL_Insert(t *testing.T) {
 	a := assert.New(t)
-	sql := New(&engine{dialect: &dialect{}})
+	sql := NewSQL(&engine{dialect: &dialect{}})
 	a.NotNil(sql)
 
 	// 单行插入
@@ -98,9 +98,9 @@ func TestSQLBuilder_Insert(t *testing.T) {
 	chkSQLEqual(a, query, "INSERT INTO table1 (col1,col2) VALUES(?,?),(?,?)")
 }
 
-func TestSQLBuilder_Update(t *testing.T) {
+func TestSQL_Update(t *testing.T) {
 	a := assert.New(t)
-	sql := New(nil)
+	sql := NewSQL(nil)
 	a.NotNil(sql)
 
 	query, vals, err := sql.Update("table1").
@@ -112,10 +112,10 @@ func TestSQLBuilder_Update(t *testing.T) {
 	chkSQLEqual(a, query, "UPDATE table1 set col1=?,col2=?")
 }
 
-func TestSQLBuilder_Select(t *testing.T) {
+func TestSQL_Select(t *testing.T) {
 	a := assert.New(t)
 	e := &engine{dialect: &dialect{}}
-	sql := New(e)
+	sql := NewSQL(e)
 	a.NotNil(sql)
 
 	query, vals, err := sql.Select("col1,col2").
