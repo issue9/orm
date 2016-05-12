@@ -11,12 +11,6 @@ import (
 	"github.com/issue9/orm/forward"
 )
 
-const (
-	tablePrefixPlaceholder = forward.TablePrefixPlaceholder
-	openQuotePlaceholder   = forward.OpenQuotePlaceholder
-	closeQuotePlaceholder  = forward.CloseQuotePlaceholder
-)
-
 // 数据库操作实例。
 type DB struct {
 	stdDB       *sql.DB
@@ -43,9 +37,9 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect forward.Dialect) (*D
 		dialect:     dialect,
 		tablePrefix: tablePrefix,
 		replacer: strings.NewReplacer(
-			tablePrefixPlaceholder, tablePrefix,
-			openQuotePlaceholder, string(l),
-			closeQuotePlaceholder, string(r),
+			forward.TablePrefixPlaceholder, tablePrefix,
+			forward.OpenQuotePlaceholder, string(l),
+			forward.CloseQuotePlaceholder, string(r),
 		),
 	}, nil
 }
