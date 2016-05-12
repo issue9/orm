@@ -8,7 +8,6 @@ package sqlbuilder
 import (
 	"bytes"
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/issue9/orm/fetch"
@@ -25,10 +24,6 @@ const (
 	flagSet         // UPDATE 的 SET
 	flagValues      // INSERT 的 VALUES
 )
-
-// 当出现此错误时，说明在构建 SQL 语句的过程中出现了错误，
-// 需要调用 SQLBuilder.Errors() 获取详细的错误信息。
-var ErrHasErrors = errors.New("语句中包含一个或多个错误")
 
 // SQLBuilder 一个简单的 SQL 语句接接工具。
 // NOTE: SQLBuilder 的所有函数调用，将直接拼接到字符串，
@@ -77,7 +72,8 @@ func (sb *SQLBuilder) setFlag(flag int8) {
 	sb.flag |= flag
 }
 
-// 是否在构建过程中触发错误信息。
+// 是否在构建过程中触发错误信息。当出现此错误时，说明在构建 SQL
+// 语句的过程中出现了错误，需要调用 Errors() 获取详细的错误信息。
 //
 // NOTE: 在构建完 SQL 语句，准备执行数据库操作之前，
 // 都应该调用此函数确认是否存在错误。
@@ -289,7 +285,7 @@ func (sb *SQLBuilder) Join(typ, table, on string) *SQLBuilder {
 // 返回 SQL 语句和其对应的值。
 func (sb *SQLBuilder) String() (string, []interface{}, error) {
 	if sb.HasError() {
-		return "", nil, ErrHasErrors
+		return "", nil, sb.Errors()
 	}
 
 	return sb.buffer.String(), sb.args, nil
@@ -298,7 +294,7 @@ func (sb *SQLBuilder) String() (string, []interface{}, error) {
 // 返回预编译的实例及对应的值。
 func (sb *SQLBuilder) Prepare() (*sql.Stmt, []interface{}, error) {
 	if sb.HasError() {
-		return nil, nil, ErrHasErrors
+		return nil, nil, sb.Errors()
 	}
 
 	stmt, err := sb.engine.Prepare(true, sb.buffer.String())
