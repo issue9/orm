@@ -5,7 +5,6 @@
 package dialect
 
 import (
-	"bytes"
 	"database/sql"
 	"reflect"
 	"testing"
@@ -20,40 +19,40 @@ func TestPostgres_SQLType(t *testing.T) {
 	p := &postgres{}
 
 	a := assert.New(t)
-	buf := bytes.NewBufferString("")
+	buf := forward.NewSQL(nil)
 	col := &forward.Column{}
 	a.Error(p.sqlType(buf, col))
 
 	col.GoType = reflect.TypeOf(1)
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "BIGINT")
+	chkSQLEqual(a, buf.Buffer().String(), "BIGINT")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "BIGINT")
+	chkSQLEqual(a, buf.Buffer().String(), "BIGINT")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "VARCHAR(5)")
+	chkSQLEqual(a, buf.Buffer().String(), "VARCHAR(5)")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "DOUBLE(5,6)")
+	chkSQLEqual(a, buf.Buffer().String(), "DOUBLE(5,6)")
 
 	col.GoType = reflect.TypeOf([]byte{'1', '2'})
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "VARCHAR(5)")
+	chkSQLEqual(a, buf.Buffer().String(), "VARCHAR(5)")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "BIGINT")
+	chkSQLEqual(a, buf.Buffer().String(), "BIGINT")
 }
 
 func TestPostgres_ReplaceMarks(t *testing.T) {

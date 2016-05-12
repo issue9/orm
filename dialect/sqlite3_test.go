@@ -5,7 +5,6 @@
 package dialect
 
 import (
-	"bytes"
 	"database/sql"
 	"reflect"
 	"testing"
@@ -20,38 +19,38 @@ func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
 	var s = &sqlite3{}
 
-	buf := bytes.NewBufferString("")
+	buf := forward.NewSQL(nil)
 	col := &forward.Column{}
 	a.Error(s.sqlType(buf, col))
 
 	col.GoType = reflect.TypeOf(1)
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "INTEGER")
+	chkSQLEqual(a, buf.Buffer().String(), "INTEGER")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "INTEGER")
+	chkSQLEqual(a, buf.Buffer().String(), "INTEGER")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "TEXT")
+	chkSQLEqual(a, buf.Buffer().String(), "TEXT")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "REAL")
+	chkSQLEqual(a, buf.Buffer().String(), "REAL")
 
 	col.GoType = reflect.TypeOf([]byte{'1', '2'})
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "TEXT")
+	chkSQLEqual(a, buf.Buffer().String(), "TEXT")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.String(), "INTEGER")
+	chkSQLEqual(a, buf.Buffer().String(), "INTEGER")
 }

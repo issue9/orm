@@ -4,10 +4,7 @@
 
 package forward
 
-import (
-	"bytes"
-	"database/sql"
-)
+import "database/sql"
 
 // forward.Engine
 
@@ -38,7 +35,7 @@ func (d *dialect) Name() string { return "dialect_test" }
 
 func (d *dialect) QuoteTuple() (openQuote, closeQuote byte) { return '`', '`' }
 
-func (d *dialect) Quote(w *bytes.Buffer, colName string) error { return nil }
+func (d *dialect) Quote(w *SQL, colName string) {}
 
 func (d *dialect) ReplaceMarks(*string) error { return nil }
 
@@ -52,12 +49,12 @@ func (d *dialect) LimitSQL(sql *SQL, limit int, offset ...int) []interface{} {
 	return []interface{}{limit, offset[0]}
 }
 
-func (d *dialect) NoAIColSQL(w *bytes.Buffer, m *Model) error { return nil }
+func (d *dialect) NoAIColSQL(w *SQL, m *Model) error { return nil }
 
-func (d *dialect) AIColSQL(w *bytes.Buffer, m *Model) error { return nil }
+func (d *dialect) AIColSQL(w *SQL, m *Model) error { return nil }
 
-func (d *dialect) ConstraintsSQL(w *bytes.Buffer, m *Model) error { return nil }
+func (d *dialect) ConstraintsSQL(w *SQL, m *Model) {}
 
-func (d *dialect) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error { return nil }
+func (d *dialect) TruncateTableSQL(w *SQL, tableName, aiColumn string) {}
 
 func (d *dialect) SupportInsertMany() bool { return true }

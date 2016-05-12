@@ -5,7 +5,6 @@
 package dialect
 
 import (
-	"bytes"
 	"reflect"
 	"regexp"
 	"strings"
@@ -39,7 +38,7 @@ func chkSQLEqual(a *assert.Assertion, s1, s2 string) {
 func TestCreatColSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := bytes.NewBufferString("")
+	buf := forward.NewSQL(nil)
 	col := &forward.Column{}
 
 	col.Name = "id"
@@ -47,7 +46,7 @@ func TestCreatColSQL(t *testing.T) {
 	col.Len1 = 5
 	createColSQL(dialect, buf, col)
 	wont := "`id` BIGINT(5) NOT NULL"
-	chkSQLEqual(a, buf.String(), wont)
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 
 	buf.Reset()
 	col.Len1 = 0
@@ -56,7 +55,7 @@ func TestCreatColSQL(t *testing.T) {
 	col.Default = "1"
 	createColSQL(dialect, buf, col)
 	wont = "`id` SMALLINT NOT NULL DEFAULT '1'"
-	chkSQLEqual(a, buf.String(), wont)
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 
 	buf.Reset()
 	col.HasDefault = false
@@ -68,43 +67,43 @@ func TestCreatColSQL(t *testing.T) {
 func TestCreatePKSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := bytes.NewBufferString("")
+	buf := forward.NewSQL(nil)
 	col1 := &forward.Column{Name: "id"}
 	col2 := &forward.Column{Name: "username"}
 	cols := []*forward.Column{col1, col2}
 
 	createPKSQL(dialect, buf, cols, "pkname")
 	wont := "CONSTRAINT pkname PRIMARY KEY(`id`,`username`)"
-	chkSQLEqual(a, buf.String(), wont)
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 
 	buf.Reset()
 	createPKSQL(dialect, buf, cols[:1], "pkname")
 	wont = "CONSTRAINT pkname PRIMARY KEY(`id`)"
-	chkSQLEqual(a, buf.String(), wont)
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 }
 
 func TestCreateUniqueSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := bytes.NewBufferString("")
+	buf := forward.NewSQL(nil)
 	col1 := &forward.Column{Name: "id"}
 	col2 := &forward.Column{Name: "username"}
 	cols := []*forward.Column{col1, col2}
 
 	createUniqueSQL(dialect, buf, cols, "pkname")
 	wont := "CONSTRAINT pkname UNIQUE(`id`,`username`)"
-	chkSQLEqual(a, buf.String(), wont)
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 
 	buf.Reset()
 	createUniqueSQL(dialect, buf, cols[:1], "pkname")
 	wont = "CONSTRAINT pkname UNIQUE(`id`)"
-	chkSQLEqual(a, buf.String(), wont)
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 }
 
 func TestCreateFKSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := bytes.NewBufferString("")
+	buf := forward.NewSQL(nil)
 	fk := &forward.ForeignKey{
 		Col:          &forward.Column{Name: "id"},
 		RefTableName: "refTable",
@@ -114,17 +113,17 @@ func TestCreateFKSQL(t *testing.T) {
 
 	createFKSQL(dialect, buf, fk, "fkname")
 	wont := "CONSTRAINT fkname FOREIGN KEY(`id`) REFERENCES refTable(`refCol`) ON UPDATE NO ACTION"
-	chkSQLEqual(a, buf.String(), wont)
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 }
 
 func TestCreateCheckSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := bytes.NewBufferString("")
+	buf := forward.NewSQL(nil)
 
 	createCheckSQL(dialect, buf, "id>5", "chkname")
 	wont := "CONSTRAINT chkname CHECK(id>5)"
-	chkSQLEqual(a, buf.String(), wont)
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 }
 
 func TestMysqlLimitSQL(t *testing.T) {
@@ -133,13 +132,12 @@ func TestMysqlLimitSQL(t *testing.T) {
 
 	ret := mysqlLimitSQL(w, 5, 0)
 	a.Equal(ret, []int{5, 0})
-	query, vals := w.String()
-	chkSQLEqual(a, query, " LIMIT ? OFFSET ? ")
+	chkSQLEqual(a, w.Buffer().String(), " LIMIT ? OFFSET ? ")
 
 	w.Reset()
 	ret = mysqlLimitSQL(w, 5)
 	a.Equal(ret, []int{5})
-	chkSQLEqual(a, w.String(), "LIMIT ?")
+	chkSQLEqual(a, w.Buffer().String(), "LIMIT ?")
 }
 
 func TestOracleLimitSQL(t *testing.T) {
@@ -148,10 +146,10 @@ func TestOracleLimitSQL(t *testing.T) {
 
 	ret := oracleLimitSQL(w, 5, 0)
 	a.Equal(ret, []int{0, 5})
-	chkSQLEqual(a, w.String(), " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ")
+	chkSQLEqual(a, w.Buffer().String(), " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ")
 
 	w.Reset()
 	ret = oracleLimitSQL(w, 5)
 	a.Equal(ret, []int{5})
-	chkSQLEqual(a, w.String(), "FETCH NEXT ? ROWS ONLY ")
+	chkSQLEqual(a, w.Buffer().String(), "FETCH NEXT ? ROWS ONLY ")
 }
