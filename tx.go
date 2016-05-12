@@ -137,14 +137,8 @@ func (tx *Tx) InsertMany(v interface{}) error {
 }
 
 // 更新一条类型。
-func (tx *Tx) Update(v interface{}) (sql.Result, error) {
-	return update(tx, v, false)
-}
-
-// 更新一条类型。
-// 零值也会被提交。
-func (tx *Tx) UpdateZero(v interface{}) (sql.Result, error) {
-	return update(tx, v, true)
+func (tx *Tx) Update(v interface{}, cols ...string) (sql.Result, error) {
+	return update(tx, v, cols...)
 }
 
 // 删除一条数据。
@@ -198,16 +192,6 @@ func (tx *Tx) MultSelect(objs ...interface{}) error {
 func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Update(v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// 更新一条或多条类型。
-func (tx *Tx) MultUpdateZero(objs ...interface{}) error {
-	for _, v := range objs {
-		if _, err := tx.UpdateZero(v); err != nil {
 			return err
 		}
 	}

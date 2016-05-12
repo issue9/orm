@@ -301,11 +301,12 @@ func find(e forward.Engine, v interface{}) error {
 	return err
 }
 
-// 更新 v 到数据库，zero 表示是否将零值也更新到数据库。
+// 更新 v 到数据库，默认情况下不更新零值。
+// cols 表示必须要更新的列，即使是零值。
 //
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func update(e forward.Engine, v interface{}, zero bool) (sql.Result, error) {
+func update(e forward.Engine, v interface{}, cols ...string) (sql.Result, error) {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return nil, err
@@ -327,7 +328,8 @@ func update(e forward.Engine, v interface{}, zero bool) (sql.Result, error) {
 			return nil, fmt.Errorf("orm.update:未找到该名称[%v]的值", col.GoName)
 		}
 
-		if !zero && col.Zero == field.Interface() {
+		// 零值，但是不属于指定需要更新的列
+		if !inStrSlice(name, cols) && col.Zero == field.Interface() {
 			continue
 		}
 
@@ -339,6 +341,15 @@ func update(e forward.Engine, v interface{}, zero bool) (sql.Result, error) {
 	}
 
 	return sql.Exec(true)
+}
+
+func inStrSlice(key string, slice []string) bool {
+	for _, v := range slice {
+		if v == key {
+			return true
+		}
+	}
+	return false
 }
 
 // 将v生成delete的sql语句
@@ -369,7 +380,7 @@ func del(e forward.Engine, v interface{}) (sql.Result, error) {
 func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*forward.SQL, error) {
 	sql := forward.NewSQL(e)
 	vals := make([]interface{}, 0, 10)
-	keys := []string{}
+	keys := []string{}         // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 
 	for i := 0; i < rval.Len(); i++ {
@@ -405,8 +416,8 @@ func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*forward.SQL, err
 				}
 
 				vals = append(vals, field.Interface())
-				cols = append(cols, "{"+name+"}") // 记录列的顺序
-				keys = append(keys, name)         // 记录列的顺序
+				cols = append(cols, "{"+name+"}")
+				keys = append(keys, name)
 			}
 			sql.Keys(cols...).Values(vals...)
 		} else { // 之后的元素，只需要获取其对应的值就行
