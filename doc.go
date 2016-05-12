@@ -8,7 +8,7 @@
 //  1. sqlite3:  github.com/mattn/go-sqlite3
 //  2. mysql:    github.com/go-sql-driver/mysql
 //  3. postgres: github.com/lib/pq
-// 其它数据库，用户可以通过实现Dialect接口，来实现相应的支持。
+// 其它数据库，用户可以通过实现 Dialect 接口，来实现相应的支持。
 //
 //
 //
@@ -143,12 +143,12 @@
 //
 // Select:
 //  // 导出id=1的数据
-//  m, err := e.Where("id=1").Table("#table").FetchMap(nil)
+//  m, err := e.SQL().Select("*").From("{#table}").Where("id=1").QueryMap(nil)
 //  // 导出id为1的数据，并回填到user实例中
 //  user := &User{Id:1}
-//  err := e.Find(u)
+//  err := e.Select(u)
 //
-//  Query/Exec:
+// Query/Exec:
 //  // Query返回参数与sql.Query是相同的
 //  sql := "select * from #tbl_name where id=?"
 //  rows, err := e.Query(true, sql, []interface{}{5})
@@ -158,9 +158,9 @@
 //
 // 事务：
 //
-// 默认的DB是不支持事务的，若需要事务支持，则需要调用DB.Begin()
-// 返回事务对象Tx，当然并不是所有的数据库都支持事务操作的。
-// Tx拥有一组与DB相同的接口，另外还提供了一组以`Mult`开头的函数，
+// 默认的 DB 是不支持事务的，若需要事务支持，则需要调用 DB.Begin()
+// 返回事务对象 Tx，当然并不是所有的数据库都支持事务操作的。
+// Tx拥有一组与 DB 相同的接口，另外还提供了一组以 `Mult` 开头的函数，
 // 用以同时操作多条记录的。
 package orm
 

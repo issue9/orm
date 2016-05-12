@@ -274,8 +274,9 @@ func insert(e forward.Engine, v interface{}) (sql.Result, error) {
 }
 
 // 查找多个数据。
-// 根据v的pk或中唯一索引列查找一行数据，并赋值给v。
-// 若v为空，则不发生任何操作，v 可以是数组。
+//
+// 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
+// 若 v 为空，则不发生任何操作，v 可以是数组。
 func find(e forward.Engine, v interface{}) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
@@ -300,7 +301,8 @@ func find(e forward.Engine, v interface{}) error {
 	return err
 }
 
-// 更新v到数据库，zero表示是否将零值也更新到数据库。
+// 更新 v 到数据库，zero 表示是否将零值也更新到数据库。
+//
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
 func update(e forward.Engine, v interface{}, zero bool) (sql.Result, error) {

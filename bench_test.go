@@ -10,7 +10,7 @@ import (
 	"github.com/issue9/assert"
 )
 
-// mysql: BenchmarkDB_Insert	    5000	    234033 ns/op
+// mysql: BenchmarkDB_Insert-4     	    5000	    280546 ns/op
 func BenchmarkDB_Insert(b *testing.B) {
 	a := assert.New(b)
 
@@ -33,7 +33,7 @@ func BenchmarkDB_Insert(b *testing.B) {
 	}
 }
 
-// mysql: BenchmarkDB_Update	    5000	    290209 ns/op
+// mysql: BenchmarkDB_Update-4     	    5000	    369461 ns/op
 func BenchmarkDB_Update(b *testing.B) {
 	a := assert.New(b)
 
@@ -59,7 +59,7 @@ func BenchmarkDB_Update(b *testing.B) {
 	}
 }
 
-// mysql: BenchmarkDB_Select	   10000	    181897 ns/op
+// mysql: BenchmarkDB_Select-4     	   10000	    218232 ns/op
 func BenchmarkDB_Select(b *testing.B) {
 	a := assert.New(b)
 
@@ -84,7 +84,7 @@ func BenchmarkDB_Select(b *testing.B) {
 	}
 }
 
-// mysql: BenchmarkDB_WhereUpdate	   10000	    169674 ns/op
+// mysql: BenchmarkDB_WhereUpdate-4	   10000	    163209 ns/op
 func BenchmarkDB_WhereUpdate(b *testing.B) {
 	a := assert.New(b)
 
@@ -106,16 +106,17 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		_, err := db.SQL().
-			Update("#bench").
-			Where("id=?", i+1).
-			Keys("name", "pass", "site").
-			Values([]interface{}{"n1", "p1", "s1"}).
+			Update("{#bench}").
+			Set("name", "n1").
+			Set("pass", "p1").
+			Set("site", "s1").
+			Where("{id}=?", i+1).
 			Exec(true)
 		a.NotError(err)
 	}
 }
 
-// mysql: BenchmarkDB_Count	   10000	    168311 ns/op
+// mysql: BenchmarkDB_Count-4      	   10000	    186920 ns/op
 func BenchmarkDB_Count(b *testing.B) {
 	a := assert.New(b)
 
