@@ -35,11 +35,6 @@ func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'
 }
 
-// implement forward.Dialect.Quote()
-func (p *postgres) Quote(w *forward.SQL, name string) {
-	w.WriteByte('"').WriteString(name).WriteByte('"')
-}
-
 // implement forward.Dialect.ReplaceMarks()
 // 在有?占位符的情况下，语句中不能包含$字符串
 func (p *postgres) ReplaceMarks(sql *string) error {

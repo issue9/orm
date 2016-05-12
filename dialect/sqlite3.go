@@ -32,11 +32,6 @@ func (s *sqlite3) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
-// implement forward.Dialect.Quote()
-func (s *sqlite3) Quote(w *forward.SQL, name string) {
-	w.WriteByte('`').WriteString(name).WriteByte('`')
-}
-
 // implement forward.Dialect.ReplaceMarks()
 func (s *sqlite3) ReplaceMarks(sql *string) error {
 	return nil

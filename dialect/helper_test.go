@@ -45,7 +45,7 @@ func TestCreatColSQL(t *testing.T) {
 	col.GoType = reflect.TypeOf(1)
 	col.Len1 = 5
 	createColSQL(dialect, buf, col)
-	wont := "`id` BIGINT(5) NOT NULL"
+	wont := "{id} BIGINT(5) NOT NULL"
 	chkSQLEqual(a, buf.Buffer().String(), wont)
 
 	buf.Reset()
@@ -54,14 +54,15 @@ func TestCreatColSQL(t *testing.T) {
 	col.HasDefault = true
 	col.Default = "1"
 	createColSQL(dialect, buf, col)
-	wont = "`id` SMALLINT NOT NULL DEFAULT '1'"
+	wont = "{id} SMALLINT NOT NULL DEFAULT '1'"
 	chkSQLEqual(a, buf.Buffer().String(), wont)
 
 	buf.Reset()
 	col.HasDefault = false
 	col.Nullable = true
 	createColSQL(dialect, buf, col)
-	wont = "`id` SMALLINT NULL"
+	wont = "{id} SMALLINT"
+	chkSQLEqual(a, buf.Buffer().String(), wont)
 }
 
 func TestCreatePKSQL(t *testing.T) {
@@ -73,12 +74,12 @@ func TestCreatePKSQL(t *testing.T) {
 	cols := []*forward.Column{col1, col2}
 
 	createPKSQL(dialect, buf, cols, "pkname")
-	wont := "CONSTRAINT pkname PRIMARY KEY(`id`,`username`)"
+	wont := "CONSTRAINT pkname PRIMARY KEY({id},{username})"
 	chkSQLEqual(a, buf.Buffer().String(), wont)
 
 	buf.Reset()
 	createPKSQL(dialect, buf, cols[:1], "pkname")
-	wont = "CONSTRAINT pkname PRIMARY KEY(`id`)"
+	wont = "CONSTRAINT pkname PRIMARY KEY({id})"
 	chkSQLEqual(a, buf.Buffer().String(), wont)
 }
 
@@ -91,12 +92,12 @@ func TestCreateUniqueSQL(t *testing.T) {
 	cols := []*forward.Column{col1, col2}
 
 	createUniqueSQL(dialect, buf, cols, "pkname")
-	wont := "CONSTRAINT pkname UNIQUE(`id`,`username`)"
+	wont := "CONSTRAINT pkname UNIQUE({id},{username})"
 	chkSQLEqual(a, buf.Buffer().String(), wont)
 
 	buf.Reset()
 	createUniqueSQL(dialect, buf, cols[:1], "pkname")
-	wont = "CONSTRAINT pkname UNIQUE(`id`)"
+	wont = "CONSTRAINT pkname UNIQUE({id})"
 	chkSQLEqual(a, buf.Buffer().String(), wont)
 }
 
@@ -112,7 +113,7 @@ func TestCreateFKSQL(t *testing.T) {
 	}
 
 	createFKSQL(dialect, buf, fk, "fkname")
-	wont := "CONSTRAINT fkname FOREIGN KEY(`id`) REFERENCES refTable(`refCol`) ON UPDATE NO ACTION"
+	wont := "CONSTRAINT fkname FOREIGN KEY({id}) REFERENCES refTable({refCol}) ON UPDATE NO ACTION"
 	chkSQLEqual(a, buf.Buffer().String(), wont)
 }
 

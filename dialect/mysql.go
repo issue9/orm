@@ -34,11 +34,6 @@ func (m *mysql) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
-// implement forward.Dialect.Quote
-func (m *mysql) Quote(w *forward.SQL, name string) {
-	w.WriteByte('`').WriteString(name).WriteByte('`')
-}
-
 // implement forward.Dialect.ReplaceMarks()
 func (m *mysql) ReplaceMarks(sql *string) error {
 	return nil

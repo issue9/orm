@@ -105,14 +105,14 @@ func buildCreateSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 		return ErrInvalidKind
 	}
 
-	sql.WriteString("CREATE TABLE IF NOT EXISTS ")
-	d.Quote(sql, e.Prefix()+m.Name)
-	sql.WriteByte('(')
+	sql.WriteString("CREATE TABLE IF NOT EXISTS ").
+		WriteString("{#").
+		WriteString(m.Name).
+		WriteString("}(")
 	d.AIColSQL(sql, m)
 	d.NoAIColSQL(sql, m)
 	d.ConstraintsSQL(sql, m)
-	sql.TruncateLast(1)
-	sql.WriteByte(')')
+	sql.TruncateLast(1).WriteByte(')')
 
 	return nil
 }
@@ -172,15 +172,13 @@ func create(e forward.Engine, v interface{}) error {
 		return nil
 	}
 	for name, cols := range m.KeyIndexes {
-		sql.Reset()
-		sql.WriteString("CREATE INDEX ")
-		e.Dialect().Quote(sql, name)
-		sql.WriteString(" ON ")
-		e.Dialect().Quote(sql, e.Prefix()+m.Name)
-		sql.WriteByte('(')
+		sql.Reset().
+			WriteString("CREATE INDEX ").
+			WriteByte('{').WriteString(name).WriteByte('}').
+			WriteString(" ON ").
+			WriteString("{#").WriteString(m.Name).WriteString("}(")
 		for _, col := range cols {
-			e.Dialect().Quote(sql, col.Name)
-			sql.WriteByte(',')
+			sql.WriteByte('{').WriteString(col.Name).WriteString("},")
 		}
 		sql.TruncateLast(1)
 		sql.WriteByte(')')

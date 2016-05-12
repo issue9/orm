@@ -38,9 +38,6 @@ type Dialect interface {
 	// 返回符合当前数据库规范的引号对。
 	QuoteTuple() (openQuote, closeQuote byte)
 
-	// 给一个关键字加引号
-	Quote(sql *SQL, colName string)
-
 	// 替换语句中的?占位符
 	ReplaceMarks(*string) error
 
