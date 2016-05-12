@@ -105,11 +105,13 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 	a.NotError(db.Insert(m))
 
 	for i := 0; i < b.N; i++ {
-		a.NotError(db.Where("id=?", i+1).Table("#bench").Update(true, map[string]interface{}{
-			"name": "n1",
-			"pass": "p1",
-			"site": "s1",
-		}))
+		_, err := db.SQL().
+			Update("#bench").
+			Where("id=?", i+1).
+			Keys("name", "pass", "site").
+			Values([]interface{}{"n1", "p1", "s1"}).
+			Exec(true)
+		a.NotError(err)
 	}
 }
 

@@ -5,7 +5,6 @@
 package orm
 
 import (
-	"bytes"
 	"database/sql"
 	"reflect"
 
@@ -121,30 +120,31 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		return ErrInvalidKind
 	}
 
-	sql := new(bytes.Buffer)
-	vals, err := buildInsertManySQL(sql, tx, rval)
+	//sql := new(bytes.Buffer)
+	sql, err := buildInsertManySQL(tx, rval)
 	if err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(false, sql.String(), vals...); err != nil {
+	if _, err := sql.Exec(true); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// 更新一个或多个类型。
+// 更新一条类型。
 func (tx *Tx) Update(v interface{}) (sql.Result, error) {
 	return update(tx, v, false)
 }
 
-// 更新一个或多个类型。
+// 更新一条类型。
+// 零值也会被提交。
 func (tx *Tx) UpdateZero(v interface{}) (sql.Result, error) {
 	return update(tx, v, true)
 }
 
-// 删除一个或是多个数据。
+// 删除一条数据。
 func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
 	return del(tx, v)
 }
@@ -181,6 +181,7 @@ func (tx *Tx) MultInsert(objs ...interface{}) error {
 	return nil
 }
 
+// 选择符合要求的一条或是多条记录。
 func (tx *Tx) MultSelect(objs ...interface{}) error {
 	for _, v := range objs {
 		if err := tx.Select(v); err != nil {
@@ -190,7 +191,7 @@ func (tx *Tx) MultSelect(objs ...interface{}) error {
 	return nil
 }
 
-// 更新一个或多个类型。
+// 更新一条或多条类型。
 func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Update(v); err != nil {
@@ -200,7 +201,7 @@ func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	return nil
 }
 
-// 更新一个或多个类型。
+// 更新一条或多条类型。
 func (tx *Tx) MultUpdateZero(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.UpdateZero(v); err != nil {
@@ -210,7 +211,7 @@ func (tx *Tx) MultUpdateZero(objs ...interface{}) error {
 	return nil
 }
 
-// 删除一个或是多个数据。
+// 删除一条或是多条数据。
 func (tx *Tx) MultDelete(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Delete(v); err != nil {
@@ -251,17 +252,11 @@ func (tx *Tx) MultTruncate(objs ...interface{}) error {
 	return nil
 }
 
-// 返回SQL实例。
-func (tx *Tx) Where(cond string, args ...interface{}) *SQL {
-	w := newSQL(tx)
-	return w.And(cond, args...)
-}
-
 // 获取当前实例的表名前缀
 func (tx *Tx) Prefix() string {
 	return tx.db.tablePrefix
 }
 
-func (tx *Tx) SQL() *SQL {
-	return newSQL(tx)
+func (tx *Tx) SQL() *forward.SQL {
+	return forward.NewSQL(tx)
 }

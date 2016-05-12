@@ -103,7 +103,7 @@ func newDB(a *assert.Assertion) *DB {
 }
 
 // table表中是否存在size条记录，若不是，则触发error
-func hasCount(db engine, a *assert.Assertion, table string, size int) {
+func hasCount(db forward.Engine, a *assert.Assertion, table string, size int) {
 	rows, err := db.Query(true, "SELECT COUNT(*) as cnt FROM #"+table)
 	a.NotError(err).NotNil(rows)
 	defer func() {

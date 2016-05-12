@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	tablePrefixPlaceholder = "#"
-	openQuotePlaceholder   = "{"
-	closeQuotePlaceholder  = "}"
+	tablePrefixPlaceholder = forward.TablePrefixPlaceholder
+	openQuotePlaceholder   = forward.OpenQuotePlaceholder
+	closeQuotePlaceholder  = forward.CloseQuotePlaceholder
 )
 
 // 数据库操作实例。
@@ -153,12 +153,12 @@ func (db *DB) Count(v interface{}) (int, error) {
 	return count(db, v)
 }
 
-// 创建一张或多张表。
+// 创建一张表。
 func (db *DB) Create(v interface{}) error {
 	return create(db, v)
 }
 
-// 删除一张或多张表。
+// 删除一张表。
 func (db *DB) Drop(v interface{}) error {
 	return drop(db, v)
 }
@@ -168,14 +168,8 @@ func (db *DB) Truncate(v interface{}) error {
 	return truncate(db, v)
 }
 
-// 通过SQL实例。
-func (db *DB) Where(cond string, args ...interface{}) *SQL {
-	w := newSQL(db)
-	return w.And(cond, args...)
-}
-
-func (db *DB) SQL() *SQL {
-	return newSQL(db)
+func (db *DB) SQL() *forward.SQL {
+	return forward.NewSQL(db)
 }
 
 // 开始一个新的事务
