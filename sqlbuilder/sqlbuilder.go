@@ -81,6 +81,11 @@ func (sb *SQLBuilder) HasError() bool {
 	return len(sb.errors) > 0
 }
 
+// 获取与之关联的 bytes.Buffer 对像。
+func (sb *SQLBuilder) Buffer() *bytes.Buffer {
+	return sb.buffer
+}
+
 // 返回所有的错误内容。
 func (sb *SQLBuilder) Errors() error {
 	return Errors(sb.errors)
@@ -100,6 +105,14 @@ func (sb *SQLBuilder) WriteString(s string) *SQLBuilder {
 	if err != nil {
 		sb.errors = append(sb.errors, err)
 	}
+
+	return sb
+}
+
+// 向语句中追加字符串和值
+func (sb *SQLBuilder) Append(sql string, vals ...interface{}) *SQLBuilder {
+	sb.WriteString(sql)
+	sb.args = append(sb.args, vals...)
 
 	return sb
 }
@@ -156,10 +169,7 @@ func (sb *SQLBuilder) where(op string, cond string, args ...interface{}) *SQLBui
 	}
 
 	sb.WriteString(op)
-	sb.WriteString(cond)
-	sb.args = append(sb.args, args...)
-
-	return sb
+	return sb.Append(cond, args...)
 }
 
 // And 的别名。
