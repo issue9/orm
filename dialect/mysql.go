@@ -54,8 +54,8 @@ func (m *mysql) ReplaceMarks(sql *string) error {
 }
 
 // implement forward.Dialect.Limit()
-func (m *mysql) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
-	return mysqlLimitSQL(w, limit, offset...)
+func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+	return mysqlLimitSQL(limit, offset...)
 }
 
 // implement forward.Dialect.AIColSQL()

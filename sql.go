@@ -264,10 +264,8 @@ func (s *SQL) query(replace bool, cols ...string) (*sql.Rows, error) {
 
 	// limit
 	if len(s.limit) > 0 {
-		vals, err := s.e.Dialect().LimitSQL(sql, s.limit[0], s.limit[1:]...)
-		if err != nil {
-			return nil, err
-		}
+		query, vals := s.e.Dialect().LimitSQL(s.limit[0], s.limit[1:]...)
+		sql.WriteString(query)
 
 		args = append(args, vals[0])
 		if len(vals) > 1 {

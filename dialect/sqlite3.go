@@ -52,8 +52,8 @@ func (s *sqlite3) ReplaceMarks(sql *string) error {
 }
 
 // implement forward.Dialect.LimitSQL()
-func (s *sqlite3) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
-	return mysqlLimitSQL(w, limit, offset...)
+func (s *sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+	return mysqlLimitSQL(limit, offset...)
 }
 
 // implement forward.Dialect.AIColSQL()

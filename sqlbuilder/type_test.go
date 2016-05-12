@@ -44,20 +44,11 @@ func (d *dialect) Quote(w *bytes.Buffer, colName string) error { return nil }
 
 func (d *dialect) ReplaceMarks(*string) error { return nil }
 
-func (d *dialect) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
-	if _, err := w.WriteString(" LIMIT ? "); err != nil {
-		return nil, err
-	}
-
+func (d *dialect) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	if len(offset) == 0 {
-		return []int{limit}, nil
+		return " LIMIT ? ", []interface{}{limit}
 	}
-
-	if _, err := w.WriteString(" OFFSET ? "); err != nil {
-		return nil, err
-	}
-
-	return []int{limit, offset[0]}, nil
+	return "LIMIT ? OFFSET ? ", []interface{}{limit, offset[0]}
 }
 
 func (d *dialect) NoAIColSQL(w *bytes.Buffer, m *forward.Model) error { return nil }

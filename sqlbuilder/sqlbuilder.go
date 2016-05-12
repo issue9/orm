@@ -207,20 +207,10 @@ func (sb *SQLBuilder) Asc(col string) *SQLBuilder {
 	return sb.orderBy(" ASC ", col)
 }
 
-func (sb *SQLBuilder) Limit(limit, offset int) *SQLBuilder {
-	vals, err := sb.engine.Dialect().LimitSQL(sb.buffer, limit, offset)
-	if err != nil {
-		sb.errors = append(sb.errors, err)
-	}
-
-	args := make([]interface{}, 0, 2)
-	for _, val := range vals {
-		args = append(args, val)
-	}
-
-	sb.args = append(sb.args, args...)
-
-	return sb
+// offset 的值为多个时，只有第一个启作用
+func (sb *SQLBuilder) Limit(limit int, offset ...int) *SQLBuilder {
+	query, vals := sb.engine.Dialect().LimitSQL(limit, offset...)
+	return sb.Append(query, vals...)
 }
 
 // 指定插入数据时的列名
