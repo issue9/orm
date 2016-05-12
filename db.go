@@ -62,13 +62,7 @@ func (db *DB) Dialect() forward.Dialect {
 }
 
 // 执行一条查询语句，并返回相应的sql.Rows实例。
-// 功能基本上等同于标准库database/sql的DB.Query()
-// replace指示是否替换掉语句中的占位符，语句中可以指定两种占位符：
-// - # 表示一个表名前缀；
-// - {} 表示一对Quote字符。如：
-//  select * from #user where {group}=1
-// 在replace为false时，将原样输出，否则将被转换成以下字符串(以myql为例，假设当前的prefix为p_)
-//  select * from prefix_user where `group`=1
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (db *DB) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
 	if replace {
 		query = db.replacer.Replace(query)
@@ -81,8 +75,8 @@ func (db *DB) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	return db.stdDB.Query(query, args...)
 }
 
-// 功能等同于database/sql的DB.Exec()。
-// replace参数可参考DB.Query()的说明。
+// 执行 SQL 语句。
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (db *DB) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
 	if replace {
 		query = db.replacer.Replace(query)
@@ -95,8 +89,8 @@ func (db *DB) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	return db.stdDB.Exec(query, args...)
 }
 
-// 功能等同于database/sql的DB.Prepare()。
-// replace参数可参考DB.Query()的说明。
+// 预编译查询语句。
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
 		query = db.replacer.Replace(query)

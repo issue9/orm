@@ -219,7 +219,7 @@ func truncate(e forward.Engine, v interface{}) error {
 	}
 
 	sql := forward.NewSQL(e)
-	e.Dialect().TruncateTableSQL(sql, e.Prefix()+m.Name, aiName)
+	e.Dialect().TruncateTableSQL(sql, "#"+m.Name, aiName)
 
 	_, err = sql.Exec(true)
 	return err

@@ -22,7 +22,8 @@ func (tx *Tx) StdTx() *sql.Tx {
 	return tx.stdTx
 }
 
-// 执行一条查询语句，具体功能参考DB::Query()
+// 执行一条查询语句。
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
 	if replace {
 		query = tx.db.replacer.Replace(query)
@@ -35,7 +36,8 @@ func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	return tx.stdTx.Query(query, args...)
 }
 
-// 执行一条SQL语句，具体功能参考DB::Exec()
+// 执行一条SQL语句。
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
 	if replace {
 		query = tx.db.replacer.Replace(query)
@@ -48,7 +50,8 @@ func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	return tx.stdTx.Exec(query, args...)
 }
 
-// 将一条SQL语句进行预编译，具体功能参考DB::Prepare()
+// 将一条SQL语句进行预编译。
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
 		query = tx.db.replacer.Replace(query)
