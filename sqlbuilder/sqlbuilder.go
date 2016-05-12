@@ -86,8 +86,8 @@ func (sb *SQLBuilder) HasError() bool {
 }
 
 // 返回所有的错误内容。
-func (sb *SQLBuilder) Errors() []error {
-	return sb.errors
+func (sb *SQLBuilder) Errors() error {
+	return Errors(sb.errors)
 }
 
 func (sb *SQLBuilder) WriteByte(c byte) *SQLBuilder {

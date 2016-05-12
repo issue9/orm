@@ -8,6 +8,12 @@ import (
 	"database/sql"
 )
 
+const (
+	TablePrefixPlaceholder = "#"
+	OpenQuotePlaceholder   = "{"
+	CloseQuotePlaceholder  = "}"
+)
+
 // DB与Tx的共有接口，方便以下方法调用。
 type Engine interface {
 	Dialect() Dialect

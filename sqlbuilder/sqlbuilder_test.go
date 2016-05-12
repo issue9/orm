@@ -76,7 +76,18 @@ func TestSQLBuilder_Insert(t *testing.T) {
 	sql := New(&engine{dialect: &dialect{}})
 	a.NotNil(sql)
 
+	// 单行插入
 	query, vals, err := sql.Insert("table1").
+		Keys("col1", "col2").
+		Values(1, 1).
+		String()
+	a.NotError(err).
+		Equal(vals, []interface{}{1, 1})
+	chkSQLEqual(a, query, "INSERT INTO table1 (col1,col2) VALUES(?,?)")
+
+	// 多行插入
+	sql.Reset()
+	query, vals, err = sql.Insert("table1").
 		Keys("col1", "col2").
 		Values(1, 1).
 		Values(2, 2).
