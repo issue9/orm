@@ -114,132 +114,10 @@ func buildCreateSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 	sql.TruncateLast(1)
 	sql.WriteByte(')')
 
-	_, err = sql.Exec(true)
-	return err
-}
-
-// 查找多个数据
-// 根据v的pk或中唯一索引列查找一行数据，并赋值给v
-// 若objs为空，则不发生任何操作。
-// 第一个返回参数用于表示实际有多少数据被导入到objs中。
-func buildSelectSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
-	m, err := forward.NewModel(v)
-	if err != nil {
-		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return ErrInvalidKind
-	}
-
-	sql.Reset()
-	sql.WriteString("SELECT * FROM ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-
-	return where(e, sql, m, rval)
-}
-
-// 更新一个或多个类型。
-// 更新依据为每个对象的主键或是唯一索引列。
-// 若不存在此两个类型的字段，则返回错误信息。
-// 若objs为空，则不发生任何操作。
-// zero 是否提交值为零的内容。
-func buildUpdateSQL(sql *forward.SQL, e forward.Engine, v interface{}, zero bool) error {
-	m, err := forward.NewModel(v)
-	if err != nil {
-		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return ErrInvalidKind
-	}
-
-	sql.Update("{#" + m.Name + "}")
-	for name, col := range m.Cols {
-		field := rval.FieldByName(col.GoName)
-		if !field.IsValid() {
-			return fmt.Errorf("orm.buildUpdateSQL:未找到该名称[%v]的值", col.GoName)
-		}
-
-		if !zero && col.Zero == field.Interface() {
-			continue
-		}
-
-		sql.Set("{"+name+"}", field.Interface())
-	}
-
-	err = where(e, sql, m, rval)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
 // 将v生成delete的sql语句
-func buildDeleteSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
-	m, err := forward.NewModel(v)
-	if err != nil {
-		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return ErrInvalidKind
-	}
-
-	sql.Delete("{#" + m.Name + "}")
-	return where(e, sql, m, rval)
-
-}
-
-// 删除objs中指定的表名。
-// 系统会默认给表名加上表名前缀。
-// 若v为空，则不发生任何操作。
-func buildDropSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
-	m, err := forward.NewModel(v)
-	if err != nil {
-		return err
-	}
-
-	sql.WriteString("DROP TABLE IF EXISTS ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-	_, err = sql.Exec(true)
-	return err
-}
-
-// 清空表，并重置AI计数。
-// 系统会默认给表名加上表名前缀。
-func buildTruncateSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
-	m, err := forward.NewModel(v)
-	if err != nil {
-		return err
-	}
-
-	aiName := ""
-	if m.AI != nil {
-		aiName = m.AI.Name
-	}
-	e.Dialect().TruncateTableSQL(sql, e.Prefix()+m.Name, aiName)
-
-	if _, err = sql.Exec(true); err != nil {
-		return err
-	}
-	return nil
-}
 
 // 统计符合v条件的记录数量。
 func count(e forward.Engine, v interface{}) (int, error) {
@@ -313,23 +191,39 @@ func create(e forward.Engine, v interface{}) error {
 	return nil
 }
 
+// 删除一张表。
 func drop(e forward.Engine, v interface{}) error {
-	sql := forward.NewSQL(e)
-	if err := buildDropSQL(sql, e, v); err != nil {
+	m, err := forward.NewModel(v)
+	if err != nil {
 		return err
 	}
 
-	_, err := sql.Exec(true)
+	_, err = forward.NewSQL(e).
+		WriteString("DROP TABLE IF EXISTS ").
+		WriteString("{#").
+		WriteString(m.Name).
+		WriteByte('}').
+		Exec(true)
 	return err
 }
 
+// 清空表，并重置AI计数。
+// 系统会默认给表名加上表名前缀。
 func truncate(e forward.Engine, v interface{}) error {
-	sql := forward.NewSQL(e)
-	if err := buildTruncateSQL(sql, e, v); err != nil {
+	m, err := forward.NewModel(v)
+	if err != nil {
 		return err
 	}
 
-	_, err := sql.Exec(true)
+	aiName := ""
+	if m.AI != nil {
+		aiName = m.AI.Name
+	}
+
+	sql := forward.NewSQL(e)
+	e.Dialect().TruncateTableSQL(sql, e.Prefix()+m.Name, aiName)
+
+	_, err = sql.Exec(true)
 	return err
 }
 
@@ -381,39 +275,90 @@ func insert(e forward.Engine, v interface{}) (sql.Result, error) {
 	return sql.Exec(true)
 }
 
+// 查找多个数据。
+// 根据v的pk或中唯一索引列查找一行数据，并赋值给v。
+// 若v为空，则不发生任何操作，v 可以是数组。
 func find(e forward.Engine, v interface{}) error {
-	sql := forward.NewSQL(e)
-	err := buildSelectSQL(sql, e, v)
+	m, err := forward.NewModel(v)
 	if err != nil {
 		return err
 	}
 
-	rows, err := sql.Query(true)
-	if err != nil {
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return ErrInvalidKind
+	}
+
+	sql := forward.NewSQL(e).Select("*").From("{#" + m.Name + "}")
+	if err = where(e, sql, m, rval); err != nil {
 		return err
 	}
 
-	_, err = fetch.Obj(v, rows)
-	rows.Close()
+	_, err = sql.QueryObj(true, v)
 	return err
 }
 
 // 更新v到数据库，zero表示是否将零值也更新到数据库。
+// 更新依据为每个对象的主键或是唯一索引列。
+// 若不存在此两个类型的字段，则返回错误信息。
 func update(e forward.Engine, v interface{}, zero bool) (sql.Result, error) {
-	sql := forward.NewSQL(e)
-
-	err := buildUpdateSQL(sql, e, v, zero)
+	m, err := forward.NewModel(v)
 	if err != nil {
+		return nil, err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return nil, ErrInvalidKind
+	}
+
+	sql := forward.NewSQL(e).Update("{#" + m.Name + "}")
+	for name, col := range m.Cols {
+		field := rval.FieldByName(col.GoName)
+		if !field.IsValid() {
+			return nil, fmt.Errorf("orm.update:未找到该名称[%v]的值", col.GoName)
+		}
+
+		if !zero && col.Zero == field.Interface() {
+			continue
+		}
+
+		sql.Set("{"+name+"}", field.Interface())
+	}
+
+	if err := where(e, sql, m, rval); err != nil {
 		return nil, err
 	}
 
 	return sql.Exec(true)
 }
 
+// 将v生成delete的sql语句
 func del(e forward.Engine, v interface{}) (sql.Result, error) {
-	sql := forward.NewSQL(e)
-	err := buildDeleteSQL(sql, e, v)
+	m, err := forward.NewModel(v)
 	if err != nil {
+		return nil, err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return nil, ErrInvalidKind
+	}
+
+	sql := forward.NewSQL(e).Delete("{#" + m.Name + "}")
+	if err = where(e, sql, m, rval); err != nil {
 		return nil, err
 	}
 
