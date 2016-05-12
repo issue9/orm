@@ -5,7 +5,6 @@
 package dialect
 
 import (
-	"bytes"
 	"errors"
 	"reflect"
 
@@ -34,16 +33,8 @@ func (s *sqlite3) QuoteTuple() (byte, byte) {
 }
 
 // implement forward.Dialect.Quote()
-func (s *sqlite3) Quote(w *bytes.Buffer, name string) error {
-	if err := w.WriteByte('`'); err != nil {
-		return err
-	}
-
-	if _, err := w.WriteString(name); err != nil {
-		return err
-	}
-
-	return w.WriteByte('`')
+func (s *sqlite3) Quote(w *forward.SQL, name string) {
+	w.WriteByte('`').WriteString(name).WriteByte('`')
 }
 
 // implement forward.Dialect.ReplaceMarks()
@@ -52,12 +43,12 @@ func (s *sqlite3) ReplaceMarks(sql *string) error {
 }
 
 // implement forward.Dialect.LimitSQL()
-func (s *sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
-	return mysqlLimitSQL(limit, offset...)
+func (s *sqlite3) LimitSQL(sql *forward.SQL, limit int, offset ...int) []interface{} {
+	return mysqlLimitSQL(sql, limit, offset...)
 }
 
 // implement forward.Dialect.AIColSQL()
-func (s *sqlite3) AIColSQL(w *bytes.Buffer, model *forward.Model) error {
+func (s *sqlite3) AIColSQL(w *forward.SQL, model *forward.Model) error {
 	if model.AI == nil {
 		return nil
 	}
@@ -66,12 +57,12 @@ func (s *sqlite3) AIColSQL(w *bytes.Buffer, model *forward.Model) error {
 		return err
 	}
 
-	_, err := w.WriteString(" PRIMARY KEY AUTOINCREMENT,")
-	return err
+	w.WriteString(" PRIMARY KEY AUTOINCREMENT,")
+	return nil
 }
 
 // implement forward.Dialect.NoAIColSQL()
-func (s *sqlite3) NoAIColSQL(w *bytes.Buffer, model *forward.Model) error {
+func (s *sqlite3) NoAIColSQL(w *forward.SQL, model *forward.Model) error {
 	for _, col := range model.Cols {
 		if col.IsAI() { // 忽略AI列
 			continue
@@ -82,11 +73,12 @@ func (s *sqlite3) NoAIColSQL(w *bytes.Buffer, model *forward.Model) error {
 		}
 		w.WriteByte(',')
 	}
+
 	return nil
 }
 
 // implement forward.Dialect.ConstraintsSQL()
-func (s *sqlite3) ConstraintsSQL(w *bytes.Buffer, m *forward.Model) error {
+func (s *sqlite3) ConstraintsSQL(w *forward.SQL, m *forward.Model) {
 	// PK，若有自增，则已经在上面指定
 	if len(m.PK) > 0 && !m.PK[0].IsAI() {
 		createPKSQL(s, w, m.PK, pkName)
@@ -94,22 +86,20 @@ func (s *sqlite3) ConstraintsSQL(w *bytes.Buffer, m *forward.Model) error {
 	}
 
 	createConstraints(s, w, m)
-	return nil
 }
 
 // implement forward.Dialect.TruncateTableSQL()
-func (s *sqlite3) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
-	w.WriteString("DELETE FROM ")
-	w.WriteString(tableName)
-	w.WriteString(";update sqlite_sequence set seq=0 where name='")
-	w.WriteString(tableName)
-	_, err := w.WriteString("';")
-	return err
+func (s *sqlite3) TruncateTableSQL(w *forward.SQL, tableName, aiColumn string) {
+	w.WriteString("DELETE FROM ").
+		WriteString(tableName).
+		WriteString(";update sqlite_sequence set seq=0 where name='").
+		WriteString(tableName).
+		WriteString("';")
 }
 
 // implement base.sqlType()
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) sqlType(buf *bytes.Buffer, col *forward.Column) error {
+func (s *sqlite3) sqlType(buf *forward.SQL, col *forward.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

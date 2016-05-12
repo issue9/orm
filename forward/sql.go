@@ -208,8 +208,9 @@ func (sql *SQL) Asc(col string) *SQL {
 
 // offset 的值为多个时，只有第一个启作用
 func (sql *SQL) Limit(limit int, offset ...int) *SQL {
-	query, vals := sql.engine.Dialect().LimitSQL(limit, offset...)
-	return sql.Append(query, vals...)
+	vals := sql.engine.Dialect().LimitSQL(sql, limit, offset...)
+	sql.args = append(sql.args, vals...)
+	return sql
 }
 
 // 指定插入数据时的列名

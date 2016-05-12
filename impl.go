@@ -5,7 +5,6 @@
 package orm
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -20,7 +19,7 @@ var ErrInvalidKind = errors.New("不支持的reflect.Kind()，只能是结构体
 
 // 根据model中的主键或是唯一索引为sql产生where语句，
 // 若两者都不存在，则返回错误信息。rval为struct的reflect.Value
-func where(e forward.Engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([]interface{}, error) {
+func where(e forward.Engine, sql *forward.SQL, m *forward.Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -51,21 +50,18 @@ func where(e forward.Engine, sql *bytes.Buffer, m *forward.Model, rval reflect.V
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("orm.where:无法为[%v]产生where部分语句", m.Name)
+		return fmt.Errorf("orm.where:无法为[%v]产生where部分语句", m.Name)
 	}
 
-	sql.WriteString(" WHERE ")
-	for _, key := range keys {
-		e.Dialect().Quote(sql, key)
-		sql.WriteString("=? AND ")
+	for index, key := range keys {
+		sql.And("{"+key+"}=?", vals[index])
 	}
-	sql.Truncate(sql.Len() - 5) // 去掉最后5个字符" AND "
 
-	return vals, nil
+	return nil
 }
 
 // 根据rval中任意非零值产生where语句
-func whereAny(e forward.Engine, sql *bytes.Buffer, m *forward.Model, rval reflect.Value) ([]interface{}, error) {
+func whereAny(e forward.Engine, sql *forward.SQL, m *forward.Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -81,22 +77,19 @@ func whereAny(e forward.Engine, sql *bytes.Buffer, m *forward.Model, rval reflec
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("orm.whereAny:无法为[%v]产生where部分语句", m.Name)
+		return fmt.Errorf("orm.whereAny:无法为[%v]产生where部分语句", m.Name)
 	}
 
-	sql.WriteString(" WHERE ")
-	for _, key := range keys {
-		e.Dialect().Quote(sql, key)
-		sql.WriteString("=? AND ")
+	for index, key := range keys {
+		sql.And("{"+key+"}=?", vals[index])
 	}
-	sql.Truncate(sql.Len() - 5) // 去掉最后5个字符" AND "
 
-	return vals, nil
+	return nil
 }
 
 // 创建一个或多个数据表
 // 若objs为空，则不发生任何操作。
-func buildCreateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
+func buildCreateSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 	d := e.Dialect()
 	m, err := forward.NewModel(v)
 	if err != nil {
@@ -118,10 +111,10 @@ func buildCreateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
 	d.AIColSQL(sql, m)
 	d.NoAIColSQL(sql, m)
 	d.ConstraintsSQL(sql, m)
-	sql.Truncate(sql.Len() - 1)
+	sql.TruncateLast(1)
 	sql.WriteByte(')')
 
-	_, err = e.Exec(false, sql.String())
+	_, err = sql.Exec(true)
 	return err
 }
 
@@ -129,10 +122,10 @@ func buildCreateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
 // 根据v的pk或中唯一索引列查找一行数据，并赋值给v
 // 若objs为空，则不发生任何操作。
 // 第一个返回参数用于表示实际有多少数据被导入到objs中。
-func buildSelectSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]interface{}, error) {
+func buildSelectSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	rval := reflect.ValueOf(v)
@@ -141,7 +134,7 @@ func buildSelectSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]inter
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return nil, ErrInvalidKind
+		return ErrInvalidKind
 	}
 
 	sql.Reset()
@@ -156,10 +149,10 @@ func buildSelectSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]inter
 // 若不存在此两个类型的字段，则返回错误信息。
 // 若objs为空，则不发生任何操作。
 // zero 是否提交值为零的内容。
-func buildUpdateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}, zero bool) ([]interface{}, error) {
+func buildUpdateSQL(sql *forward.SQL, e forward.Engine, v interface{}, zero bool) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	rval := reflect.ValueOf(v)
@@ -168,42 +161,35 @@ func buildUpdateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}, zero boo
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return nil, ErrInvalidKind
+		return ErrInvalidKind
 	}
 
-	vals := make([]interface{}, 0, 10)
-	sql.WriteString("UPDATE ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-	sql.WriteString(" SET ")
-
+	sql.Update("{#" + m.Name + "}")
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
-			return nil, fmt.Errorf("orm.buildUpdateSQL:未找到该名称[%v]的值", col.GoName)
+			return fmt.Errorf("orm.buildUpdateSQL:未找到该名称[%v]的值", col.GoName)
 		}
 
 		if !zero && col.Zero == field.Interface() {
 			continue
 		}
 
-		e.Dialect().Quote(sql, name)
-		sql.WriteString("=?,")
-		vals = append(vals, field.Interface())
+		sql.Set("{"+name+"}", field.Interface())
 	}
-	sql.Truncate(sql.Len() - 1)
 
-	whereVals, err := where(e, sql, m, rval)
+	err = where(e, sql, m, rval)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return append(vals, whereVals...), nil
+	return nil
 }
 
 // 将v生成delete的sql语句
-func buildDeleteSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]interface{}, error) {
+func buildDeleteSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	rval := reflect.ValueOf(v)
@@ -212,12 +198,10 @@ func buildDeleteSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]inter
 	}
 
 	if rval.Kind() != reflect.Struct {
-		return nil, ErrInvalidKind
+		return ErrInvalidKind
 	}
 
-	sql.WriteString("DELETE FROM ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-
+	sql.Delete("{#" + m.Name + "}")
 	return where(e, sql, m, rval)
 
 }
@@ -225,7 +209,7 @@ func buildDeleteSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]inter
 // 删除objs中指定的表名。
 // 系统会默认给表名加上表名前缀。
 // 若v为空，则不发生任何操作。
-func buildDropSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
+func buildDropSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return err
@@ -233,13 +217,13 @@ func buildDropSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
 
 	sql.WriteString("DROP TABLE IF EXISTS ")
 	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-	_, err = e.Exec(false, sql.String())
+	_, err = sql.Exec(true)
 	return err
 }
 
 // 清空表，并重置AI计数。
 // 系统会默认给表名加上表名前缀。
-func buildTruncateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
+func buildTruncateSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 	m, err := forward.NewModel(v)
 	if err != nil {
 		return err
@@ -251,7 +235,7 @@ func buildTruncateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error 
 	}
 	e.Dialect().TruncateTableSQL(sql, e.Prefix()+m.Name, aiName)
 
-	if _, err = e.Exec(false, sql.String()); err != nil {
+	if _, err = sql.Exec(true); err != nil {
 		return err
 	}
 	return nil
@@ -273,14 +257,13 @@ func count(e forward.Engine, v interface{}) (int, error) {
 		return 0, ErrInvalidKind
 	}
 
-	sql := bytes.NewBufferString("SELECT COUNT(*) AS count FROM ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-	vals, err := whereAny(e, sql, m, rval)
+	sql := forward.NewSQL(e).Select("COUNT(*)AS count").From("{#" + m.Name + "}")
+	err = whereAny(e, sql, m, rval)
 	if err != nil {
 		return 0, err
 	}
 
-	rows, err := e.Query(false, sql.String(), vals...)
+	rows, err := sql.Query(true)
 	if err != nil {
 		return 0, err
 	}
@@ -294,11 +277,11 @@ func count(e forward.Engine, v interface{}) (int, error) {
 }
 
 func create(e forward.Engine, v interface{}) error {
-	sql := new(bytes.Buffer)
+	sql := forward.NewSQL(e)
 	if err := buildCreateSQL(sql, e, v); err != nil {
 		return err
 	}
-	if _, err := e.Exec(false, sql.String()); err != nil {
+	if _, err := sql.Exec(true); err != nil {
 		return err
 	}
 
@@ -321,9 +304,9 @@ func create(e forward.Engine, v interface{}) error {
 			e.Dialect().Quote(sql, col.Name)
 			sql.WriteByte(',')
 		}
-		sql.Truncate(sql.Len() - 1)
+		sql.TruncateLast(1)
 		sql.WriteByte(')')
-		if _, err := e.Exec(false, sql.String()); err != nil {
+		if _, err := sql.Exec(true); err != nil {
 			return err
 		}
 	}
@@ -331,22 +314,22 @@ func create(e forward.Engine, v interface{}) error {
 }
 
 func drop(e forward.Engine, v interface{}) error {
-	sql := new(bytes.Buffer)
+	sql := forward.NewSQL(e)
 	if err := buildDropSQL(sql, e, v); err != nil {
 		return err
 	}
 
-	_, err := e.Exec(false, sql.String())
+	_, err := sql.Exec(true)
 	return err
 }
 
 func truncate(e forward.Engine, v interface{}) error {
-	sql := new(bytes.Buffer)
+	sql := forward.NewSQL(e)
 	if err := buildTruncateSQL(sql, e, v); err != nil {
 		return err
 	}
 
-	_, err := e.Exec(false, sql.String())
+	_, err := sql.Exec(true)
 	return err
 }
 
@@ -399,13 +382,13 @@ func insert(e forward.Engine, v interface{}) (sql.Result, error) {
 }
 
 func find(e forward.Engine, v interface{}) error {
-	sql := new(bytes.Buffer)
-	vals, err := buildSelectSQL(sql, e, v)
+	sql := forward.NewSQL(e)
+	err := buildSelectSQL(sql, e, v)
 	if err != nil {
 		return err
 	}
 
-	rows, err := e.Query(false, sql.String(), vals...)
+	rows, err := sql.Query(true)
 	if err != nil {
 		return err
 	}
@@ -417,24 +400,24 @@ func find(e forward.Engine, v interface{}) error {
 
 // 更新v到数据库，zero表示是否将零值也更新到数据库。
 func update(e forward.Engine, v interface{}, zero bool) (sql.Result, error) {
-	sql := new(bytes.Buffer)
+	sql := forward.NewSQL(e)
 
-	vals, err := buildUpdateSQL(sql, e, v, zero)
+	err := buildUpdateSQL(sql, e, v, zero)
 	if err != nil {
 		return nil, err
 	}
 
-	return e.Exec(false, sql.String(), vals...)
+	return sql.Exec(true)
 }
 
 func del(e forward.Engine, v interface{}) (sql.Result, error) {
-	sql := new(bytes.Buffer)
-	vals, err := buildDeleteSQL(sql, e, v)
+	sql := forward.NewSQL(e)
+	err := buildDeleteSQL(sql, e, v)
 	if err != nil {
 		return nil, err
 	}
 
-	return e.Exec(false, sql.String(), vals...)
+	return sql.Exec(true)
 }
 
 // rval 为结构体指针组成的数据

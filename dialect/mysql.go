@@ -5,7 +5,6 @@
 package dialect
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -36,16 +35,8 @@ func (m *mysql) QuoteTuple() (byte, byte) {
 }
 
 // implement forward.Dialect.Quote
-func (m *mysql) Quote(w *bytes.Buffer, name string) error {
-	if err := w.WriteByte('`'); err != nil {
-		return err
-	}
-
-	if _, err := w.WriteString(name); err != nil {
-		return err
-	}
-
-	return w.WriteByte('`')
+func (m *mysql) Quote(w *forward.SQL, name string) {
+	w.WriteByte('`').WriteString(name).WriteByte('`')
 }
 
 // implement forward.Dialect.ReplaceMarks()
@@ -54,12 +45,12 @@ func (m *mysql) ReplaceMarks(sql *string) error {
 }
 
 // implement forward.Dialect.Limit()
-func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
-	return mysqlLimitSQL(limit, offset...)
+func (m *mysql) LimitSQL(sql *forward.SQL, limit int, offset ...int) []interface{} {
+	return mysqlLimitSQL(sql, limit, offset...)
 }
 
 // implement forward.Dialect.AIColSQL()
-func (m *mysql) AIColSQL(w *bytes.Buffer, model *forward.Model) error {
+func (m *mysql) AIColSQL(w *forward.SQL, model *forward.Model) error {
 	if model.AI == nil {
 		return nil
 	}
@@ -67,12 +58,13 @@ func (m *mysql) AIColSQL(w *bytes.Buffer, model *forward.Model) error {
 	if err := createColSQL(m, w, model.AI); err != nil {
 		return err
 	}
-	_, err := w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
-	return err
+
+	w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
+	return nil
 }
 
 // implement forward.Dialect.NoAIColSQL()
-func (m *mysql) NoAIColSQL(w *bytes.Buffer, model *forward.Model) error {
+func (m *mysql) NoAIColSQL(w *forward.SQL, model *forward.Model) error {
 	for _, col := range model.Cols {
 		if col.IsAI() { // 忽略AI列
 			continue
@@ -83,11 +75,12 @@ func (m *mysql) NoAIColSQL(w *bytes.Buffer, model *forward.Model) error {
 		}
 		w.WriteByte(',')
 	}
+
 	return nil
 }
 
 // implement forward.Dialect.ConstraintsSQL()
-func (m *mysql) ConstraintsSQL(w *bytes.Buffer, model *forward.Model) error {
+func (m *mysql) ConstraintsSQL(w *forward.SQL, model *forward.Model) {
 	// PK，若有自增，则已经在上面指定
 	if len(model.PK) > 0 && !model.PK[0].IsAI() {
 		createPKSQL(m, w, model.PK, pkName)
@@ -95,18 +88,15 @@ func (m *mysql) ConstraintsSQL(w *bytes.Buffer, model *forward.Model) error {
 	}
 
 	createConstraints(m, w, model)
-	return nil
 }
 
 // implement forward.Dialect.TruncateTableSQL()
-func (m *mysql) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
-	w.WriteString("TRUNCATE TABLE ")
-	_, err := w.WriteString(tableName)
-	return err
+func (m *mysql) TruncateTableSQL(w *forward.SQL, tableName, aiColumn string) {
+	w.WriteString("TRUNCATE TABLE ").WriteString(tableName)
 }
 
 // implement base.sqlType()
-func (m *mysql) sqlType(buf *bytes.Buffer, col *forward.Column) error {
+func (m *mysql) sqlType(buf *forward.SQL, col *forward.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}
@@ -117,9 +107,9 @@ func (m *mysql) sqlType(buf *bytes.Buffer, col *forward.Column) error {
 
 	addIntLen := func() {
 		if col.Len1 > 0 {
-			buf.WriteByte('(')
-			buf.WriteString(strconv.Itoa(col.Len1))
-			buf.WriteByte(')')
+			buf.WriteByte('(').
+				WriteString(strconv.Itoa(col.Len1)).
+				WriteByte(')')
 		}
 	}
 

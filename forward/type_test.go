@@ -42,11 +42,14 @@ func (d *dialect) Quote(w *bytes.Buffer, colName string) error { return nil }
 
 func (d *dialect) ReplaceMarks(*string) error { return nil }
 
-func (d *dialect) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+func (d *dialect) LimitSQL(sql *SQL, limit int, offset ...int) []interface{} {
 	if len(offset) == 0 {
-		return " LIMIT ? ", []interface{}{limit}
+		sql.WriteString(" LIMIT ? ")
+		return []interface{}{limit}
 	}
-	return "LIMIT ? OFFSET ? ", []interface{}{limit, offset[0]}
+
+	sql.WriteString("LIMIT ? OFFSET ? ")
+	return []interface{}{limit, offset[0]}
 }
 
 func (d *dialect) NoAIColSQL(w *bytes.Buffer, m *Model) error { return nil }

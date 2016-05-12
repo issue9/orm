@@ -168,14 +168,8 @@ func (db *DB) Truncate(v interface{}) error {
 	return truncate(db, v)
 }
 
-// 通过SQL实例。
-func (db *DB) Where(cond string, args ...interface{}) *SQL {
-	w := newSQL(db)
-	return w.And(cond, args...)
-}
-
-func (db *DB) SQL() *SQL {
-	return newSQL(db)
+func (db *DB) SQL() *forward.SQL {
+	return forward.NewSQL(db)
 }
 
 // 开始一个新的事务

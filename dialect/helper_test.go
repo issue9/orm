@@ -129,28 +129,29 @@ func TestCreateCheckSQL(t *testing.T) {
 
 func TestMysqlLimitSQL(t *testing.T) {
 	a := assert.New(t)
-	w := new(bytes.Buffer)
+	w := forward.NewSQL(nil)
 
-	ret, err := mysqlLimitSQL(w, 5, 0)
-	a.NotError(err).Equal(ret, []int{5, 0})
-	chkSQLEqual(a, w.String(), " LIMIT ? OFFSET ? ")
+	ret := mysqlLimitSQL(w, 5, 0)
+	a.Equal(ret, []int{5, 0})
+	query, vals := w.String()
+	chkSQLEqual(a, query, " LIMIT ? OFFSET ? ")
 
 	w.Reset()
-	ret, err = mysqlLimitSQL(w, 5)
-	a.NotError(err).Equal(ret, []int{5})
+	ret = mysqlLimitSQL(w, 5)
+	a.Equal(ret, []int{5})
 	chkSQLEqual(a, w.String(), "LIMIT ?")
 }
 
 func TestOracleLimitSQL(t *testing.T) {
 	a := assert.New(t)
-	w := new(bytes.Buffer)
+	w := forward.NewSQL(nil)
 
-	ret, err := oracleLimitSQL(w, 5, 0)
-	a.NotError(err).Equal(ret, []int{0, 5})
+	ret := oracleLimitSQL(w, 5, 0)
+	a.Equal(ret, []int{0, 5})
 	chkSQLEqual(a, w.String(), " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ")
 
 	w.Reset()
-	ret, err = oracleLimitSQL(w, 5)
-	a.NotError(err).Equal(ret, []int{5})
+	ret = oracleLimitSQL(w, 5)
+	a.Equal(ret, []int{5})
 	chkSQLEqual(a, w.String(), "FETCH NEXT ? ROWS ONLY ")
 }

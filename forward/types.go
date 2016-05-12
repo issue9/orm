@@ -4,10 +4,7 @@
 
 package forward
 
-import (
-	"bytes"
-	"database/sql"
-)
+import "database/sql"
 
 type Errors []error
 
@@ -20,7 +17,7 @@ func (e Errors) Error() string {
 	return msg
 }
 
-// DB与Tx的共有接口，方便以下方法调用。
+// DB与Tx的共有接口。
 type Engine interface {
 	Dialect() Dialect
 
@@ -42,7 +39,7 @@ type Dialect interface {
 	QuoteTuple() (openQuote, closeQuote byte)
 
 	// 给一个关键字加引号
-	Quote(w *bytes.Buffer, colName string) error
+	Quote(sql *SQL, colName string)
 
 	// 替换语句中的?占位符
 	ReplaceMarks(*string) error
@@ -50,20 +47,20 @@ type Dialect interface {
 	// 生成LIMIT N OFFSET M 或是相同的语意的语句。
 	// offset值为一个可选参数，若不指定，则表示LIMIT N语句。
 	// 返回的是对应数据库的limit语句以及语句中占位符对应的值。
-	LimitSQL(limit int, offset ...int) (string, []interface{})
+	LimitSQL(sql *SQL, limit int, offset ...int) []interface{}
 
 	// 输出非AI列的定义，必须包含末尾的分号
-	NoAIColSQL(w *bytes.Buffer, m *Model) error
+	NoAIColSQL(sql *SQL, m *Model) error
 
 	// 输出AI列的定义，必须包含末尾的分号
-	AIColSQL(w *bytes.Buffer, m *Model) error
+	AIColSQL(sql *SQL, m *Model) error
 
 	// 输出所有的约束定义，必须包含末尾的分号
-	ConstraintsSQL(w *bytes.Buffer, m *Model) error
+	ConstraintsSQL(sql *SQL, m *Model)
 
 	// 清空表内容，重置AI。
 	// aiColumn 需要被重置的自增列列名
-	TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error
+	TruncateTableSQL(sql *SQL, tableName, aiColumn string)
 
 	// 是否支持一次性插入多条语句
 	SupportInsertMany() bool
