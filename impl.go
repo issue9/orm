@@ -14,6 +14,7 @@ import (
 
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/forward"
+	"github.com/issue9/orm/sqlbuilder"
 )
 
 var ErrInvalidKind = errors.New("不支持的reflect.Kind()，只能是结构体或是结构体指针")
@@ -123,58 +124,6 @@ func buildCreateSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) error {
 
 	_, err = e.Exec(false, sql.String())
 	return err
-}
-
-// 将v生成一个insert的sql语句。
-func buildInsertSQL(sql *bytes.Buffer, e forward.Engine, v interface{}) ([]interface{}, error) {
-	vals := make([]interface{}, 0, 10)
-	m, err := forward.NewModel(v)
-	if err != nil {
-		return nil, err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return nil, ErrInvalidKind
-	}
-
-	sql.WriteString("INSERT INTO ")
-	e.Dialect().Quote(sql, e.Prefix()+m.Name)
-	sql.WriteByte('(')
-	for name, col := range m.Cols {
-		field := rval.FieldByName(col.GoName)
-		if !field.IsValid() {
-			return nil, fmt.Errorf("orm.buildInsertSQL:未找到该名称[%v]的值", col.GoName)
-		}
-
-		// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if col.Zero == field.Interface() &&
-			(col.IsAI() || col.HasDefault) {
-			continue
-		}
-
-		e.Dialect().Quote(sql, name)
-		sql.WriteByte(',')
-		vals = append(vals, field.Interface())
-	}
-
-	if len(vals) == 0 {
-		return nil, errors.New("orm.buildInsertSQL:未指定任何插入的列数据")
-	}
-
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteString(")VALUES(")
-	for range vals {
-		sql.WriteString("?,")
-	}
-	sql.Truncate(sql.Len() - 1)
-	sql.WriteByte(')')
-
-	return vals, nil
 }
 
 // 查找多个数据
@@ -403,13 +352,51 @@ func truncate(e forward.Engine, v interface{}) error {
 }
 
 func insert(e forward.Engine, v interface{}) (sql.Result, error) {
-	sql := new(bytes.Buffer)
-	vals, err := buildInsertSQL(sql, e, v)
+	m, err := forward.NewModel(v)
 	if err != nil {
 		return nil, err
 	}
 
-	return e.Exec(false, sql.String(), vals...)
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return nil, ErrInvalidKind
+	}
+
+	keys := make([]string, 0, len(m.Cols))
+	vals := make([]interface{}, 0, len(m.Cols))
+	for name, col := range m.Cols {
+		field := rval.FieldByName(col.GoName)
+		if !field.IsValid() {
+			return nil, fmt.Errorf("orm.insert:未找到该名称[%v]的值", col.GoName)
+		}
+
+		// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
+		if col.Zero == field.Interface() &&
+			(col.IsAI() || col.HasDefault) {
+			continue
+		}
+
+		keys = append(keys, "{"+name+"}")
+		vals = append(vals, field.Interface())
+	}
+
+	if len(vals) == 0 {
+		return nil, errors.New("orm.insert:未指定任何插入的列数据")
+	}
+
+	sql := sqlbuilder.New(e).
+		Insert("{#" + m.Name + "}").
+		Keys(keys...).
+		Values(vals...)
+
+	if sql.HasError() {
+		return nil, sql.Errors()
+	}
+	return sql.Exec(true)
 }
 
 func find(e forward.Engine, v interface{}) error {
@@ -451,11 +438,12 @@ func del(e forward.Engine, v interface{}) (sql.Result, error) {
 	return e.Exec(false, sql.String(), vals...)
 }
 
-func buildInsertManySQL(sql *bytes.Buffer, e forward.Engine, rval reflect.Value) ([]interface{}, error) {
-	sql.WriteString("INSERT INTO ")
+// rval 为结构体指针组成的数据
+func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*sqlbuilder.SQLBuilder, error) {
+	sql := sqlbuilder.New(e)
 	vals := make([]interface{}, 0, 10)
 	keys := []string{}
-	var firstType reflect.Type
+	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 
 	for i := 0; i < rval.Len(); i++ {
 		irval := rval.Index(i)
@@ -473,11 +461,10 @@ func buildInsertManySQL(sql *bytes.Buffer, e forward.Engine, rval reflect.Value)
 		}
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
-			vs := new(bytes.Buffer)
-
 			firstType = irval.Type()
-			e.Dialect().Quote(sql, e.Prefix()+m.Name) // 指定表名
-			sql.WriteByte('(')
+			sql.Insert("{#" + m.Name + "}")
+			cols := []string{}
+
 			for name, col := range m.Cols {
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
@@ -490,26 +477,23 @@ func buildInsertManySQL(sql *bytes.Buffer, e forward.Engine, rval reflect.Value)
 					continue
 				}
 
-				e.Dialect().Quote(sql, name)
-				sql.WriteByte(',')
-
-				vs.WriteString("?,")
 				vals = append(vals, field.Interface())
-				keys = append(keys, name) // 记录列的顺序
+				cols = append(cols, "{"+name+"}") // 记录列的顺序
+				keys = append(keys, name)         // 记录列的顺序
 			}
-			sql.Truncate(sql.Len() - 1)
-			vs.Truncate(vs.Len() - 1)
-			sql.WriteString(")VALUES(")
-			sql.WriteString(vs.String())
-			sql.WriteByte(')')
+			sql.Keys(cols...).Values(vals...)
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
 				return nil, errors.New("orm.buildInsertManySQL:参数v中包含了不同类型的元素")
 			}
 
-			sql.WriteString(",(")
+			vals = vals[:0]
 			for _, name := range keys {
-				col := m.Cols[name]
+				col, found := m.Cols[name]
+				if !found {
+					return nil, fmt.Errorf("orm:buildInsertManySQL:不存在的列名:[%v]", name)
+				}
+
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
 					return nil, fmt.Errorf("orm.buildInsertManySQL:未找到该名称[%v]的值", col.GoName)
@@ -521,13 +505,11 @@ func buildInsertManySQL(sql *bytes.Buffer, e forward.Engine, rval reflect.Value)
 					continue
 				}
 
-				sql.WriteString("?,")
 				vals = append(vals, field.Interface())
 			}
-			sql.Truncate(sql.Len() - 1)
-			sql.WriteByte(')')
+			sql.Values(vals...)
 		}
 	} // end for array
 
-	return vals, nil
+	return sql, nil
 }

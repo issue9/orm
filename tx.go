@@ -5,7 +5,6 @@
 package orm
 
 import (
-	"bytes"
 	"database/sql"
 	"reflect"
 
@@ -121,13 +120,13 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		return ErrInvalidKind
 	}
 
-	sql := new(bytes.Buffer)
-	vals, err := buildInsertManySQL(sql, tx, rval)
+	//sql := new(bytes.Buffer)
+	sql, err := buildInsertManySQL(tx, rval)
 	if err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(false, sql.String(), vals...); err != nil {
+	if _, err := sql.Exec(true); err != nil {
 		return err
 	}
 

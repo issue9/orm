@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	tablePrefixPlaceholder = "#"
-	openQuotePlaceholder   = "{"
-	closeQuotePlaceholder  = "}"
+	tablePrefixPlaceholder = forward.TablePrefixPlaceholder
+	openQuotePlaceholder   = forward.OpenQuotePlaceholder
+	closeQuotePlaceholder  = forward.CloseQuotePlaceholder
 )
 
 // 数据库操作实例。
