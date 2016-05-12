@@ -18,7 +18,7 @@ func TestNewDB(t *testing.T) {
 		a.NotError(db.Close())
 	}()
 
-	a.Equal(db.Prefix(), prefix)
+	a.Equal(db.tablePrefix, prefix)
 	a.NotNil(db.StdDB()).NotNil(db.Dialect())
 }
 

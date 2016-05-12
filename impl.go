@@ -117,9 +117,7 @@ func buildCreateSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 	return nil
 }
 
-// 将v生成delete的sql语句
-
-// 统计符合v条件的记录数量。
+// 统计符合 v 条件的记录数量。
 func count(e forward.Engine, v interface{}) (int, error) {
 	m, err := forward.NewModel(v)
 	if err != nil {
@@ -154,6 +152,7 @@ func count(e forward.Engine, v interface{}) (int, error) {
 	return strconv.Atoi(data[0])
 }
 
+// 创建表。
 func create(e forward.Engine, v interface{}) error {
 	sql := forward.NewSQL(e)
 	if err := buildCreateSQL(sql, e, v); err != nil {

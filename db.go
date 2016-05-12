@@ -130,8 +130,9 @@ func (db *DB) Select(v interface{}) error {
 	return find(db, v)
 }
 
-// 查询符合v条件的记录数量。
-// v中的所有非零字段都将参与查询。
+// 查询符合 v 条件的记录数量。
+// v 中的所有非零字段都将参与查询。
+// 若需要复杂的查询方式，请构建 forward.SQL 对象查询。
 func (db *DB) Count(v interface{}) (int, error) {
 	return count(db, v)
 }
@@ -166,9 +167,4 @@ func (db *DB) Begin() (*Tx, error) {
 		db:    db,
 		stdTx: tx,
 	}, nil
-}
-
-// 获取当前实例的表名前缀
-func (db *DB) Prefix() string {
-	return db.tablePrefix
 }

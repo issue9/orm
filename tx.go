@@ -239,11 +239,6 @@ func (tx *Tx) MultTruncate(objs ...interface{}) error {
 	return nil
 }
 
-// 获取当前实例的表名前缀
-func (tx *Tx) Prefix() string {
-	return tx.db.tablePrefix
-}
-
 func (tx *Tx) SQL() *forward.SQL {
 	return forward.NewSQL(tx)
 }
