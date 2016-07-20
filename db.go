@@ -11,7 +11,7 @@ import (
 	"github.com/issue9/orm/forward"
 )
 
-// 数据库操作实例。
+// DB 数据库操作实例。
 type DB struct {
 	stdDB       *sql.DB
 	dialect     forward.Dialect
@@ -19,7 +19,7 @@ type DB struct {
 	replacer    *strings.Replacer
 }
 
-// 声明一个新的DB实例。
+// NewDB 声明一个新的 DB 实例。
 func NewDB(driverName, dataSourceName, tablePrefix string, dialect forward.Dialect) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
@@ -29,7 +29,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect forward.Diale
 	return NewDBWithStdDB(db, tablePrefix, dialect)
 }
 
-// 从sql.DB构建一个DB实例。
+// NewDBWithStdDB 从 sql.DB 构建一个 DB 实例。
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect forward.Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{

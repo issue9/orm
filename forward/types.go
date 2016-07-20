@@ -43,6 +43,41 @@ type Engine interface {
 	// 功能等同于 database/sql 的 DB.Prepare()。
 	// replace 参数可参考 Engine.Query() 的说明。
 	Prepare(replace bool, query string) (*sql.Stmt, error)
+
+	// 插入数据，若需一次性插入多条数据，请使用tx.Insert()。
+	Insert(v interface{}) (sql.Result, error)
+
+	// 删除符合条件的数据。
+	// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
+	// 若两者都不存在，则将返回error
+	Delete(v interface{}) (sql.Result, error)
+
+	// 更新数据，零值不会被提交。
+	// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
+	// 若两者都不存在，则将返回error
+	Update(v interface{}, cols ...string) (sql.Result, error)
+
+	// 查询一个符合条件的数据。
+	// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
+	// 若两者都不存在，则将返回error
+	// 若没有符合条件的数据，将不会对参数v做任何变动。
+	Select(v interface{}) error
+
+	// 查询符合 v 条件的记录数量。
+	// v 中的所有非零字段都将参与查询。
+	// 若需要复杂的查询方式，请构建 SQL 对象查询。
+	Count(v interface{}) (int, error)
+
+	// 创建一张表。
+	Create(v interface{}) error
+
+	// 删除一张表。
+	Drop(v interface{}) error
+
+	// 清空一张表。
+	Truncate(v interface{}) error
+
+	SQL() *SQL
 }
 
 // Dialect 接口用于描述与数据库相关的一些语言特性。
