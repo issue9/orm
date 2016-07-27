@@ -26,6 +26,42 @@ func (e *engine) Prepare(replace bool, query string) (*sql.Stmt, error) { return
 
 func (e *engine) Prefix() string { return "engine" }
 
+func (e *engine) Insert(v interface{}) (sql.Result, error) {
+	return nil, nil
+}
+
+func (e *engine) Delete(v interface{}) (sql.Result, error) {
+	return nil, nil
+}
+
+func (e *engine) Update(v interface{}, cols ...string) (sql.Result, error) {
+	return nil, nil
+}
+
+func (e *engine) Select(v interface{}) error {
+	return nil
+}
+
+func (e *engine) Count(v interface{}) (int, error) {
+	return 0, nil
+}
+
+func (e *engine) Create(v interface{}) error {
+	return nil
+}
+
+func (e *engine) Drop(v interface{}) error {
+	return nil
+}
+
+func (e *engine) Truncate(v interface{}) error {
+	return nil
+}
+
+func (e *engine) SQL() *SQL {
+	return nil
+}
+
 // forward.Dialect
 
 type dialect struct {
