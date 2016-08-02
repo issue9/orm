@@ -5,7 +5,6 @@
 package orm
 
 import (
-	"bytes"
 	"database/sql"
 	"reflect"
 
@@ -23,7 +22,8 @@ func (tx *Tx) StdTx() *sql.Tx {
 	return tx.stdTx
 }
 
-// 执行一条查询语句，具体功能参考DB::Query()
+// 执行一条查询语句。
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
 	if replace {
 		query = tx.db.replacer.Replace(query)
@@ -36,7 +36,8 @@ func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	return tx.stdTx.Query(query, args...)
 }
 
-// 执行一条SQL语句，具体功能参考DB::Exec()
+// 执行一条SQL语句。
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
 	if replace {
 		query = tx.db.replacer.Replace(query)
@@ -49,7 +50,8 @@ func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	return tx.stdTx.Exec(query, args...)
 }
 
-// 将一条SQL语句进行预编译，具体功能参考DB::Prepare()
+// 将一条SQL语句进行预编译。
+// 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
 		query = tx.db.replacer.Replace(query)
@@ -121,13 +123,13 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		return ErrInvalidKind
 	}
 
-	sql := new(bytes.Buffer)
-	vals, err := buildInsertManySQL(sql, tx, rval)
+	//sql := new(bytes.Buffer)
+	sql, err := buildInsertManySQL(tx, rval)
 	if err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(false, sql.String(), vals...); err != nil {
+	if _, err := sql.Exec(true); err != nil {
 		return err
 	}
 
@@ -135,14 +137,8 @@ func (tx *Tx) InsertMany(v interface{}) error {
 }
 
 // 更新一条类型。
-func (tx *Tx) Update(v interface{}) (sql.Result, error) {
-	return update(tx, v, false)
-}
-
-// 更新一条类型。
-// 零值也会被提交。
-func (tx *Tx) UpdateZero(v interface{}) (sql.Result, error) {
-	return update(tx, v, true)
+func (tx *Tx) Update(v interface{}, cols ...string) (sql.Result, error) {
+	return update(tx, v, cols...)
 }
 
 // 删除一条数据。
@@ -202,16 +198,6 @@ func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	return nil
 }
 
-// 更新一条或多条类型。
-func (tx *Tx) MultUpdateZero(objs ...interface{}) error {
-	for _, v := range objs {
-		if _, err := tx.UpdateZero(v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // 删除一条或是多条数据。
 func (tx *Tx) MultDelete(objs ...interface{}) error {
 	for _, v := range objs {
@@ -253,17 +239,6 @@ func (tx *Tx) MultTruncate(objs ...interface{}) error {
 	return nil
 }
 
-// 返回SQL实例。
-func (tx *Tx) Where(cond string, args ...interface{}) *SQL {
-	w := newSQL(tx)
-	return w.And(cond, args...)
-}
-
-// 获取当前实例的表名前缀
-func (tx *Tx) Prefix() string {
-	return tx.db.tablePrefix
-}
-
-func (tx *Tx) SQL() *SQL {
-	return newSQL(tx)
+func (tx *Tx) SQL() *forward.SQL {
+	return forward.NewSQL(tx)
 }

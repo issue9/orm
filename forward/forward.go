@@ -4,3 +4,9 @@
 
 // 这是orm包中的一些接口的前置声明。
 package forward
+
+const (
+	TablePrefixPlaceholder = "#"
+	OpenQuotePlaceholder   = "{"
+	CloseQuotePlaceholder  = "}"
+)

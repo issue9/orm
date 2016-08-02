@@ -13,7 +13,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/issue9/encoding/tag"
+	"github.com/issue9/orm/tags"
 )
 
 type conType int
@@ -58,7 +58,7 @@ type Metaer interface {
 	Meta() string
 }
 
-// 表示一个数据库的表模型。数据结构从字段和字段的struct tag中分析得出。
+// 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
 	Name string // 表的名称
 
@@ -213,7 +213,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 
 	tagTxt := field.Tag.Get("orm")
 
-	// 没有附加的struct tag，直接取得几个关键信息返回。
+	// 没有附加的 struct tag，直接取得几个关键信息返回。
 	if len(tagTxt) == 0 {
 		m.Cols[field.Name] = &Column{
 			GoType: field.Type,
@@ -225,7 +225,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 		return nil
 	}
 
-	// 以-开头，表示忽略此字段。要确保struct tag最少有一个字符，
+	// 以-开头，表示忽略此字段。要确保 struct tag 最少有一个字符，
 	// 所以要上面len(tagTxt) == 0的判断之后。
 	if tagTxt[0] == '-' {
 		return nil
@@ -238,7 +238,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 		model:  m,
 		GoName: field.Name,
 	}
-	tags := tag.Parse(tagTxt)
+	tags := tags.Parse(tagTxt)
 	for k, v := range tags {
 		switch k {
 		case "name": // name(colname)
@@ -282,7 +282,7 @@ func (m *Model) parseMeta(obj interface{}) error {
 		return nil
 	}
 
-	tags := tag.Parse(meta.Meta())
+	tags := tags.Parse(meta.Meta())
 	if len(tags) == 0 {
 		return nil
 	}

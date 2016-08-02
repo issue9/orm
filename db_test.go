@@ -8,7 +8,10 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/forward"
 )
+
+var _ forward.Engine = &DB{}
 
 func TestNewDB(t *testing.T) {
 	a := assert.New(t)
@@ -18,7 +21,7 @@ func TestNewDB(t *testing.T) {
 		a.NotError(db.Close())
 	}()
 
-	a.Equal(db.Prefix(), prefix)
+	a.Equal(db.tablePrefix, prefix)
 	a.NotNil(db.StdDB()).NotNil(db.Dialect())
 }
 

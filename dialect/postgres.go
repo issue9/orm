@@ -5,7 +5,6 @@
 package dialect
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -22,6 +21,10 @@ func Postgres() forward.Dialect {
 
 type postgres struct{}
 
+func (p *postgres) Name() string {
+	return "postgres"
+}
+
 // implement forward.Dialect.SupportInsertMany()
 func (p *postgres) SupportInsertMany() bool {
 	return true
@@ -30,19 +33,6 @@ func (p *postgres) SupportInsertMany() bool {
 // implement forward.Dialect.QuoteTuple()
 func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'
-}
-
-// implement forward.Dialect.Quote()
-func (p *postgres) Quote(w *bytes.Buffer, name string) error {
-	if err := w.WriteByte('"'); err != nil {
-		return err
-	}
-
-	if _, err := w.WriteString(name); err != nil {
-		return err
-	}
-
-	return w.WriteByte('"')
 }
 
 // implement forward.Dialect.ReplaceMarks()
@@ -73,18 +63,18 @@ func (p *postgres) ReplaceMarks(sql *string) error {
 }
 
 // implement forward.Dialect.LimitSQL()
-func (p *postgres) LimitSQL(w *bytes.Buffer, limit int, offset ...int) ([]int, error) {
-	return mysqlLimitSQL(w, limit, offset...)
+func (p *postgres) LimitSQL(sql *forward.SQL, limit int, offset ...int) []interface{} {
+	return mysqlLimitSQL(sql, limit, offset...)
 }
 
 // implement forward.Dialect.AIColSQL()
-func (p *postgres) AIColSQL(w *bytes.Buffer, model *forward.Model) error {
+func (p *postgres) AIColSQL(w *forward.SQL, model *forward.Model) error {
 	// Potgres的AI仅仅是类型不同，可直接使用NoAiColSQL输出
 	return nil
 }
 
 // implement forward.Dialect.NoAIColSQL()
-func (p *postgres) NoAIColSQL(w *bytes.Buffer, model *forward.Model) error {
+func (p *postgres) NoAIColSQL(w *forward.SQL, model *forward.Model) error {
 	for _, col := range model.Cols {
 		if err := createColSQL(p, w, col); err != nil {
 			return err
@@ -95,35 +85,33 @@ func (p *postgres) NoAIColSQL(w *bytes.Buffer, model *forward.Model) error {
 }
 
 // implement forward.Dialect.ConstraintsSQL()
-func (p *postgres) ConstraintsSQL(w *bytes.Buffer, model *forward.Model) error {
+func (p *postgres) ConstraintsSQL(w *forward.SQL, model *forward.Model) {
 	if len(model.PK) > 0 {
 		createPKSQL(p, w, model.PK, model.Name+pkName) // postgres主键名需要全局唯一？
 		w.WriteByte(',')
 	}
 
 	createConstraints(p, w, model)
-	return nil
 }
 
 // implement forward.Dialect.TruncateTableSQL()
-func (p *postgres) TruncateTableSQL(w *bytes.Buffer, tableName, aiColumn string) error {
-	w.WriteString("TRUNCATE TABLE ")
-	w.WriteString(tableName)
+func (p *postgres) TruncateTableSQL(w *forward.SQL, tableName, aiColumn string) {
+	w.WriteString("TRUNCATE TABLE ").
+		WriteString(tableName)
 	if len(aiColumn) == 0 {
-		return nil
+		return
 	}
 
-	w.WriteString("; ALTER SEQUENCE ")
-	w.WriteString(tableName)
-	w.WriteByte('_')
-	w.WriteString(aiColumn)
-	_, err := w.WriteString("_seq RESTART WITH 1")
-	return err
+	w.WriteString("; ALTER SEQUENCE ").
+		WriteString(tableName).
+		WriteByte('_').
+		WriteString(aiColumn).
+		WriteString("_seq RESTART WITH 1")
 }
 
 // implement base.sqlType
 // 将col转换成sql类型，并写入buf中。
-func (p *postgres) sqlType(buf *bytes.Buffer, col *forward.Column) error {
+func (p *postgres) sqlType(buf *forward.SQL, col *forward.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

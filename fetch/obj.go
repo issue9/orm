@@ -11,12 +11,12 @@ import (
 	"unicode"
 
 	"github.com/issue9/conv"
-	"github.com/issue9/encoding/tag"
+	t "github.com/issue9/orm/tags"
 )
 
 // 将v转换成map[string]reflect.Value形式，其中键名为对象的字段名，
 // 键值为字段的值。支持匿名字段，不会转换不可导出(小写字母开头)的
-// 字段，也不会转换struct tag以-开头的字段。
+// 字段，也不会转换 struct tag 以-开头的字段。
 func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 	for v.Kind() == reflect.Ptr { // 嵌套类型可能为指针
 		v = v.Elem()
@@ -42,7 +42,7 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 				continue
 			}
 
-			if name, found := tag.Get(tags, "name"); found {
+			if name, found := t.Get(tags, "name"); found {
 				if _, found := (*ret)[name[0]]; found {
 					return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
 				}
@@ -51,7 +51,7 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 			}
 		}
 
-		// 未指定struct tag，则尝试直接使用字段名。
+		// 未指定 struct tag，则尝试直接使用字段名。
 		if unicode.IsUpper(rune(field.Name[0])) {
 			if _, found := (*ret)[field.Name]; found {
 				return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
