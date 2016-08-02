@@ -208,7 +208,7 @@ func (sql *SQL) Limit(limit int, offset ...int) *SQL {
 	return sql
 }
 
-// 指定插入数据时的列名
+// Keys 指定插入数据时的列名
 func (sql *SQL) Keys(keys ...string) *SQL {
 	sql.WriteByte('(')
 	for _, key := range keys {
@@ -221,7 +221,7 @@ func (sql *SQL) Keys(keys ...string) *SQL {
 	return sql
 }
 
-// 指定插入的数据，需要与 Keys 中的名称一一对应。
+// Values 指定插入的数据，需要与 Keys 中的名称一一对应。
 //
 // NOTE: 若数据库支持多行插入，可多次调用，每次指定一行数据。
 func (sql *SQL) Values(vals ...interface{}) *SQL {
@@ -247,7 +247,8 @@ func (sql *SQL) Values(vals ...interface{}) *SQL {
 	return sql
 }
 
-// 指定需要更新的数据。
+// Set 指定需要更新的数据。
+//
 // 仅针对 UPDATE 语句，INSERT 请使用 Keys() 和 Values() 两个函数指定。
 func (sql *SQL) Set(k string, v interface{}) *SQL {
 	if !sql.isSetFlag(flagSet) {
@@ -265,7 +266,7 @@ func (sql *SQL) Set(k string, v interface{}) *SQL {
 	return sql
 }
 
-// 拼接 SELECT 语句的 JOIN 部分。
+// Join 拼接 SELECT 语句的 JOIN 部分。
 func (sql *SQL) Join(typ, table, on string) *SQL {
 	sql.WriteByte(' ')
 	sql.WriteString(typ)
@@ -277,7 +278,7 @@ func (sql *SQL) Join(typ, table, on string) *SQL {
 	return sql
 }
 
-// 返回 SQL 语句和其对应的值。
+// String 返回 SQL 语句和其对应的值。
 func (sql *SQL) String() (string, []interface{}, error) {
 	if sql.HasError() {
 		return "", nil, sql.Errors()
@@ -286,7 +287,7 @@ func (sql *SQL) String() (string, []interface{}, error) {
 	return sql.buffer.String(), sql.args, nil
 }
 
-// 返回预编译的实例及对应的值。
+// Prepare 返回预编译的实例及对应的值。
 func (sql *SQL) Prepare() (*sql.Stmt, []interface{}, error) {
 	if sql.HasError() {
 		return nil, nil, sql.Errors()
@@ -300,7 +301,7 @@ func (sql *SQL) Prepare() (*sql.Stmt, []interface{}, error) {
 	return stmt, sql.args, nil
 }
 
-// 执行 SQL 语句。
+// Exec 执行 SQL 语句。
 func (sql *SQL) Exec(replace bool) (sql.Result, error) {
 	query, vals, err := sql.String()
 	if err != nil {
@@ -310,7 +311,7 @@ func (sql *SQL) Exec(replace bool) (sql.Result, error) {
 	return sql.engine.Exec(replace, query, vals...)
 }
 
-// 执行 SQL 查询语句。仅对 SELECT 启作用。
+// Query 执行 SQL 查询语句。仅对 SELECT 启作用。
 func (sql *SQL) Query(replace bool) (*sql.Rows, error) {
 	query, vals, err := sql.String()
 	if err != nil {
@@ -320,7 +321,7 @@ func (sql *SQL) Query(replace bool) (*sql.Rows, error) {
 	return sql.engine.Query(replace, query, vals...)
 }
 
-// 返回符合当前条件的所有记录。
+// QueryMap 返回符合当前条件的所有记录。
 //
 // replace，是否需将对语句的占位符进行替换。
 func (sql *SQL) QueryMap(replace bool) ([]map[string]interface{}, error) {
@@ -333,7 +334,7 @@ func (sql *SQL) QueryMap(replace bool) ([]map[string]interface{}, error) {
 	return fetch.Map(false, rows)
 }
 
-// 返回符合当前条件的所有记录，功能与 QueryMap 相同，但 map 中的值全为字符串类型。
+// QueryMapString 返回符合当前条件的所有记录，功能与 QueryMap 相同，但 map 中的值全为字符串类型。
 //
 // replace，是否需将对语句的占位符进行替换。
 func (sql *SQL) QueryMapString(replace bool) ([]map[string]string, error) {
@@ -346,7 +347,7 @@ func (sql *SQL) QueryMapString(replace bool) ([]map[string]string, error) {
 	return fetch.MapString(false, rows)
 }
 
-// 将符合当前条件的所有记录依次写入 objs 中。
+// QueryObj 将符合当前条件的所有记录依次写入 objs 中。
 //
 // replace，是否需将对语句的占位符进行替换。
 func (sql *SQL) QueryObj(replace bool, objs interface{}) (int, error) {
@@ -359,7 +360,7 @@ func (sql *SQL) QueryObj(replace bool, objs interface{}) (int, error) {
 	return fetch.Obj(objs, rows)
 }
 
-// 返回符合条件的记录中的某一列值。
+// QueryColumn 返回符合条件的记录中的某一列值。
 func (sql *SQL) QueryColumn(replace bool, col string) ([]interface{}, error) {
 	rows, err := sql.Query(replace)
 	if err != nil {
@@ -370,7 +371,8 @@ func (sql *SQL) QueryColumn(replace bool, col string) ([]interface{}, error) {
 	return fetch.Column(false, col, rows)
 }
 
-// 返回符合条件的记录中的某一列值，功能与 QueryColumn 相同，但返回的值均为字符串类型。
+// QueryColumnString 返回符合条件的记录中的某一列值，
+// 功能与 QueryColumn 相同，但返回的值均为字符串类型。
 func (sql *SQL) QueryColumnString(replace bool, col string) ([]string, error) {
 	rows, err := sql.Query(replace)
 	if err != nil {
