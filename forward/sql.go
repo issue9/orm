@@ -25,6 +25,7 @@ const (
 )
 
 // SQL 一个简单的 SQL 语句接接工具。
+//
 // NOTE: SQL 的所有函数调用，将直接拼接到字符串，
 // 而不会做缓存，所以调用顺序必须与 SQL 语法相同。
 //
@@ -108,14 +109,6 @@ func (sql *SQL) WriteString(s string) *SQL {
 	return sql
 }
 
-// Append 向语句中追加字符串和值
-func (sql *SQL) Append(query string, vals ...interface{}) *SQL {
-	sql.WriteString(query)
-	sql.args = append(sql.args, vals...)
-
-	return sql
-}
-
 // TruncateLast 去掉尾部的 n 个字符。
 func (sql *SQL) TruncateLast(n int) *SQL {
 	sql.buffer.Truncate(sql.buffer.Len() - n)
@@ -168,7 +161,9 @@ func (sql *SQL) where(op string, cond string, args ...interface{}) *SQL {
 	}
 
 	sql.WriteString(op)
-	return sql.Append(cond, args...)
+	sql.WriteString(cond)
+	sql.args = append(sql.args, args...)
+	return sql
 }
 
 // And 的别名。
