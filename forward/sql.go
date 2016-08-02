@@ -42,7 +42,7 @@ type SQL struct {
 	errors []error
 }
 
-// 声明一个 SQL 实例
+// NewSQL 声明一个 SQL 实例
 func NewSQL(e Engine) *SQL {
 	return &SQL{
 		engine: e,
@@ -53,7 +53,7 @@ func NewSQL(e Engine) *SQL {
 	}
 }
 
-// 重置所有的数据为初始值，这样可以重复利用该 SQL 对象。
+// Reset 重置所有的数据为初始值，这样可以重复利用该 SQL 对象。
 func (sql *SQL) Reset() *SQL {
 	sql.buffer.Reset()
 	sql.args = sql.args[:0]
@@ -71,7 +71,7 @@ func (sql *SQL) setFlag(flag int8) {
 	sql.flag |= flag
 }
 
-// 是否在构建过程中触发错误信息。当出现此错误时，说明在构建 SQL
+// HasError 是否在构建过程中触发错误信息。当出现此错误时，说明在构建 SQL
 // 语句的过程中出现了错误，需要调用 Errors() 获取详细的错误信息。
 //
 // NOTE: 在构建完 SQL 语句，准备执行数据库操作之前，
@@ -80,12 +80,12 @@ func (sql *SQL) HasError() bool {
 	return len(sql.errors) > 0
 }
 
-// 获取与之关联的 bytes.Buffer 对像。
+// Buffer 获取与之关联的 bytes.Buffer 对像。
 func (sql *SQL) Buffer() *bytes.Buffer {
 	return sql.buffer
 }
 
-// 返回所有的错误内容。
+// Errors 返回所有的错误内容。
 func (sql *SQL) Errors() error {
 	return Errors(sql.errors)
 }
@@ -108,7 +108,7 @@ func (sql *SQL) WriteString(s string) *SQL {
 	return sql
 }
 
-// 向语句中追加字符串和值
+// Append 向语句中追加字符串和值
 func (sql *SQL) Append(query string, vals ...interface{}) *SQL {
 	sql.WriteString(query)
 	sql.args = append(sql.args, vals...)
@@ -116,18 +116,18 @@ func (sql *SQL) Append(query string, vals ...interface{}) *SQL {
 	return sql
 }
 
-// 去掉尾部的 n 个字符。
+// TruncateLast 去掉尾部的 n 个字符。
 func (sql *SQL) TruncateLast(n int) *SQL {
 	sql.buffer.Truncate(sql.buffer.Len() - n)
 	return sql
 }
 
-// 启动一个 DELETE 语句。
+// Delete 启动一个 DELETE 语句。
 func (sql *SQL) Delete(table string) *SQL {
 	return sql.WriteString("DELETE FROM ").WriteString(table)
 }
 
-// 启动一个 SELECT 语句，并指定列名。可多次调用。
+// Select 启动一个 SELECT 语句，并指定列名。可多次调用。
 func (sql *SQL) Select(cols ...string) *SQL {
 	if !sql.isSetFlag(flagColumn) {
 		sql.WriteString("SELECT ")
@@ -143,12 +143,12 @@ func (sql *SQL) Select(cols ...string) *SQL {
 	return sql.TruncateLast(1)
 }
 
-// 启动一个 INSERT 语句。
+// Insert 启动一个 INSERT 语句。
 func (sql *SQL) Insert(table string) *SQL {
 	return sql.WriteString("INSERT INTO ").WriteString(table)
 }
 
-// 启动一个 UPDATE 语句。
+// Update 启动一个 UPDATE 语句。
 func (sql *SQL) Update(table string) *SQL {
 	return sql.WriteString("UPDATE ").WriteString(table)
 }

@@ -115,14 +115,15 @@ func (db *DB) Delete(v interface{}) (sql.Result, error) {
 	return del(db, v)
 }
 
-// 更新数据，零值不会被提交。
+// Update 更新数据，零值不会被提交，cols 指定的列，即使是零值也会被更新。
+//
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
-// 若两者都不存在，则将返回error
+// 若两者都不存在，则将返回 error
 func (db *DB) Update(v interface{}, cols ...string) (sql.Result, error) {
 	return update(db, v, cols...)
 }
 
-// 查询一个符合条件的数据。
+// Select 查询一个符合条件的数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 // 若没有符合条件的数据，将不会对参数v做任何变动。
@@ -130,7 +131,7 @@ func (db *DB) Select(v interface{}) error {
 	return find(db, v)
 }
 
-// 查询符合 v 条件的记录数量。
+// Count 查询符合 v 条件的记录数量。
 // v 中的所有非零字段都将参与查询。
 // 若需要复杂的查询方式，请构建 forward.SQL 对象查询。
 func (db *DB) Count(v interface{}) (int, error) {
