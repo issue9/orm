@@ -288,12 +288,12 @@ func (sql *SQL) String() (string, []interface{}, error) {
 }
 
 // Prepare 返回预编译的实例及对应的值。
-func (sql *SQL) Prepare() (*sql.Stmt, []interface{}, error) {
+func (sql *SQL) Prepare(replace bool) (*sql.Stmt, []interface{}, error) {
 	if sql.HasError() {
 		return nil, nil, sql.Errors()
 	}
 
-	stmt, err := sql.engine.Prepare(true, sql.buffer.String())
+	stmt, err := sql.engine.Prepare(replace, sql.buffer.String())
 	if err != nil {
 		return nil, nil, err
 	}
