@@ -74,14 +74,14 @@ type Model struct {
 	constraints map[string]conType // 约束名缓存
 }
 
-// 外键
+// ForeignKey 外键
 type ForeignKey struct {
 	Col                      *Column
 	RefTableName, RefColName string
 	UpdateRule, DeleteRule   string
 }
 
-// 列结构
+// Column 列结构
 type Column struct {
 	model *Model
 
@@ -97,7 +97,7 @@ type Column struct {
 	Default    string // 默认值
 }
 
-// 当前列是否为自增列
+// IsAI 当前列是否为自增列
 func (c *Column) IsAI() bool {
 	return (c.model != nil) && (c.model.AI == c)
 }
@@ -119,7 +119,7 @@ func (c *Column) setLen(vals []string) (err error) {
 	return
 }
 
-// 从vals中分析，得出Column.Nullable的值。
+// 从 vals 中分析，得出 Column.Nullable 的值。
 // nullable; or nullable(true);
 func (c *Column) setNullable(vals []string) (err error) {
 	if c.IsAI() {
@@ -140,8 +140,8 @@ func (c *Column) setNullable(vals []string) (err error) {
 	return nil
 }
 
-// 从一个obj声明一个Model实例。
-// obj可以是一个struct实例或是指针。
+// NewModel 从一个 obj 声明一个 Model 实例。
+// obj 可以是一个 struct 实例或是指针。
 func NewModel(obj interface{}) (*Model, error) {
 	models.Lock()
 	defer models.Unlock()
@@ -153,7 +153,7 @@ func NewModel(obj interface{}) (*Model, error) {
 	rtype := rval.Type()
 
 	if rtype.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("NewModel:obj参数只能是struct或是struct指针，当前为:[%v]", rval.Kind())
+		return nil, fmt.Errorf("NewModel:obj 参数只能是 struct 或是 struct 指针，当前为:[%v]", rval.Kind())
 	}
 
 	// 是否已经缓存的数组

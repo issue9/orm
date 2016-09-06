@@ -90,7 +90,7 @@ func (tx *Tx) Select(v interface{}) error {
 	return find(tx, v)
 }
 
-// 插入多条相同的数据。若需要向某张表中插入多条记录，
+// InsertMany 插入多条相同的数据。若需要向某张表中插入多条记录，
 // InsertMany()会比Insert()性能上好很多。
 // 与DB::Insert()方法最大的不同在于:
 //  // Insert()可以每个参数的类型都不一样：
@@ -119,6 +119,7 @@ func (tx *Tx) InsertMany(v interface{}) error {
 			}
 			return nil
 		}
+		// 支持多个插入，则由此处跳出 switch
 	default:
 		return ErrInvalidKind
 	}
@@ -136,39 +137,39 @@ func (tx *Tx) InsertMany(v interface{}) error {
 	return nil
 }
 
-// 更新一条类型。
+// Update 更新一条类型。
 func (tx *Tx) Update(v interface{}, cols ...string) (sql.Result, error) {
 	return update(tx, v, cols...)
 }
 
-// 删除一条数据。
+// Delete 删除一条数据。
 func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
 	return del(tx, v)
 }
 
-// 查询符合v条件的记录数量。
-// v中的所有非零字段都将参与查询。
+// Count 查询符合 v 条件的记录数量。
+// v 中的所有非零字段都将参与查询。
 func (tx *Tx) Count(v interface{}) (int, error) {
 	return count(tx, v)
 }
 
-// 创建数据表。
+// Create 创建数据表。
 func (tx *Tx) Create(v interface{}) error {
 	return create(tx, v)
 
 }
 
-// 删除表结构及数据。
+// Drop 删除表结构及数据。
 func (tx *Tx) Drop(v interface{}) error {
 	return drop(tx, v)
 }
 
-// 清除表内容，重置ai，但保留表结构。
+// Truncate 清除表内容，重置 ai，但保留表结构。
 func (tx *Tx) Truncate(v interface{}) error {
 	return truncate(tx, v)
 }
 
-// 插入一个或多个数据。
+// MultInsert 插入一个或多个数据。
 func (tx *Tx) MultInsert(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Insert(v); err != nil {
@@ -178,7 +179,7 @@ func (tx *Tx) MultInsert(objs ...interface{}) error {
 	return nil
 }
 
-// 选择符合要求的一条或是多条记录。
+// MultSelect 选择符合要求的一条或是多条记录。
 func (tx *Tx) MultSelect(objs ...interface{}) error {
 	for _, v := range objs {
 		if err := tx.Select(v); err != nil {
@@ -188,7 +189,7 @@ func (tx *Tx) MultSelect(objs ...interface{}) error {
 	return nil
 }
 
-// 更新一条或多条类型。
+// MultUpdate 更新一条或多条类型。
 func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Update(v); err != nil {
@@ -198,7 +199,7 @@ func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	return nil
 }
 
-// 删除一条或是多条数据。
+// MultDelete 删除一条或是多条数据。
 func (tx *Tx) MultDelete(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Delete(v); err != nil {
@@ -208,7 +209,7 @@ func (tx *Tx) MultDelete(objs ...interface{}) error {
 	return nil
 }
 
-// 创建数据表。
+// MultCreate 创建数据表。
 func (tx *Tx) MultCreate(objs ...interface{}) error {
 	for _, v := range objs {
 		if err := tx.Create(v); err != nil {
@@ -218,7 +219,7 @@ func (tx *Tx) MultCreate(objs ...interface{}) error {
 	return nil
 }
 
-// 删除表结构及数据。
+// MultDrop 删除表结构及数据。
 func (tx *Tx) MultDrop(objs ...interface{}) error {
 	for _, v := range objs {
 		if err := tx.Drop(v); err != nil {
@@ -229,7 +230,7 @@ func (tx *Tx) MultDrop(objs ...interface{}) error {
 	return nil
 }
 
-// 清除表内容，重置ai，但保留表结构。
+// MultTruncate 清除表内容，重置 ai，但保留表结构。
 func (tx *Tx) MultTruncate(objs ...interface{}) error {
 	for _, v := range objs {
 		if err := tx.Truncate(v); err != nil {
@@ -239,6 +240,7 @@ func (tx *Tx) MultTruncate(objs ...interface{}) error {
 	return nil
 }
 
+// SQL 返回一个 forward.SQL 实例。
 func (tx *Tx) SQL() *forward.SQL {
 	return forward.NewSQL(tx)
 }

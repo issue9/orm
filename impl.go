@@ -384,17 +384,18 @@ func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*forward.SQL, err
 
 	for i := 0; i < rval.Len(); i++ {
 		irval := rval.Index(i)
+
+		m, err := forward.NewModel(irval.Interface())
+		if err != nil {
+			return nil, err
+		}
+
 		for irval.Kind() == reflect.Ptr {
 			irval = irval.Elem()
 		}
 
 		if irval.Kind() != reflect.Struct {
 			return nil, ErrInvalidKind
-		}
-
-		m, err := forward.NewModel(irval.Interface())
-		if err != nil {
-			return nil, err
 		}
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
