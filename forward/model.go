@@ -1,4 +1,4 @@
-// Copyright 2014 by cAIxw, All rights reserved.
+// Copyright 2014 by caixw, All rights reserved.
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
@@ -102,7 +102,7 @@ func (c *Column) IsAI() bool {
 	return (c.model != nil) && (c.model.AI == c)
 }
 
-// 从参数中获取Column的len1和len2变量。
+// 从参数中获取 Column 的 len1 和 len2 变量。
 // len(len1,len2)
 func (c *Column) setLen(vals []string) (err error) {
 	switch len(vals) {
@@ -466,7 +466,7 @@ func (m *Model) hasConstraint(name string, except conType) conType {
 	return none
 }
 
-// 清除所有的Model缓存。
+// ClearModels 清除所有的Model缓存。
 func ClearModels() {
 	models.Lock()
 	defer models.Unlock()

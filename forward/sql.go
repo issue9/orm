@@ -266,6 +266,38 @@ func (sql *SQL) Set(k string, v interface{}) *SQL {
 	return sql
 }
 
+// Incr 增加计数
+func (sql *SQL) Incr(k string, v interface{}) *SQL {
+	if !sql.isSetFlag(flagSet) {
+		sql.WriteString(" SET ")
+		sql.setFlag(flagSet)
+	} else {
+		sql.WriteByte(',')
+	}
+
+	sql.WriteString(k)
+	sql.WriteString("=k+")
+	sql.WriteString(fmt.Sprint(v))
+
+	return sql
+}
+
+//  Decr 减少计数
+func (sql *SQL) Decr(k string, v interface{}) *SQL {
+	if !sql.isSetFlag(flagSet) {
+		sql.WriteString(" SET ")
+		sql.setFlag(flagSet)
+	} else {
+		sql.WriteByte(',')
+	}
+
+	sql.WriteString(k)
+	sql.WriteString("=k-")
+	sql.WriteString(fmt.Sprint(v))
+
+	return sql
+}
+
 // Join 拼接 SELECT 语句的 JOIN 部分。
 func (sql *SQL) Join(typ, table, on string) *SQL {
 	sql.WriteByte(' ')
