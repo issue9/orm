@@ -272,7 +272,7 @@ func insert(e forward.Engine, v interface{}) (sql.Result, error) {
 	return sql.Exec(true)
 }
 
-// 查找多个数据。
+// 查找数据。
 //
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
@@ -293,6 +293,30 @@ func find(e forward.Engine, v interface{}) error {
 
 	sql := forward.NewSQL(e).Select("*").From("{#" + m.Name + "}")
 	if err = where(e, sql, m, rval); err != nil {
+		return err
+	}
+
+	_, err = sql.QueryObj(true, v)
+	return err
+}
+
+func forUpdate(tx *Tx, v interface{}) error {
+	m, err := forward.NewModel(v)
+	if err != nil {
+		return err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	if rval.Kind() != reflect.Struct {
+		return ErrInvalidKind
+	}
+
+	sql := forward.NewSQL(tx).Select("*").From("{#" + m.Name + "} FOR UPDATE")
+	if err = where(tx, sql, m, rval); err != nil {
 		return err
 	}
 

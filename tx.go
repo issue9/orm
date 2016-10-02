@@ -86,8 +86,14 @@ func (tx *Tx) Insert(v interface{}) (sql.Result, error) {
 	return insert(tx, v)
 }
 
+// Select 读数据并锁定
 func (tx *Tx) Select(v interface{}) error {
 	return find(tx, v)
+}
+
+// ForUpdate 读数据并锁定
+func (tx *Tx) ForUpdate(v interface{}) error {
+	return forUpdate(tx, v)
 }
 
 // InsertMany 插入多条相同的数据。若需要向某张表中插入多条记录，
