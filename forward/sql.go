@@ -221,6 +221,14 @@ func (sql *SQL) Keys(keys ...string) *SQL {
 	return sql
 }
 
+// Group 生成 GROUP BY 语句
+func (sql *SQL) Group(col string) *SQL {
+	sql.WriteString(" GROUP BY ")
+	sql.WriteString(col)
+	sql.WriteByte(' ')
+	return sql
+}
+
 // Values 指定插入的数据，需要与 Keys 中的名称一一对应。
 //
 // NOTE: 若数据库支持多行插入，可多次调用，每次指定一行数据。
