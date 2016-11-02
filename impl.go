@@ -25,6 +25,10 @@ func where(e forward.Engine, sql *forward.SQL, m *forward.Model, rval reflect.Va
 
 	// 获取构成where的键名和键值
 	getKV := func(cols []*forward.Column) bool {
+		if len(cols) == 0 {
+			return false
+		}
+
 		for _, col := range cols {
 			field := rval.FieldByName(col.GoName)
 
