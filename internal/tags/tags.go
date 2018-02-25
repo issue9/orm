@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 // Package tags 包实现对特定格式的 struct tag 字符串的分析。
-// 并不具有很强的通用性。支持以下两种格式的字符串。
 //
 // 1. 以分号分隔的字符串，每个子串又以逗号分隔，
 // 第一个字符串为键名，之后的字符串组成的数组为键值。如：
@@ -28,7 +27,7 @@ package tags
 
 import "strings"
 
-// 将第二种风格的struct tag转换成第一种风格的。
+// 将第二种风格的 struct tag 转换成第一种风格的。
 var styleReplace = strings.NewReplacer("(", ",", ")", "")
 
 // Parse 分析 tag 的内容，并以 map 的形式返回
