@@ -2,7 +2,6 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// 一个简单的 SQL 拼接工具。
 package forward
 
 import (
@@ -91,6 +90,7 @@ func (sql *SQL) Errors() error {
 	return Errors(sql.errors)
 }
 
+// WriteByte 写入一个字符
 func (sql *SQL) WriteByte(c byte) *SQL {
 	err := sql.buffer.WriteByte(c)
 	if err != nil {
@@ -100,6 +100,7 @@ func (sql *SQL) WriteByte(c byte) *SQL {
 	return sql
 }
 
+// WriteString 写入一个字符串
 func (sql *SQL) WriteString(s string) *SQL {
 	_, err := sql.buffer.WriteString(s)
 	if err != nil {
@@ -146,7 +147,7 @@ func (sql *SQL) Update(table string) *SQL {
 	return sql.WriteString("UPDATE ").WriteString(table)
 }
 
-// 拼接表名字符串。当调用 Select() 之后，此方法用于指定表名。
+// From 拼接表名字符串。当调用 Select() 之后，此方法用于指定表名。
 func (sql *SQL) From(table string) *SQL {
 	sql.WriteString(" FROM ")
 	sql.WriteString(table)
@@ -166,7 +167,7 @@ func (sql *SQL) where(op string, cond string, args ...interface{}) *SQL {
 	return sql
 }
 
-// And 的别名。
+// Where 是 And 的别名。
 func (sql *SQL) Where(cond string, args ...interface{}) *SQL {
 	return sql.And(cond, args...)
 }

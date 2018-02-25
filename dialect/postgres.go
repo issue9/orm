@@ -14,7 +14,7 @@ import (
 	"github.com/issue9/orm/forward"
 )
 
-// 返回一个适配postgresql的forward.Dialect接口
+// Postgres 返回一个适配postgresql的forward.Dialect接口
 func Postgres() forward.Dialect {
 	return &postgres{}
 }

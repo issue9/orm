@@ -11,7 +11,7 @@ import (
 	"github.com/issue9/orm/forward"
 )
 
-// 返回一个适配sqlite3的forward.Dialect接口
+// Sqlite3 返回一个适配sqlite3的forward.Dialect接口
 func Sqlite3() forward.Dialect {
 	return &sqlite3{}
 }
@@ -117,9 +117,8 @@ func (s *sqlite3) sqlType(buf *forward.SQL, col *forward.Column) error {
 		k := col.GoType.Elem().Kind()
 		if (k != reflect.Uint8) && (k != reflect.Int32) {
 			return errors.New("sqlType:不支持数组类型")
-		} else {
-			buf.WriteString("TEXT")
 		}
+		buf.WriteString("TEXT")
 	case reflect.Struct:
 		switch col.GoType {
 		case nullBool:

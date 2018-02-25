@@ -24,7 +24,7 @@ type FetchEmail struct {
 
 type FetchUser struct {
 	FetchEmail
-	Id       int    `orm:"name(id);ai(1,2);"`
+	ID       int    `orm:"name(id);ai(1,2);"`
 	Username string `orm:"index(index)"`
 	Group    int    `orm:"name(group);fk(fk_group,group,id)"`
 
@@ -33,7 +33,7 @@ type FetchUser struct {
 
 func TestParseObj(t *testing.T) {
 	a := assert.New(t)
-	obj := &FetchUser{Id: 5}
+	obj := &FetchUser{ID: 5}
 	mapped := map[string]reflect.Value{}
 
 	v := reflect.ValueOf(obj).Elem()
@@ -52,7 +52,7 @@ func TestParseObj(t *testing.T) {
 
 	// 设置字段的值
 	mapped["id"].Set(reflect.ValueOf(36))
-	a.Equal(36, obj.Id)
+	a.Equal(36, obj.ID)
 	mapped["Email"].SetString("email")
 	a.Equal("email", obj.Email)
 	mapped["Username"].SetString("username")
@@ -118,8 +118,8 @@ func TestObj(t *testing.T) {
 	a.NotError(Obj(&objs, rows))
 
 	a.Equal([]*FetchUser{
-		&FetchUser{Id: 0, FetchEmail: FetchEmail{Email: "email-0"}},
-		&FetchUser{Id: 1, FetchEmail: FetchEmail{Email: "email-1"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -132,8 +132,8 @@ func TestObj(t *testing.T) {
 	a.NotError(Obj(&objs, rows))
 	a.Equal(len(objs), 2)
 	a.Equal([]*FetchUser{
-		&FetchUser{Id: 0, FetchEmail: FetchEmail{Email: "email-0"}},
-		&FetchUser{Id: 1, FetchEmail: FetchEmail{Email: "email-1"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -146,7 +146,7 @@ func TestObj(t *testing.T) {
 	a.NotError(Obj(objs, rows)) // 非指针传递
 	a.Equal(len(objs), 1)
 	a.Equal([]*FetchUser{
-		&FetchUser{Id: 0, FetchEmail: FetchEmail{Email: "email-0"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -159,8 +159,8 @@ func TestObj(t *testing.T) {
 	}
 	a.NotError(Obj(&objs, rows))
 	a.Equal([]*FetchUser{
-		&FetchUser{Id: 0, FetchEmail: FetchEmail{Email: "email-0"}},
-		&FetchUser{Id: 1, FetchEmail: FetchEmail{Email: "email-1"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}},
 		&FetchUser{},
 	}, objs)
 	a.NotError(rows.Close())
@@ -181,7 +181,7 @@ func TestObj(t *testing.T) {
 	}
 	a.NotError(Obj(&array, rows))
 	a.Equal([1]*FetchUser{
-		&FetchUser{Id: 0, FetchEmail: FetchEmail{Email: "email-0"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
 	}, array)
 	a.NotError(rows.Close())
 
@@ -189,7 +189,7 @@ func TestObj(t *testing.T) {
 	rows, err = db.Query(sql)
 	obj := FetchUser{}
 	a.NotError(Obj(&obj, rows))
-	a.Equal(FetchUser{Id: 0, FetchEmail: FetchEmail{Email: "email-0"}}, obj)
+	a.Equal(FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}}, obj)
 	a.NotError(rows.Close())
 
 	// test8:obj为一个struct。这将返回错误信息

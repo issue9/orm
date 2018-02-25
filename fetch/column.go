@@ -10,16 +10,16 @@ import (
 	"reflect"
 )
 
-// 导出rows中某列的所有或一行数据。
-// once若为true，则只导出第一条数据。
-// colName指定需要导出的列名，若不指定了不存在的名称，返回error。
+// Column 导出 rows 中某列的所有或一行数据。
+// once 若为 true，则只导出第一条数据。
+// colName 指定需要导出的列名，若不指定了不存在的名称，返回 error。
 func Column(once bool, colName string, rows *sql.Rows) ([]interface{}, error) {
 	cols, err := rows.Columns()
 	if err != nil {
 		return nil, err
 	}
 
-	index := -1 // colName列在rows.Columns()中的索引号
+	index := -1 // colName 列在 rows.Columns() 中的索引号
 	buff := make([]interface{}, len(cols))
 	for i, v := range cols {
 		var value interface{}
@@ -49,8 +49,8 @@ func Column(once bool, colName string, rows *sql.Rows) ([]interface{}, error) {
 	return data, nil
 }
 
-// 导出rows中某列的所有或是一行数据。
-// 功能等同于Columns()函数，但是返回值是[]string而不是[]interface{}。
+// ColumnString 导出 rows 中某列的所有或是一行数据。
+// 功能等同于 Columns() 函数，但是返回值是 []string 而不是 []interface{}。
 func ColumnString(once bool, colName string, rows *sql.Rows) ([]string, error) {
 	cols, err := rows.Columns()
 	if err != nil {

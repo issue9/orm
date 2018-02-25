@@ -11,18 +11,18 @@ import (
 	"github.com/issue9/orm/forward"
 )
 
-// 事务对象
+// Tx 事务对象
 type Tx struct {
 	db    *DB
 	stdTx *sql.Tx
 }
 
-// 返回标准库的*sql.Tx对象。
+// StdTx 返回标准库的 *sql.Tx 对象。
 func (tx *Tx) StdTx() *sql.Tx {
 	return tx.stdTx
 }
 
-// 执行一条查询语句。
+// Query 执行一条查询语句。
 // 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
 	if replace {
@@ -36,7 +36,7 @@ func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	return tx.stdTx.Query(query, args...)
 }
 
-// 执行一条SQL语句。
+// Exec 执行一条SQL语句。
 // 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
 	if replace {
@@ -50,7 +50,7 @@ func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	return tx.stdTx.Exec(query, args...)
 }
 
-// 将一条SQL语句进行预编译。
+// Prepare 将一条 SQL 语句进行预编译。
 // 具体参数说明可参考 forward.Engine 接口文档。
 func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
@@ -64,24 +64,24 @@ func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	return tx.stdTx.Prepare(query)
 }
 
-// 返回对应的Dialect实例
+// Dialect 返回对应的Dialect实例
 func (tx *Tx) Dialect() forward.Dialect {
 	return tx.db.Dialect()
 }
 
-// 提交事务。
+// Commit 提交事务。
 // 提交之后，整个Tx对象将不再有效。
 func (tx *Tx) Commit() error {
 	return tx.stdTx.Commit()
 }
 
-// 回滚事务。
+// Roolback 回滚事务。
 // 回滚之后，整个Tx对象将不再有效。
 func (tx *Tx) Rollback() error {
 	return tx.stdTx.Rollback()
 }
 
-// 插入一个或多个数据。
+// Insert 插入一个或多个数据。
 func (tx *Tx) Insert(v interface{}) (sql.Result, error) {
 	return insert(tx, v)
 }

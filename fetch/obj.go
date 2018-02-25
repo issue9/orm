@@ -188,32 +188,32 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	return len(mapped), nil
 }
 
-// 将rows中的数据导出到obj中。obj只有在类型为slice指针时，
-// 才有可能随着rows的长度变化，否则其长度是固定的，若查询结果为空值，
-// 则不会对obj的内容做任何更改。
+// Obj 将 rows 中的数据导出到 obj 中。obj 只有在类型为 slice 指针时，
+// 才有可能随着 rows 的长度变化，否则其长度是固定的，若查询结果为空值，
+// 则不会对 obj 的内容做任何更改。
 //
-// obj参数可以为以下四种类型：
+// obj 参数可以为以下四种类型：
 //
-// struct指针：
-// 将rows中的第一条记录转换成obj对象。
+// struct 指针：
+// 将 rows 中的第一条记录转换成 obj 对象。
 //
-// struct array指针或是struct slice:
-// 将rows中的len(obj)条记录导出到obj对象中；若rows中的数量不足，
-// 则obj尾部的元素保存原来的值。
+// struct array 指针或是 struct slice:
+// 将 rows 中的 len(obj) 条记录导出到 obj 对象中；若 rows 中的数量不足，
+// 则 obj 尾部的元素保存原来的值。
 //
-// struct slice指针：
-// 将rows中的所有记录依次写入obj中。若rows中的记录比len(obj)要长，
-// 则会增长obj的长度以适应rows的所有记录。
+// struct slice 指针：
+// 将 rows 中的所有记录依次写入 obj 中。若 rows 中的记录比 len(obj) 要长，
+// 则会增长 obj 的长度以适应 rows 的所有记录。
 //
-// struct可以在struct tag中用name指定字段名称，
+// struct 可以在 struct tag 中用 name 指定字段名称，
 // 或是以减号(-)开头表示忽略该字段的导出：
 //  type user struct {
-//      ID    int `orm:"name(id)"`  // 对应rows中的id字段，而不是ID。
+//      ID    int `orm:"name(id)"`  // 对应 rows 中的 id 字段，而不是 ID。
 //      age   int `orm:"name(Age)"` // 小写不会被导出。
 //      Count int `orm:"-"`         // 不会匹配与该字段对应的列。
 //  }
 //
-// 第一个参数用于表示有多少数据被正确导入到obj中
+// 第一个参数用于表示有多少数据被正确导入到 obj 中
 func Obj(obj interface{}, rows *sql.Rows) (int, error) {
 	val := reflect.ValueOf(obj)
 
@@ -221,7 +221,7 @@ func Obj(obj interface{}, rows *sql.Rows) (int, error) {
 	case reflect.Ptr:
 		elem := val.Elem()
 		switch elem.Kind() {
-		case reflect.Slice: // slice指针，可以增长
+		case reflect.Slice: // slice 指针，可以增长
 			return fetchObjToSlice(val, rows)
 		case reflect.Array: // 数组指针，只能按其大小导出
 			return fetchObjToFixedSlice(elem, rows)
@@ -230,7 +230,7 @@ func Obj(obj interface{}, rows *sql.Rows) (int, error) {
 		default:
 			return 0, fmt.Errorf("不允许的数据类型：[%v]", val.Kind())
 		}
-	case reflect.Slice: // slice只能按其大小导出。
+	case reflect.Slice: // slice 只能按其大小导出。
 		return fetchObjToFixedSlice(val, rows)
 	default:
 		return 0, fmt.Errorf("不允许的数据类型：[%v]", val.Kind())

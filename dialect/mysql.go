@@ -13,7 +13,7 @@ import (
 	"github.com/issue9/orm/forward"
 )
 
-// 返回一个适配mysql的forward.Dialect接口
+// Mysql 返回一个适配 mysql 的 forward.Dialect 接口
 func Mysql() forward.Dialect {
 	return &mysql{}
 }

@@ -93,7 +93,7 @@ func TestHas(t *testing.T) {
 	a := assert.New(t)
 
 	for _, test := range tests {
-		for name, _ := range test.data {
+		for name := range test.data {
 			a.True(Has(test.tag, name))
 
 			a.False(Has(test.tag, name+"-temp"))

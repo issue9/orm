@@ -15,7 +15,8 @@ import (
 	"github.com/issue9/orm/forward"
 )
 
-var ErrInvalidKind = errors.New("不支持的reflect.Kind()，只能是结构体或是结构体指针")
+// ErrInvalidKind 表示该类型不是结构体或是结构体的指针
+var ErrInvalidKind = errors.New("不支持的 reflect.Kind()，只能是结构体或是结构体指针")
 
 // 根据model中的主键或是唯一索引为sql产生where语句，
 // 若两者都不存在，则返回错误信息。rval为struct的reflect.Value

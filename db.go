@@ -44,24 +44,24 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect forward.Dialect) (*D
 	}, nil
 }
 
-// 关闭当前数据库，释放所有的链接。
+// Close 关闭当前数据库，释放所有的链接。
 // 关闭之后，之前通过DB.StdDB()返回的实例也将失效。
 // 通过调用DB.StdDB().Close()也将使当前实例失效。
 func (db *DB) Close() error {
 	return db.stdDB.Close()
 }
 
-// 返回标准包中的sql.DB指针。
+// StdDB 返回标准包中的sql.DB指针。
 func (db *DB) StdDB() *sql.DB {
 	return db.stdDB
 }
 
-// 返回对应的Dialect接口实例。
+// Dialect 返回对应的Dialect接口实例。
 func (db *DB) Dialect() forward.Dialect {
 	return db.dialect
 }
 
-// 执行一条查询语句，并返回相应的sql.Rows实例。
+// Query 执行一条查询语句，并返回相应的sql.Rows实例。
 // 具体参数说明可参考 forward.Engine 接口文档。
 func (db *DB) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
 	if replace {
@@ -75,7 +75,7 @@ func (db *DB) Query(replace bool, query string, args ...interface{}) (*sql.Rows,
 	return db.stdDB.Query(query, args...)
 }
 
-// 执行 SQL 语句。
+// Exec 执行 SQL 语句。
 // 具体参数说明可参考 forward.Engine 接口文档。
 func (db *DB) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
 	if replace {
@@ -89,7 +89,7 @@ func (db *DB) Exec(replace bool, query string, args ...interface{}) (sql.Result,
 	return db.stdDB.Exec(query, args...)
 }
 
-// 预编译查询语句。
+// Prepare 预编译查询语句。
 // 具体参数说明可参考 forward.Engine 接口文档。
 func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	if replace {
@@ -103,12 +103,12 @@ func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
 	return db.stdDB.Prepare(query)
 }
 
-// 插入数据，若需一次性插入多条数据，请使用tx.Insert()。
+// Insert 插入数据，若需一次性插入多条数据，请使用tx.Insert()。
 func (db *DB) Insert(v interface{}) (sql.Result, error) {
 	return insert(db, v)
 }
 
-// 删除符合条件的数据。
+// Delete 删除符合条件的数据。
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回error
 func (db *DB) Delete(v interface{}) (sql.Result, error) {
@@ -138,26 +138,27 @@ func (db *DB) Count(v interface{}) (int, error) {
 	return count(db, v)
 }
 
-// 创建一张表。
+// Create 创建一张表。
 func (db *DB) Create(v interface{}) error {
 	return create(db, v)
 }
 
-// 删除一张表。
+// Drop 删除一张表。
 func (db *DB) Drop(v interface{}) error {
 	return drop(db, v)
 }
 
-// 清空一张表。
+// Truncate 清空一张表。
 func (db *DB) Truncate(v interface{}) error {
 	return truncate(db, v)
 }
 
+// SQL 返回一个 SQL 语句
 func (db *DB) SQL() *forward.SQL {
 	return forward.NewSQL(db)
 }
 
-// 开始一个新的事务
+// Begin 开始一个新的事务
 func (db *DB) Begin() (*Tx, error) {
 	tx, err := db.stdDB.Begin()
 	if err != nil {

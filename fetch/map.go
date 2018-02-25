@@ -9,8 +9,8 @@ import (
 	"reflect"
 )
 
-// 将rows中的所有或一行数据导出到map[string]interface{}中。
-// 若once值为true，则只导出第一条数据。
+// Map 将 rows 中的所有或一行数据导出到 map[string]interface{} 中。
+// 若 once 值为 true，则只导出第一条数据。
 //
 // NOTE:
 // 每个数据库对数据的处理方式是不一样的，比如如下语句
@@ -26,7 +26,7 @@ func Map(once bool, rows *sql.Rows) ([]map[string]interface{}, error) {
 
 	// 临时缓存，用于保存从rows中读取出来的一行。
 	buff := make([]interface{}, len(cols))
-	for i, _ := range cols {
+	for i := range cols {
 		var value interface{}
 		buff[i] = &value
 	}
@@ -55,7 +55,7 @@ func Map(once bool, rows *sql.Rows) ([]map[string]interface{}, error) {
 	return data, nil
 }
 
-// 将rows中的数据导出到一个map[string]string中。
+// MapString 将 rows 中的数据导出到一个 map[string]string 中。
 // 功能上与Map()上一样，但map的键值固定为string。
 func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) {
 	cols, err := rows.Columns()
@@ -64,7 +64,7 @@ func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) 
 	}
 
 	buf := make([]interface{}, len(cols))
-	for k, _ := range buf {
+	for k := range buf {
 		var val string
 		buf[k] = &val
 	}

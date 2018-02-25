@@ -6,7 +6,7 @@ package forward
 
 import "database/sql"
 
-// 将一组错误信息转换成一个标准的 error 接口。
+// Errors 将一组错误信息转换成一个标准的 error 接口。
 type Errors []error
 
 func (e Errors) Error() string {
@@ -18,7 +18,7 @@ func (e Errors) Error() string {
 	return msg
 }
 
-// DB 与 Tx 的共有接口。
+// Engine 是 DB 与 Tx 的共有接口。
 type Engine interface {
 	// 获取与之关联的 Dialect 接口。
 	Dialect() Dialect
