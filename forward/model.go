@@ -13,7 +13,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/issue9/orm/tags"
+	"github.com/issue9/orm/internal/tags"
 )
 
 type conType int

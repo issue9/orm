@@ -11,7 +11,7 @@ import (
 	"unicode"
 
 	"github.com/issue9/conv"
-	t "github.com/issue9/orm/tags"
+	t "github.com/issue9/orm/internal/tags"
 )
 
 // 将v转换成map[string]reflect.Value形式，其中键名为对象的字段名，
