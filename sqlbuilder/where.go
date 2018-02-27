@@ -4,17 +4,17 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/internal/stringbuilder"
+import "github.com/issue9/orm/core"
 
 // SQL 语句的 where 部分
 type where struct {
-	buffer *stringbuilder.StringBuilder
+	buffer *core.StringBuilder
 	args   []interface{}
 }
 
 func newWhere() *where {
 	return &where{
-		buffer: stringbuilder.New(""),
+		buffer: core.NewStringBuilder(""),
 		args:   make([]interface{}, 0, 10),
 	}
 }

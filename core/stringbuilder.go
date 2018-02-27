@@ -2,8 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// Package stringbuilder 实现了字符串拼接的一些基本操作
-package stringbuilder
+package core
 
 import "bytes"
 
@@ -11,8 +10,8 @@ import "bytes"
 // 当 Write* 系列函数出错时，直接 panic。
 type StringBuilder bytes.Buffer
 
-// New 声明一个新的 StringBuilder 实例
-func New(str string) *StringBuilder {
+// NewStringBuilder 声明一个新的 StringBuilder 实例
+func NewStringBuilder(str string) *StringBuilder {
 	return (*StringBuilder)(bytes.NewBufferString(str))
 }
 
@@ -54,6 +53,11 @@ func (b *StringBuilder) TruncateLast(n int) *StringBuilder {
 // String 获取表示的字符串
 func (b *StringBuilder) String() string {
 	return b.buffer().String()
+}
+
+// Bytes 获取表示的字符串
+func (b *StringBuilder) Bytes() []byte {
+	return b.buffer().Bytes()
 }
 
 // Len 获取长度

@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/issue9/orm/internal/stringbuilder"
+	"github.com/issue9/orm/core"
 )
 
 // InsertStmt 表示插入操作的 SQL 语句
@@ -65,7 +65,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		}
 	}
 
-	buffer := stringbuilder.New("INSERT INTO ")
+	buffer := core.NewStringBuilder("INSERT INTO ")
 	buffer.WriteString(stmt.table)
 
 	buffer.WriteByte('(')

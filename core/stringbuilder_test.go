@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package stringbuilder
+package core
 
 import (
 	"testing"
@@ -13,7 +13,7 @@ import (
 func TestStringBuilder(t *testing.T) {
 	a := assert.New(t)
 
-	b := New("")
+	b := NewStringBuilder("")
 	b.WriteByte('1')
 	b.WriteString("23")
 

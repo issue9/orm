@@ -7,14 +7,16 @@ package sqlbuilder
 import (
 	"database/sql"
 
-	"github.com/issue9/orm/internal/stringbuilder"
+	"github.com/issue9/orm/core"
 )
 
 // UpdateStmt 更新语句
 type UpdateStmt struct {
-	table  string
-	where  *where
-	values map[string]interface{}
+	table    string
+	where    *where
+	values   map[string]interface{}
+	increase map[string]interface{}
+	decrease map[string]interface{}
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
@@ -28,6 +30,18 @@ func Update(table string) *UpdateStmt {
 // Set 设置值，若 col 相同，则会覆盖
 func (stmt *UpdateStmt) Set(col string, val interface{}) *UpdateStmt {
 	stmt.values[col] = val
+	return stmt
+}
+
+// Increase 给列增加值
+func (stmt *UpdateStmt) Increase(col string, val interface{}) *UpdateStmt {
+	stmt.increase[col] = val
+	return stmt
+}
+
+// Decrease 给钱减少值
+func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
+	stmt.decrease[col] = val
 	return stmt
 }
 
@@ -66,14 +80,45 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrValueIsEmpty
 	}
 
-	buf := stringbuilder.New("UPDATE ")
+	buf := core.NewStringBuilder("UPDATE ")
 	buf.WriteString(stmt.table)
 	buf.WriteString(" SET ")
 
 	args := make([]interface{}, 0, len(stmt.values))
+
 	for col, val := range stmt.values {
 		buf.WriteString(col)
 		buf.WriteByte('=')
+		if named, ok := val.(sql.NamedArg); ok && named.Name != "" {
+			buf.WriteByte('@')
+			buf.WriteString(named.Name)
+		} else {
+			buf.WriteByte('?')
+		}
+		buf.WriteByte(',')
+		args = append(args, val)
+	}
+
+	for col, val := range stmt.increase {
+		buf.WriteString(col)
+		buf.WriteByte('=')
+		buf.WriteString(col)
+		buf.WriteByte('+')
+		if named, ok := val.(sql.NamedArg); ok && named.Name != "" {
+			buf.WriteByte('@')
+			buf.WriteString(named.Name)
+		} else {
+			buf.WriteByte('?')
+		}
+		buf.WriteByte(',')
+		args = append(args, val)
+	}
+
+	for col, val := range stmt.decrease {
+		buf.WriteString(col)
+		buf.WriteByte('=')
+		buf.WriteString(col)
+		buf.WriteByte('-')
 		if named, ok := val.(sql.NamedArg); ok && named.Name != "" {
 			buf.WriteByte('@')
 			buf.WriteString(named.Name)
