@@ -4,7 +4,11 @@
 
 package sqlbuilder
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/issue9/orm/internal/stringbuilder"
+)
 
 // InsertStmt 表示插入操作的 SQL 语句
 type InsertStmt struct {
@@ -53,19 +57,20 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		}
 	}
 
-	buffer := newStringBuilder("INSERT INTO ")
-	buffer.writeString(stmt.table)
+	buffer := stringbuilder.New("INSERT INTO ")
+	buffer.WriteString(stmt.table)
 
-	buffer.writeByte('(')
+	buffer.WriteByte('(')
 	for _, col := range stmt.cols {
-		buffer.writeString(col)
-		buffer.writeByte(',')
+		buffer.WriteString(col)
+		buffer.WriteByte(',')
 	}
-	buffer.truncateLast(1)
-	buffer.writeByte(')')
+	buffer.TruncateLast(1)
+	buffer.WriteByte(')')
 
-	buffer.writeString(" VALUES ")
+	buffer.WriteString(" VALUES ")
 	for index, vals := range stmt.args {
 		// TODO
 	}
+
 }
