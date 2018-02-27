@@ -5,6 +5,7 @@
 package sqlbuilder
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/issue9/orm/internal/stringbuilder"
@@ -37,23 +38,30 @@ func (stmt *InsertStmt) Values(vals ...interface{}) *InsertStmt {
 	return stmt
 }
 
+// Reset 重置语句
+func (stmt *InsertStmt) Reset() {
+	stmt.table = ""
+	stmt.cols = stmt.cols[:0]
+	stmt.args = stmt.args[:0]
+}
+
 // SQL 获取 SQL 的语句及参数部分
 func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	if stmt.table == "" {
-		return "", nil, errors.New("表名不能为空")
+		return "", nil, ErrTableIsEmpty
 	}
 
 	if len(stmt.cols) == 0 {
-		return "", nil, errors.New("列名不能为空")
+		return "", nil, ErrColumnsIsEmpty
 	}
 
 	if len(stmt.args) == 0 {
-		return "", nil, errors.New("没有指定数据")
+		return "", nil, ErrValueIsEmpty
 	}
 
 	for _, vals := range stmt.args {
 		if len(vals) != len(stmt.cols) {
-			return "", nil, errors.New("数所与列名数量不相同")
+			return "", nil, errors.New("数据与列数量不相同")
 		}
 	}
 
@@ -68,9 +76,23 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	buffer.TruncateLast(1)
 	buffer.WriteByte(')')
 
+	args := make([]interface{}, 0, len(stmt.cols)*len(stmt.args))
 	buffer.WriteString(" VALUES ")
-	for index, vals := range stmt.args {
-		// TODO
+	for _, vals := range stmt.args {
+		buffer.WriteByte('(')
+		for _, v := range vals {
+			if named, ok := v.(sql.NamedArg); ok && named.Name != "" {
+				buffer.WriteByte('@')
+				buffer.WriteString(named.Name)
+			} else {
+				buffer.WriteByte('?')
+			}
+			buffer.WriteByte(',')
+			args = append(args, v)
+		}
+		buffer.TruncateLast(1) // 去掉最后的逗号
+		buffer.WriteByte(')')
 	}
 
+	return buffer.String(), args, nil
 }

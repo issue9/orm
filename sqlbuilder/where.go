@@ -4,22 +4,12 @@
 
 package sqlbuilder
 
-import (
-	"strconv"
-
-	"github.com/issue9/orm/internal/stringbuilder"
-)
-
-// 内置命名参数的前缀。
-// 最终会生成 @___key_1 这样格式的命名参数。
-const innerArgsPrefix = "@___key_"
+import "github.com/issue9/orm/internal/stringbuilder"
 
 // SQL 语句的 where 部分
 type where struct {
-	buffer        *stringbuilder.StringBuilder
-	args          []interface{}
-	argsName      []string // 参数对应的命名参数
-	innerArgIndex int      // 内置命名参数的计数器，用于生成唯一参数名称
+	buffer *stringbuilder.StringBuilder
+	args   []interface{}
 }
 
 func newWhere() *where {
@@ -32,17 +22,11 @@ func newWhere() *where {
 func (w *where) Reset() {
 	w.buffer.Reset()
 	w.args = w.args[:0]
-	w.innerArgIndex = 0
 }
 
 func (w *where) SQL() (string, []interface{}, error) {
+	// TODO 检测 args 中的参数与 buffer 中的占位符是否相同
 	return w.buffer.String(), w.args, nil
-}
-
-func (w *where) writeInnerArgName() {
-	w.innerArgIndex++
-	w.buffer.WriteString(innerArgsPrefix)
-	w.buffer.WriteString(strconv.Itoa(w.innerArgIndex))
 }
 
 func (w *where) writeAnd(and bool) {
@@ -74,48 +58,4 @@ func (w *where) and(cond string, args ...interface{}) {
 
 func (w *where) or(cond string, args ...interface{}) {
 	w.where(false, cond, args...)
-}
-
-func (w *where) in(and, not bool, col string, args ...interface{}) {
-	w.writeAnd(and)
-
-	w.buffer.WriteString(col)
-	if not {
-		w.buffer.WriteString(" NOT")
-	}
-	w.buffer.WriteString(" IN(")
-	for range args {
-		w.writeInnerArgName()
-		w.buffer.WriteByte(',')
-	}
-	w.buffer.TruncateLast(1) // 去掉最后一 个逗号
-	w.buffer.WriteByte(')')
-}
-
-func (w *where) between(and, not bool, col string, arg1, arg2 interface{}) {
-	w.writeAnd(and)
-
-	w.buffer.WriteString(col)
-	if not {
-		w.buffer.WriteString(" NOT")
-	}
-	w.buffer.WriteString(" BETWEEN ")
-
-	w.writeInnerArgName()
-	w.buffer.WriteString(" AND ")
-	w.writeInnerArgName()
-
-	w.args = append(w.args, arg1, arg2)
-}
-
-func (w *where) null(and, not bool, col string) {
-	w.writeAnd(and)
-
-	w.buffer.WriteString(col)
-	if not {
-		w.buffer.WriteString(" IS NOT NULL ")
-		return
-	}
-
-	w.buffer.WriteString(" IS NULL ")
 }
