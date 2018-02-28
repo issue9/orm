@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/internal/sqltest"
 )
 
 var _ SQL = &UpdateStmt{}
@@ -23,7 +24,7 @@ func TestUpdate(t *testing.T) {
 	query, args, err := u.SQL()
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
-	chkSQLEqual(a, query, "update table SET c1=?,c2=@c2")
+	sqltest.Equal(a, query, "update table SET c1=?,c2=@c2")
 
 	// bug(caix): UpdateStmt 采用 map 保存修改的值，
 	// 而 map 的顺序是不一定的，所以测试的比较内容，可能会出现值顺序不一样，
@@ -35,7 +36,7 @@ func TestUpdate(t *testing.T) {
 	query, args, err = u.SQL()
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, sql.Named("c2", 2), 3, sql.Named("c4", 4), 5, sql.Named("c6", 6)})
-	chkSQLEqual(a, query, "update table SET c1=?,c2=@c2,c3=c3+?,c4=c4+@c4,c5=c5-?,c6=c6-@c6")
+	sqltest.Equal(a, query, "update table SET c1=?,c2=@c2,c3=c3+?,c4=c4+@c4,c5=c5-?,c6=c6-@c6")
 
 	// 重置
 	u.Reset()
@@ -49,5 +50,5 @@ func TestUpdate(t *testing.T) {
 	query, args, err = u.SQL()
 	a.NotError(err)
 	a.Equal(args, []interface{}{11, 1, 2})
-	chkSQLEqual(a, query, "update tb2 SET c1=c1+? where id=? or id=?")
+	sqltest.Equal(a, query, "update tb2 SET c1=c1+? where id=? or id=?")
 }

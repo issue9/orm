@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/internal/sqltest"
 )
 
 var _ SQL = &InsertStmt{}
@@ -22,7 +23,7 @@ func TestInsert(t *testing.T) {
 	query, args, err := i.SQL()
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, 2, 3, 4, 5, 6})
-	chkSQLEqual(a, query, "insert into table (c1,c2,c3) values (?,?,?),(?,?,?)")
+	sqltest.Equal(a, query, "insert into table (c1,c2,c3) values (?,?,?),(?,?,?)")
 
 	i.Reset()
 	a.Empty(i.cols).Empty(i.args)
@@ -34,7 +35,7 @@ func TestInsert(t *testing.T) {
 	query, args, err = i.SQL()
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, 2, 3, sql.Named("c2", 4)})
-	chkSQLEqual(a, query, "insert into tb2 (c1,c2) values (?,?),(?,@c2)")
+	sqltest.Equal(a, query, "insert into tb2 (c1,c2) values (?,?),(?,@c2)")
 }
 
 func TestInsertError(t *testing.T) {

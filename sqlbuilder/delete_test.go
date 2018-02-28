@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/internal/sqltest"
 )
 
 var _ SQL = &DeleteStmt{}
@@ -22,7 +23,7 @@ func TestDelete(t *testing.T) {
 	query, args, err := d.SQL()
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, 2, 3})
-	chkSQLEqual(a, query, "delete from #table where id=? or id=? and id=?")
+	sqltest.Equal(a, query, "delete from #table where id=? or id=? and id=?")
 
 	d.Reset()
 	a.Empty(d.table)

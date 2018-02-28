@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/internal/sqltest"
 )
 
 var _ SQL = &where{}
@@ -23,7 +24,7 @@ func TestWhere(t *testing.T) {
 	sql, args, err := w.SQL()
 	a.NotError(err).NotNil(args).NotEmpty(sql)
 	a.Equal(args, []interface{}{1, "name", 5})
-	chkSQLEqual(a, sql, "where id=? and name like ? or type=?")
+	sqltest.Equal(a, sql, "where id=? and name like ? or type=?")
 
 	w.Reset()
 	a.Equal(0, w.buffer.Len())
@@ -33,7 +34,7 @@ func TestWhere(t *testing.T) {
 	sql, args, err = w.SQL()
 	a.NotError(err).NotNil(args).NotEmpty(sql)
 	a.Equal(args, []interface{}{5})
-	chkSQLEqual(a, sql, "where id=?")
+	sqltest.Equal(a, sql, "where id=?")
 
 	w.Reset()
 	a.Equal(0, w.buffer.Len())
