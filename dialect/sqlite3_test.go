@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/forward"
+	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/internal/sqltest"
 )
 
 var _ base = &sqlite3{}
@@ -19,38 +20,38 @@ func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
 	var s = &sqlite3{}
 
-	buf := forward.NewSQL(nil)
-	col := &forward.Column{}
+	buf := core.NewStringBuilder("")
+	col := &core.Column{}
 	a.Error(s.sqlType(buf, col))
 
 	col.GoType = reflect.TypeOf(1)
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "INTEGER")
+	sqltest.Equal(a, buf.String(), "INTEGER")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "INTEGER")
+	sqltest.Equal(a, buf.String(), "INTEGER")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "TEXT")
+	sqltest.Equal(a, buf.String(), "TEXT")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "REAL")
+	sqltest.Equal(a, buf.String(), "REAL")
 
 	col.GoType = reflect.TypeOf([]byte{'1', '2'})
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "TEXT")
+	sqltest.Equal(a, buf.String(), "TEXT")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "INTEGER")
+	sqltest.Equal(a, buf.String(), "INTEGER")
 }

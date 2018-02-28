@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/forward"
+	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/internal/sqltest"
 )
 
 var _ base = &postgres{}
@@ -19,54 +20,56 @@ func TestPostgres_SQLType(t *testing.T) {
 	p := &postgres{}
 
 	a := assert.New(t)
-	buf := forward.NewSQL(nil)
-	col := &forward.Column{}
+	buf := core.NewStringBuilder("")
+	col := &core.Column{}
 	a.Error(p.sqlType(buf, col))
 
 	col.GoType = reflect.TypeOf(1)
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "BIGINT")
+	sqltest.Equal(a, buf.String(), "BIGINT")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "BIGINT")
+	sqltest.Equal(a, buf.String(), "BIGINT")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "VARCHAR(5)")
+	sqltest.Equal(a, buf.String(), "VARCHAR(5)")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "DOUBLE(5,6)")
+	sqltest.Equal(a, buf.String(), "DOUBLE(5,6)")
 
 	col.GoType = reflect.TypeOf([]byte{'1', '2'})
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "VARCHAR(5)")
+	sqltest.Equal(a, buf.String(), "VARCHAR(5)")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
-	chkSQLEqual(a, buf.Buffer().String(), "BIGINT")
+	sqltest.Equal(a, buf.String(), "BIGINT")
 }
 
-func TestPostgres_ReplaceMarks(t *testing.T) {
+func TestPostgres_SQL(t *testing.T) {
 	a := assert.New(t)
 	p := Postgres()
 	a.NotNil(p)
 
 	eq := func(s1, s2 string) {
-		a.NotError(p.ReplaceMarks(&s1))
-		a.Equal(s1, s2)
+		ret, err := p.SQL(s1)
+		a.NotError(err)
+		a.Equal(ret, s2)
 	}
 
 	err := func(s1 string) {
-		a.Error(p.ReplaceMarks(&s1))
+		ret, err := p.SQL(s1)
+		a.Error(err).Empty(ret)
 	}
 
 	eq("abc", "abc")
@@ -90,6 +93,6 @@ func BenchmarkPostgres_ReplaceMarks(b *testing.B) {
 	s1 := "SELECT * FROM tbl WHERE uid>? AND group=? AND username LIKE ?"
 
 	for i := 0; i < b.N; i++ {
-		p.ReplaceMarks(&s1)
+		p.SQL(s1)
 	}
 }

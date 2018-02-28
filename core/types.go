@@ -49,7 +49,7 @@ type Dialect interface {
 	//
 	// 比如占位符 postgresql 可以使用 $1 等形式。
 	// 以及部分驱动可能不支持最新的命名参数，也会做调整。
-	SQL(sql *StringBuilder) error
+	SQL(sql string) (string, error)
 
 	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句。
 	//

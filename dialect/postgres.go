@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/issue9/orm/forward"
+	"github.com/issue9/orm/core"
 )
 
-// Postgres 返回一个适配postgresql的forward.Dialect接口
-func Postgres() forward.Dialect {
+// Postgres 返回一个适配 postgresql 的 core.Dialect 接口
+func Postgres() core.Dialect {
 	return &postgres{}
 }
 
@@ -25,56 +25,48 @@ func (p *postgres) Name() string {
 	return "postgres"
 }
 
-// implement forward.Dialect.SupportInsertMany()
 func (p *postgres) SupportInsertMany() bool {
 	return true
 }
 
-// implement forward.Dialect.QuoteTuple()
 func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'
 }
 
-// implement forward.Dialect.ReplaceMarks()
-// 在有?占位符的情况下，语句中不能包含$字符串
-func (p *postgres) ReplaceMarks(sql *string) error {
-	s := *sql
-	if strings.IndexByte(s, '?') < 0 {
-		return nil
+// 在有 ? 占位符的情况下，语句中不能包含$字符串
+func (p *postgres) SQL(sql string) (string, error) {
+	if strings.IndexByte(sql, '?') < 0 {
+		return sql, nil
 	}
 
 	num := 1
-	ret := make([]rune, 0, len(s))
-	for _, c := range s {
+	ret := make([]rune, 0, len(sql))
+	for _, c := range sql {
 		switch c {
 		case '?':
 			ret = append(ret, '$')
 			ret = append(ret, []rune(strconv.Itoa(num))...)
 			num++
 		case '$':
-			return errors.New("语句中包含非法的字符串:$")
+			return "", errors.New("语句中包含非法的字符串:$")
 		default:
 			ret = append(ret, c)
 		}
 	}
 
-	*sql = string(ret)
+	return string(ret), nil
+}
+
+func (p *postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+	return mysqlLimitSQL(limit, offset...)
+}
+
+func (p *postgres) AIColSQL(w *core.StringBuilder, model *core.Model) error {
+	// Potgres 的 AI 仅仅是类型不同，可直接使用 NoAiColSQL 输出
 	return nil
 }
 
-// implement forward.Dialect.LimitSQL()
-func (p *postgres) LimitSQL(sql *forward.SQL, limit int, offset ...int) []interface{} {
-	return mysqlLimitSQL(sql, limit, offset...)
-}
-
-// implement forward.Dialect.AIColSQL()
-func (p *postgres) AIColSQL(w *forward.SQL, model *forward.Model) error {
-	// Potgres的AI仅仅是类型不同，可直接使用NoAiColSQL输出
-	return nil
-}
-
-// implement forward.Dialect.NoAIColSQL()
-func (p *postgres) NoAIColSQL(w *forward.SQL, model *forward.Model) error {
+func (p *postgres) NoAIColSQL(w *core.StringBuilder, model *core.Model) error {
 	for _, col := range model.Cols {
 		if err := createColSQL(p, w, col); err != nil {
 			return err
@@ -84,8 +76,7 @@ func (p *postgres) NoAIColSQL(w *forward.SQL, model *forward.Model) error {
 	return nil
 }
 
-// implement forward.Dialect.ConstraintsSQL()
-func (p *postgres) ConstraintsSQL(w *forward.SQL, model *forward.Model) {
+func (p *postgres) ConstraintsSQL(w *core.StringBuilder, model *core.Model) {
 	if len(model.PK) > 0 {
 		createPKSQL(p, w, model.PK, model.Name+pkName) // postgres主键名需要全局唯一？
 		w.WriteByte(',')
@@ -94,8 +85,7 @@ func (p *postgres) ConstraintsSQL(w *forward.SQL, model *forward.Model) {
 	createConstraints(p, w, model)
 }
 
-// implement forward.Dialect.TruncateTableSQL()
-func (p *postgres) TruncateTableSQL(w *forward.SQL, tableName, aiColumn string) {
+func (p *postgres) TruncateTableSQL(w *core.StringBuilder, tableName, aiColumn string) {
 	w.WriteString("TRUNCATE TABLE ").
 		WriteString(tableName)
 	if len(aiColumn) == 0 {
@@ -111,7 +101,7 @@ func (p *postgres) TruncateTableSQL(w *forward.SQL, tableName, aiColumn string) 
 
 // implement base.sqlType
 // 将col转换成sql类型，并写入buf中。
-func (p *postgres) sqlType(buf *forward.SQL, col *forward.Column) error {
+func (p *postgres) sqlType(buf *core.StringBuilder, col *core.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

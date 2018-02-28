@@ -10,11 +10,11 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/issue9/orm/forward"
+	"github.com/issue9/orm/core"
 )
 
-// Mysql 返回一个适配 mysql 的 forward.Dialect 接口
-func Mysql() forward.Dialect {
+// Mysql 返回一个适配 mysql 的 core.Dialect 接口
+func Mysql() core.Dialect {
 	return &mysql{}
 }
 
@@ -24,28 +24,23 @@ func (m *mysql) Name() string {
 	return "mysql"
 }
 
-// implement forward.Dialect.SupportInsertMany()
 func (m *mysql) SupportInsertMany() bool {
 	return true
 }
 
-// implement forward.Dialect.QuoteTuple()
 func (m *mysql) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
 
-// implement forward.Dialect.ReplaceMarks()
-func (m *mysql) ReplaceMarks(sql *string) error {
-	return nil
+func (m *mysql) SQL(sql string) (string, error) {
+	return sql, nil
 }
 
-// implement forward.Dialect.Limit()
-func (m *mysql) LimitSQL(sql *forward.SQL, limit int, offset ...int) []interface{} {
-	return mysqlLimitSQL(sql, limit, offset...)
+func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+	return mysqlLimitSQL(limit, offset...)
 }
 
-// implement forward.Dialect.AIColSQL()
-func (m *mysql) AIColSQL(w *forward.SQL, model *forward.Model) error {
+func (m *mysql) AIColSQL(w *core.StringBuilder, model *core.Model) error {
 	if model.AI == nil {
 		return nil
 	}
@@ -58,8 +53,7 @@ func (m *mysql) AIColSQL(w *forward.SQL, model *forward.Model) error {
 	return nil
 }
 
-// implement forward.Dialect.NoAIColSQL()
-func (m *mysql) NoAIColSQL(w *forward.SQL, model *forward.Model) error {
+func (m *mysql) NoAIColSQL(w *core.StringBuilder, model *core.Model) error {
 	for _, col := range model.Cols {
 		if col.IsAI() { // 忽略AI列
 			continue
@@ -74,8 +68,7 @@ func (m *mysql) NoAIColSQL(w *forward.SQL, model *forward.Model) error {
 	return nil
 }
 
-// implement forward.Dialect.ConstraintsSQL()
-func (m *mysql) ConstraintsSQL(w *forward.SQL, model *forward.Model) {
+func (m *mysql) ConstraintsSQL(w *core.StringBuilder, model *core.Model) {
 	// PK，若有自增，则已经在上面指定
 	if len(model.PK) > 0 && !model.PK[0].IsAI() {
 		createPKSQL(m, w, model.PK, pkName)
@@ -85,13 +78,11 @@ func (m *mysql) ConstraintsSQL(w *forward.SQL, model *forward.Model) {
 	createConstraints(m, w, model)
 }
 
-// implement forward.Dialect.TruncateTableSQL()
-func (m *mysql) TruncateTableSQL(w *forward.SQL, tableName, aiColumn string) {
+func (m *mysql) TruncateTableSQL(w *core.StringBuilder, tableName, aiColumn string) {
 	w.WriteString("TRUNCATE TABLE ").WriteString(tableName)
 }
 
-// implement base.sqlType()
-func (m *mysql) sqlType(buf *forward.SQL, col *forward.Column) error {
+func (m *mysql) sqlType(buf *core.StringBuilder, col *core.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}
