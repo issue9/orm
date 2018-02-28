@@ -22,9 +22,18 @@ type UpdateStmt struct {
 // Update 声明一条 UPDATE 的 SQL 语句
 func Update(table string) *UpdateStmt {
 	return &UpdateStmt{
-		table: table,
-		where: newWhere(),
+		table:    table,
+		where:    newWhere(),
+		values:   map[string]interface{}{},
+		increase: map[string]interface{}{},
+		decrease: map[string]interface{}{},
 	}
+}
+
+// Table 指定表名
+func (stmt *UpdateStmt) Table(table string) *UpdateStmt {
+	stmt.table = table
+	return stmt
 }
 
 // Set 设置值，若 col 相同，则会覆盖
@@ -68,6 +77,8 @@ func (stmt *UpdateStmt) Reset() {
 	stmt.table = ""
 	stmt.where.Reset()
 	stmt.values = map[string]interface{}{}
+	stmt.increase = map[string]interface{}{}
+	stmt.decrease = map[string]interface{}{}
 }
 
 // SQL 获取 SQL 语句以及对应的参数
@@ -76,7 +87,7 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	if len(stmt.values) == 0 {
+	if len(stmt.values) == 0 && len(stmt.increase) == 0 && len(stmt.decrease) == 0 {
 		return "", nil, ErrValueIsEmpty
 	}
 
@@ -129,7 +140,10 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 		args = append(args, val)
 	}
 
-	wq, wa, err := stmt.SQL()
+	// 等所有的 SET 部分内容都完成了，去掉最后的逗号
+	buf.TruncateLast(1)
+
+	wq, wa, err := stmt.where.SQL()
 	if err != nil {
 		return "", nil, err
 	}

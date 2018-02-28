@@ -25,7 +25,16 @@ func (w *where) Reset() {
 }
 
 func (w *where) SQL() (string, []interface{}, error) {
-	// TODO 检测 args 中的参数与 buffer 中的占位符是否相同
+	cnt := 0
+	for _, c := range w.buffer.Bytes() {
+		if c == '?' || c == '@' {
+			cnt++
+		}
+	}
+	if cnt != len(w.args) {
+		return "", nil, ErrArgsNotMatch
+	}
+
 	return w.buffer.String(), w.args, nil
 }
 

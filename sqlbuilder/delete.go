@@ -18,6 +18,12 @@ func Delete(table string) *DeleteStmt {
 	}
 }
 
+// Table 指定表名
+func (stmt *DeleteStmt) Table(table string) *DeleteStmt {
+	stmt.table = table
+	return stmt
+}
+
 // SQL 获取 SQL 语句，以及其参数对应的具体值
 func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 	if stmt.table == "" {

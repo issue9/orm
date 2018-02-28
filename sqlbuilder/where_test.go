@@ -34,4 +34,12 @@ func TestWhere(t *testing.T) {
 	a.NotError(err).NotNil(args).NotEmpty(sql)
 	a.Equal(args, []interface{}{5})
 	chkSQLEqual(a, sql, "where id=?")
+
+	w.Reset()
+	a.Equal(0, w.buffer.Len())
+	a.Equal(0, len(w.args))
+
+	w.and("id=?", 5, 7)
+	sql, args, err = w.SQL()
+	a.Equal(err, ErrArgsNotMatch).Nil(args).Empty(sql)
 }

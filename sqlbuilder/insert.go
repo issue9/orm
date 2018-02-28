@@ -6,7 +6,6 @@ package sqlbuilder
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/issue9/orm/core"
 )
@@ -24,6 +23,12 @@ func Insert(table string) *InsertStmt {
 		table: table,
 		args:  make([][]interface{}, 0, 10),
 	}
+}
+
+// Table 指定表名
+func (stmt *InsertStmt) Table(table string) *InsertStmt {
+	stmt.table = table
+	return stmt
 }
 
 // Columns 指定插入的列，多次指定，之前的会被覆盖。
@@ -61,7 +66,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 
 	for _, vals := range stmt.args {
 		if len(vals) != len(stmt.cols) {
-			return "", nil, errors.New("数据与列数量不相同")
+			return "", nil, ErrArgsNotMatch
 		}
 	}
 
@@ -91,8 +96,9 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 			args = append(args, v)
 		}
 		buffer.TruncateLast(1) // 去掉最后的逗号
-		buffer.WriteByte(')')
+		buffer.WriteString("),")
 	}
+	buffer.TruncateLast(1)
 
 	return buffer.String(), args, nil
 }

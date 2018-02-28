@@ -19,6 +19,9 @@ var (
 	// ErrColumnsIsEmpty 在 Insert 和 Select 语句中，
 	// 若未指定任何列表，则返回此错误
 	ErrColumnsIsEmpty = errors.New("未指定列")
+
+	// ErrArgsNotMatch 在生成的 SQL 语句中，传递的参数与语句的占位符数量不匹配。
+	ErrArgsNotMatch = errors.New("列与值的数量不匹配")
 )
 
 // SQL 定义 SQL 语句的基本接口

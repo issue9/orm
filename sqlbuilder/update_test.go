@@ -4,4 +4,50 @@
 
 package sqlbuilder
 
+import (
+	"database/sql"
+	"testing"
+
+	"github.com/issue9/assert"
+)
+
 var _ SQL = &UpdateStmt{}
+
+func TestUpdate(t *testing.T) {
+	a := assert.New(t)
+	u := Update("table")
+	a.NotNil(u)
+
+	// 不带 where 部分
+	u.Set("c1", 1).Set("c2", sql.Named("c2", 2))
+	query, args, err := u.SQL()
+	a.NotError(err)
+	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
+	chkSQLEqual(a, query, "update table SET c1=?,c2=@c2")
+
+	// bug(caix): UpdateStmt 采用 map 保存修改的值，
+	// 而 map 的顺序是不一定的，所以测试的比较内容，可能会出现值顺序不一样，
+	// 从页导致测试失败
+	u.Increase("c3", 3).
+		Increase("c4", sql.Named("c4", 4)).
+		Decrease("c5", 5).
+		Decrease("c6", sql.Named("c6", 6))
+	query, args, err = u.SQL()
+	a.NotError(err)
+	a.Equal(args, []interface{}{1, sql.Named("c2", 2), 3, sql.Named("c4", 4), 5, sql.Named("c6", 6)})
+	chkSQLEqual(a, query, "update table SET c1=?,c2=@c2,c3=c3+?,c4=c4+@c4,c5=c5-?,c6=c6-@c6")
+
+	// 重置
+	u.Reset()
+	a.Empty(u.table).Empty(u.values)
+
+	u.Table("tb1").Table("tb2")
+	u.Increase("c1", 1).
+		Increase("c1", 11).
+		Where(true, "id=?", 1).
+		Or("id=?", 2)
+	query, args, err = u.SQL()
+	a.NotError(err)
+	a.Equal(args, []interface{}{11, 1, 2})
+	chkSQLEqual(a, query, "update tb2 SET c1=c1+? where id=? or id=?")
+}
