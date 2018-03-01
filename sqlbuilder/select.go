@@ -262,20 +262,12 @@ func (stmt *SelectStmt) Limit(limit int, offset ...int) *SelectStmt {
 
 // Query 查询
 func (stmt *SelectStmt) Query() (*sql.Rows, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.Query(query, args...)
+	return query(stmt.engine, stmt)
 }
 
 // QueryContext 查询
 func (stmt *SelectStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.QueryContext(ctx, query, args...)
+	return queryContext(ctx, stmt.engine, stmt)
 }
 
 // QueryObj 将符合当前条件的所有记录依次写入 objs 中。
@@ -291,18 +283,10 @@ func (stmt *SelectStmt) QueryObj(objs interface{}) (int, error) {
 
 // Prepare 预编译
 func (stmt *SelectStmt) Prepare() (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.Prepare(query)
+	return prepare(stmt.engine, stmt)
 }
 
 // PrepareContext 预编译
 func (stmt *SelectStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.PrepareContext(ctx, query)
+	return prepareContext(ctx, stmt.engine, stmt)
 }

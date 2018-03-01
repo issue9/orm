@@ -9,6 +9,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
+	"github.com/issue9/orm/core"
 )
 
 var (
@@ -54,4 +56,52 @@ type queryer interface {
 	QueryContext(ctx context.Context) (*sql.Rows, error)
 	Prepare() (*sql.Stmt, error)
 	PrepareContext(ctx context.Context) (*sql.Stmt, error)
+}
+
+func exec(e core.Engine, stmt SQLer) (sql.Result, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return e.Exec(query, args...)
+}
+
+func execContext(ctx context.Context, e core.Engine, stmt SQLer) (sql.Result, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return e.ExecContext(ctx, query, args...)
+}
+
+func prepare(e core.Engine, stmt SQLer) (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return e.Prepare(query)
+}
+
+func prepareContext(ctx context.Context, e core.Engine, stmt SQLer) (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return e.PrepareContext(ctx, query)
+}
+
+func query(e core.Engine, stmt SQLer) (*sql.Rows, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return e.Query(query, args...)
+}
+
+func queryContext(ctx context.Context, e core.Engine, stmt SQLer) (*sql.Rows, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return e.QueryContext(ctx, query, args...)
 }

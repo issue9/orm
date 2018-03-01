@@ -109,36 +109,20 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 
 // Exec 执行 SQL 语句
 func (stmt *InsertStmt) Exec() (sql.Result, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.Exec(query, args...)
+	return exec(stmt.engine, stmt)
 }
 
 // ExecContext 执行 SQL 语句
 func (stmt *InsertStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.ExecContext(ctx, query, args...)
+	return execContext(ctx, stmt.engine, stmt)
 }
 
 // Prepare 预编译
 func (stmt *InsertStmt) Prepare() (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.Prepare(query)
+	return prepare(stmt.engine, stmt)
 }
 
 // PrepareContext 预编译
 func (stmt *InsertStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.PrepareContext(ctx, query)
+	return prepareContext(ctx, stmt.engine, stmt)
 }

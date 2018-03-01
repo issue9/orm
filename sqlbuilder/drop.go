@@ -50,36 +50,20 @@ func (stmt *DropTableStmt) Reset() {
 
 // Exec 执行 SQL 语句
 func (stmt *DropTableStmt) Exec() (sql.Result, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.Exec(query, args...)
+	return exec(stmt.engine, stmt)
 }
 
 // ExecContext 执行 SQL 语句
 func (stmt *DropTableStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.ExecContext(ctx, query, args...)
+	return execContext(ctx, stmt.engine, stmt)
 }
 
 // Prepare 预编译
 func (stmt *DropTableStmt) Prepare() (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.Prepare(query)
+	return prepare(stmt.engine, stmt)
 }
 
 // PrepareContext 预编译
 func (stmt *DropTableStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return stmt.engine.PrepareContext(ctx, query)
+	return prepareContext(ctx, stmt.engine, stmt)
 }
