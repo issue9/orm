@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/sqlbuilder"
 )
 
 // mysql: BenchmarkDB_Insert-4     	    5000	    280546 ns/op
@@ -105,13 +106,13 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 	a.NotError(db.Insert(m))
 
 	for i := 0; i < b.N; i++ {
-		_, err := db.SQL().
-			Update("{#bench}").
+		_, err := sqlbuilder.
+			Update(db, "{#bench}").
 			Set("name", "n1").
 			Set("pass", "p1").
 			Set("site", "s1").
 			Where("{id}=?", i+1).
-			Exec(true)
+			Exec()
 		a.NotError(err)
 	}
 }

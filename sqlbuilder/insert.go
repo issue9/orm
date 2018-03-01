@@ -87,6 +87,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	args := make([]interface{}, 0, len(stmt.cols)*len(stmt.args))
 	buffer.WriteString(" VALUES ")
 	for _, vals := range stmt.args {
+		// TODO if len(vals) != len(stmt.cols)
 		buffer.WriteByte('(')
 		for _, v := range vals {
 			if named, ok := v.(sql.NamedArg); ok && named.Name != "" {

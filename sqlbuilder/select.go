@@ -9,15 +9,17 @@ import (
 	"database/sql"
 
 	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/fetch"
 )
 
 // SelectStmt 查询语句
 type SelectStmt struct {
-	engine   core.Engine
-	table    string
-	where    *WhereStmt
-	cols     []string
-	distinct string
+	engine    core.Engine
+	table     string
+	where     *WhereStmt
+	cols      []string
+	distinct  string
+	forupdate bool
 
 	joins  []*join
 	orders *core.StringBuilder
@@ -56,6 +58,7 @@ func (stmt *SelectStmt) Reset() {
 	stmt.where.Reset()
 	stmt.cols = stmt.cols[:0]
 	stmt.distinct = ""
+	stmt.forupdate = false
 
 	stmt.joins = stmt.joins[:]
 	stmt.orders.Reset()
@@ -138,6 +141,11 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	if stmt.limitQuery != "" {
 		buf.WriteString(stmt.limitQuery)
 		args = append(args, stmt.limitVals...)
+	}
+
+	// for update
+	if stmt.forupdate {
+		buf.WriteString(" FOR UPDATE")
 	}
 
 	return buf.String(), args, nil
@@ -232,6 +240,12 @@ func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	return stmt
 }
 
+// ForUpdate 添加 FOR UPDATE 语句部分
+func (stmt *SelectStmt) ForUpdate() *SelectStmt {
+	stmt.forupdate = true
+	return stmt
+}
+
 // Group 添加 GROUP BY 语句
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
 	stmt.group = " GROUP BY " + col + " "
@@ -262,6 +276,17 @@ func (stmt *SelectStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 		return nil, err
 	}
 	return stmt.engine.QueryContext(ctx, query, args...)
+}
+
+// QueryObj 将符合当前条件的所有记录依次写入 objs 中。
+func (stmt *SelectStmt) QueryObj(objs interface{}) (int, error) {
+	rows, err := stmt.Query()
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	return fetch.Obj(objs, rows)
 }
 
 // Prepare 预编译

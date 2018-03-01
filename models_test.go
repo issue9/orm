@@ -9,9 +9,9 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/conv"
+	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/fetch"
-	"github.com/issue9/orm/forward"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -25,7 +25,7 @@ var (
 
 	prefix = "prefix_"
 	dsn    string
-	d      forward.Dialect
+	d      core.Dialect
 )
 
 type bench struct {
@@ -104,8 +104,8 @@ func newDB(a *assert.Assertion) *DB {
 }
 
 // table表中是否存在size条记录，若不是，则触发error
-func hasCount(db forward.Engine, a *assert.Assertion, table string, size int) {
-	rows, err := db.Query(true, "SELECT COUNT(*) as cnt FROM #"+table)
+func hasCount(db core.Engine, a *assert.Assertion, table string, size int) {
+	rows, err := db.Query("SELECT COUNT(*) as cnt FROM #" + table)
 	a.NotError(err).NotNil(rows)
 	defer func() {
 		a.NotError(rows.Close())

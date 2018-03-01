@@ -53,7 +53,7 @@ func (s *sqlite3) AIColSQL(w *core.StringBuilder, model *core.Model) error {
 
 func (s *sqlite3) NoAIColSQL(w *core.StringBuilder, model *core.Model) error {
 	for _, col := range model.Cols {
-		if col.IsAI() { // 忽略AI列
+		if col.IsAI() { // 忽略 AI 列
 			continue
 		}
 

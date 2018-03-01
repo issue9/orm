@@ -5,10 +5,11 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 
-	"github.com/issue9/orm/forward"
+	"github.com/issue9/orm/core"
 )
 
 // Tx 事务对象
@@ -23,49 +24,79 @@ func (tx *Tx) StdTx() *sql.Tx {
 }
 
 // Query 执行一条查询语句。
-// 具体参数说明可参考 forward.Engine 接口文档。
-func (tx *Tx) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
-	if replace {
-		query = tx.db.replacer.Replace(query)
-	}
-
-	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+// 具体参数说明可参考 core.Engine 接口文档。
+func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	query = tx.db.replacer.Replace(query)
+	query, err := tx.db.dialect.SQL(query)
+	if err != nil {
 		return nil, err
 	}
 
 	return tx.stdTx.Query(query, args...)
 }
 
-// Exec 执行一条SQL语句。
-// 具体参数说明可参考 forward.Engine 接口文档。
-func (tx *Tx) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
-	if replace {
-		query = tx.db.replacer.Replace(query)
+// QueryContext 执行一条查询语句。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	query = tx.db.replacer.Replace(query)
+	query, err := tx.db.dialect.SQL(query)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+	return tx.stdTx.QueryContext(ctx, query, args...)
+}
+
+// Exec 执行一条SQL语句。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
+	query = tx.db.replacer.Replace(query)
+	query, err := tx.db.dialect.SQL(query)
+	if err != nil {
 		return nil, err
 	}
 
 	return tx.stdTx.Exec(query, args...)
 }
 
-// Prepare 将一条 SQL 语句进行预编译。
-// 具体参数说明可参考 forward.Engine 接口文档。
-func (tx *Tx) Prepare(replace bool, query string) (*sql.Stmt, error) {
-	if replace {
-		query = tx.db.replacer.Replace(query)
+// ExecContext 执行一条SQL语句。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	query = tx.db.replacer.Replace(query)
+	query, err := tx.db.dialect.SQL(query)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := tx.db.dialect.ReplaceMarks(&query); err != nil {
+	return tx.stdTx.ExecContext(ctx, query, args...)
+}
+
+// Prepare 将一条 SQL 语句进行预编译。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
+	query = tx.db.replacer.Replace(query)
+	query, err := tx.db.dialect.SQL(query)
+	if err != nil {
 		return nil, err
 	}
 
 	return tx.stdTx.Prepare(query)
 }
 
+// PrepareContext 将一条 SQL 语句进行预编译。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (tx *Tx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	query = tx.db.replacer.Replace(query)
+	query, err := tx.db.dialect.SQL(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx.stdTx.PrepareContext(ctx, query)
+}
+
 // Dialect 返回对应的Dialect实例
-func (tx *Tx) Dialect() forward.Dialect {
+func (tx *Tx) Dialect() core.Dialect {
 	return tx.db.Dialect()
 }
 
@@ -75,7 +106,7 @@ func (tx *Tx) Commit() error {
 	return tx.stdTx.Commit()
 }
 
-// Roolback 回滚事务。
+// Rollback 回滚事务。
 // 回滚之后，整个Tx对象将不再有效。
 func (tx *Tx) Rollback() error {
 	return tx.stdTx.Rollback()
@@ -130,13 +161,12 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		return ErrInvalidKind
 	}
 
-	//sql := new(bytes.Buffer)
 	sql, err := buildInsertManySQL(tx, rval)
 	if err != nil {
 		return err
 	}
 
-	if _, err := sql.Exec(true); err != nil {
+	if _, err := sql.Exec(); err != nil {
 		return err
 	}
 
@@ -244,9 +274,4 @@ func (tx *Tx) MultTruncate(objs ...interface{}) error {
 		}
 	}
 	return nil
-}
-
-// SQL 返回一个 forward.SQL 实例。
-func (tx *Tx) SQL() *forward.SQL {
-	return forward.NewSQL(tx)
 }

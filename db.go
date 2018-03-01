@@ -5,22 +5,23 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"strings"
 
-	"github.com/issue9/orm/forward"
+	"github.com/issue9/orm/core"
 )
 
 // DB 数据库操作实例。
 type DB struct {
 	stdDB       *sql.DB
-	dialect     forward.Dialect
+	dialect     core.Dialect
 	tablePrefix string
 	replacer    *strings.Replacer
 }
 
 // NewDB 声明一个新的 DB 实例。
-func NewDB(driverName, dataSourceName, tablePrefix string, dialect forward.Dialect) (*DB, error) {
+func NewDB(driverName, dataSourceName, tablePrefix string, dialect core.Dialect) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
@@ -30,16 +31,16 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect forward.Diale
 }
 
 // NewDBWithStdDB 从 sql.DB 构建一个 DB 实例。
-func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect forward.Dialect) (*DB, error) {
+func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect core.Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{
 		stdDB:       db,
 		dialect:     dialect,
 		tablePrefix: tablePrefix,
 		replacer: strings.NewReplacer(
-			forward.TablePrefixPlaceholder, tablePrefix,
-			forward.OpenQuotePlaceholder, string(l),
-			forward.CloseQuotePlaceholder, string(r),
+			"#", tablePrefix,
+			"{", string(l),
+			"}", string(r),
 		),
 	}, nil
 }
@@ -57,50 +58,80 @@ func (db *DB) StdDB() *sql.DB {
 }
 
 // Dialect 返回对应的Dialect接口实例。
-func (db *DB) Dialect() forward.Dialect {
+func (db *DB) Dialect() core.Dialect {
 	return db.dialect
 }
 
 // Query 执行一条查询语句，并返回相应的sql.Rows实例。
-// 具体参数说明可参考 forward.Engine 接口文档。
-func (db *DB) Query(replace bool, query string, args ...interface{}) (*sql.Rows, error) {
-	if replace {
-		query = db.replacer.Replace(query)
-	}
-
-	if err := db.dialect.ReplaceMarks(&query); err != nil {
+// 具体参数说明可参考 core.Engine 接口文档。
+func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	query = db.replacer.Replace(query)
+	query, err := db.dialect.SQL(query)
+	if err != nil {
 		return nil, err
 	}
 
 	return db.stdDB.Query(query, args...)
 }
 
-// Exec 执行 SQL 语句。
-// 具体参数说明可参考 forward.Engine 接口文档。
-func (db *DB) Exec(replace bool, query string, args ...interface{}) (sql.Result, error) {
-	if replace {
-		query = db.replacer.Replace(query)
+// QueryContext 执行一条查询语句，并返回相应的sql.Rows实例。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	query = db.replacer.Replace(query)
+	query, err := db.dialect.SQL(query)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := db.dialect.ReplaceMarks(&query); err != nil {
+	return db.stdDB.QueryContext(ctx, query, args...)
+}
+
+// Exec 执行 SQL 语句。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	query = db.replacer.Replace(query)
+	query, err := db.dialect.SQL(query)
+	if err != nil {
 		return nil, err
 	}
 
 	return db.stdDB.Exec(query, args...)
 }
 
-// Prepare 预编译查询语句。
-// 具体参数说明可参考 forward.Engine 接口文档。
-func (db *DB) Prepare(replace bool, query string) (*sql.Stmt, error) {
-	if replace {
-		query = db.replacer.Replace(query)
+// ExecContext 执行 SQL 语句。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	query = db.replacer.Replace(query)
+	query, err := db.dialect.SQL(query)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := db.dialect.ReplaceMarks(&query); err != nil {
+	return db.stdDB.ExecContext(ctx, query, args...)
+}
+
+// Prepare 预编译查询语句。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (db *DB) Prepare(query string) (*sql.Stmt, error) {
+	query = db.replacer.Replace(query)
+	query, err := db.dialect.SQL(query)
+	if err != nil {
 		return nil, err
 	}
 
 	return db.stdDB.Prepare(query)
+}
+
+// PrepareContext 预编译查询语句。
+// 具体参数说明可参考 core.Engine 接口文档。
+func (db *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	query = db.replacer.Replace(query)
+	query, err := db.dialect.SQL(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return db.stdDB.PrepareContext(ctx, query)
 }
 
 // Insert 插入数据，若需一次性插入多条数据，请使用tx.Insert()。
@@ -133,7 +164,7 @@ func (db *DB) Select(v interface{}) error {
 
 // Count 查询符合 v 条件的记录数量。
 // v 中的所有非零字段都将参与查询。
-// 若需要复杂的查询方式，请构建 forward.SQL 对象查询。
+// 若需要复杂的查询方式，请构建 core.SQL 对象查询。
 func (db *DB) Count(v interface{}) (int, error) {
 	return count(db, v)
 }
@@ -151,11 +182,6 @@ func (db *DB) Drop(v interface{}) error {
 // Truncate 清空一张表。
 func (db *DB) Truncate(v interface{}) error {
 	return truncate(db, v)
-}
-
-// SQL 返回一个 SQL 语句
-func (db *DB) SQL() *forward.SQL {
-	return forward.NewSQL(db)
 }
 
 // Begin 开始一个新的事务

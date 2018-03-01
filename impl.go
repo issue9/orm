@@ -11,21 +11,22 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/fetch"
-	"github.com/issue9/orm/forward"
+	"github.com/issue9/orm/sqlbuilder"
 )
 
 // ErrInvalidKind 表示该类型不是结构体或是结构体的指针
 var ErrInvalidKind = errors.New("不支持的 reflect.Kind()，只能是结构体或是结构体指针")
 
-// 根据model中的主键或是唯一索引为sql产生where语句，
-// 若两者都不存在，则返回错误信息。rval为struct的reflect.Value
-func where(e forward.Engine, sql *forward.SQL, m *forward.Model, rval reflect.Value) error {
+// 根据 model 中的主键或是唯一索引为 sql 产生 where 语句，
+// 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
+func where(e core.Engine, sql sqlbuilder.WhereStmter, m *core.Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
-	// 获取构成where的键名和键值
-	getKV := func(cols []*forward.Column) bool {
+	// 获取构成 where 的键名和键值
+	getKV := func(cols []*core.Column) bool {
 		if len(cols) == 0 {
 			return false
 		}
@@ -59,14 +60,14 @@ func where(e forward.Engine, sql *forward.SQL, m *forward.Model, rval reflect.Va
 	}
 
 	for index, key := range keys {
-		sql.And("{"+key+"}=?", vals[index])
+		sql.WhereStmt().And("{"+key+"}=?", vals[index])
 	}
 
 	return nil
 }
 
-// 根据rval中任意非零值产生where语句
-func whereAny(e forward.Engine, sql *forward.SQL, m *forward.Model, rval reflect.Value) error {
+// 根据 rval 中任意非零值产生 where 语句
+func whereAny(e core.Engine, sql sqlbuilder.WhereStmter, m *core.Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -86,17 +87,17 @@ func whereAny(e forward.Engine, sql *forward.SQL, m *forward.Model, rval reflect
 	}
 
 	for index, key := range keys {
-		sql.And("{"+key+"}=?", vals[index])
+		sql.WhereStmt().And("{"+key+"}=?", vals[index])
 	}
 
 	return nil
 }
 
 // 创建一个或多个数据表
-// 若objs为空，则不发生任何操作。
-func buildCreateSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
+// 若 objs 为空，则不发生任何操作。
+func buildCreateSQL(sql *core.StringBuilder, e core.Engine, v interface{}) error {
 	d := e.Dialect()
-	m, err := forward.NewModel(v)
+	m, err := core.NewModel(v)
 	if err != nil {
 		return err
 	}
@@ -123,8 +124,8 @@ func buildCreateSQL(sql *forward.SQL, e forward.Engine, v interface{}) error {
 }
 
 // 统计符合 v 条件的记录数量。
-func count(e forward.Engine, v interface{}) (int, error) {
-	m, err := forward.NewModel(v)
+func count(e core.Engine, v interface{}) (int, error) {
+	m, err := core.NewModel(v)
 	if err != nil {
 		return 0, err
 	}
@@ -138,13 +139,13 @@ func count(e forward.Engine, v interface{}) (int, error) {
 		return 0, ErrInvalidKind
 	}
 
-	sql := forward.NewSQL(e).Select("COUNT(*)AS count").From("{#" + m.Name + "}")
+	sql := sqlbuilder.Select(e).Select("COUNT(*)AS count").From("{#" + m.Name + "}")
 	err = whereAny(e, sql, m, rval)
 	if err != nil {
 		return 0, err
 	}
 
-	rows, err := sql.Query(true)
+	rows, err := sql.Query()
 	if err != nil {
 		return 0, err
 	}
@@ -158,17 +159,17 @@ func count(e forward.Engine, v interface{}) (int, error) {
 }
 
 // 创建表。
-func create(e forward.Engine, v interface{}) error {
-	sql := forward.NewSQL(e)
+func create(e core.Engine, v interface{}) error {
+	sql := core.NewStringBuilder("")
 	if err := buildCreateSQL(sql, e, v); err != nil {
 		return err
 	}
-	if _, err := sql.Exec(true); err != nil {
+	if _, err := e.Exec(sql.String()); err != nil {
 		return err
 	}
 
 	// CREATE INDEX
-	m, err := forward.NewModel(v)
+	m, err := core.NewModel(v)
 	if err != nil {
 		return err
 	}
@@ -186,7 +187,7 @@ func create(e forward.Engine, v interface{}) error {
 		}
 		sql.TruncateLast(1)
 		sql.WriteByte(')')
-		if _, err := sql.Exec(true); err != nil {
+		if _, err := e.Exec(sql.String()); err != nil {
 			return err
 		}
 	}
@@ -194,25 +195,25 @@ func create(e forward.Engine, v interface{}) error {
 }
 
 // 删除一张表。
-func drop(e forward.Engine, v interface{}) error {
-	m, err := forward.NewModel(v)
+func drop(e core.Engine, v interface{}) error {
+	m, err := core.NewModel(v)
 	if err != nil {
 		return err
 	}
 
-	_, err = forward.NewSQL(e).
+	sql := core.NewStringBuilder("").
 		WriteString("DROP TABLE IF EXISTS ").
 		WriteString("{#").
 		WriteString(m.Name).
-		WriteByte('}').
-		Exec(true)
+		WriteByte('}')
+	_, err = e.Exec(sql.String())
 	return err
 }
 
 // 清空表，并重置AI计数。
 // 系统会默认给表名加上表名前缀。
-func truncate(e forward.Engine, v interface{}) error {
-	m, err := forward.NewModel(v)
+func truncate(e core.Engine, v interface{}) error {
+	m, err := core.NewModel(v)
 	if err != nil {
 		return err
 	}
@@ -222,15 +223,15 @@ func truncate(e forward.Engine, v interface{}) error {
 		aiName = m.AI.Name
 	}
 
-	sql := forward.NewSQL(e)
+	sql := core.NewStringBuilder("")
 	e.Dialect().TruncateTableSQL(sql, "#"+m.Name, aiName)
 
-	_, err = sql.Exec(true)
+	_, err = e.Exec(sql.String())
 	return err
 }
 
-func insert(e forward.Engine, v interface{}) (sql.Result, error) {
-	m, err := forward.NewModel(v)
+func insert(e core.Engine, v interface{}) (sql.Result, error) {
+	m, err := core.NewModel(v)
 	if err != nil {
 		return nil, err
 	}
@@ -266,23 +267,18 @@ func insert(e forward.Engine, v interface{}) (sql.Result, error) {
 		return nil, errors.New("orm.insert:未指定任何插入的列数据")
 	}
 
-	sql := forward.NewSQL(e).
-		Insert("{#" + m.Name + "}").
-		Keys(keys...).
-		Values(vals...)
-
-	if sql.HasError() {
-		return nil, sql.Errors()
-	}
-	return sql.Exec(true)
+	return sqlbuilder.Insert(e, "{#"+m.Name+"}").
+		Columns(keys...).
+		Values(vals...).
+		Exec()
 }
 
 // 查找数据。
 //
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
-func find(e forward.Engine, v interface{}) error {
-	m, err := forward.NewModel(v)
+func find(e core.Engine, v interface{}) error {
+	m, err := core.NewModel(v)
 	if err != nil {
 		return err
 	}
@@ -296,17 +292,20 @@ func find(e forward.Engine, v interface{}) error {
 		return ErrInvalidKind
 	}
 
-	sql := forward.NewSQL(e).Select("*").From("{#" + m.Name + "}")
+	sql := sqlbuilder.Select(e).
+		Select("*").
+		From("{#" + m.Name + "}")
 	if err = where(e, sql, m, rval); err != nil {
 		return err
 	}
 
-	_, err = sql.QueryObj(true, v)
+	_, err = sql.QueryObj(v)
 	return err
 }
 
+// for update 只能作用于事务
 func forUpdate(tx *Tx, v interface{}) error {
-	m, err := forward.NewModel(v)
+	m, err := core.NewModel(v)
 	if err != nil {
 		return err
 	}
@@ -320,12 +319,15 @@ func forUpdate(tx *Tx, v interface{}) error {
 		return ErrInvalidKind
 	}
 
-	sql := forward.NewSQL(tx).Select("*").From("{#" + m.Name + "} FOR UPDATE")
+	sql := sqlbuilder.Select(tx).
+		Select("*").
+		From("{#" + m.Name + "}").
+		ForUpdate()
 	if err = where(tx, sql, m, rval); err != nil {
 		return err
 	}
 
-	_, err = sql.QueryObj(true, v)
+	_, err = sql.QueryObj(v)
 	return err
 }
 
@@ -334,8 +336,8 @@ func forUpdate(tx *Tx, v interface{}) error {
 //
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func update(e forward.Engine, v interface{}, cols ...string) (sql.Result, error) {
-	m, err := forward.NewModel(v)
+func update(e core.Engine, v interface{}, cols ...string) (sql.Result, error) {
+	m, err := core.NewModel(v)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +351,7 @@ func update(e forward.Engine, v interface{}, cols ...string) (sql.Result, error)
 		return nil, ErrInvalidKind
 	}
 
-	sql := forward.NewSQL(e).Update("{#" + m.Name + "}")
+	sql := sqlbuilder.Update(e, "{#"+m.Name+"}")
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -368,7 +370,7 @@ func update(e forward.Engine, v interface{}, cols ...string) (sql.Result, error)
 		return nil, err
 	}
 
-	return sql.Exec(true)
+	return sql.Exec()
 }
 
 func inStrSlice(key string, slice []string) bool {
@@ -380,9 +382,9 @@ func inStrSlice(key string, slice []string) bool {
 	return false
 }
 
-// 将v生成delete的sql语句
-func del(e forward.Engine, v interface{}) (sql.Result, error) {
-	m, err := forward.NewModel(v)
+// 将 v 生成 delete 的 sql 语句
+func del(e core.Engine, v interface{}) (sql.Result, error) {
+	m, err := core.NewModel(v)
 	if err != nil {
 		return nil, err
 	}
@@ -396,17 +398,17 @@ func del(e forward.Engine, v interface{}) (sql.Result, error) {
 		return nil, ErrInvalidKind
 	}
 
-	sql := forward.NewSQL(e).Delete("{#" + m.Name + "}")
+	sql := sqlbuilder.Delete(e, "{#"+m.Name+"}")
 	if err = where(e, sql, m, rval); err != nil {
 		return nil, err
 	}
 
-	return sql.Exec(true)
+	return sql.Exec()
 }
 
 // rval 为结构体指针组成的数据
-func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*forward.SQL, error) {
-	sql := forward.NewSQL(e)
+func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, error) {
+	sql := sqlbuilder.Insert(e, "")
 	vals := make([]interface{}, 0, 10)
 	keys := []string{}         // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
@@ -414,7 +416,7 @@ func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*forward.SQL, err
 	for i := 0; i < rval.Len(); i++ {
 		irval := rval.Index(i)
 
-		m, err := forward.NewModel(irval.Interface())
+		m, err := core.NewModel(irval.Interface())
 		if err != nil {
 			return nil, err
 		}
@@ -429,7 +431,7 @@ func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*forward.SQL, err
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
 			firstType = irval.Type()
-			sql.Insert("{#" + m.Name + "}")
+			sql.Table("{#" + m.Name + "}")
 			cols := []string{}
 
 			for name, col := range m.Cols {
@@ -448,13 +450,14 @@ func buildInsertManySQL(e forward.Engine, rval reflect.Value) (*forward.SQL, err
 				cols = append(cols, "{"+name+"}")
 				keys = append(keys, name)
 			}
-			sql.Keys(cols...).Values(vals...)
+			sql.Columns(cols...).Values(vals...)
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
 				return nil, errors.New("orm.buildInsertManySQL:参数v中包含了不同类型的元素")
 			}
 
-			vals = vals[:0]
+			//vals = vals[:0]
+			vals = make([]interface{}, 0, 10)
 			for _, name := range keys {
 				col, found := m.Cols[name]
 				if !found {
