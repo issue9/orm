@@ -4,17 +4,26 @@
 
 package sqlbuilder
 
+import (
+	"context"
+	"database/sql"
+
+	"github.com/issue9/orm/core"
+)
+
 // DeleteStmt 表示删除操作的 SQL 语句
 type DeleteStmt struct {
-	table string
-	where *where
+	engine core.Engine
+	table  string
+	where  *WhereStmt
 }
 
 // Delete 声明一条删除语句
-func Delete(table string) *DeleteStmt {
+func Delete(e core.Engine, table string) *DeleteStmt {
 	return &DeleteStmt{
-		table: table,
-		where: newWhere(),
+		engine: e,
+		table:  table,
+		where:  newWhereStmt(),
 	}
 }
 
@@ -44,20 +53,60 @@ func (stmt *DeleteStmt) Reset() {
 	stmt.where.Reset()
 }
 
+// WhereStmt 实现 WhereStmter 接口
+func (stmt *DeleteStmt) WhereStmt() *WhereStmt {
+	return stmt.where
+}
+
 // Where 指定 where 语句
-func (stmt *DeleteStmt) Where(and bool, cond string, args ...interface{}) *DeleteStmt {
-	stmt.where.where(and, cond, args...)
-	return stmt
+func (stmt *DeleteStmt) Where(cond string, args ...interface{}) *DeleteStmt {
+	return stmt.And(cond, args...)
 }
 
 // And 指定 where ... AND ... 语句
 func (stmt *DeleteStmt) And(cond string, args ...interface{}) *DeleteStmt {
-	stmt.where.and(cond, args...)
+	stmt.where.And(cond, args...)
 	return stmt
 }
 
 // Or 指定 where ... OR ... 语句
 func (stmt *DeleteStmt) Or(cond string, args ...interface{}) *DeleteStmt {
-	stmt.where.or(cond, args...)
+	stmt.where.Or(cond, args...)
 	return stmt
+}
+
+// Exec 执行 SQL 语句
+func (stmt *DeleteStmt) Exec() (sql.Result, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.Exec(query, args...)
+}
+
+// ExecContext 执行 SQL 语句
+func (stmt *DeleteStmt) ExecContext(ctx context.Context) (sql.Result, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.ExecContext(ctx, query, args...)
+}
+
+// Prepare 预编译
+func (stmt *DeleteStmt) Prepare() (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.Prepare(query)
+}
+
+// PrepareContext 预编译
+func (stmt *DeleteStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.PrepareContext(ctx, query)
 }

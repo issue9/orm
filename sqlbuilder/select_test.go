@@ -4,4 +4,8 @@
 
 package sqlbuilder
 
-var _ SQL = &SelectStmt{}
+var (
+	_ SQLer       = &SelectStmt{}
+	_ WhereStmter = &SelectStmt{}
+	_ queryer     = &SelectStmt{}
+)

@@ -5,7 +5,11 @@
 // Package sqlbuilder 用于构建 SQL 语句
 package sqlbuilder
 
-import "errors"
+import (
+	"context"
+	"database/sql"
+	"errors"
+)
 
 var (
 	// ErrTableIsEmpty 未指定表名，任何 SQL 语句中，
@@ -24,11 +28,30 @@ var (
 	ErrArgsNotMatch = errors.New("列与值的数量不匹配")
 )
 
-// SQL 定义 SQL 语句的基本接口
-type SQL interface {
+// SQLer 定义 SQL 语句的基本接口
+type SQLer interface {
 	// 获取 SQL 语句以及其关联的参数
 	SQL() (query string, args []interface{}, err error)
 
 	// 重置整个 SQL 语句。
 	Reset()
+}
+
+// WhereStmter 带 Where 语句的 SQL
+type WhereStmter interface {
+	WhereStmt() *WhereStmt
+}
+
+type execer interface {
+	Exec() (sql.Result, error)
+	ExecContext(ctx context.Context) (sql.Result, error)
+	Prepare() (*sql.Stmt, error)
+	PrepareContext(ctx context.Context) (*sql.Stmt, error)
+}
+
+type queryer interface {
+	Query() (*sql.Rows, error)
+	QueryContext(ctx context.Context) (*sql.Rows, error)
+	Prepare() (*sql.Stmt, error)
+	PrepareContext(ctx context.Context) (*sql.Stmt, error)
 }

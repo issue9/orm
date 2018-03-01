@@ -11,16 +11,16 @@ import (
 	"github.com/issue9/orm/internal/sqltest"
 )
 
-var _ SQL = &where{}
+var _ SQLer = &WhereStmt{}
 
 func TestWhere(t *testing.T) {
 	a := assert.New(t)
-	w := newWhere()
+	w := newWhereStmt()
 	a.NotNil(w)
 
-	w.and("id=?", 1)
-	w.and("name like ?", "name")
-	w.or("type=?", 5)
+	w.And("id=?", 1)
+	w.And("name like ?", "name")
+	w.Or("type=?", 5)
 	sql, args, err := w.SQL()
 	a.NotError(err).NotNil(args).NotEmpty(sql)
 	a.Equal(args, []interface{}{1, "name", 5})
@@ -30,7 +30,7 @@ func TestWhere(t *testing.T) {
 	a.Equal(0, w.buffer.Len())
 	a.Equal(0, len(w.args))
 
-	w.and("id=?", 5)
+	w.And("id=?", 5)
 	sql, args, err = w.SQL()
 	a.NotError(err).NotNil(args).NotEmpty(sql)
 	a.Equal(args, []interface{}{5})
@@ -40,7 +40,7 @@ func TestWhere(t *testing.T) {
 	a.Equal(0, w.buffer.Len())
 	a.Equal(0, len(w.args))
 
-	w.and("id=?", 5, 7)
+	w.And("id=?", 5, 7)
 	sql, args, err = w.SQL()
 	a.Equal(err, ErrArgsNotMatch).Nil(args).Empty(sql)
 }

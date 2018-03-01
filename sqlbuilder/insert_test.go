@@ -12,11 +12,14 @@ import (
 	"github.com/issue9/orm/internal/sqltest"
 )
 
-var _ SQL = &InsertStmt{}
+var (
+	_ SQLer  = &InsertStmt{}
+	_ execer = &InsertStmt{}
+)
 
 func TestInsert(t *testing.T) {
 	a := assert.New(t)
-	i := Insert("table")
+	i := Insert(nil, "table")
 	a.NotNil(i)
 
 	i.Columns("c1", "c2", "c3").Values(1, 2, 3).Values(4, 5, 6)
@@ -40,7 +43,7 @@ func TestInsert(t *testing.T) {
 
 func TestInsertError(t *testing.T) {
 	a := assert.New(t)
-	i := Insert("table")
+	i := Insert(nil, "table")
 	a.NotNil(i)
 
 	query, args, err := i.Columns("c1", "c2").SQL()

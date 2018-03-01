@@ -12,11 +12,15 @@ import (
 	"github.com/issue9/orm/internal/sqltest"
 )
 
-var _ SQL = &UpdateStmt{}
+var (
+	_ SQLer       = &UpdateStmt{}
+	_ WhereStmter = &UpdateStmt{}
+	_ execer      = &UpdateStmt{}
+)
 
 func TestUpdate(t *testing.T) {
 	a := assert.New(t)
-	u := Update("table")
+	u := Update(nil, "table")
 	a.NotNil(u)
 
 	// 不带 where 部分
@@ -45,7 +49,7 @@ func TestUpdate(t *testing.T) {
 	u.Table("tb1").Table("tb2")
 	u.Increase("c1", 1).
 		Increase("c1", 11).
-		Where(true, "id=?", 1).
+		Where("id=?", 1).
 		Or("id=?", 2)
 	query, args, err = u.SQL()
 	a.NotError(err)

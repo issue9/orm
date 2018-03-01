@@ -5,6 +5,7 @@
 package sqlbuilder
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/issue9/orm/core"
@@ -12,18 +13,20 @@ import (
 
 // UpdateStmt 更新语句
 type UpdateStmt struct {
+	engine   core.Engine
 	table    string
-	where    *where
+	where    *WhereStmt
 	values   map[string]interface{}
 	increase map[string]interface{}
 	decrease map[string]interface{}
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
-func Update(table string) *UpdateStmt {
+func Update(e core.Engine, table string) *UpdateStmt {
 	return &UpdateStmt{
+		engine:   e,
 		table:    table,
-		where:    newWhere(),
+		where:    newWhereStmt(),
 		values:   map[string]interface{}{},
 		increase: map[string]interface{}{},
 		decrease: map[string]interface{}{},
@@ -54,21 +57,25 @@ func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
 	return stmt
 }
 
+// WhereStmt 实现 WhereStmter 接口
+func (stmt *UpdateStmt) WhereStmt() *WhereStmt {
+	return stmt.where
+}
+
 // Where 指定 where 语句
-func (stmt *UpdateStmt) Where(and bool, cond string, args ...interface{}) *UpdateStmt {
-	stmt.where.where(and, cond, args...)
-	return stmt
+func (stmt *UpdateStmt) Where(cond string, args ...interface{}) *UpdateStmt {
+	return stmt.And(cond, args...)
 }
 
 // And 指定 where ... AND ... 语句
 func (stmt *UpdateStmt) And(cond string, args ...interface{}) *UpdateStmt {
-	stmt.where.and(cond, args...)
+	stmt.where.And(cond, args...)
 	return stmt
 }
 
 // Or 指定 where ... OR ... 语句
 func (stmt *UpdateStmt) Or(cond string, args ...interface{}) *UpdateStmt {
-	stmt.where.or(cond, args...)
+	stmt.where.Or(cond, args...)
 	return stmt
 }
 
@@ -151,4 +158,40 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	buf.WriteString(wq)
 	args = append(args, wa...)
 	return buf.String(), args, nil
+}
+
+// Exec 执行 SQL 语句
+func (stmt *UpdateStmt) Exec() (sql.Result, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.Exec(query, args...)
+}
+
+// ExecContext 执行 SQL 语句
+func (stmt *UpdateStmt) ExecContext(ctx context.Context) (sql.Result, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.ExecContext(ctx, query, args...)
+}
+
+// Prepare 预编译
+func (stmt *UpdateStmt) Prepare() (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.Prepare(query)
+}
+
+// PrepareContext 预编译
+func (stmt *UpdateStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.PrepareContext(ctx, query)
 }

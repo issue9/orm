@@ -4,13 +4,18 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/core"
+import (
+	"context"
+	"database/sql"
+
+	"github.com/issue9/orm/core"
+)
 
 // SelectStmt 查询语句
 type SelectStmt struct {
 	engine   core.Engine
 	table    string
-	where    *where
+	where    *WhereStmt
 	cols     []string
 	distinct string
 
@@ -35,7 +40,7 @@ type join struct {
 func Select(e core.Engine) *SelectStmt {
 	return &SelectStmt{
 		engine: e,
-		where:  newWhere(),
+		where:  newWhereStmt(),
 	}
 }
 
@@ -163,21 +168,25 @@ func (stmt *SelectStmt) Having(expr string, args ...interface{}) *SelectStmt {
 	return stmt
 }
 
+// WhereStmt 实现 WhereStmter 接口
+func (stmt *SelectStmt) WhereStmt() *WhereStmt {
+	return stmt.where
+}
+
 // Where 指定 where 语句
-func (stmt *SelectStmt) Where(and bool, cond string, args ...interface{}) *SelectStmt {
-	stmt.where.where(and, cond, args...)
-	return stmt
+func (stmt *SelectStmt) Where(cond string, args ...interface{}) *SelectStmt {
+	return stmt.And(cond, args...)
 }
 
 // And 指定 where ... AND ... 语句
 func (stmt *SelectStmt) And(cond string, args ...interface{}) *SelectStmt {
-	stmt.where.and(cond, args...)
+	stmt.where.And(cond, args...)
 	return stmt
 }
 
 // Or 指定 where ... OR ... 语句
 func (stmt *SelectStmt) Or(cond string, args ...interface{}) *SelectStmt {
-	stmt.where.or(cond, args...)
+	stmt.where.Or(cond, args...)
 	return stmt
 }
 
@@ -235,4 +244,40 @@ func (stmt *SelectStmt) Limit(limit int, offset ...int) *SelectStmt {
 	stmt.limitQuery = query
 	stmt.limitVals = vals
 	return stmt
+}
+
+// Query 查询
+func (stmt *SelectStmt) Query() (*sql.Rows, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.Query(query, args...)
+}
+
+// QueryContext 查询
+func (stmt *SelectStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.QueryContext(ctx, query, args...)
+}
+
+// Prepare 预编译
+func (stmt *SelectStmt) Prepare() (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.Prepare(query)
+}
+
+// PrepareContext 预编译
+func (stmt *SelectStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.PrepareContext(ctx, query)
 }

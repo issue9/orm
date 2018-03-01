@@ -5,6 +5,7 @@
 package sqlbuilder
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/issue9/orm/core"
@@ -12,16 +13,18 @@ import (
 
 // InsertStmt 表示插入操作的 SQL 语句
 type InsertStmt struct {
-	table string
-	cols  []string
-	args  [][]interface{}
+	engine core.Engine
+	table  string
+	cols   []string
+	args   [][]interface{}
 }
 
 // Insert 声明一条插入语句
-func Insert(table string) *InsertStmt {
+func Insert(e core.Engine, table string) *InsertStmt {
 	return &InsertStmt{
-		table: table,
-		args:  make([][]interface{}, 0, 10),
+		engine: e,
+		table:  table,
+		args:   make([][]interface{}, 0, 10),
 	}
 }
 
@@ -101,4 +104,40 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	buffer.TruncateLast(1)
 
 	return buffer.String(), args, nil
+}
+
+// Exec 执行 SQL 语句
+func (stmt *InsertStmt) Exec() (sql.Result, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.Exec(query, args...)
+}
+
+// ExecContext 执行 SQL 语句
+func (stmt *InsertStmt) ExecContext(ctx context.Context) (sql.Result, error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.ExecContext(ctx, query, args...)
+}
+
+// Prepare 预编译
+func (stmt *InsertStmt) Prepare() (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.Prepare(query)
+}
+
+// PrepareContext 预编译
+func (stmt *InsertStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
+	query, _, err := stmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	return stmt.engine.PrepareContext(ctx, query)
 }

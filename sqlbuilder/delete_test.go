@@ -11,13 +11,17 @@ import (
 	"github.com/issue9/orm/internal/sqltest"
 )
 
-var _ SQL = &DeleteStmt{}
+var (
+	_ SQLer       = &DeleteStmt{}
+	_ WhereStmter = &DeleteStmt{}
+	_ execer      = &DeleteStmt{}
+)
 
 func TestDelete(t *testing.T) {
 	a := assert.New(t)
 
-	d := Delete("#table").
-		Where(true, "id=?", 1).
+	d := Delete(nil, "#table").
+		Where("id=?", 1).
 		Or("id=?", 2).
 		And("id=?", 3)
 	query, args, err := d.SQL()
@@ -27,7 +31,7 @@ func TestDelete(t *testing.T) {
 
 	d.Reset()
 	a.Empty(d.table)
-	query, args, err = d.Table("tb1").Where(true, "id=?").Or("id=?", 1).SQL()
+	query, args, err = d.Table("tb1").Where("id=?").Or("id=?", 1).SQL()
 	a.Equal(err, ErrArgsNotMatch) // 由 where 抛出
 	a.Empty(query).Nil(args)
 }
