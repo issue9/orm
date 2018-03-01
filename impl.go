@@ -201,12 +201,7 @@ func drop(e core.Engine, v interface{}) error {
 		return err
 	}
 
-	sql := core.NewStringBuilder("").
-		WriteString("DROP TABLE IF EXISTS ").
-		WriteString("{#").
-		WriteString(m.Name).
-		WriteByte('}')
-	_, err = e.Exec(sql.String())
+	_, err = sqlbuilder.DropTable(e, "{#"+m.Name+"}").Exec()
 	return err
 }
 
