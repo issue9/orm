@@ -26,12 +26,10 @@ type Engine interface {
 
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 
-	// 功能等同于 database/sql 的 DB.Exec()。
 	Exec(query string, args ...interface{}) (sql.Result, error)
 
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 
-	// 功能等同于 database/sql 的 DB.Prepare()。
 	Prepare(query string) (*sql.Stmt, error)
 
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
