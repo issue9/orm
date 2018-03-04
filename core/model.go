@@ -18,7 +18,7 @@ import (
 
 type conType int
 
-// 预定的约束类型，方便Model中使用。
+// 预定的约束类型，方便 Model 中使用。
 const (
 	none conType = iota
 	index
@@ -44,7 +44,7 @@ func (t conType) String() string {
 	}
 }
 
-// model缓存
+// model 缓存
 var models = &modelsMap{items: map[reflect.Type]*Model{}}
 
 type modelsMap struct {
@@ -88,9 +88,9 @@ type Column struct {
 	Name     string       // 数据库的字段名
 	Len1     int          // 长度1，仅对部分类型启作用
 	Len2     int          // 长度2，仅对部分类型启作用
-	Nullable bool         // 是否可以为NULL
-	GoType   reflect.Type // Go语言中的数据类型
-	Zero     interface{}  // GoType的零值
+	Nullable bool         // 是否可以为 NULL
+	GoType   reflect.Type // Go 语言中的数据类型
+	Zero     interface{}  // GoType 的零值
 	GoName   string       // 结构字段名
 
 	HasDefault bool
@@ -204,40 +204,34 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 	return nil
 }
 
-// 分析一个字段。
-func (m *Model) parseColumn(field reflect.StructField) (err error) {
-	// 直接忽略以小写字母开头的字段
-	if unicode.IsLower(rune(field.Name[0])) {
-		return nil
-	}
-
-	tagTxt := field.Tag.Get("orm")
-
-	// 没有附加的 struct tag，直接取得几个关键信息返回。
-	if len(tagTxt) == 0 {
-		m.Cols[field.Name] = &Column{
-			GoType: field.Type,
-			Zero:   reflect.Zero(field.Type).Interface(),
-			Name:   field.Name,
-			model:  m,
-			GoName: field.Name,
-		}
-		return nil
-	}
-
-	// 以-开头，表示忽略此字段。要确保 struct tag 最少有一个字符，
-	// 所以要上面len(tagTxt) == 0的判断之后。
-	if tagTxt[0] == '-' {
-		return nil
-	}
-
-	col := &Column{
+func (m *Model) newColumn(field reflect.StructField) *Column {
+	return &Column{
 		GoType: field.Type,
 		Zero:   reflect.Zero(field.Type).Interface(),
 		Name:   field.Name,
 		model:  m,
 		GoName: field.Name,
 	}
+}
+
+// 分析一个字段。
+func (m *Model) parseColumn(field reflect.StructField) (err error) {
+	if unicode.IsLower(rune(field.Name[0])) { // 忽略以小写字母开头的字段
+		return nil
+	}
+
+	tagTxt := field.Tag.Get("orm")
+	if tagTxt == "-" {
+		return nil
+	}
+
+	col := m.newColumn(field)
+
+	if len(tagTxt) == 0 { // 没有附加的 struct tag，直接取得几个关键信息返回。
+		m.Cols[col.Name] = col
+		return nil
+	}
+
 	tags := tags.Parse(tagTxt)
 	for k, v := range tags {
 		switch k {
@@ -270,12 +264,13 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 			return err
 		}
 	}
+	// col.Name 可能在上面的 for 循环中被更改，所以要在最后再添加到 m.Cols 中
 	m.Cols[col.Name] = col
 
 	return nil
 }
 
-// 分析struct的meta接口数据。
+// 分析 meta 接口数据。
 func (m *Model) parseMeta(obj interface{}) error {
 	meta, ok := obj.(Metaer)
 	if !ok {
@@ -318,7 +313,6 @@ func (m *Model) parseMeta(obj interface{}) error {
 	return nil
 }
 
-// 通过vals设置字段的default属性
 // default(5)
 func (m *Model) setDefault(col *Column, vals []string) error {
 	if m.AI == col {
@@ -341,7 +335,6 @@ func (m *Model) setDefault(col *Column, vals []string) error {
 	return nil
 }
 
-// 通过vals设置字段的index约束
 // index(idx_name)
 func (m *Model) setIndex(col *Column, vals []string) error {
 	if len(vals) != 1 {
@@ -357,7 +350,6 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 	return nil
 }
 
-// 通过vals设置字段的primark key约束
 // pk
 func (m *Model) setPK(col *Column, vals []string) error {
 	if col.HasDefault {
@@ -376,7 +368,6 @@ func (m *Model) setPK(col *Column, vals []string) error {
 	return nil
 }
 
-// 通过vals设置字段的unique约束
 // unique(unique_name)
 func (m *Model) setUnique(col *Column, vals []string) error {
 	if len(vals) != 1 {
@@ -393,7 +384,6 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 	return nil
 }
 
-// 通过vals设置字段的foregin key约束
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
 func (m *Model) setFK(col *Column, vals []string) error {
 	if len(vals) < 3 {
@@ -426,7 +416,6 @@ func (m *Model) setFK(col *Column, vals []string) error {
 	return nil
 }
 
-// 通过vals设置Model的自增列。
 // ai(colName,start,step)
 func (m *Model) setAI(col *Column, vals []string) (err error) {
 	if col.HasDefault {
@@ -455,8 +444,8 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 	return nil
 }
 
-// 是否存在指定名称的约束名，name不区分大小写。
-// 若已经存在返回表示该约束类型的常量，否则返回none。
+// 是否存在指定名称的约束名，name 不区分大小写。
+// 若已经存在返回表示该约束类型的常量，否则返回 none。
 func (m *Model) hasConstraint(name string, except conType) conType {
 	// 约束名不区分大小写
 	if typ, found := m.constraints[strings.ToLower(name)]; found && typ != except {
