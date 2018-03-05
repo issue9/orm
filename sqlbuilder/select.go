@@ -262,9 +262,11 @@ func (stmt *SelectStmt) Limit(limit int, offset ...int) *SelectStmt {
 
 // Count 用于统计符合当前条件的数量。
 //
-// NOTE: 会去掉 Limit 限制，其它不变，如果要分页，
+// NOTE: 会去掉 Limit 和查询列的限制，其它不变，如果要分页，
 // 在 Count 之后，需要再次调用 Limit 函数.
-func (stmt *SelectStmt) Count() *SelectStmt {
+func (stmt *SelectStmt) Count(col string) *SelectStmt {
+	stmt.cols = stmt.cols[:1]
+	stmt.cols[0] = " COUNT(*) AS " + col
 	stmt.limitQuery = stmt.limitQuery[:0]
 	stmt.limitQuery = ""
 	return stmt
