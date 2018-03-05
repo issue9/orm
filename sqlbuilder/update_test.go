@@ -18,6 +18,79 @@ var (
 	_ execer      = &UpdateStmt{}
 )
 
+func TestUpdate_columnsHasDup(t *testing.T) {
+	a := assert.New(t)
+	u := Update(nil, "table")
+
+	u.values = []*updateSet{
+		&updateSet{
+			column: "c1",
+			value:  1,
+		},
+		&updateSet{
+			column: "c2",
+			value:  1,
+		},
+
+		&updateSet{
+			column: "c2",
+			value:  1,
+		},
+	}
+	a.True(u.columnsHasDup())
+
+	u.values = []*updateSet{
+		&updateSet{
+			column: "c1",
+			value:  1,
+		},
+		&updateSet{
+			column: "c1",
+			value:  1,
+		},
+
+		&updateSet{
+			column: "c2",
+			value:  1,
+		},
+	}
+	a.True(u.columnsHasDup())
+
+	u.values = []*updateSet{
+		&updateSet{
+			column: "c1",
+			value:  1,
+		},
+		&updateSet{
+			column: "c2",
+			value:  1,
+		},
+
+		&updateSet{
+			column: "c1",
+			value:  1,
+		},
+	}
+	a.True(u.columnsHasDup())
+
+	u.values = []*updateSet{
+		&updateSet{
+			column: "c1",
+			value:  1,
+		},
+		&updateSet{
+			column: "c2",
+			value:  1,
+		},
+
+		&updateSet{
+			column: "c3",
+			value:  1,
+		},
+	}
+	a.False(u.columnsHasDup())
+}
+
 func TestUpdate(t *testing.T) {
 	a := assert.New(t)
 	u := Update(nil, "table")
