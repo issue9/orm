@@ -260,6 +260,26 @@ func (stmt *SelectStmt) Limit(limit int, offset ...int) *SelectStmt {
 	return stmt
 }
 
+// Count 用于统计符合当前条件的数量。
+//
+// NOTE: 会去掉 Limit 限制，其它不变，如果要分页，
+// 在 Count 之后，需要再次调用 Limit 函数.
+func (stmt *SelectStmt) Count() *SelectStmt {
+	stmt.limitQuery = stmt.limitQuery[:0]
+	stmt.limitQuery = ""
+	return stmt
+}
+
+// Prepare 预编译
+func (stmt *SelectStmt) Prepare() (*sql.Stmt, error) {
+	return prepare(stmt.engine, stmt)
+}
+
+// PrepareContext 预编译
+func (stmt *SelectStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
+	return prepareContext(ctx, stmt.engine, stmt)
+}
+
 // Query 查询
 func (stmt *SelectStmt) Query() (*sql.Rows, error) {
 	return query(stmt.engine, stmt)
@@ -279,14 +299,4 @@ func (stmt *SelectStmt) QueryObj(objs interface{}) (int, error) {
 	defer rows.Close()
 
 	return fetch.Obj(objs, rows)
-}
-
-// Prepare 预编译
-func (stmt *SelectStmt) Prepare() (*sql.Stmt, error) {
-	return prepare(stmt.engine, stmt)
-}
-
-// PrepareContext 预编译
-func (stmt *SelectStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	return prepareContext(ctx, stmt.engine, stmt)
 }
