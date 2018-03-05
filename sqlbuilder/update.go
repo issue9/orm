@@ -7,18 +7,25 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+	"sort"
 
 	"github.com/issue9/orm/core"
 )
 
 // UpdateStmt 更新语句
 type UpdateStmt struct {
-	engine   core.Engine
-	table    string
-	where    *WhereStmt
+	engine core.Engine
+	table  string
+	where  *WhereStmt
+
+	// 以下 map 键名为数据库中的列名，键值为数据库中的值。
 	values   map[string]interface{}
 	increase map[string]interface{}
 	decrease map[string]interface{}
+
+	// 保存着 values,increase,decrease 三个字段中所有的列名。
+	// 方便排查是否存在重复的列名。
+	cols []string
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
@@ -30,6 +37,7 @@ func Update(e core.Engine, table string) *UpdateStmt {
 		values:   map[string]interface{}{},
 		increase: map[string]interface{}{},
 		decrease: map[string]interface{}{},
+		cols:     []string{},
 	}
 }
 
@@ -42,18 +50,21 @@ func (stmt *UpdateStmt) Table(table string) *UpdateStmt {
 // Set 设置值，若 col 相同，则会覆盖
 func (stmt *UpdateStmt) Set(col string, val interface{}) *UpdateStmt {
 	stmt.values[col] = val
+	stmt.cols = append(stmt.cols, col)
 	return stmt
 }
 
 // Increase 给列增加值
 func (stmt *UpdateStmt) Increase(col string, val interface{}) *UpdateStmt {
 	stmt.increase[col] = val
+	stmt.cols = append(stmt.cols, col)
 	return stmt
 }
 
 // Decrease 给钱减少值
 func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
 	stmt.decrease[col] = val
+	stmt.cols = append(stmt.cols, col)
 	return stmt
 }
 
@@ -90,12 +101,8 @@ func (stmt *UpdateStmt) Reset() {
 
 // SQL 获取 SQL 语句以及对应的参数
 func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
-	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
-	}
-
-	if len(stmt.values) == 0 && len(stmt.increase) == 0 && len(stmt.decrease) == 0 {
-		return "", nil, ErrValueIsEmpty
+	if err := stmt.checkErrors(); err != nil {
+		return "", nil, err
 	}
 
 	buf := core.NewStringBuilder("UPDATE ")
@@ -158,6 +165,43 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	buf.WriteString(wq)
 	args = append(args, wa...)
 	return buf.String(), args, nil
+}
+
+// 检测列名是否存在重复，先排序，再与后一元素比较。
+func (stmt *UpdateStmt) checkErrors() error {
+	if stmt.table == "" {
+		return ErrTableIsEmpty
+	}
+
+	if len(stmt.cols) == 0 {
+		return ErrColumnsIsEmpty
+	}
+
+	if stmt.columnsHasDup() {
+		return ErrDupColumn
+	}
+
+	if len(stmt.values) == 0 && len(stmt.increase) == 0 && len(stmt.decrease) == 0 {
+		return ErrValueIsEmpty
+	}
+
+	return nil
+}
+
+// 检测列名是否存在重复，先排序，再与后一元素比较。
+func (stmt *UpdateStmt) columnsHasDup() bool {
+	sort.Strings(stmt.cols)
+	for index, col := range stmt.cols {
+		if index+1 >= len(stmt.cols) {
+			return false
+		}
+
+		if col == stmt.cols[index+1] {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Exec 执行 SQL 语句
