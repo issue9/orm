@@ -48,11 +48,10 @@ func TestUpdate(t *testing.T) {
 
 	u.Table("tb1").Table("tb2")
 	u.Increase("c1", 1).
-		Increase("c1", 11).
 		Where("id=?", 1).
 		Or("id=?", 2)
 	query, args, err = u.SQL()
 	a.NotError(err)
-	a.Equal(args, []interface{}{11, 1, 2})
+	a.Equal(args, []interface{}{1, 1, 2})
 	sqltest.Equal(a, query, "update tb2 SET c1=c1+? where id=? or id=?")
 }

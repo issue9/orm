@@ -17,27 +17,22 @@ type UpdateStmt struct {
 	engine core.Engine
 	table  string
 	where  *WhereStmt
+	values []*updateSet
+}
 
-	// 以下 map 键名为数据库中的列名，键值为数据库中的值。
-	values   map[string]interface{}
-	increase map[string]interface{}
-	decrease map[string]interface{}
-
-	// 保存着 values,increase,decrease 三个字段中所有的列名。
-	// 方便排查是否存在重复的列名。
-	cols []string
+type updateSet struct {
+	column string
+	value  interface{}
+	typ    byte // 类型，可以是 + 自增类型，- 自减类型，或是空值表示正常表达式
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
 func Update(e core.Engine, table string) *UpdateStmt {
 	return &UpdateStmt{
-		engine:   e,
-		table:    table,
-		where:    newWhereStmt(),
-		values:   map[string]interface{}{},
-		increase: map[string]interface{}{},
-		decrease: map[string]interface{}{},
-		cols:     []string{},
+		engine: e,
+		table:  table,
+		where:  newWhereStmt(),
+		values: []*updateSet{},
 	}
 }
 
@@ -49,22 +44,31 @@ func (stmt *UpdateStmt) Table(table string) *UpdateStmt {
 
 // Set 设置值，若 col 相同，则会覆盖
 func (stmt *UpdateStmt) Set(col string, val interface{}) *UpdateStmt {
-	stmt.values[col] = val
-	stmt.cols = append(stmt.cols, col)
+	stmt.values = append(stmt.values, &updateSet{
+		column: col,
+		value:  val,
+		typ:    0,
+	})
 	return stmt
 }
 
 // Increase 给列增加值
 func (stmt *UpdateStmt) Increase(col string, val interface{}) *UpdateStmt {
-	stmt.increase[col] = val
-	stmt.cols = append(stmt.cols, col)
+	stmt.values = append(stmt.values, &updateSet{
+		column: col,
+		value:  val,
+		typ:    '+',
+	})
 	return stmt
 }
 
 // Decrease 给钱减少值
 func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
-	stmt.decrease[col] = val
-	stmt.cols = append(stmt.cols, col)
+	stmt.values = append(stmt.values, &updateSet{
+		column: col,
+		value:  val,
+		typ:    '-',
+	})
 	return stmt
 }
 
@@ -94,9 +98,7 @@ func (stmt *UpdateStmt) Or(cond string, args ...interface{}) *UpdateStmt {
 func (stmt *UpdateStmt) Reset() {
 	stmt.table = ""
 	stmt.where.Reset()
-	stmt.values = map[string]interface{}{}
-	stmt.increase = map[string]interface{}{}
-	stmt.decrease = map[string]interface{}{}
+	stmt.values = stmt.values[:0]
 }
 
 // SQL 获取 SQL 语句以及对应的参数
@@ -111,50 +113,24 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 
 	args := make([]interface{}, 0, len(stmt.values))
 
-	for col, val := range stmt.values {
-		buf.WriteString(col)
+	for _, val := range stmt.values {
+		buf.WriteString(val.column)
 		buf.WriteByte('=')
-		if named, ok := val.(sql.NamedArg); ok && named.Name != "" {
+
+		if val.typ != 0 {
+			buf.WriteString(val.column)
+			buf.WriteByte(val.typ)
+		}
+
+		if named, ok := val.value.(sql.NamedArg); ok && named.Name != "" {
 			buf.WriteByte('@')
 			buf.WriteString(named.Name)
 		} else {
 			buf.WriteByte('?')
 		}
 		buf.WriteByte(',')
-		args = append(args, val)
+		args = append(args, val.value)
 	}
-
-	for col, val := range stmt.increase {
-		buf.WriteString(col)
-		buf.WriteByte('=')
-		buf.WriteString(col)
-		buf.WriteByte('+')
-		if named, ok := val.(sql.NamedArg); ok && named.Name != "" {
-			buf.WriteByte('@')
-			buf.WriteString(named.Name)
-		} else {
-			buf.WriteByte('?')
-		}
-		buf.WriteByte(',')
-		args = append(args, val)
-	}
-
-	for col, val := range stmt.decrease {
-		buf.WriteString(col)
-		buf.WriteByte('=')
-		buf.WriteString(col)
-		buf.WriteByte('-')
-		if named, ok := val.(sql.NamedArg); ok && named.Name != "" {
-			buf.WriteByte('@')
-			buf.WriteString(named.Name)
-		} else {
-			buf.WriteByte('?')
-		}
-		buf.WriteByte(',')
-		args = append(args, val)
-	}
-
-	// 等所有的 SET 部分内容都完成了，去掉最后的逗号
 	buf.TruncateLast(1)
 
 	wq, wa, err := stmt.where.SQL()
@@ -173,16 +149,12 @@ func (stmt *UpdateStmt) checkErrors() error {
 		return ErrTableIsEmpty
 	}
 
-	if len(stmt.cols) == 0 {
-		return ErrColumnsIsEmpty
+	if len(stmt.values) == 0 {
+		return ErrValueIsEmpty
 	}
 
 	if stmt.columnsHasDup() {
 		return ErrDupColumn
-	}
-
-	if len(stmt.values) == 0 && len(stmt.increase) == 0 && len(stmt.decrease) == 0 {
-		return ErrValueIsEmpty
 	}
 
 	return nil
@@ -190,13 +162,16 @@ func (stmt *UpdateStmt) checkErrors() error {
 
 // 检测列名是否存在重复，先排序，再与后一元素比较。
 func (stmt *UpdateStmt) columnsHasDup() bool {
-	sort.Strings(stmt.cols)
-	for index, col := range stmt.cols {
-		if index+1 >= len(stmt.cols) {
+	sort.SliceStable(stmt.values, func(i, j int) bool {
+		return stmt.values[i].column < stmt.values[j].column
+	})
+
+	for index, col := range stmt.values {
+		if index+1 >= len(stmt.values) {
 			return false
 		}
 
-		if col == stmt.cols[index+1] {
+		if col.column == stmt.values[index+1].column {
 			return true
 		}
 	}

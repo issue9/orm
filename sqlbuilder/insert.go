@@ -35,12 +35,16 @@ func (stmt *InsertStmt) Table(table string) *InsertStmt {
 }
 
 // Columns 指定插入的列，多次指定，之前的会被覆盖。
+//
+// NOTE:cols 传入时，并不会被解压
 func (stmt *InsertStmt) Columns(cols ...string) *InsertStmt {
 	stmt.cols = cols
 	return stmt
 }
 
 // Values 指定需要插入的值
+//
+// vals 传入时，并不会被解压
 func (stmt *InsertStmt) Values(vals ...interface{}) *InsertStmt {
 	stmt.args = append(stmt.args, vals)
 	return stmt
