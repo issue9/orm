@@ -9,29 +9,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/internal/modeltest"
 )
-
-type user struct {
-	ID       int    `orm:"name(id);ai;"`
-	Username string `orm:"unique(unique_username);index(index_name);len(50)"`
-	Password string `orm:"name(password)"`
-	Regdate  int    `orm:"-"`
-}
-
-func (m *user) Meta() string {
-	return "check(chk_name,id>0);engine(innodb);charset(utf-8);name(users)"
-}
-
-type admin struct {
-	user
-
-	Email string `orm:"name(email);unique(unique_email)"`
-	Group int    `orm:"name(group);fk(fk_name,table_group,id,NO ACTION)"`
-}
-
-func (m *admin) Meta() string {
-	return "check(chk_name,id>0);engine(innodb);charset(utf-8);name(administrators)"
-}
 
 func TestConType_String(t *testing.T) {
 	a := assert.New(t)
@@ -80,19 +59,19 @@ func TestModels(t *testing.T) {
 	ClearModels()
 	a.Equal(0, len(models.items))
 
-	m, err := NewModel(&user{})
+	m, err := NewModel(&modeltest.User{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
-	// 相同的model实例，不会增加数量
-	m, err = NewModel(&user{})
+	// 相同的 model 实例，不会增加数量
+	m, err = NewModel(&modeltest.User{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
-	// 添加新的model
-	m, err = NewModel(&admin{})
+	// 添加新的 model
+	m, err = NewModel(&modeltest.Admin{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(2, len(models.items))
@@ -101,12 +80,12 @@ func TestModels(t *testing.T) {
 	a.Equal(0, len(models.items))
 }
 
-// 传递给NewModel是一个指针时的各种情况
+// 传递给 NewModel 是一个指针时的各种情况
 func TestModel(t *testing.T) {
 	ClearModels()
 	a := assert.New(t)
 
-	m, err := NewModel(&admin{})
+	m, err := NewModel(&modeltest.Admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols
@@ -116,7 +95,7 @@ func TestModel(t *testing.T) {
 	usernameCol, found := m.Cols["Username"] // 未指定别名，与字段名相同
 	a.True(found).False(usernameCol.Nullable)
 
-	// 通过struct tag过滤掉的列
+	// 通过 struct tag 过滤掉的列
 	regdate, found := m.Cols["Regdate"]
 	a.False(found).Nil(regdate)
 
@@ -140,7 +119,7 @@ func TestModel(t *testing.T) {
 	fk, found := m.FK["fk_name"]
 	a.True(found).
 		Equal(fk.Col, groupCol).
-		Equal(fk.RefTableName, "table_group").
+		Equal(fk.RefTableName, "groups").
 		Equal(fk.RefColName, "id").
 		Equal(fk.UpdateRule, "NO ACTION").
 		Equal(fk.DeleteRule, "")
@@ -165,7 +144,7 @@ func BenchmarkNewModelNoCached(b *testing.B) {
 	a := assert.New(b)
 
 	for i := 0; i < b.N; i++ {
-		m, err := NewModel(&user{})
+		m, err := NewModel(&modeltest.User{})
 		ClearModels()
 		a.NotError(err).NotNil(m)
 	}
@@ -177,7 +156,7 @@ func BenchmarkNewModelCached(b *testing.B) {
 	a := assert.New(b)
 
 	for i := 0; i < b.N; i++ {
-		m, err := NewModel(&user{})
+		m, err := NewModel(&modeltest.User{})
 		a.NotError(err).NotNil(m)
 	}
 }

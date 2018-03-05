@@ -31,7 +31,7 @@
 // 占位符
 //
 //
-// SQL 语句可以使用'#'字符在语句中暂替真实的表名前缀，也可以使用{}
+// SQL 语句可以使用 # 字符在语句中暂替真实的表名前缀，也可以使用 {}
 // 包含一个关键字，使其它成为普通列名，如：
 //  select * from #user where {group}=1
 // 在实际执行时，如 DB.Query()，将第一个参数 replace 指定为 true，
@@ -98,14 +98,15 @@
 //  因为 check 约束的表达式可以通过and或是or等符号连接多条基本表达式，
 //  在字段 struct tag 中指定会显得有点怪异。
 //
-// 关于core.Metaer接口。
 //
-// 在go不能将struct tag作用于结构体，所以为了指定一些表级别的属性，
-// 只能通过接口的形式，在接口方法中返回一段类似于struct tag的字符串，
+// core.Metaer:
+//
+// 在 Go 不能将 struct tag 作用于结构体，所以为了指定一些表级别的属性，
+// 只能通过接口的形式，在接口方法中返回一段类似于 struct tag 的字符串，
 // 以达到相同的目的。
 //
-// 在core.Metaer中除了可以指定name(table_name)和check(name,expr)两个属性之外，
-// 还可指定一些自定义的属性，这些属性都将会被保存到Model.Meta中。
+// 在 core.Metaer 中除了可以指定 name(table_name) 和 check(name,expr) 两个属性之外，
+// 还可指定一些自定义的属性，这些属性都将会被保存到 Model.Meta 中。
 //
 //
 //

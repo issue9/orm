@@ -6,8 +6,10 @@ package orm
 
 import (
 	"testing"
+	"time"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/internal/modeltest"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -15,19 +17,18 @@ import (
 func BenchmarkDB_Insert(b *testing.B) {
 	a := assert.New(b)
 
-	m := &bench{
-		Name: "name",
-		Pass: "pass",
-		Site: "http://www.github.com/issue9/orm",
+	m := &modeltest.Group{
+		Name:    "name",
+		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&bench{})
+		db.Drop(&modeltest.Group{})
 		closeDB(a)
 	}()
 
-	a.NotError(db.Create(&bench{}))
+	a.NotError(db.Create(&modeltest.Group{}))
 
 	for i := 0; i < b.N; i++ {
 		a.NotError(db.Insert(m))
@@ -38,23 +39,22 @@ func BenchmarkDB_Insert(b *testing.B) {
 func BenchmarkDB_Update(b *testing.B) {
 	a := assert.New(b)
 
-	m := &bench{
-		Name: "name",
-		Pass: "pass",
-		Site: "http://www.github.com/issue9/orm",
+	m := &modeltest.Group{
+		Name:    "name",
+		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&bench{})
+		db.Drop(&modeltest.Group{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&bench{}))
+	a.NotError(db.Create(&modeltest.Group{}))
 	a.NotError(db.Insert(m))
 
-	m.ID = 1 // 自增，从1开始
+	m.ID = 1 // 自增，从 1 开始
 	for i := 0; i < b.N; i++ {
 		a.NotError(db.Update(m))
 	}
@@ -64,19 +64,18 @@ func BenchmarkDB_Update(b *testing.B) {
 func BenchmarkDB_Select(b *testing.B) {
 	a := assert.New(b)
 
-	m := &bench{
-		Name: "name",
-		Pass: "pass",
-		Site: "http://www.github.com/issue9/orm",
+	m := &modeltest.Group{
+		Name:    "name",
+		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&bench{})
+		db.Drop(&modeltest.Group{})
 		closeDB(a)
 	}()
 
-	a.NotError(db.Create(&bench{}))
+	a.NotError(db.Create(&modeltest.Group{}))
 	a.NotError(db.Insert(m))
 
 	m.ID = 1
@@ -89,28 +88,26 @@ func BenchmarkDB_Select(b *testing.B) {
 func BenchmarkDB_WhereUpdate(b *testing.B) {
 	a := assert.New(b)
 
-	m := &bench{
-		Name: "name",
-		Pass: "pass",
-		Site: "http://www.github.com/issue9/orm",
+	m := &modeltest.Group{
+		Name:    "name",
+		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&bench{})
+		db.Drop(&modeltest.Group{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&bench{}))
+	a.NotError(db.Create(&modeltest.Group{}))
 	a.NotError(db.Insert(m))
 
 	for i := 0; i < b.N; i++ {
 		_, err := sqlbuilder.
-			Update(db, "{#bench}").
+			Update(db, "{#groups}").
 			Set("name", "n1").
-			Set("pass", "p1").
-			Set("site", "s1").
+			Increase("created", 1).
 			Where("{id}=?", i+1).
 			Exec()
 		a.NotError(err)
@@ -121,23 +118,22 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 func BenchmarkDB_Count(b *testing.B) {
 	a := assert.New(b)
 
-	m := &bench{
-		Name: "name",
-		Pass: "pass",
-		Site: "http://www.github.com/issue9/orm",
+	m := &modeltest.Group{
+		Name:    "name",
+		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&bench{})
+		db.Drop(&modeltest.Group{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&bench{}))
+	a.NotError(db.Create(&modeltest.Group{}))
 	a.NotError(db.Insert(m))
 
-	be := &bench{Name: "name"}
+	be := &modeltest.Group{Name: "name"}
 	for i := 0; i < b.N; i++ {
 		count, _ := db.Count(be)
 		if count < 1 {

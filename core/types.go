@@ -15,10 +15,9 @@ type Engine interface {
 	Dialect() Dialect
 
 	// 执行一条查询语句，并返回相应的 sql.Rows 实例。
-	// 功能基本上等同于标准库 database/sql 的 DB.Query()
+	// 功能等同于标准库 database/sql 的 DB.Query()
 	//
-	// 如：以下内容，在 replace 为 false 时，将原样输出，
-	// 否则将被转换成以下字符串(以 mysql 为例，假设当前的 prefix 为 p_)
+	// query 会被作相应的转换。以 mysql 为例，假设当前的 prefix 为 p_
 	//  select * from #user where {group}=1
 	//  // 转换后
 	//  select * from prefix_user where `group`=1
