@@ -25,7 +25,7 @@ func Column(once bool, colName string, rows *sql.Rows) ([]interface{}, error) {
 		var value interface{}
 		buff[i] = &value
 
-		if colName == v { // 获取index的值
+		if colName == v { // 获取 index 的值
 			index = i
 		}
 	}
@@ -57,13 +57,13 @@ func ColumnString(once bool, colName string, rows *sql.Rows) ([]string, error) {
 		return nil, err
 	}
 
-	index := -1 // colName列在rows.Columns()中的索引号
+	index := -1 // colName 列在 rows.Columns() 中的索引号
 	buff := make([]interface{}, len(cols))
 	for i, v := range cols {
 		var value string
 		buff[i] = &value
 
-		if colName == v { // 获取index的值
+		if colName == v { // 获取 index 的值
 			index = i
 		}
 	}

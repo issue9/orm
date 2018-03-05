@@ -21,6 +21,9 @@ type SelectStmt struct {
 	distinct  string
 	forupdate bool
 
+	// COUNT 查询的列内容
+	countExpr string
+
 	joins  []*join
 	orders *core.StringBuilder
 	group  string
@@ -60,6 +63,8 @@ func (stmt *SelectStmt) Reset() {
 	stmt.distinct = ""
 	stmt.forupdate = false
 
+	stmt.countExpr = ""
+
 	stmt.joins = stmt.joins[:]
 	stmt.orders.Reset()
 	stmt.group = ""
@@ -90,11 +95,15 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		buf.WriteByte(' ')
 	}
 
-	for _, c := range stmt.cols {
-		buf.WriteString(c)
-		buf.WriteByte(',')
+	if stmt.countExpr == "" {
+		for _, c := range stmt.cols {
+			buf.WriteString(c)
+			buf.WriteByte(',')
+		}
+		buf.TruncateLast(1)
+	} else {
+		buf.WriteString(stmt.countExpr)
 	}
-	buf.TruncateLast(1)
 
 	buf.WriteString(" FROM ")
 	buf.WriteString(stmt.table)
@@ -138,7 +147,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	}
 
 	// limit
-	if stmt.limitQuery != "" {
+	if stmt.countExpr == "" && stmt.limitQuery != "" {
 		buf.WriteString(stmt.limitQuery)
 		args = append(args, stmt.limitVals...)
 	}
@@ -154,10 +163,10 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 // Select 指定列名
 func (stmt *SelectStmt) Select(cols ...string) *SelectStmt {
 	if stmt.cols == nil {
-		stmt.cols = cols
-	} else {
-		stmt.cols = append(stmt.cols, cols...)
+		stmt.cols = make([]string, 0, len(cols))
 	}
+
+	stmt.cols = append(stmt.cols, cols...)
 	return stmt
 }
 
@@ -260,6 +269,24 @@ func (stmt *SelectStmt) Limit(limit int, offset ...int) *SelectStmt {
 	return stmt
 }
 
+// Count 指定 Count 表示式，如果指定了 count 表达式，则会造成 limit 失效。
+//
+// 传递空的 expr 参数，表示去除 count 表达式。
+func (stmt *SelectStmt) Count(expr string) *SelectStmt {
+	stmt.countExpr = expr
+	return stmt
+}
+
+// Prepare 预编译
+func (stmt *SelectStmt) Prepare() (*sql.Stmt, error) {
+	return prepare(stmt.engine, stmt)
+}
+
+// PrepareContext 预编译
+func (stmt *SelectStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
+	return prepareContext(ctx, stmt.engine, stmt)
+}
+
 // Query 查询
 func (stmt *SelectStmt) Query() (*sql.Rows, error) {
 	return query(stmt.engine, stmt)
@@ -279,14 +306,4 @@ func (stmt *SelectStmt) QueryObj(objs interface{}) (int, error) {
 	defer rows.Close()
 
 	return fetch.Obj(objs, rows)
-}
-
-// Prepare 预编译
-func (stmt *SelectStmt) Prepare() (*sql.Stmt, error) {
-	return prepare(stmt.engine, stmt)
-}
-
-// PrepareContext 预编译
-func (stmt *SelectStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	return prepareContext(ctx, stmt.engine, stmt)
 }
