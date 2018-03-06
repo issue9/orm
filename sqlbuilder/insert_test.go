@@ -12,10 +12,7 @@ import (
 	"github.com/issue9/orm/internal/sqltest"
 )
 
-var (
-	_ SQLer  = &InsertStmt{}
-	_ execer = &InsertStmt{}
-)
+var _ SQLer = &InsertStmt{}
 
 func TestInsert(t *testing.T) {
 	a := assert.New(t)

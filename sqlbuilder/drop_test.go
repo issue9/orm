@@ -11,10 +11,7 @@ import (
 	"github.com/issue9/orm/internal/sqltest"
 )
 
-var (
-	_ SQLer  = &UpdateStmt{}
-	_ execer = &UpdateStmt{}
-)
+var _ SQLer = &UpdateStmt{}
 
 func TestDropTable(t *testing.T) {
 	a := assert.New(t)

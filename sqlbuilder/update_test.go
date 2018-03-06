@@ -15,7 +15,6 @@ import (
 var (
 	_ SQLer       = &UpdateStmt{}
 	_ WhereStmter = &UpdateStmt{}
-	_ execer      = &UpdateStmt{}
 )
 
 func TestUpdate_columnsHasDup(t *testing.T) {

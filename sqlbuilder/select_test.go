@@ -47,4 +47,20 @@ func TestSelect(t *testing.T) {
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
 	sqltest.Equal(a, query, "select count(*) as cnt from table where c1=? or c2=@c2 order by c1 desc")
+
+	// reset
+	s.Reset()
+	query, args, err = s.SQL()
+	a.Error(err)
+
+	s.Distinct().
+		Select("c1,c2,c3").
+		Join("left", "users as u", "a.id=u.id").
+		Where("id=?", 5).
+		Asc("id").
+		From("table1 as t")
+	query, args, err = s.SQL()
+	a.NotError(err)
+	a.Equal(args, []interface{}{5})
+	sqltest.Equal(a, query, "select distinct c1,c2,c3 from table1 as t left join users as u on a.id=u.id where id=? order by id asc")
 }

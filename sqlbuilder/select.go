@@ -18,7 +18,7 @@ type SelectStmt struct {
 	table     string
 	where     *WhereStmt
 	cols      []string
-	distinct  string
+	distinct  bool
 	forupdate bool
 
 	// COUNT 查询的列内容
@@ -50,8 +50,10 @@ func Select(e core.Engine) *SelectStmt {
 }
 
 // Distinct 声明一条 Select 语句的 Distinct
-func (stmt *SelectStmt) Distinct(col string) *SelectStmt {
-	stmt.distinct = col
+//
+// 若指定了此值，则 Select() 所指定的列，均为 Distinct 之后的列。
+func (stmt *SelectStmt) Distinct() *SelectStmt {
+	stmt.distinct = true
 	return stmt
 }
 
@@ -60,7 +62,7 @@ func (stmt *SelectStmt) Reset() {
 	stmt.table = ""
 	stmt.where.Reset()
 	stmt.cols = stmt.cols[:0]
-	stmt.distinct = ""
+	stmt.distinct = false
 	stmt.forupdate = false
 
 	stmt.countExpr = ""
@@ -89,13 +91,10 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	buf := core.NewStringBuilder("SELECT ")
 	args := make([]interface{}, 0, 10)
 
-	if stmt.distinct != "" {
-		buf.WriteString("DISTINCT ")
-		buf.WriteString(stmt.distinct)
-		buf.WriteByte(' ')
-	}
-
 	if stmt.countExpr == "" {
+		if stmt.distinct {
+			buf.WriteString("DISTINCT ")
+		}
 		for _, c := range stmt.cols {
 			buf.WriteString(c)
 			buf.WriteByte(',')
@@ -229,7 +228,11 @@ func (stmt *SelectStmt) Asc(col ...string) *SelectStmt {
 
 func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	if stmt.orders == nil {
-		stmt.orders = core.NewStringBuilder(" ORDER BY ")
+		stmt.orders = core.NewStringBuilder("")
+	}
+
+	if stmt.orders.Len() == 0 {
+		stmt.orders.WriteString(" ORDER BY ")
 	} else {
 		stmt.orders.WriteByte(',')
 	}

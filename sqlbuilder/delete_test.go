@@ -14,7 +14,6 @@ import (
 var (
 	_ SQLer       = &DeleteStmt{}
 	_ WhereStmter = &DeleteStmt{}
-	_ execer      = &DeleteStmt{}
 )
 
 func TestDelete(t *testing.T) {

@@ -47,20 +47,6 @@ type WhereStmter interface {
 	WhereStmt() *WhereStmt
 }
 
-type execer interface {
-	Exec() (sql.Result, error)
-	ExecContext(ctx context.Context) (sql.Result, error)
-	Prepare() (*sql.Stmt, error)
-	PrepareContext(ctx context.Context) (*sql.Stmt, error)
-}
-
-type queryer interface {
-	Query() (*sql.Rows, error)
-	QueryContext(ctx context.Context) (*sql.Rows, error)
-	Prepare() (*sql.Stmt, error)
-	PrepareContext(ctx context.Context) (*sql.Stmt, error)
-}
-
 func exec(e core.Engine, stmt SQLer) (sql.Result, error) {
 	query, args, err := stmt.SQL()
 	if err != nil {
