@@ -7,6 +7,7 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+	"strconv"
 
 	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/fetch"
@@ -301,6 +302,8 @@ func (stmt *SelectStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 }
 
 // QueryObj 将符合当前条件的所有记录依次写入 objs 中。
+//
+// 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Obj 函数的相关介绍。
 func (stmt *SelectStmt) QueryObj(objs interface{}) (int, error) {
 	rows, err := stmt.Query()
 	if err != nil {
@@ -309,4 +312,20 @@ func (stmt *SelectStmt) QueryObj(objs interface{}) (int, error) {
 	defer rows.Close()
 
 	return fetch.Obj(objs, rows)
+}
+
+// QueryInt 查询指定列的第一行数据，并将其转换成 int
+func (stmt *SelectStmt) QueryInt(colName string) (int64, error) {
+	rows, err := stmt.Query()
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	cols, err := fetch.ColumnString(true, colName, rows)
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.ParseInt(cols[0], 10, 64)
 }

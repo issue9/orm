@@ -32,6 +32,22 @@ type Engine interface {
 	Prepare(query string) (*sql.Stmt, error)
 
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+
+	Insert(v interface{}) (sql.Result, error)
+
+	Delete(v interface{}) (sql.Result, error)
+
+	Update(v interface{}, cols ...string) (sql.Result, error)
+
+	Select(v interface{}) error
+
+	Count(v interface{}) (int, error)
+
+	Create(v interface{}) error
+
+	Drop(v interface{}) error
+
+	Truncate(v interface{}) error
 }
 
 // Dialect 接口用于描述与数据库相关的一些语言特性。
