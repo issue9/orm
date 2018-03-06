@@ -139,7 +139,7 @@ func count(e core.Engine, v interface{}) (int, error) {
 		return 0, ErrInvalidKind
 	}
 
-	sql := sqlbuilder.Select(e).Select("COUNT(*)AS count").From("{#" + m.Name + "}")
+	sql := sqlbuilder.Select(e).Count("COUNT(*) AS count").From("{#" + m.Name + "}")
 	err = whereAny(e, sql, m, rval)
 	if err != nil {
 		return 0, err
@@ -149,8 +149,9 @@ func count(e core.Engine, v interface{}) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer rows.Close()
+
 	data, err := fetch.ColumnString(true, "count", rows)
-	rows.Close() // 及时关闭rows
 	if err != nil {
 		return 0, err
 	}

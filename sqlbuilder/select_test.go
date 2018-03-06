@@ -2,41 +2,49 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlbuilder
+package sqlbuilder_test
 
 import (
 	"database/sql"
 	"testing"
 
+	"github.com/issue9/orm"
+	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/internal/sqltest"
+	"github.com/issue9/orm/sqlbuilder"
 
 	"github.com/issue9/assert"
+
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
-	_ SQLer       = &SelectStmt{}
-	_ WhereStmter = &SelectStmt{}
-	_ queryer     = &SelectStmt{}
+	_ sqlbuilder.SQLer       = &sqlbuilder.SelectStmt{}
+	_ sqlbuilder.WhereStmter = &sqlbuilder.SelectStmt{}
 )
 
 func TestSelect(t *testing.T) {
 	a := assert.New(t)
-	s := Select(nil).Select("c1", "column2 as c2", "c3").
+	e, err := orm.NewDB("sqlite3", "./test.db", "test_", dialect.Sqlite3())
+	a.NotError(err)
+	s := sqlbuilder.Select(e).Select("c1", "column2 as c2", "c3").
 		From("table").
 		And("c1=?", 1).
-		Or("c2=?", sql.Named("c2", 2)).
+		Or("c2=@c2", sql.Named("c2", 2)).
 		Limit(10, 0).
 		Desc("c1")
 	a.NotNil(s)
 	query, args, err := s.SQL()
 	a.NotError(err)
-	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
-	sqltest.Equal(a, query, "select c1,colun2 as c2,c3 from table where c1=? and c2=@c2 order by c1 desc limit 10,0")
+	a.Equal(args, []interface{}{1, sql.Named("c2", 2), 10, 0})
+	sqltest.Equal(a, query, "select c1,column2 as c2,c3 from table where c1=? or c2=@c2 order by c1 desc limit ? offset ?")
 
 	// count
 	s.Count("count(*) as cnt")
 	query, args, err = s.SQL()
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
-	sqltest.Equal(a, query, "select count(*) as cnt from table where c1=? and c2=@c2 order by c1 desc")
+	sqltest.Equal(a, query, "select count(*) as cnt from table where c1=? or c2=@c2 order by c1 desc")
 }

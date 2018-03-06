@@ -46,23 +46,23 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect core.Dialect) (*DB, 
 }
 
 // Close 关闭当前数据库，释放所有的链接。
-// 关闭之后，之前通过DB.StdDB()返回的实例也将失效。
-// 通过调用DB.StdDB().Close()也将使当前实例失效。
+// 关闭之后，之前通过 DB.StdDB() 返回的实例也将失效。
+// 通过调用 DB.StdDB().Close() 也将使当前实例失效。
 func (db *DB) Close() error {
 	return db.stdDB.Close()
 }
 
-// StdDB 返回标准包中的sql.DB指针。
+// StdDB 返回标准包中的 sql.DB 指针。
 func (db *DB) StdDB() *sql.DB {
 	return db.stdDB
 }
 
-// Dialect 返回对应的Dialect接口实例。
+// Dialect 返回对应的 core.Dialect 接口实例。
 func (db *DB) Dialect() core.Dialect {
 	return db.dialect
 }
 
-// Query 执行一条查询语句，并返回相应的sql.Rows实例。
+// Query 执行一条查询语句，并返回相应的 sql.Rows 实例。
 // 具体参数说明可参考 core.Engine 接口文档。
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	query = db.replacer.Replace(query)
@@ -74,7 +74,7 @@ func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	return db.stdDB.Query(query, args...)
 }
 
-// QueryContext 执行一条查询语句，并返回相应的sql.Rows实例。
+// QueryContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
 // 具体参数说明可参考 core.Engine 接口文档。
 func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	query = db.replacer.Replace(query)

@@ -82,7 +82,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	if len(stmt.cols) == 0 {
+	if len(stmt.cols) == 0 && stmt.countExpr == "" {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
