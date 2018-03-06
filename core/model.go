@@ -16,6 +16,9 @@ import (
 	"github.com/issue9/orm/internal/tags"
 )
 
+// ErrInvalidKind 表示该类型不是结构体或是结构体的指针
+var ErrInvalidKind = errors.New("不支持的 reflect.Kind()，只能是结构体或是结构体指针")
+
 type conType int
 
 // 预定的约束类型，方便 Model 中使用。
@@ -153,7 +156,7 @@ func NewModel(obj interface{}) (*Model, error) {
 	rtype := rval.Type()
 
 	if rtype.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("NewModel:obj 参数只能是 struct 或是 struct 指针，当前为:[%v]", rval.Kind())
+		return nil, ErrInvalidKind
 	}
 
 	// 是否已经缓存的数组

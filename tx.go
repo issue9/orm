@@ -158,7 +158,7 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		}
 		// 支持多个插入，则由此处跳出 switch
 	default:
-		return ErrInvalidKind
+		return core.ErrInvalidKind
 	}
 
 	sql, err := buildInsertManySQL(tx, rval)
@@ -185,7 +185,7 @@ func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
 
 // Count 查询符合 v 条件的记录数量。
 // v 中的所有非零字段都将参与查询。
-func (tx *Tx) Count(v interface{}) (int, error) {
+func (tx *Tx) Count(v interface{}) (int64, error) {
 	return count(tx, v)
 }
 

@@ -152,6 +152,18 @@ func clearData(db *DB, a *assert.Assertion) {
 	closeDB(a)
 }
 
+func TestDB_Update_error(t *testing.T) {
+	a := assert.New(t)
+
+	db := newDB(a)
+	initData(db, a)
+	defer clearData(db, a)
+
+	// 非结构体传入
+	r, err := db.Update(123)
+	a.Error(err).Nil(r)
+}
+
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t)
 

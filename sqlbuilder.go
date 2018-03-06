@@ -9,19 +9,28 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	"github.com/issue9/orm/core"
-	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
-// ErrInvalidKind 表示该类型不是结构体或是结构体的指针
-var ErrInvalidKind = errors.New("不支持的 reflect.Kind()，只能是结构体或是结构体指针")
+func getModel(v interface{}) (*core.Model, reflect.Value, error) {
+	m, err := core.NewModel(v)
+	if err != nil {
+		return nil, reflect.Value{}, err
+	}
+
+	rval := reflect.ValueOf(v)
+	for rval.Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	return m, rval, nil
+}
 
 // 根据 model 中的主键或是唯一索引为 sql 产生 where 语句，
 // 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
-func where(e core.Engine, sql sqlbuilder.WhereStmter, m *core.Model, rval reflect.Value) error {
+func where(sql sqlbuilder.WhereStmter, m *core.Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -56,7 +65,7 @@ func where(e core.Engine, sql sqlbuilder.WhereStmter, m *core.Model, rval reflec
 	}
 
 	if len(keys) == 0 {
-		return fmt.Errorf("orm.where:无法为[%v]产生where部分语句", m.Name)
+		return fmt.Errorf("没有主键或唯一约束，无法为 %s 产生 where 部分语句", m.Name)
 	}
 
 	for index, key := range keys {
@@ -67,7 +76,7 @@ func where(e core.Engine, sql sqlbuilder.WhereStmter, m *core.Model, rval reflec
 }
 
 // 根据 rval 中任意非零值产生 where 语句
-func whereAny(e core.Engine, sql sqlbuilder.WhereStmter, m *core.Model, rval reflect.Value) error {
+func whereAny(sql sqlbuilder.WhereStmter, m *core.Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -83,7 +92,7 @@ func whereAny(e core.Engine, sql sqlbuilder.WhereStmter, m *core.Model, rval ref
 	}
 
 	if len(keys) == 0 {
-		return fmt.Errorf("orm.whereAny:无法为[%v]产生where部分语句", m.Name)
+		return fmt.Errorf("没有非零值字段，无法为 %s 产生 where 部分语句", m.Name)
 	}
 
 	for index, key := range keys {
@@ -96,21 +105,12 @@ func whereAny(e core.Engine, sql sqlbuilder.WhereStmter, m *core.Model, rval ref
 // 创建一个或多个数据表
 // 若 objs 为空，则不发生任何操作。
 func buildCreateSQL(sql *core.StringBuilder, e core.Engine, v interface{}) error {
-	d := e.Dialect()
-	m, err := core.NewModel(v)
+	m, _, err := getModel(v)
 	if err != nil {
 		return err
 	}
 
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return ErrInvalidKind
-	}
-
+	d := e.Dialect()
 	sql.WriteString("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(m.Name).
@@ -124,39 +124,18 @@ func buildCreateSQL(sql *core.StringBuilder, e core.Engine, v interface{}) error
 }
 
 // 统计符合 v 条件的记录数量。
-func count(e core.Engine, v interface{}) (int, error) {
-	m, err := core.NewModel(v)
+func count(e core.Engine, v interface{}) (int64, error) {
+	m, rval, err := getModel(v)
 	if err != nil {
 		return 0, err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return 0, ErrInvalidKind
 	}
 
 	sql := sqlbuilder.Select(e).Count("COUNT(*) AS count").From("{#" + m.Name + "}")
-	err = whereAny(e, sql, m, rval)
-	if err != nil {
+	if err = whereAny(sql, m, rval); err != nil {
 		return 0, err
 	}
 
-	rows, err := sql.Query()
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	data, err := fetch.ColumnString(true, "count", rows)
-	if err != nil {
-		return 0, err
-	}
-
-	return strconv.Atoi(data[0])
+	return sql.QueryInt("count")
 }
 
 // 创建表。
@@ -206,7 +185,7 @@ func drop(e core.Engine, v interface{}) error {
 	return err
 }
 
-// 清空表，并重置AI计数。
+// 清空表，并重置 AI 计数。
 // 系统会默认给表名加上表名前缀。
 func truncate(e core.Engine, v interface{}) error {
 	m, err := core.NewModel(v)
@@ -227,18 +206,9 @@ func truncate(e core.Engine, v interface{}) error {
 }
 
 func insert(e core.Engine, v interface{}) (sql.Result, error) {
-	m, err := core.NewModel(v)
+	m, rval, err := getModel(v)
 	if err != nil {
 		return nil, err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return nil, ErrInvalidKind
 	}
 
 	keys := make([]string, 0, len(m.Cols))
@@ -249,7 +219,7 @@ func insert(e core.Engine, v interface{}) (sql.Result, error) {
 			return nil, fmt.Errorf("orm.insert:未找到该名称[%v]的值", col.GoName)
 		}
 
-		// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
+		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
 		if col.Zero == field.Interface() &&
 			(col.IsAI() || col.HasDefault) {
 			continue
@@ -274,24 +244,15 @@ func insert(e core.Engine, v interface{}) (sql.Result, error) {
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
 func find(e core.Engine, v interface{}) error {
-	m, err := core.NewModel(v)
+	m, rval, err := getModel(v)
 	if err != nil {
 		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return ErrInvalidKind
 	}
 
 	sql := sqlbuilder.Select(e).
 		Select("*").
 		From("{#" + m.Name + "}")
-	if err = where(e, sql, m, rval); err != nil {
+	if err = where(sql, m, rval); err != nil {
 		return err
 	}
 
@@ -301,25 +262,16 @@ func find(e core.Engine, v interface{}) error {
 
 // for update 只能作用于事务
 func forUpdate(tx *Tx, v interface{}) error {
-	m, err := core.NewModel(v)
+	m, rval, err := getModel(v)
 	if err != nil {
 		return err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return ErrInvalidKind
 	}
 
 	sql := sqlbuilder.Select(tx).
 		Select("*").
 		From("{#" + m.Name + "}").
 		ForUpdate()
-	if err = where(tx, sql, m, rval); err != nil {
+	if err = where(sql, m, rval); err != nil {
 		return err
 	}
 
@@ -333,18 +285,9 @@ func forUpdate(tx *Tx, v interface{}) error {
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
 func update(e core.Engine, v interface{}, cols ...string) (sql.Result, error) {
-	m, err := core.NewModel(v)
+	m, rval, err := getModel(v)
 	if err != nil {
 		return nil, err
-	}
-
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return nil, ErrInvalidKind
 	}
 
 	sql := sqlbuilder.Update(e, "{#"+m.Name+"}")
@@ -362,7 +305,7 @@ func update(e core.Engine, v interface{}, cols ...string) (sql.Result, error) {
 		sql.Set("{"+name+"}", field.Interface())
 	}
 
-	if err := where(e, sql, m, rval); err != nil {
+	if err := where(sql, m, rval); err != nil {
 		return nil, err
 	}
 
@@ -380,22 +323,13 @@ func inStrSlice(key string, slice []string) bool {
 
 // 将 v 生成 delete 的 sql 语句
 func del(e core.Engine, v interface{}) (sql.Result, error) {
-	m, err := core.NewModel(v)
+	m, rval, err := getModel(v)
 	if err != nil {
 		return nil, err
 	}
 
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	if rval.Kind() != reflect.Struct {
-		return nil, ErrInvalidKind
-	}
-
 	sql := sqlbuilder.Delete(e, "{#"+m.Name+"}")
-	if err = where(e, sql, m, rval); err != nil {
+	if err = where(sql, m, rval); err != nil {
 		return nil, err
 	}
 
@@ -412,17 +346,9 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 	for i := 0; i < rval.Len(); i++ {
 		irval := rval.Index(i)
 
-		m, err := core.NewModel(irval.Interface())
+		m, irval, err := getModel(irval.Interface())
 		if err != nil {
 			return nil, err
-		}
-
-		for irval.Kind() == reflect.Ptr {
-			irval = irval.Elem()
-		}
-
-		if irval.Kind() != reflect.Struct {
-			return nil, ErrInvalidKind
 		}
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
@@ -453,7 +379,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 			}
 
 			//vals = vals[:0]
-			vals = make([]interface{}, 0, 10)
+			vals = make([]interface{}, 0, len(keys))
 			for _, name := range keys {
 				col, found := m.Cols[name]
 				if !found {

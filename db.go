@@ -165,7 +165,7 @@ func (db *DB) Select(v interface{}) error {
 // Count 查询符合 v 条件的记录数量。
 // v 中的所有非零字段都将参与查询。
 // 若需要复杂的查询方式，请构建 core.SQL 对象查询。
-func (db *DB) Count(v interface{}) (int, error) {
+func (db *DB) Count(v interface{}) (int64, error) {
 	return count(db, v)
 }
 
