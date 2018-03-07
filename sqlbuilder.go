@@ -349,7 +349,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 					return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 				}
 
-				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
+				// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
 				if col.Zero == field.Interface() &&
 					(col.IsAI() || col.HasDefault) {
 					continue

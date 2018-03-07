@@ -20,10 +20,10 @@
 //      _ github.com/issue9/orm/dialect  // sqlite3 的 dialect 声明在此处
 //  )
 //
-//  // 初始化一个DB，表前缀为prefix_
+//  // 初始化一个 DB，表前缀为 prefix_
 //  db1 := orm.NewDB("sqlite3", "./db1", "prefix_", dialect.Sqlite3())
 //
-//  // 另一个DB实例
+//  // 另一个 DB 实例
 //  db2 := orm.NewDB("sqlite3", "./db2", "db2_", dialect.Sqlite3())
 //
 //
@@ -35,10 +35,10 @@
 // 包含一个关键字，使其它成为普通列名，如：
 //  select * from #user where {group}=1
 // 在实际执行时，如 DB.Query()，将第一个参数 replace 指定为 true，
-// 相关的占位符就会被替换成与当前环境想容的实例，如在表名前缀为p_，
+// 相关的占位符就会被替换成与当前环境想容的实例，如在表名前缀为 p_，
 // 数据库为 mysql 时，会被替换成以下语句，然后再执行：
 //  select * from p_user where `group`=1
-// DB.Query(),DB.Exec(),DB.Prepare().DB.Where() 及 Tx与之对应的函数都可以使用占位符。
+// DB.Query(),DB.Exec(),DB.Prepare().DB.Where() 及 Tx 与之对应的函数都可以使用占位符。
 //
 // Model 不能指定占位符，它们默认总会使用占位符，且无法取消。
 //
@@ -90,12 +90,12 @@
 //  所以在需要用到零值的字段，最好不要用 default 的 struct tag。
 //
 //  fk(fk_name,refTable,refColName,updateRule,deleteRule):
-//  定义物理外键，最少需要指定fk_name,refTabl,refColName三个值。分别对应约束名，
+//  定义物理外键，最少需要指定 fk_name,refTabl,refColName 三个值。分别对应约束名，
 //  引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
 //
 //  check(chk_name, expr): check 约束。chk_name 为约束名，expr 为该约束的表达式。
 //  check 约束只能在 core.Metaer 接口中指定，而不是像其它约束一样，通过字段的 struct tag 指定。
-//  因为 check 约束的表达式可以通过and或是or等符号连接多条基本表达式，
+//  因为 check 约束的表达式可以通过 and 或是 or 等符号连接多条基本表达式，
 //  在字段 struct tag 中指定会显得有点怪异。
 //
 //
@@ -121,32 +121,32 @@
 // 如何使用：
 //
 // Create:
-// 可以通过 Engine.Create() 或是 Tx.Create() 创建一张表。
+// 可以通过 DB.Create() 或是 Tx.Create() 创建一张表。
 //  // 创建表
 //  db.Create(&User{})
 //  // 创建多个表，同时创建多张表，主使用 Tx.Create
-//  tx.Create(&User{},&Email{})
+//  tx.MultCreate(&User{},&Email{})
 //
 // Update:
 //  // 将 id 为 1 的记录的 FirstName 更改为 abc；对象中的零值不会被提交。
 //  db.Update(&User{Id:1,FirstName:"abc"})
-//  db.Where("id=?",1).Table("#table").Set("FirstName", "abc").Update(nil)
+//  sqlbuilder.Update(db, "#table").Where("id=?",1).Set("FirstName", "abc").Exec()
 //
 // Delete:
 //  // 删除 id 为 1 的记录
 //  e.Delete(&User{Id:1})
-//  e.Where("id=?",1).Table("#table").Delete(nil)
+//  sqlbuilder.Delete(e, "#table").Where("id=?",1).Exec()
 //
 // Insert:
 //  // 插入一条数据
 //  db.Insert(&User{Id:1,FirstName:"abc"})
 //  // 一次性插入多条数据
-//  tx.Insert(&User{Id:1,FirstName:"abc"},&User{Id:1,FirstName:"abc"})
+//  tx.InsertMany(&User{Id:1,FirstName:"abc"},&User{Id:1,FirstName:"abc"})
 //
 // Select:
 //  // 导出 id=1 的数据
-//  m, err := e.SQL().Select("*").From("{#table}").Where("id=1").QueryMap(nil)
-//  // 导出id为1的数据，并回填到user实例中
+//  _,err := sqlbuilder.Select(e).Select("*").From("{#table}").Where("id=1").QueryObj(obj)
+//  // 导出 id 为 1 的数据，并回填到 user 实例中
 //  user := &User{Id:1}
 //  err := e.Select(u)
 //

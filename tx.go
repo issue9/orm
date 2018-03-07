@@ -24,7 +24,6 @@ func (tx *Tx) StdTx() *sql.Tx {
 }
 
 // Query 执行一条查询语句。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	query = tx.db.replacer.Replace(query)
 	query, err := tx.db.dialect.SQL(query)
@@ -36,7 +35,6 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 }
 
 // QueryContext 执行一条查询语句。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	query = tx.db.replacer.Replace(query)
 	query, err := tx.db.dialect.SQL(query)
@@ -47,8 +45,7 @@ func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{
 	return tx.stdTx.QueryContext(ctx, query, args...)
 }
 
-// Exec 执行一条SQL语句。
-// 具体参数说明可参考 core.Engine 接口文档。
+// Exec 执行一条 SQL 语句。
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 	query = tx.db.replacer.Replace(query)
 	query, err := tx.db.dialect.SQL(query)
@@ -59,8 +56,7 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return tx.stdTx.Exec(query, args...)
 }
 
-// ExecContext 执行一条SQL语句。
-// 具体参数说明可参考 core.Engine 接口文档。
+// ExecContext 执行一条 SQL 语句。
 func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	query = tx.db.replacer.Replace(query)
 	query, err := tx.db.dialect.SQL(query)
@@ -72,7 +68,6 @@ func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}
 }
 
 // Prepare 将一条 SQL 语句进行预编译。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
 	query = tx.db.replacer.Replace(query)
 	query, err := tx.db.dialect.SQL(query)
@@ -84,7 +79,6 @@ func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
 }
 
 // PrepareContext 将一条 SQL 语句进行预编译。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (tx *Tx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	query = tx.db.replacer.Replace(query)
 	query, err := tx.db.dialect.SQL(query)
@@ -95,19 +89,21 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, erro
 	return tx.stdTx.PrepareContext(ctx, query)
 }
 
-// Dialect 返回对应的Dialect实例
+// Dialect 返回对应的 Dialect 实例
 func (tx *Tx) Dialect() core.Dialect {
 	return tx.db.Dialect()
 }
 
 // Commit 提交事务。
-// 提交之后，整个Tx对象将不再有效。
+//
+// 提交之后，整个 Tx 对象将不再有效。
 func (tx *Tx) Commit() error {
 	return tx.stdTx.Commit()
 }
 
 // Rollback 回滚事务。
-// 回滚之后，整个Tx对象将不再有效。
+//
+// 回滚之后，整个 Tx 对象将不再有效。
 func (tx *Tx) Rollback() error {
 	return tx.stdTx.Rollback()
 }
@@ -117,7 +113,7 @@ func (tx *Tx) Insert(v interface{}) (sql.Result, error) {
 	return insert(tx, v)
 }
 
-// Select 读数据并锁定
+// Select 读数据
 func (tx *Tx) Select(v interface{}) error {
 	return find(tx, v)
 }
@@ -129,6 +125,7 @@ func (tx *Tx) ForUpdate(v interface{}) error {
 
 // InsertMany 插入多条相同的数据。若需要向某张表中插入多条记录，
 // InsertMany()会比Insert()性能上好很多。
+//
 // 与DB::Insert()方法最大的不同在于:
 //  // Insert()可以每个参数的类型都不一样：
 //  vs := []interface{}{&user{...}, &userInfo{...}}

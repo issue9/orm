@@ -46,6 +46,7 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect core.Dialect) (*DB, 
 }
 
 // Close 关闭当前数据库，释放所有的链接。
+//
 // 关闭之后，之前通过 DB.StdDB() 返回的实例也将失效。
 // 通过调用 DB.StdDB().Close() 也将使当前实例失效。
 func (db *DB) Close() error {
@@ -134,14 +135,15 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, erro
 	return db.stdDB.PrepareContext(ctx, query)
 }
 
-// Insert 插入数据，若需一次性插入多条数据，请使用tx.Insert()。
+// Insert 插入数据，若需一次性插入多条数据，请使用 tx.Insert()。
 func (db *DB) Insert(v interface{}) (sql.Result, error) {
 	return insert(db, v)
 }
 
 // Delete 删除符合条件的数据。
+//
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
-// 若两者都不存在，则将返回error
+// 若两者都不存在，则将返回 error
 func (db *DB) Delete(v interface{}) (sql.Result, error) {
 	return del(db, v)
 }
@@ -155,8 +157,9 @@ func (db *DB) Update(v interface{}, cols ...string) (sql.Result, error) {
 }
 
 // Select 查询一个符合条件的数据。
-// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
-// 若两者都不存在，则将返回error
+//
+// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下 ) 来查找，
+// 若两者都不存在，则将返回 error
 // 若没有符合条件的数据，将不会对参数v做任何变动。
 func (db *DB) Select(v interface{}) error {
 	return find(db, v)
@@ -164,7 +167,7 @@ func (db *DB) Select(v interface{}) error {
 
 // Count 查询符合 v 条件的记录数量。
 // v 中的所有非零字段都将参与查询。
-// 若需要复杂的查询方式，请构建 core.SQL 对象查询。
+// 若需要复杂的查询方式，请构建 core.Select 对象查询。
 func (db *DB) Count(v interface{}) (int64, error) {
 	return count(db, v)
 }

@@ -3,21 +3,21 @@ orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https:
 
 ```go
 type User struct {
-    // 对应表中的id字段，为自增列，从0开始
+    // 对应表中的 id 字段，为自增列，从 0 开始
     Id          int64      `orm:"name(id);ai(0);"`
-    // 对应表中的first_name字段，为索引index_name的一部分
+    // 对应表中的 first_name 字段，为索引 index_name 的一部分
     FirstName   string     `orm:"name(first_name);index(index_name)"`
     LastName    string     `orm:"name(first_name);index(index_name)"`
 }
 
-// 创建User表
+// 创建 User 表
 e.Create(&User{})
 
-// 更新id为1的记录
+// 更新 id 为 1 的记录
 e.Update(&User{Id:1,FirstName:"abc"})
 e.Where("id=?", 1).Table("#tbl_name").Update(true, "FirstName", "abc")
 
-// 删除id为1的记录
+// 删除 id 为 1 的记录
 e.Delete(&User{Id:1})
 e.Where("id=?", 1).Table("#tbl_name").Delete(true, []interface{}{"id":1})
 

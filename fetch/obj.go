@@ -112,8 +112,8 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 	return nil
 }
 
-// 将rows中的一条记录写入到val中，必须保证val的类型为reflect.Struct。
-// 仅供Obj()调用。
+// 将 rows 中的一条记录写入到 val 中，必须保证 val 的类型为 reflect.Struct。
+// 仅供 Obj() 调用。
 func fetchOnceObj(val reflect.Value, rows *sql.Rows) (int, error) {
 	mapped, err := Map(true, rows)
 	if err != nil {
@@ -142,21 +142,21 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) (int, error) {
 	return 1, nil
 }
 
-// 将rows中的记录按obj的长度数量导出到obj中。
-// val的类型必须是reflect.Slice或是reflect.Array.
-// 可能只有部分数据被成功导入，而后发生error，
+// 将 rows 中的记录按 obj 的长度数量导出到 obj 中。
+// val 的类型必须是 reflect.Slice 或是 reflect.Array.
+// 可能只有部分数据被成功导入，而后发生 error，
 // 此时只能通过第一个返回参数来判断有多少数据是成功导入的。
 func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	itemType := val.Type().Elem()
 	for itemType.Kind() == reflect.Ptr {
 		itemType = itemType.Elem()
 	}
-	// 判断数组元素的类型是否为struct
+	// 判断数组元素的类型是否为 struct
 	if itemType.Kind() != reflect.Struct {
 		return 0, fmt.Errorf("fetchObjToFixedSlice:元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
 	}
 
-	// 先导出数据到map中
+	// 先导出数据到 map 中
 	mapped, err := Map(false, rows)
 	if err != nil {
 		return 0, err
@@ -178,7 +178,7 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 				continue
 			}
 			if err = conv.Value(v, item); err != nil {
-				return i, err // 已经有i条数据被正确导出
+				return i, err // 已经有 i 条数据被正确导出
 			}
 		} // end for objItem
 	}
@@ -186,9 +186,9 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	return l, nil
 }
 
-// 将rows中的所有记录导出到val中，val必须为slice的指针。
-// 若val的长度不够，会根据rows中的长度调整。
-// 可能只有部分数据被成功导入，而后发生error，
+// 将 rows 中的所有记录导出到 val 中，val 必须为 slice 的指针。
+// 若 val 的长度不够，会根据 rowsa 中的长度调整。
+// 可能只有部分数据被成功导入，而后发生 error，
 // 此时只能通过第一个返回参数来判断有多少数据是成功导入的。
 func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	elem := val.Elem()
@@ -197,18 +197,18 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	for itemType.Kind() == reflect.Ptr {
 		itemType = itemType.Elem()
 	}
-	// 判断数组元素的类型是否为struct
+	// 判断数组元素的类型是否为 struct
 	if itemType.Kind() != reflect.Struct {
 		return 0, fmt.Errorf("元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
 	}
 
-	// 先导出数据到map中
+	// 先导出数据到 map 中
 	mapped, err := Map(false, rows)
 	if err != nil {
 		return 0, err
 	}
 
-	// 使elem表示的数组长度最起码和mapped一样。
+	// 使 elem 表示的数组长度最起码和 mapped 一样。
 	size := len(mapped) - elem.Len()
 	if size > 0 {
 		for i := 0; i < size; i++ {
