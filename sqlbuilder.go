@@ -153,9 +153,7 @@ func create(e core.Engine, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	if len(m.KeyIndexes) == 0 {
-		return nil
-	}
+
 	for name, cols := range m.KeyIndexes {
 		sql.Reset().
 			WriteString("CREATE INDEX ").
@@ -285,7 +283,7 @@ func update(e core.Engine, v interface{}, cols ...string) (sql.Result, error) {
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
-			return nil, fmt.Errorf("orm.update:未找到该名称[%v]的值", col.GoName)
+			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 		}
 
 		// 零值，但是不属于指定需要更新的列
@@ -330,7 +328,6 @@ func del(e core.Engine, v interface{}) (sql.Result, error) {
 // rval 为结构体指针组成的数据
 func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, error) {
 	sql := sqlbuilder.Insert(e, "")
-	vals := make([]interface{}, 0, 10)
 	keys := []string{}         // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 
@@ -345,12 +342,11 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 		if i == 0 { // 第一个元素，需要从中获取列信息。
 			firstType = irval.Type()
 			sql.Table("{#" + m.Name + "}")
-			cols := []string{}
 
 			for name, col := range m.Cols {
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
-					return nil, fmt.Errorf("orm.buildInsertManySQL:未找到该名称[%v]的值", col.GoName)
+					return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 				}
 
 				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
@@ -359,30 +355,27 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 					continue
 				}
 
-				vals = append(vals, field.Interface())
-				cols = append(cols, "{"+name+"}")
+				sql.KeyValue("{"+name+"}", field.Interface())
 				keys = append(keys, name)
 			}
-			sql.Columns(cols...).Values(vals...)
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
-				return nil, errors.New("orm.buildInsertManySQL:参数v中包含了不同类型的元素")
+				return nil, errors.New("参数 v 中包含了不同类型的元素")
 			}
 
-			//vals = vals[:0]
-			vals = make([]interface{}, 0, len(keys))
+			vals := make([]interface{}, 0, len(keys))
 			for _, name := range keys {
 				col, found := m.Cols[name]
 				if !found {
-					return nil, fmt.Errorf("orm:buildInsertManySQL:不存在的列名:[%v]", name)
+					return nil, fmt.Errorf("不存在的列名 %s", name)
 				}
 
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
-					return nil, fmt.Errorf("orm.buildInsertManySQL:未找到该名称[%v]的值", col.GoName)
+					return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 				}
 
-				// 在为零值的情况下，若该列是AI或是有默认值，则过滤掉。无论该零值是否为手动设置的。
+				// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
 				if col.Zero == field.Interface() &&
 					(col.IsAI() || col.HasDefault) {
 					continue
