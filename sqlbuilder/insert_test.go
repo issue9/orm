@@ -38,6 +38,32 @@ func TestInsert(t *testing.T) {
 	sqltest.Equal(a, query, "insert into tb2 (c1,c2) values (?,?),(?,@c2)")
 }
 
+func TestInsert_KeyValue(t *testing.T) {
+	a := assert.New(t)
+	i := Insert(nil, "table")
+	i.KeyValue("c1", 1).KeyValue("c2", sql.Named("c2", 2))
+	query, args, err := i.SQL()
+	a.NotError(err)
+	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
+	sqltest.Equal(a, query, "insert into table (c1,c2) values(?,@c2)")
+
+	i.Reset()
+	i.Table("table")
+	i.Columns("c1", "c2")
+	i.Values(1, 2)
+	i.KeyValue("c3", 3)
+	query, args, err = i.SQL()
+	a.NotError(err)
+	a.Equal(args, []interface{}{1, 2, 3})
+	sqltest.Equal(a, query, "insert into table (c1,c2,c3) values(?,?,?)")
+
+	// 添加第二行数据，就不能再次使用 KeyValue 了
+	i.Values(1, 2, 3)
+	a.Panic(func() {
+		i.KeyValue("c4", 4)
+	})
+}
+
 func TestInsertError(t *testing.T) {
 	a := assert.New(t)
 	i := Insert(nil, "table")

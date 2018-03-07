@@ -24,6 +24,7 @@ func Insert(e core.Engine, table string) *InsertStmt {
 	return &InsertStmt{
 		engine: e,
 		table:  table,
+		cols:   make([]string, 0, 10),
 		args:   make([][]interface{}, 0, 10),
 	}
 }
@@ -34,17 +35,33 @@ func (stmt *InsertStmt) Table(table string) *InsertStmt {
 	return stmt
 }
 
-// Columns 指定插入的列，多次指定，之前的会被覆盖。
+// KeyValue 指定键值对
 //
-// NOTE:cols 传入时，并不会被解压
+// 当通过 Values() 指定多行数据时，再使用 KeyValue 会出错
+func (stmt *InsertStmt) KeyValue(col string, val interface{}) *InsertStmt {
+	if len(stmt.args) > 1 {
+		panic("多列模式，不能调用 KeyValue 函数")
+	}
+
+	if len(stmt.args) == 0 {
+		stmt.args = append(stmt.args, []interface{}{})
+	}
+
+	stmt.cols = append(stmt.cols, col)
+	stmt.args[0] = append(stmt.args[0], val)
+
+	return stmt
+}
+
+// Columns 指定插入的列，多次指定，之前的会被覆盖。
 func (stmt *InsertStmt) Columns(cols ...string) *InsertStmt {
-	stmt.cols = cols
+	stmt.cols = append(stmt.cols, cols...)
 	return stmt
 }
 
 // Values 指定需要插入的值
 //
-// vals 传入时，并不会被解压
+// NOTE: vals 传入时，并不会被解压
 func (stmt *InsertStmt) Values(vals ...interface{}) *InsertStmt {
 	stmt.args = append(stmt.args, vals)
 	return stmt

@@ -211,12 +211,11 @@ func insert(e core.Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	keys := make([]string, 0, len(m.Cols))
-	vals := make([]interface{}, 0, len(m.Cols))
+	sql := sqlbuilder.Insert(e, "{#"+m.Name+"}")
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
-			return nil, fmt.Errorf("orm.insert:未找到该名称[%v]的值", col.GoName)
+			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 		}
 
 		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
@@ -225,18 +224,10 @@ func insert(e core.Engine, v interface{}) (sql.Result, error) {
 			continue
 		}
 
-		keys = append(keys, "{"+name+"}")
-		vals = append(vals, field.Interface())
+		sql.KeyValue("{"+name+"}", field.Interface())
 	}
 
-	if len(vals) == 0 {
-		return nil, errors.New("orm.insert:未指定任何插入的列数据")
-	}
-
-	return sqlbuilder.Insert(e, "{#"+m.Name+"}").
-		Columns(keys...).
-		Values(vals...).
-		Exec()
+	return sql.Exec()
 }
 
 // 查找数据。
