@@ -96,12 +96,13 @@ func (s *sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (s *sqlite3) TruncateTableSQL(w *core.StringBuilder, tableName, aiColumn string) {
-	w.WriteString("DELETE FROM ").
+func (s *sqlite3) TruncateTableSQL(tableName, aiColumn string) string {
+	return core.NewStringBuilder("DELETE FROM ").
 		WriteString(tableName).
 		WriteString(";update sqlite_sequence set seq=0 where name='").
 		WriteString(tableName).
-		WriteString("';")
+		WriteString("';").
+		String()
 }
 
 // 具体规则参照:http://www.sqlite.org/datatype3.html

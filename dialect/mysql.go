@@ -101,8 +101,8 @@ func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (m *mysql) TruncateTableSQL(w *core.StringBuilder, tableName, aiColumn string) {
-	w.WriteString("TRUNCATE TABLE ").WriteString(tableName)
+func (m *mysql) TruncateTableSQL(tableName, aiColumn string) string {
+	return "TRUNCATE TABLE " + tableName
 }
 
 func (m *mysql) sqlType(buf *core.StringBuilder, col *core.Column) error {

@@ -86,18 +86,18 @@ func (p *postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (p *postgres) TruncateTableSQL(w *core.StringBuilder, tableName, aiColumn string) {
-	w.WriteString("TRUNCATE TABLE ").
-		WriteString(tableName)
-	if len(aiColumn) == 0 {
-		return
+func (p *postgres) TruncateTableSQL(tableName, aiColumn string) string {
+	w := core.NewStringBuilder("TRUNCATE TABLE ").WriteString(tableName)
+
+	if aiColumn != "" {
+		w.WriteString("; ALTER SEQUENCE ").
+			WriteString(tableName).
+			WriteByte('_').
+			WriteString(aiColumn).
+			WriteString("_seq RESTART WITH 1")
 	}
 
-	w.WriteString("; ALTER SEQUENCE ").
-		WriteString(tableName).
-		WriteByte('_').
-		WriteString(aiColumn).
-		WriteString("_seq RESTART WITH 1")
+	return w.String()
 }
 
 // implement base.sqlType
