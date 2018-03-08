@@ -124,10 +124,10 @@ func (tx *Tx) ForUpdate(v interface{}) error {
 }
 
 // InsertMany 插入多条相同的数据。若需要向某张表中插入多条记录，
-// InsertMany()会比Insert()性能上好很多。
+// InsertMany() 会比 Insert() 性能上好很多。
 //
-// 与DB::Insert()方法最大的不同在于:
-//  // Insert()可以每个参数的类型都不一样：
+// 与 MultInsert() 方法最大的不同在于:
+//  // MultInsert() 可以每个参数的类型都不一样：
 //  vs := []interface{}{&user{...}, &userInfo{...}}
 //  db.Insert(vs...)
 //  // db.InsertMany(vs) // 这里将出错，数组的元素的类型必须相同。

@@ -13,9 +13,7 @@ import (
 	"github.com/issue9/orm/core"
 )
 
-const (
-	pkName = "pk" // 默认的主键约束名
-)
+const pkName = "pk" // 默认的主键约束名
 
 var (
 	nullString  = reflect.TypeOf(sql.NullString{})

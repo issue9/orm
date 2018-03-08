@@ -14,6 +14,10 @@ import (
 )
 
 // Mysql 返回一个适配 mysql 的 core.Dialect 接口
+//
+// 支持以下 meta 属性
+//  charset 字符集，语法为： charset(utf-8)
+//  engine 使用的引擎，语法为： engine(innodb)
 func Mysql() core.Dialect {
 	return &mysql{}
 }
@@ -52,7 +56,7 @@ func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
 
 	// 普通列
 	for _, col := range model.Cols {
-		if col.IsAI() { // 忽略AI列
+		if col.IsAI() { // 忽略 AI 列
 			continue
 		}
 
@@ -68,8 +72,23 @@ func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
 		w.WriteByte(',')
 	}
 	createConstraints(m, w, model)
-
 	w.TruncateLast(1).WriteByte(')')
+
+	if len(model.Meta["engine"]) == 1 {
+		w.WriteString(" ENGINE=")
+		w.WriteString(model.Meta["engine"][0])
+		w.WriteByte(' ')
+	} else if len(model.Meta["engine"]) > 0 {
+		return errors.New("无效的属性值 engine")
+	}
+
+	if len(model.Meta["charset"]) == 1 {
+		w.WriteString(" CHARACTER SET=")
+		w.WriteString(model.Meta["charset"][0])
+		w.WriteByte(' ')
+	} else if len(model.Meta["charset"]) > 0 {
+		return errors.New("无效的属性值 charset")
+	}
 	return nil
 }
 
@@ -110,7 +129,7 @@ func (m *mysql) sqlType(buf *core.StringBuilder, col *core.Column) error {
 	case reflect.Int32:
 		buf.WriteString("INT")
 		addIntLen()
-	case reflect.Int64, reflect.Int: // reflect.Int大小未知，都当作是BIGINT处理
+	case reflect.Int64, reflect.Int: // reflect.Int 大小未知，都当作是 BIGINT 处理
 		buf.WriteString("BIGINT")
 		addIntLen()
 	case reflect.Uint8:

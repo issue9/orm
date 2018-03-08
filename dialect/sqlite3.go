@@ -7,11 +7,15 @@ package dialect
 import (
 	"errors"
 	"reflect"
+	"strconv"
 
 	"github.com/issue9/orm/core"
 )
 
 // Sqlite3 返回一个适配 sqlite3 的 core.Dialect 接口
+//
+// Meta 可以接受以下参数：
+//  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
 func Sqlite3() core.Dialect {
 	return &sqlite3{}
 }
@@ -66,8 +70,20 @@ func (s *sqlite3) CreateTableSQL(w *core.StringBuilder, model *core.Model) error
 		w.WriteByte(',')
 	}
 	createConstraints(s, w, model)
-
 	w.TruncateLast(1).WriteByte(')')
+
+	if len(model.Meta["rowid"]) == 1 {
+		val, err := strconv.ParseBool(model.Meta["rowid"][0])
+		if err != nil {
+			return err
+		}
+
+		if !val {
+			w.WriteString("WITHOUT ROWID")
+		}
+	} else if len(model.Meta["rowid"]) > 0 {
+		return errors.New("rowid 只接受一个参数")
+	}
 	return nil
 }
 

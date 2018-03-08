@@ -72,12 +72,13 @@ func (p *postgres) CreateTableSQL(w *core.StringBuilder, model *core.Model) erro
 	}
 
 	if len(model.PK) > 0 {
-		createPKSQL(p, w, model.PK, model.Name+pkName) // postgres主键名需要全局唯一？
+		createPKSQL(p, w, model.PK, model.Name+pkName) // postgres 主键名需要全局唯一？
 		w.WriteByte(',')
 	}
 	createConstraints(p, w, model)
-
 	w.TruncateLast(1).WriteByte(')')
+
+	// TODO meta
 	return nil
 }
 
