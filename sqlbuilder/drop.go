@@ -8,17 +8,17 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/types"
 )
 
 // DropTableStmt 删除表语句
 type DropTableStmt struct {
-	engine core.Engine
+	engine types.Engine
 	table  string
 }
 
 // DropTable 声明一条删除表的语句
-func DropTable(e core.Engine, table string) *DropTableStmt {
+func DropTable(e types.Engine, table string) *DropTableStmt {
 	return &DropTableStmt{
 		engine: e,
 		table:  table,
@@ -38,7 +38,7 @@ func (stmt *DropTableStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	buf := core.NewStringBuilder("DROP TABLE IF EXISTS ")
+	buf := New("DROP TABLE IF EXISTS ")
 	buf.WriteString(stmt.table)
 	return buf.String(), nil, nil
 }

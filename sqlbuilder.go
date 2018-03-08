@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/types"
 )
 
 func getModel(v interface{}) (*model.Model, reflect.Value, error) {
@@ -104,7 +104,7 @@ func whereAny(sql sqlbuilder.WhereStmter, m *model.Model, rval reflect.Value) er
 }
 
 // 统计符合 v 条件的记录数量。
-func count(e core.Engine, v interface{}) (int64, error) {
+func count(e types.Engine, v interface{}) (int64, error) {
 	m, rval, err := getModel(v)
 	if err != nil {
 		return 0, err
@@ -134,7 +134,7 @@ func create(e *Tx, v interface{}) error {
 	}
 
 	// CREATE INDEX，部分数据库并没有直接有 create table with index 功能
-	sql := core.NewStringBuilder("")
+	sql := sqlbuilder.New("")
 	for name, cols := range m.KeyIndexes {
 		sql.Reset().
 			WriteString("CREATE INDEX ").
@@ -154,7 +154,7 @@ func create(e *Tx, v interface{}) error {
 }
 
 // 删除一张表。
-func drop(e core.Engine, v interface{}) error {
+func drop(e types.Engine, v interface{}) error {
 	m, err := model.New(v)
 	if err != nil {
 		return err
@@ -166,7 +166,7 @@ func drop(e core.Engine, v interface{}) error {
 
 // 清空表，并重置 AI 计数。
 // 系统会默认给表名加上表名前缀。
-func truncate(e core.Engine, v interface{}) error {
+func truncate(e types.Engine, v interface{}) error {
 	m, err := model.New(v)
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func truncate(e core.Engine, v interface{}) error {
 	return err
 }
 
-func insert(e core.Engine, v interface{}) (sql.Result, error) {
+func insert(e types.Engine, v interface{}) (sql.Result, error) {
 	m, rval, err := getModel(v)
 	if err != nil {
 		return nil, err
@@ -206,7 +206,7 @@ func insert(e core.Engine, v interface{}) (sql.Result, error) {
 //
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
-func find(e core.Engine, v interface{}) error {
+func find(e types.Engine, v interface{}) error {
 	m, rval, err := getModel(v)
 	if err != nil {
 		return err
@@ -247,7 +247,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 //
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func update(e core.Engine, v interface{}, cols ...string) (sql.Result, error) {
+func update(e types.Engine, v interface{}, cols ...string) (sql.Result, error) {
 	m, rval, err := getModel(v)
 	if err != nil {
 		return nil, err
@@ -285,7 +285,7 @@ func inStrSlice(key string, slice []string) bool {
 }
 
 // 将 v 生成 delete 的 sql 语句
-func del(e core.Engine, v interface{}) (sql.Result, error) {
+func del(e types.Engine, v interface{}) (sql.Result, error) {
 	m, rval, err := getModel(v)
 	if err != nil {
 		return nil, err

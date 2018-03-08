@@ -10,17 +10,17 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/conv"
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/internal/modeltest"
+	"github.com/issue9/orm/types"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var _ core.Engine = &DB{}
+var _ types.Engine = &DB{}
 
 var (
 	// 通过修改此值来确定使用哪个数据库驱动来测试
@@ -29,7 +29,7 @@ var (
 
 	prefix = "prefix_"
 	dsn    string
-	d      core.Dialect
+	d      types.Dialect
 )
 
 // 销毁数据库。默认仅对 sqlite3 启作用，删除该数据库文件。
@@ -64,7 +64,7 @@ func newDB(a *assert.Assertion) *DB {
 }
 
 // table表中是否存在 size 条记录，若不是，则触发 error
-func hasCount(db core.Engine, a *assert.Assertion, table string, size int) {
+func hasCount(db types.Engine, a *assert.Assertion, table string, size int) {
 	rows, err := db.Query("SELECT COUNT(*) as cnt FROM #" + table)
 	a.NotError(err).NotNil(rows)
 	defer func() {

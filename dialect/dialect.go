@@ -10,8 +10,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/types"
 )
 
 const pkName = "pk" // 默认的主键约束名
@@ -25,14 +26,14 @@ var (
 )
 
 type base interface {
-	core.Dialect
+	types.Dialect
 
 	// 将col转换成sql类型，并写入buf中。
-	sqlType(buf *core.StringBuilder, col *model.Column) error
+	sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error
 }
 
 // 用于产生在 createTable 中使用的普通列信息表达式，不包含 autoincrement 和 primary key 的关键字。
-func createColSQL(b base, buf *core.StringBuilder, col *model.Column) error {
+func createColSQL(b base, buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 	// col_name VARCHAR(100) NOT NULL DEFAULT 'abc'
 	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
 	buf.WriteByte(' ')
@@ -56,7 +57,7 @@ func createColSQL(b base, buf *core.StringBuilder, col *model.Column) error {
 }
 
 // create table 语句中 pk 约束的语句
-func createPKSQL(b base, buf *core.StringBuilder, cols []*model.Column, pkName string) {
+func createPKSQL(b base, buf *sqlbuilder.SQLBuilder, cols []*model.Column, pkName string) {
 	//CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(pkName).
@@ -71,7 +72,7 @@ func createPKSQL(b base, buf *core.StringBuilder, cols []*model.Column, pkName s
 }
 
 // create table 语句中的 unique 约束部分的语句。
-func createUniqueSQL(b base, buf *core.StringBuilder, cols []*model.Column, indexName string) {
+func createUniqueSQL(b base, buf *sqlbuilder.SQLBuilder, cols []*model.Column, indexName string) {
 	//CONSTRAINT unique_name UNIQUE (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(indexName).
@@ -86,7 +87,7 @@ func createUniqueSQL(b base, buf *core.StringBuilder, cols []*model.Column, inde
 }
 
 // create table 语句中 fk 的约束部分的语句
-func createFKSQL(b base, buf *core.StringBuilder, fk *model.ForeignKey, fkName string) {
+func createFKSQL(b base, buf *sqlbuilder.SQLBuilder, fk *model.ForeignKey, fkName string) {
 	//CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ").WriteString(fkName)
 
@@ -109,7 +110,7 @@ func createFKSQL(b base, buf *core.StringBuilder, fk *model.ForeignKey, fkName s
 }
 
 // create table 语句中 check 约束部分的语句
-func createCheckSQL(b base, buf *core.StringBuilder, expr, chkName string) {
+func createCheckSQL(b base, buf *sqlbuilder.SQLBuilder, expr, chkName string) {
 	//CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(chkName).
@@ -119,7 +120,7 @@ func createCheckSQL(b base, buf *core.StringBuilder, expr, chkName string) {
 }
 
 // 创建标准的几种约束(除 PK 约束，该约束有专门的函数 createPKSQL() 产生)：unique, foreign key, check
-func createConstraints(b base, buf *core.StringBuilder, model *model.Model) {
+func createConstraints(b base, buf *sqlbuilder.SQLBuilder, model *model.Model) {
 	// Unique Index
 	for name, index := range model.UniqueIndexes {
 		createUniqueSQL(b, buf, index, name)

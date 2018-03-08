@@ -8,19 +8,19 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/types"
 )
 
 // InsertStmt 表示插入操作的 SQL 语句
 type InsertStmt struct {
-	engine core.Engine
+	engine types.Engine
 	table  string
 	cols   []string
 	args   [][]interface{}
 }
 
 // Insert 声明一条插入语句
-func Insert(e core.Engine, table string) *InsertStmt {
+func Insert(e types.Engine, table string) *InsertStmt {
 	return &InsertStmt{
 		engine: e,
 		table:  table,
@@ -94,7 +94,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		}
 	}
 
-	buffer := core.NewStringBuilder("INSERT INTO ")
+	buffer := New("INSERT INTO ")
 	buffer.WriteString(stmt.table)
 
 	buffer.WriteByte('(')

@@ -9,15 +9,16 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/types"
 )
 
-// Sqlite3 返回一个适配 sqlite3 的 core.Dialect 接口
+// Sqlite3 返回一个适配 sqlite3 的 types.Dialect 接口
 //
 // Meta 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
-func Sqlite3() core.Dialect {
+func Sqlite3() types.Dialect {
 	return &sqlite3{}
 }
 
@@ -36,7 +37,7 @@ func (s *sqlite3) SQL(sql string) (string, error) {
 }
 
 func (s *sqlite3) CreateTableSQL(model *model.Model) (string, error) {
-	w := core.NewStringBuilder("CREATE TABLE IF NOT EXISTS ").
+	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
 		WriteString("}(")
@@ -75,7 +76,7 @@ func (s *sqlite3) CreateTableSQL(model *model.Model) (string, error) {
 	return w.String(), nil
 }
 
-func (s *sqlite3) createTableOptions(w *core.StringBuilder, model *model.Model) error {
+func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Model) error {
 	if len(model.Meta["rowid"]) == 1 {
 		val, err := strconv.ParseBool(model.Meta["rowid"][0])
 		if err != nil {
@@ -97,7 +98,7 @@ func (s *sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 }
 
 func (s *sqlite3) TruncateTableSQL(model *model.Model) string {
-	return core.NewStringBuilder("DELETE FROM ").
+	return sqlbuilder.New("DELETE FROM ").
 		WriteString("#" + model.Name).
 		WriteString(";update sqlite_sequence set seq=0 where name='").
 		WriteString("#" + model.Name).
@@ -106,7 +107,7 @@ func (s *sqlite3) TruncateTableSQL(model *model.Model) string {
 }
 
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) sqlType(buf *core.StringBuilder, col *model.Column) error {
+func (s *sqlite3) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

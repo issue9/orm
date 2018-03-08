@@ -9,19 +9,19 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/types"
 )
 
 // DB 数据库操作实例。
 type DB struct {
 	stdDB       *sql.DB
-	dialect     core.Dialect
+	dialect     types.Dialect
 	tablePrefix string
 	replacer    *strings.Replacer
 }
 
 // NewDB 声明一个新的 DB 实例。
-func NewDB(driverName, dataSourceName, tablePrefix string, dialect core.Dialect) (*DB, error) {
+func NewDB(driverName, dataSourceName, tablePrefix string, dialect types.Dialect) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect core.Dialect)
 }
 
 // NewDBWithStdDB 从 sql.DB 构建一个 DB 实例。
-func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect core.Dialect) (*DB, error) {
+func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect types.Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{
 		stdDB:       db,
@@ -58,13 +58,13 @@ func (db *DB) StdDB() *sql.DB {
 	return db.stdDB
 }
 
-// Dialect 返回对应的 core.Dialect 接口实例。
-func (db *DB) Dialect() core.Dialect {
+// Dialect 返回对应的 types.Dialect 接口实例。
+func (db *DB) Dialect() types.Dialect {
 	return db.dialect
 }
 
 // Query 执行一条查询语句，并返回相应的 sql.Rows 实例。
-// 具体参数说明可参考 core.Engine 接口文档。
+// 具体参数说明可参考 types.Engine 接口文档。
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	query = db.replacer.Replace(query)
 	query, err := db.dialect.SQL(query)
@@ -76,7 +76,6 @@ func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 }
 
 // QueryContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	query = db.replacer.Replace(query)
 	query, err := db.dialect.SQL(query)
@@ -88,7 +87,6 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{
 }
 
 // Exec 执行 SQL 语句。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	query = db.replacer.Replace(query)
 	query, err := db.dialect.SQL(query)
@@ -100,7 +98,6 @@ func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 }
 
 // ExecContext 执行 SQL 语句。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	query = db.replacer.Replace(query)
 	query, err := db.dialect.SQL(query)
@@ -112,7 +109,6 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 }
 
 // Prepare 预编译查询语句。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (db *DB) Prepare(query string) (*sql.Stmt, error) {
 	query = db.replacer.Replace(query)
 	query, err := db.dialect.SQL(query)
@@ -124,7 +120,6 @@ func (db *DB) Prepare(query string) (*sql.Stmt, error) {
 }
 
 // PrepareContext 预编译查询语句。
-// 具体参数说明可参考 core.Engine 接口文档。
 func (db *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	query = db.replacer.Replace(query)
 	query, err := db.dialect.SQL(query)
@@ -167,7 +162,7 @@ func (db *DB) Select(v interface{}) error {
 
 // Count 查询符合 v 条件的记录数量。
 // v 中的所有非零字段都将参与查询。
-// 若需要复杂的查询方式，请构建 core.Select 对象查询。
+// 若需要复杂的查询方式，请构建 sqlbuilder.SelectStmt 对象查询。
 func (db *DB) Count(v interface{}) (int64, error) {
 	return count(db, v)
 }

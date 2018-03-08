@@ -10,16 +10,17 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/types"
 )
 
-// Mysql 返回一个适配 mysql 的 core.Dialect 接口
+// Mysql 返回一个适配 mysql 的 types.Dialect 接口
 //
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql() core.Dialect {
+func Mysql() types.Dialect {
 	return &mysql{}
 }
 
@@ -38,7 +39,7 @@ func (m *mysql) SQL(sql string) (string, error) {
 }
 
 func (m *mysql) CreateTableSQL(model *model.Model) (string, error) {
-	w := core.NewStringBuilder("CREATE TABLE IF NOT EXISTS ").
+	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
 		WriteString("}(")
@@ -78,7 +79,7 @@ func (m *mysql) CreateTableSQL(model *model.Model) (string, error) {
 	return w.String(), nil
 }
 
-func (m *mysql) createTableOptions(w *core.StringBuilder, model *model.Model) error {
+func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Model) error {
 	if len(model.Meta["engine"]) == 1 {
 		w.WriteString(" ENGINE=")
 		w.WriteString(model.Meta["engine"][0])
@@ -106,7 +107,7 @@ func (m *mysql) TruncateTableSQL(model *model.Model) string {
 	return "TRUNCATE TABLE #" + model.Name
 }
 
-func (m *mysql) sqlType(buf *core.StringBuilder, col *model.Column) error {
+func (m *mysql) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

@@ -10,10 +10,10 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/internal/modeltest"
 	"github.com/issue9/orm/internal/sqltest"
 	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/sqlbuilder"
 )
 
 var _ base = &mysql{}
@@ -22,7 +22,7 @@ var m = &mysql{}
 
 func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
-	sql := core.NewStringBuilder("")
+	sql := sqlbuilder.New("")
 	a.NotNil(sql)
 
 	// 空的 meta
@@ -42,7 +42,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 
 func TestMysql_sqlType(t *testing.T) {
 	a := assert.New(t)
-	buf := core.NewStringBuilder("")
+	buf := sqlbuilder.New("")
 	col := &model.Column{}
 
 	// col == nil

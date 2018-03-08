@@ -9,13 +9,13 @@ import (
 	"database/sql"
 	"strconv"
 
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/fetch"
+	"github.com/issue9/orm/types"
 )
 
 // SelectStmt 查询语句
 type SelectStmt struct {
-	engine    core.Engine
+	engine    types.Engine
 	table     string
 	where     *WhereStmt
 	cols      []string
@@ -26,7 +26,7 @@ type SelectStmt struct {
 	countExpr string
 
 	joins  []*join
-	orders *core.StringBuilder
+	orders *SQLBuilder
 	group  string
 
 	havingQuery string
@@ -43,7 +43,7 @@ type join struct {
 }
 
 // Select 声明一条 Select 语句
-func Select(e core.Engine) *SelectStmt {
+func Select(e types.Engine) *SelectStmt {
 	return &SelectStmt{
 		engine: e,
 		where:  newWhereStmt(),
@@ -89,7 +89,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
-	buf := core.NewStringBuilder("SELECT ")
+	buf := New("SELECT ")
 	args := make([]interface{}, 0, 10)
 
 	if stmt.countExpr == "" {
@@ -229,7 +229,7 @@ func (stmt *SelectStmt) Asc(col ...string) *SelectStmt {
 
 func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	if stmt.orders == nil {
-		stmt.orders = core.NewStringBuilder("")
+		stmt.orders = New("")
 	}
 
 	if stmt.orders.Len() == 0 {

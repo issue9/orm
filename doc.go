@@ -94,18 +94,18 @@
 //  引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
 //
 //  check(chk_name, expr): check 约束。chk_name 为约束名，expr 为该约束的表达式。
-//  check 约束只能在 core.Metaer 接口中指定，而不是像其它约束一样，通过字段的 struct tag 指定。
+//  check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一样，通过字段的 struct tag 指定。
 //  因为 check 约束的表达式可以通过 and 或是 or 等符号连接多条基本表达式，
 //  在字段 struct tag 中指定会显得有点怪异。
 //
 //
-// core.Metaer:
+// model.Metaer:
 //
 // 在 Go 不能将 struct tag 作用于结构体，所以为了指定一些表级别的属性，
 // 只能通过接口的形式，在接口方法中返回一段类似于 struct tag 的字符串，
 // 以达到相同的目的。
 //
-// 在 core.Metaer 中除了可以指定 name(table_name) 和 check(name,expr) 两个属性之外，
+// 在 model.Metaer 中除了可以指定 name(table_name) 和 check(name,expr) 两个属性之外，
 // 还可指定一些自定义的属性，这些属性都将会被保存到 Model.Meta 中。
 //
 //

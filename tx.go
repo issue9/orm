@@ -9,8 +9,8 @@ import (
 	"database/sql"
 	"reflect"
 
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/types"
 )
 
 // Tx 事务对象
@@ -91,7 +91,7 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, erro
 }
 
 // Dialect 返回对应的 Dialect 实例
-func (tx *Tx) Dialect() core.Dialect {
+func (tx *Tx) Dialect() types.Dialect {
 	return tx.db.Dialect()
 }
 

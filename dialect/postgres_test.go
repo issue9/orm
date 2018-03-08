@@ -10,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/internal/sqltest"
 	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/sqlbuilder"
 )
 
 var _ base = &postgres{}
@@ -21,7 +21,7 @@ func TestPostgres_sqlType(t *testing.T) {
 	p := &postgres{}
 
 	a := assert.New(t)
-	buf := core.NewStringBuilder("")
+	buf := sqlbuilder.New("")
 	col := &model.Column{}
 	a.Error(p.sqlType(buf, col))
 

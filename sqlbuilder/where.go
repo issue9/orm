@@ -4,17 +4,15 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/core"
-
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
-	buffer *core.StringBuilder
+	buffer *SQLBuilder
 	args   []interface{}
 }
 
 func newWhereStmt() *WhereStmt {
 	return &WhereStmt{
-		buffer: core.NewStringBuilder(""),
+		buffer: New(""),
 		args:   make([]interface{}, 0, 10),
 	}
 }

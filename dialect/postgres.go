@@ -11,12 +11,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/types"
 )
 
-// Postgres 返回一个适配 postgresql 的 core.Dialect 接口
-func Postgres() core.Dialect {
+// Postgres 返回一个适配 postgresql 的 types.Dialect 接口
+func Postgres() types.Dialect {
 	return &postgres{}
 }
 
@@ -55,7 +56,7 @@ func (p *postgres) SQL(sql string) (string, error) {
 }
 
 func (p *postgres) CreateTableSQL(model *model.Model) (string, error) {
-	w := core.NewStringBuilder("CREATE TABLE IF NOT EXISTS ").
+	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
 		WriteString("}(")
@@ -84,7 +85,7 @@ func (p *postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 }
 
 func (p *postgres) TruncateTableSQL(model *model.Model) string {
-	w := core.NewStringBuilder("TRUNCATE TABLE ").WriteString(model.Name)
+	w := sqlbuilder.New("TRUNCATE TABLE ").WriteString(model.Name)
 
 	if model.AI != nil {
 		w.WriteString("; ALTER SEQUENCE ").
@@ -99,7 +100,7 @@ func (p *postgres) TruncateTableSQL(model *model.Model) string {
 
 // implement base.sqlType
 // 将col转换成sql类型，并写入buf中。
-func (p *postgres) sqlType(buf *core.StringBuilder, col *model.Column) error {
+func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

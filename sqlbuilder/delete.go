@@ -8,18 +8,18 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/types"
 )
 
 // DeleteStmt 表示删除操作的 SQL 语句
 type DeleteStmt struct {
-	engine core.Engine
+	engine types.Engine
 	table  string
 	where  *WhereStmt
 }
 
 // Delete 声明一条删除语句
-func Delete(e core.Engine, table string) *DeleteStmt {
+func Delete(e types.Engine, table string) *DeleteStmt {
 	return &DeleteStmt{
 		engine: e,
 		table:  table,

@@ -9,12 +9,12 @@ import (
 	"database/sql"
 	"sort"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/types"
 )
 
 // UpdateStmt 更新语句
 type UpdateStmt struct {
-	engine core.Engine
+	engine types.Engine
 	table  string
 	where  *WhereStmt
 	values []*updateSet
@@ -27,7 +27,7 @@ type updateSet struct {
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
-func Update(e core.Engine, table string) *UpdateStmt {
+func Update(e types.Engine, table string) *UpdateStmt {
 	return &UpdateStmt{
 		engine: e,
 		table:  table,
@@ -107,7 +107,7 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 
-	buf := core.NewStringBuilder("UPDATE ")
+	buf := New("UPDATE ")
 	buf.WriteString(stmt.table)
 	buf.WriteString(" SET ")
 

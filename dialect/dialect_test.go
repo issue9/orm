@@ -9,15 +9,15 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/internal/sqltest"
 	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/sqlbuilder"
 )
 
 func TestCreatColSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := core.NewStringBuilder("")
+	buf := sqlbuilder.New("")
 	col := &model.Column{}
 
 	col.Name = "id"
@@ -47,7 +47,7 @@ func TestCreatColSQL(t *testing.T) {
 func TestCreatePKSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := core.NewStringBuilder("")
+	buf := sqlbuilder.New("")
 	col1 := &model.Column{Name: "id"}
 	col2 := &model.Column{Name: "username"}
 	cols := []*model.Column{col1, col2}
@@ -65,7 +65,7 @@ func TestCreatePKSQL(t *testing.T) {
 func TestCreateUniqueSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := core.NewStringBuilder("")
+	buf := sqlbuilder.New("")
 	col1 := &model.Column{Name: "id"}
 	col2 := &model.Column{Name: "username"}
 	cols := []*model.Column{col1, col2}
@@ -83,7 +83,7 @@ func TestCreateUniqueSQL(t *testing.T) {
 func TestCreateFKSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := core.NewStringBuilder("")
+	buf := sqlbuilder.New("")
 	fk := &model.ForeignKey{
 		Col:          &model.Column{Name: "id"},
 		RefTableName: "refTable",
@@ -99,7 +99,7 @@ func TestCreateFKSQL(t *testing.T) {
 func TestCreateCheckSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
-	buf := core.NewStringBuilder("")
+	buf := sqlbuilder.New("")
 
 	createCheckSQL(dialect, buf, "id>5", "chkname")
 	wont := "CONSTRAINT chkname CHECK(id>5)"

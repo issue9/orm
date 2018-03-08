@@ -6,11 +6,12 @@
 package sqlbuilder
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
 
-	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/types"
 )
 
 var (
@@ -47,7 +48,66 @@ type WhereStmter interface {
 	WhereStmt() *WhereStmt
 }
 
-func exec(e core.Engine, stmt SQLer) (sql.Result, error) {
+// SQLBuilder 对 bytes.Buffer 的一个简单封装。
+// 当 Write* 系列函数出错时，直接 panic。
+type SQLBuilder bytes.Buffer
+
+// New 声明一个新的 SQLBuilder 实例
+func New(str string) *SQLBuilder {
+	return (*SQLBuilder)(bytes.NewBufferString(str))
+}
+
+func (b *SQLBuilder) buffer() *bytes.Buffer {
+	return (*bytes.Buffer)(b)
+}
+
+// WriteString 写入一字符串
+func (b *SQLBuilder) WriteString(str string) *SQLBuilder {
+	if _, err := b.buffer().WriteString(str); err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
+// WriteByte 写入一字符
+func (b *SQLBuilder) WriteByte(c byte) *SQLBuilder {
+	if err := b.buffer().WriteByte(c); err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
+// Reset 重置内容
+func (b *SQLBuilder) Reset() *SQLBuilder {
+	b.buffer().Reset()
+	return b
+}
+
+// TruncateLast 去掉最后几个字符
+func (b *SQLBuilder) TruncateLast(n int) *SQLBuilder {
+	b.buffer().Truncate(b.Len() - n)
+
+	return b
+}
+
+// String 获取表示的字符串
+func (b *SQLBuilder) String() string {
+	return b.buffer().String()
+}
+
+// Bytes 获取表示的字符串
+func (b *SQLBuilder) Bytes() []byte {
+	return b.buffer().Bytes()
+}
+
+// Len 获取长度
+func (b *SQLBuilder) Len() int {
+	return b.buffer().Len()
+}
+
+func exec(e types.Engine, stmt SQLer) (sql.Result, error) {
 	query, args, err := stmt.SQL()
 	if err != nil {
 		return nil, err
@@ -55,7 +115,7 @@ func exec(e core.Engine, stmt SQLer) (sql.Result, error) {
 	return e.Exec(query, args...)
 }
 
-func execContext(ctx context.Context, e core.Engine, stmt SQLer) (sql.Result, error) {
+func execContext(ctx context.Context, e types.Engine, stmt SQLer) (sql.Result, error) {
 	query, args, err := stmt.SQL()
 	if err != nil {
 		return nil, err
@@ -63,7 +123,7 @@ func execContext(ctx context.Context, e core.Engine, stmt SQLer) (sql.Result, er
 	return e.ExecContext(ctx, query, args...)
 }
 
-func prepare(e core.Engine, stmt SQLer) (*sql.Stmt, error) {
+func prepare(e types.Engine, stmt SQLer) (*sql.Stmt, error) {
 	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err
@@ -71,7 +131,7 @@ func prepare(e core.Engine, stmt SQLer) (*sql.Stmt, error) {
 	return e.Prepare(query)
 }
 
-func prepareContext(ctx context.Context, e core.Engine, stmt SQLer) (*sql.Stmt, error) {
+func prepareContext(ctx context.Context, e types.Engine, stmt SQLer) (*sql.Stmt, error) {
 	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err
@@ -79,7 +139,7 @@ func prepareContext(ctx context.Context, e core.Engine, stmt SQLer) (*sql.Stmt, 
 	return e.PrepareContext(ctx, query)
 }
 
-func query(e core.Engine, stmt SQLer) (*sql.Rows, error) {
+func query(e types.Engine, stmt SQLer) (*sql.Rows, error) {
 	query, args, err := stmt.SQL()
 	if err != nil {
 		return nil, err
@@ -87,7 +147,7 @@ func query(e core.Engine, stmt SQLer) (*sql.Rows, error) {
 	return e.Query(query, args...)
 }
 
-func queryContext(ctx context.Context, e core.Engine, stmt SQLer) (*sql.Rows, error) {
+func queryContext(ctx context.Context, e types.Engine, stmt SQLer) (*sql.Rows, error) {
 	query, args, err := stmt.SQL()
 	if err != nil {
 		return nil, err

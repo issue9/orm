@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/internal/modeltest"
+	"github.com/issue9/orm/types"
 )
 
-var _ core.Engine = &Tx{}
+var _ types.Engine = &Tx{}
 
 func TestTx_InsertMany(t *testing.T) {
 	a := assert.New(t)

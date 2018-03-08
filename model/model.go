@@ -2,6 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
+// Package model 定义数据模型信息
 package model
 
 import (
