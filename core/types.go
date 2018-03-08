@@ -7,6 +7,8 @@ package core
 import (
 	"context"
 	"database/sql"
+
+	"github.com/issue9/orm/model"
 )
 
 // Engine 是 DB 与 Tx 的共有接口。
@@ -71,8 +73,8 @@ type Dialect interface {
 	LimitSQL(limit int, offset ...int) (string, []interface{})
 
 	// 生成创建表的 SQL 语句。
-	CreateTableSQL(m *Model) (string, error)
+	CreateTableSQL(m *model.Model) (string, error)
 
 	// 清空表内容，重置 AI。
-	TruncateTableSQL(m *Model) string
+	TruncateTableSQL(m *model.Model) string
 }

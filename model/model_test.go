@@ -2,56 +2,14 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package core
+package model
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/internal/modeltest"
 )
-
-func TestConType_String(t *testing.T) {
-	a := assert.New(t)
-
-	a.Equal("<none>", none.String()).
-		Equal("KEY INDEX", fmt.Sprint(index)).
-		Equal("UNIQUE INDEX", unique.String()).
-		Equal("FOREIGN KEY", fk.String()).
-		Equal("CHECK", check.String())
-
-	var c1 conType
-	a.Equal("<none>", c1.String())
-
-	c1 = 100
-	a.Equal("<unknown>", c1.String())
-}
-
-func TestColumn_SetLen(t *testing.T) {
-	a := assert.New(t)
-	col := &Column{}
-
-	a.NotError(col.setLen([]string{})).Equal(col.Len1, 0).Equal(col.Len2, 0)
-	a.NotError(col.setLen([]string{"1", "2"})).Equal(col.Len1, 1).Equal(col.Len2, 2)
-	a.Error(col.setLen([]string{"1", "2", "3"}))
-	a.Error(col.setLen([]string{"1", "one"}))
-}
-
-func TestColumn_SetNullable(t *testing.T) {
-	a := assert.New(t)
-
-	col := &Column{}
-
-	a.False(col.Nullable)
-	a.NotError(col.setNullable([]string{})).True(col.Nullable)
-	a.NotError(col.setNullable([]string{"false"})).False(col.Nullable)
-	a.NotError(col.setNullable([]string{"T"})).True(col.Nullable)
-	a.NotError(col.setNullable([]string{"0"})).False(col.Nullable)
-
-	a.Error(col.setNullable([]string{"1", "2"}))
-	a.Error(col.setNullable([]string{"T1"}))
-}
 
 func TestModels(t *testing.T) {
 	a := assert.New(t)
@@ -59,19 +17,19 @@ func TestModels(t *testing.T) {
 	ClearModels()
 	a.Equal(0, len(models.items))
 
-	m, err := NewModel(&modeltest.User{})
+	m, err := New(&modeltest.User{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 相同的 model 实例，不会增加数量
-	m, err = NewModel(&modeltest.User{})
+	m, err = New(&modeltest.User{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 添加新的 model
-	m, err = NewModel(&modeltest.Admin{})
+	m, err = New(&modeltest.Admin{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(2, len(models.items))
@@ -85,7 +43,7 @@ func TestModel(t *testing.T) {
 	ClearModels()
 	a := assert.New(t)
 
-	m, err := NewModel(&modeltest.Admin{})
+	m, err := New(&modeltest.Admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols
@@ -136,27 +94,4 @@ func TestModel(t *testing.T) {
 
 	// Meta返回的name属性
 	a.Equal(m.Name, "administrators")
-}
-
-// BenchmarkNewModelNoCached	  100000	     23724 ns/op
-func BenchmarkNewModelNoCached(b *testing.B) {
-	ClearModels()
-	a := assert.New(b)
-
-	for i := 0; i < b.N; i++ {
-		m, err := NewModel(&modeltest.User{})
-		ClearModels()
-		a.NotError(err).NotNil(m)
-	}
-}
-
-// BenchmarkNewModelCached	 3000000	       480 ns/op
-func BenchmarkNewModelCached(b *testing.B) {
-	ClearModels()
-	a := assert.New(b)
-
-	for i := 0; i < b.N; i++ {
-		m, err := NewModel(&modeltest.User{})
-		a.NotError(err).NotNil(m)
-	}
 }

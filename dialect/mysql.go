@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/model"
 )
 
 // Mysql 返回一个适配 mysql 的 core.Dialect 接口
@@ -36,7 +37,7 @@ func (m *mysql) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (m *mysql) CreateTableSQL(model *core.Model) (string, error) {
+func (m *mysql) CreateTableSQL(model *model.Model) (string, error) {
 	w := core.NewStringBuilder("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
@@ -77,7 +78,7 @@ func (m *mysql) CreateTableSQL(model *core.Model) (string, error) {
 	return w.String(), nil
 }
 
-func (m *mysql) createTableOptions(w *core.StringBuilder, model *core.Model) error {
+func (m *mysql) createTableOptions(w *core.StringBuilder, model *model.Model) error {
 	if len(model.Meta["engine"]) == 1 {
 		w.WriteString(" ENGINE=")
 		w.WriteString(model.Meta["engine"][0])
@@ -101,11 +102,11 @@ func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (m *mysql) TruncateTableSQL(model *core.Model) string {
+func (m *mysql) TruncateTableSQL(model *model.Model) string {
 	return "TRUNCATE TABLE #" + model.Name
 }
 
-func (m *mysql) sqlType(buf *core.StringBuilder, col *core.Column) error {
+func (m *mysql) sqlType(buf *core.StringBuilder, col *model.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

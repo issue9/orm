@@ -13,6 +13,7 @@ import (
 	"github.com/issue9/orm/core"
 	"github.com/issue9/orm/internal/modeltest"
 	"github.com/issue9/orm/internal/sqltest"
+	"github.com/issue9/orm/model"
 )
 
 var _ base = &mysql{}
@@ -25,14 +26,14 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 	a.NotNil(sql)
 
 	// 空的 meta
-	mod, err := core.NewModel(&modeltest.Group{})
+	mod, err := model.New(&modeltest.Group{})
 	a.NotError(err).NotNil(mod)
 	m.createTableOptions(sql, mod)
 	a.Equal(sql.Len(), 0)
 
 	// engine
 	sql.Reset()
-	mod, err = core.NewModel(&modeltest.User{})
+	mod, err = model.New(&modeltest.User{})
 	a.NotError(err).NotNil(mod)
 	m.createTableOptions(sql, mod)
 	a.True(sql.Len() > 0)
@@ -42,7 +43,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 func TestMysql_sqlType(t *testing.T) {
 	a := assert.New(t)
 	buf := core.NewStringBuilder("")
-	col := &core.Column{}
+	col := &model.Column{}
 
 	// col == nil
 	a.Error(m.sqlType(buf, nil))

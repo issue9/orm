@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/model"
 )
 
 // Tx 事务对象
@@ -153,7 +154,7 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		_, err = sql.Exec()
 		return err
 	default:
-		return core.ErrInvalidKind
+		return model.ErrInvalidKind
 	}
 }
 

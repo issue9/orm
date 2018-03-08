@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/model"
 )
 
 // Sqlite3 返回一个适配 sqlite3 的 core.Dialect 接口
@@ -34,7 +35,7 @@ func (s *sqlite3) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (s *sqlite3) CreateTableSQL(model *core.Model) (string, error) {
+func (s *sqlite3) CreateTableSQL(model *model.Model) (string, error) {
 	w := core.NewStringBuilder("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
@@ -74,7 +75,7 @@ func (s *sqlite3) CreateTableSQL(model *core.Model) (string, error) {
 	return w.String(), nil
 }
 
-func (s *sqlite3) createTableOptions(w *core.StringBuilder, model *core.Model) error {
+func (s *sqlite3) createTableOptions(w *core.StringBuilder, model *model.Model) error {
 	if len(model.Meta["rowid"]) == 1 {
 		val, err := strconv.ParseBool(model.Meta["rowid"][0])
 		if err != nil {
@@ -95,7 +96,7 @@ func (s *sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (s *sqlite3) TruncateTableSQL(model *core.Model) string {
+func (s *sqlite3) TruncateTableSQL(model *model.Model) string {
 	return core.NewStringBuilder("DELETE FROM ").
 		WriteString("#" + model.Name).
 		WriteString(";update sqlite_sequence set seq=0 where name='").
@@ -105,7 +106,7 @@ func (s *sqlite3) TruncateTableSQL(model *core.Model) string {
 }
 
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) sqlType(buf *core.StringBuilder, col *core.Column) error {
+func (s *sqlite3) sqlType(buf *core.StringBuilder, col *model.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}
