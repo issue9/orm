@@ -75,7 +75,7 @@ type Dialect interface {
 
 	// 清空表内容，重置 AI。
 	// aiColumn 需要被重置的自增列列名
-	TruncateTableSQL(tableName, aiColumn string) string
+	TruncateTableSQL(m *Model) string
 
 	// 是否支持一次性插入多条语句
 	SupportInsertMany() bool
