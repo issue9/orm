@@ -36,24 +36,21 @@ func (m *mysql) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
-	return mysqlLimitSQL(limit, offset...)
-}
+func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
+	w.WriteString("CREATE TABLE IF NOT EXISTS ").
+		WriteString("{#").
+		WriteString(model.Name).
+		WriteString("}(")
 
-func (m *mysql) AIColSQL(w *core.StringBuilder, model *core.Model) error {
-	if model.AI == nil {
-		return nil
+	// 自增列
+	if model.AI != nil {
+		if err := createColSQL(m, w, model.AI); err != nil {
+			return err
+		}
+		w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
 	}
 
-	if err := createColSQL(m, w, model.AI); err != nil {
-		return err
-	}
-
-	w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
-	return nil
-}
-
-func (m *mysql) NoAIColSQL(w *core.StringBuilder, model *core.Model) error {
+	// 普通列
 	for _, col := range model.Cols {
 		if col.IsAI() { // 忽略AI列
 			continue
@@ -65,17 +62,23 @@ func (m *mysql) NoAIColSQL(w *core.StringBuilder, model *core.Model) error {
 		w.WriteByte(',')
 	}
 
-	return nil
-}
-
-func (m *mysql) ConstraintsSQL(w *core.StringBuilder, model *core.Model) {
-	// PK，若有自增，则已经在上面指定
-	if len(model.PK) > 0 && !model.PK[0].IsAI() {
+	// 约束
+	if len(model.PK) > 0 && !model.PK[0].IsAI() { // PK，若有自增，则已经在上面指定
 		createPKSQL(m, w, model.PK, pkName)
 		w.WriteByte(',')
 	}
-
 	createConstraints(m, w, model)
+
+	w.TruncateLast(1).WriteByte(')')
+	return nil
+}
+
+func (m *mysql) CreateTableWithIndex() bool {
+	return true
+}
+
+func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+	return mysqlLimitSQL(limit, offset...)
 }
 
 func (m *mysql) TruncateTableSQL(w *core.StringBuilder, tableName, aiColumn string) {

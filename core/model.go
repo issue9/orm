@@ -19,7 +19,7 @@ import (
 // ErrInvalidKind 表示该类型不是结构体或是结构体的指针
 var ErrInvalidKind = errors.New("不支持的 reflect.Kind()，只能是结构体或是结构体指针")
 
-type conType int
+type conType int8
 
 // 预定的约束类型，方便 Model 中使用。
 const (

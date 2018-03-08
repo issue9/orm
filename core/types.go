@@ -70,14 +70,12 @@ type Dialect interface {
 	// 返回的是对应数据库的 limit 语句以及语句中占位符对应的值。
 	LimitSQL(limit int, offset ...int) (string, []interface{})
 
-	// 输出非 AI 列的定义，必须包含末尾的分号
-	NoAIColSQL(sql *StringBuilder, m *Model) error
+	// 生成创建表的 SQL 语句。
+	CreateTableSQL(sql *StringBuilder, m *Model) error
 
-	// 输出 AI 列的定义，必须包含末尾的分号
-	AIColSQL(sql *StringBuilder, m *Model) error
-
-	// 输出所有的约束定义，必须包含末尾的分号
-	ConstraintsSQL(sql *StringBuilder, m *Model)
+	// 表示 create table 语句中是否包含了 create index 的功能，
+	// 比如 postgresql 不能在 create table 中包含 index。
+	CreateTableWithIndex() bool
 
 	// 清空表内容，重置 AI。
 	// aiColumn 需要被重置的自增列列名

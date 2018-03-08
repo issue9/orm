@@ -57,32 +57,36 @@ func (p *postgres) SQL(sql string) (string, error) {
 	return string(ret), nil
 }
 
-func (p *postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
-	return mysqlLimitSQL(limit, offset...)
-}
+func (p *postgres) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
+	w.WriteString("CREATE TABLE IF NOT EXISTS ").
+		WriteString("{#").
+		WriteString(model.Name).
+		WriteString("}(")
 
-func (p *postgres) AIColSQL(w *core.StringBuilder, model *core.Model) error {
-	// Potgres 的 AI 仅仅是类型不同，可直接使用 NoAiColSQL 输出
-	return nil
-}
-
-func (p *postgres) NoAIColSQL(w *core.StringBuilder, model *core.Model) error {
+	// 自增和普通列输出是相同的，自增列仅是类型名不相同
 	for _, col := range model.Cols {
 		if err := createColSQL(p, w, col); err != nil {
 			return err
 		}
 		w.WriteByte(',')
 	}
-	return nil
-}
 
-func (p *postgres) ConstraintsSQL(w *core.StringBuilder, model *core.Model) {
 	if len(model.PK) > 0 {
 		createPKSQL(p, w, model.PK, model.Name+pkName) // postgres主键名需要全局唯一？
 		w.WriteByte(',')
 	}
-
 	createConstraints(p, w, model)
+
+	w.TruncateLast(1).WriteByte(')')
+	return nil
+}
+
+func (p *postgres) CreateTableWithIndex() bool {
+	return false
+}
+
+func (p *postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+	return mysqlLimitSQL(limit, offset...)
 }
 
 func (p *postgres) TruncateTableSQL(w *core.StringBuilder, tableName, aiColumn string) {

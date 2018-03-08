@@ -110,17 +110,7 @@ func buildCreateSQL(sql *core.StringBuilder, e core.Engine, v interface{}) error
 		return err
 	}
 
-	d := e.Dialect()
-	sql.WriteString("CREATE TABLE IF NOT EXISTS ").
-		WriteString("{#").
-		WriteString(m.Name).
-		WriteString("}(")
-	d.AIColSQL(sql, m)
-	d.NoAIColSQL(sql, m)
-	d.ConstraintsSQL(sql, m)
-	sql.TruncateLast(1).WriteByte(')')
-
-	return nil
+	return e.Dialect().CreateTableSQL(sql, m)
 }
 
 // 统计符合 v 条件的记录数量。

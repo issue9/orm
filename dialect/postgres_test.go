@@ -85,7 +85,7 @@ func TestPostgres_SQL(t *testing.T) {
 	err("?中$文")
 }
 
-func BenchmarkPostgres_ReplaceMarks(b *testing.B) {
+func BenchmarkPostgres_SQL(b *testing.B) {
 	a := assert.New(b)
 	p := Postgres()
 	a.NotNil(p)
