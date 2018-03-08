@@ -72,6 +72,10 @@ func (s *sqlite3) CreateTableSQL(w *core.StringBuilder, model *core.Model) error
 	createConstraints(s, w, model)
 	w.TruncateLast(1).WriteByte(')')
 
+	return s.createTableOptions(w, model)
+}
+
+func (s *sqlite3) createTableOptions(w *core.StringBuilder, model *core.Model) error {
 	if len(model.Meta["rowid"]) == 1 {
 		val, err := strconv.ParseBool(model.Meta["rowid"][0])
 		if err != nil {
@@ -84,6 +88,7 @@ func (s *sqlite3) CreateTableSQL(w *core.StringBuilder, model *core.Model) error
 	} else if len(model.Meta["rowid"]) > 0 {
 		return errors.New("rowid 只接受一个参数")
 	}
+
 	return nil
 }
 
@@ -99,7 +104,6 @@ func (s *sqlite3) TruncateTableSQL(w *core.StringBuilder, tableName, aiColumn st
 		WriteString("';")
 }
 
-// implement base.sqlType()
 // 具体规则参照:http://www.sqlite.org/datatype3.html
 func (s *sqlite3) sqlType(buf *core.StringBuilder, col *core.Column) error {
 	if col == nil {

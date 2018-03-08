@@ -11,6 +11,7 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/core"
+	"github.com/issue9/orm/internal/modeltest"
 	"github.com/issue9/orm/internal/sqltest"
 )
 
@@ -18,7 +19,27 @@ var _ base = &mysql{}
 
 var m = &mysql{}
 
-func TestMysql_SQLType(t *testing.T) {
+func TestMysql_CreateTableOptions(t *testing.T) {
+	a := assert.New(t)
+	sql := core.NewStringBuilder("")
+	a.NotNil(sql)
+
+	// 空的 meta
+	mod, err := core.NewModel(&modeltest.Group{})
+	a.NotError(err).NotNil(mod)
+	m.createTableOptions(sql, mod)
+	a.Equal(sql.Len(), 0)
+
+	// engine
+	sql.Reset()
+	mod, err = core.NewModel(&modeltest.User{})
+	a.NotError(err).NotNil(mod)
+	m.createTableOptions(sql, mod)
+	a.True(sql.Len() > 0)
+	sqltest.Equal(a, sql.String(), "engine=innodb character set=utf-8")
+}
+
+func TestMysql_sqlType(t *testing.T) {
 	a := assert.New(t)
 	buf := core.NewStringBuilder("")
 	col := &core.Column{}

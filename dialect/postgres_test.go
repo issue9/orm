@@ -16,7 +16,7 @@ import (
 
 var _ base = &postgres{}
 
-func TestPostgres_SQLType(t *testing.T) {
+func TestPostgres_sqlType(t *testing.T) {
 	p := &postgres{}
 
 	a := assert.New(t)

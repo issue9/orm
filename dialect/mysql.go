@@ -74,6 +74,10 @@ func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
 	createConstraints(m, w, model)
 	w.TruncateLast(1).WriteByte(')')
 
+	return m.createTableOptions(w, model)
+}
+
+func (m *mysql) createTableOptions(w *core.StringBuilder, model *core.Model) error {
 	if len(model.Meta["engine"]) == 1 {
 		w.WriteString(" ENGINE=")
 		w.WriteString(model.Meta["engine"][0])
@@ -89,6 +93,7 @@ func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
 	} else if len(model.Meta["charset"]) > 0 {
 		return errors.New("无效的属性值 charset")
 	}
+
 	return nil
 }
 

@@ -16,7 +16,7 @@ import (
 
 var _ base = &sqlite3{}
 
-func TestSqlite3_SQLType(t *testing.T) {
+func TestSqlite3_sqlType(t *testing.T) {
 	a := assert.New(t)
 	var s = &sqlite3{}
 
