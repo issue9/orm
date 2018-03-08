@@ -71,6 +71,7 @@ type Model struct {
 	FK            map[string]*ForeignKey // 外键
 	PK            []*Column              // 主键
 	AI            *Column                // 自增列
+	OCC           *Column                // 锁观锁
 	Check         map[string]string      // Check 键名为约束名，键值为约束表达式
 	Meta          map[string][]string    // 表级别的数据，如存储引擎，表名和字符集等。
 
@@ -259,6 +260,8 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 			err = m.setFK(col, v)
 		case "default":
 			err = m.setDefault(col, v)
+		case "occ":
+			err = m.setOCC(col, v)
 		default:
 			err = fmt.Errorf("parseColumn:未知的struct tag属性:[%v]", k)
 		}
@@ -311,6 +314,41 @@ func (m *Model) parseMeta(obj interface{}) error {
 		default:
 			m.Meta[k] = v
 		}
+	}
+
+	return nil
+}
+
+// occ(true) or occ
+func (m *Model) setOCC(c *Column, vals []string) error {
+	if c.IsAI() || c.Nullable {
+		return errors.New("自增列和允许为空的列不能作为乐观锁列")
+	}
+
+	if m.OCC != nil {
+		return errors.New("已经存在一个乐观锁")
+	}
+
+	switch c.GoType.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	default:
+		return errors.New("乐观锁只能是数值类型")
+	}
+
+	switch len(vals) {
+	case 0:
+		m.OCC = c
+	case 1:
+		val, err := strconv.ParseBool(vals[0])
+		if err != nil {
+			return err
+		}
+		if val {
+			m.OCC = c
+		}
+	default:
+		return fmt.Errorf("[%v]字段的 occ 属性指定了太多的值:[%v]", c.Name, vals)
 	}
 
 	return nil
