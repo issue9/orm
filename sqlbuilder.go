@@ -102,17 +102,6 @@ func whereAny(sql sqlbuilder.WhereStmter, m *core.Model, rval reflect.Value) err
 	return nil
 }
 
-// 创建一个或多个数据表
-// 若 objs 为空，则不发生任何操作。
-func buildCreateSQL(sql *core.StringBuilder, e core.Engine, v interface{}) error {
-	m, _, err := getModel(v)
-	if err != nil {
-		return err
-	}
-
-	return e.Dialect().CreateTableSQL(sql, m)
-}
-
 // 统计符合 v 条件的记录数量。
 func count(e core.Engine, v interface{}) (int64, error) {
 	m, rval, err := getModel(v)
@@ -130,8 +119,13 @@ func count(e core.Engine, v interface{}) (int64, error) {
 
 // 创建表。
 func create(e core.Engine, v interface{}) error {
+	m, _, err := getModel(v)
+	if err != nil {
+		return err
+	}
+
 	sql := core.NewStringBuilder("")
-	if err := buildCreateSQL(sql, e, v); err != nil {
+	if err = e.Dialect().CreateTableSQL(sql, m); err != nil {
 		return err
 	}
 	if _, err := e.Exec(sql.String()); err != nil {
@@ -139,11 +133,6 @@ func create(e core.Engine, v interface{}) error {
 	}
 
 	// CREATE INDEX
-	m, err := core.NewModel(v)
-	if err != nil {
-		return err
-	}
-
 	for name, cols := range m.KeyIndexes {
 		sql.Reset().
 			WriteString("CREATE INDEX ").
