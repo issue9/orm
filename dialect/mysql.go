@@ -28,10 +28,6 @@ func (m *mysql) Name() string {
 	return "mysql"
 }
 
-func (m *mysql) SupportInsertMany() bool {
-	return true
-}
-
 func (m *mysql) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }

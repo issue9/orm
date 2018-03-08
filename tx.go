@@ -144,30 +144,17 @@ func (tx *Tx) InsertMany(v interface{}) error {
 	case reflect.Struct: // 单个元素
 		_, err := tx.Insert(v)
 		return err
-	case reflect.Array, reflect.Slice:
-		if !tx.Dialect().SupportInsertMany() {
-			for i := 0; i < rval.Len(); i++ {
-				if _, err := tx.Insert(rval.Index(i).Interface()); err != nil {
-					return err
-				}
-			}
-			return nil
+	case reflect.Array, reflect.Slice: // 支持多个插入，则由此处跳出 switch
+		sql, err := buildInsertManySQL(tx, rval)
+		if err != nil {
+			return err
 		}
-		// 支持多个插入，则由此处跳出 switch
+
+		_, err = sql.Exec()
+		return err
 	default:
 		return core.ErrInvalidKind
 	}
-
-	sql, err := buildInsertManySQL(tx, rval)
-	if err != nil {
-		return err
-	}
-
-	if _, err := sql.Exec(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Update 更新一条类型。

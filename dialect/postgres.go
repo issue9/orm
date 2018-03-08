@@ -25,10 +25,6 @@ func (p *postgres) Name() string {
 	return "postgres"
 }
 
-func (p *postgres) SupportInsertMany() bool {
-	return true
-}
-
 func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'
 }
