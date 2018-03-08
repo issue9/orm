@@ -71,10 +71,6 @@ func (s *sqlite3) CreateTableSQL(w *core.StringBuilder, model *core.Model) error
 	return nil
 }
 
-func (s *sqlite3) CreateTableWithIndex() bool {
-	return false
-}
-
 func (s *sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }

@@ -73,10 +73,6 @@ func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
 	return nil
 }
 
-func (m *mysql) CreateTableWithIndex() bool {
-	return true
-}
-
 func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }

@@ -117,8 +117,8 @@ func count(e core.Engine, v interface{}) (int64, error) {
 	return sql.QueryInt("count")
 }
 
-// 创建表。
-func create(e core.Engine, v interface{}) error {
+// 创建表。可能有多条执行语句，所以只能是事务。
+func create(e *Tx, v interface{}) error {
 	m, _, err := getModel(v)
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ func create(e core.Engine, v interface{}) error {
 		return err
 	}
 
-	// CREATE INDEX
+	// CREATE INDEX，部分数据库并没有直接有 create table with index 功能
 	for name, cols := range m.KeyIndexes {
 		sql.Reset().
 			WriteString("CREATE INDEX ").

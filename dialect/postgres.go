@@ -81,10 +81,6 @@ func (p *postgres) CreateTableSQL(w *core.StringBuilder, model *core.Model) erro
 	return nil
 }
 
-func (p *postgres) CreateTableWithIndex() bool {
-	return false
-}
-
 func (p *postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }

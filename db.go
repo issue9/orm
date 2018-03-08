@@ -174,7 +174,17 @@ func (db *DB) Count(v interface{}) (int64, error) {
 
 // Create 创建一张表。
 func (db *DB) Create(v interface{}) error {
-	return create(db, v)
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err = create(tx, v); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 // Drop 删除一张表。

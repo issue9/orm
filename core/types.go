@@ -73,10 +73,6 @@ type Dialect interface {
 	// 生成创建表的 SQL 语句。
 	CreateTableSQL(sql *StringBuilder, m *Model) error
 
-	// 表示 create table 语句中是否包含了 create index 的功能，
-	// 比如 postgresql 不能在 create table 中包含 index。
-	CreateTableWithIndex() bool
-
 	// 清空表内容，重置 AI。
 	// aiColumn 需要被重置的自增列列名
 	TruncateTableSQL(sql *StringBuilder, tableName, aiColumn string)
