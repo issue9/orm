@@ -38,8 +38,8 @@ func (s *sqlite3) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (s *sqlite3) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
-	w.WriteString("CREATE TABLE IF NOT EXISTS ").
+func (s *sqlite3) CreateTableSQL(model *core.Model) (string, error) {
+	w := core.NewStringBuilder("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
 		WriteString("}(")
@@ -47,7 +47,7 @@ func (s *sqlite3) CreateTableSQL(w *core.StringBuilder, model *core.Model) error
 	// 自增列
 	if model.AI != nil {
 		if err := createColSQL(s, w, model.AI); err != nil {
-			return err
+			return "", err
 		}
 		w.WriteString(" PRIMARY KEY AUTOINCREMENT,")
 	}
@@ -59,7 +59,7 @@ func (s *sqlite3) CreateTableSQL(w *core.StringBuilder, model *core.Model) error
 		}
 
 		if err := createColSQL(s, w, col); err != nil {
-			return err
+			return "", err
 		}
 		w.WriteByte(',')
 	}
@@ -72,7 +72,10 @@ func (s *sqlite3) CreateTableSQL(w *core.StringBuilder, model *core.Model) error
 	createConstraints(s, w, model)
 	w.TruncateLast(1).WriteByte(')')
 
-	return s.createTableOptions(w, model)
+	if err := s.createTableOptions(w, model); err != nil {
+		return "", err
+	}
+	return w.String(), nil
 }
 
 func (s *sqlite3) createTableOptions(w *core.StringBuilder, model *core.Model) error {

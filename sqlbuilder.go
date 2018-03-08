@@ -124,15 +124,16 @@ func create(e *Tx, v interface{}) error {
 		return err
 	}
 
-	sql := core.NewStringBuilder("")
-	if err = e.Dialect().CreateTableSQL(sql, m); err != nil {
+	s, err := e.Dialect().CreateTableSQL(m)
+	if err != nil {
 		return err
 	}
-	if _, err := e.Exec(sql.String()); err != nil {
+	if _, err := e.Exec(s); err != nil {
 		return err
 	}
 
 	// CREATE INDEX，部分数据库并没有直接有 create table with index 功能
+	sql := core.NewStringBuilder("")
 	for name, cols := range m.KeyIndexes {
 		sql.Reset().
 			WriteString("CREATE INDEX ").

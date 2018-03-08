@@ -40,8 +40,8 @@ func (m *mysql) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
-	w.WriteString("CREATE TABLE IF NOT EXISTS ").
+func (m *mysql) CreateTableSQL(model *core.Model) (string, error) {
+	w := core.NewStringBuilder("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
 		WriteString("}(")
@@ -49,7 +49,7 @@ func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
 	// 自增列
 	if model.AI != nil {
 		if err := createColSQL(m, w, model.AI); err != nil {
-			return err
+			return "", err
 		}
 		w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
 	}
@@ -61,7 +61,7 @@ func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
 		}
 
 		if err := createColSQL(m, w, col); err != nil {
-			return err
+			return "", err
 		}
 		w.WriteByte(',')
 	}
@@ -74,7 +74,11 @@ func (m *mysql) CreateTableSQL(w *core.StringBuilder, model *core.Model) error {
 	createConstraints(m, w, model)
 	w.TruncateLast(1).WriteByte(')')
 
-	return m.createTableOptions(w, model)
+	if err := m.createTableOptions(w, model); err != nil {
+		return "", err
+	}
+
+	return w.String(), nil
 }
 
 func (m *mysql) createTableOptions(w *core.StringBuilder, model *core.Model) error {

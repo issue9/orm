@@ -71,7 +71,7 @@ type Dialect interface {
 	LimitSQL(limit int, offset ...int) (string, []interface{})
 
 	// 生成创建表的 SQL 语句。
-	CreateTableSQL(sql *StringBuilder, m *Model) error
+	CreateTableSQL(m *Model) (string, error)
 
 	// 清空表内容，重置 AI。
 	// aiColumn 需要被重置的自增列列名
