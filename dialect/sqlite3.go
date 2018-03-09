@@ -101,6 +101,10 @@ func (s *sqlite3) TruncateTableSQL(model *model.Model) string {
 		String()
 }
 
+func (s *sqlite3) TransactionalDDL() bool {
+	return true
+}
+
 // 具体规则参照:http://www.sqlite.org/datatype3.html
 func (s *sqlite3) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 	if col == nil {

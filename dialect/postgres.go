@@ -93,6 +93,10 @@ func (p *postgres) TruncateTableSQL(model *model.Model) string {
 	return w.String()
 }
 
+func (p *postgres) TransactionalDDL() bool {
+	return true
+}
+
 // implement base.sqlType
 // 将col转换成sql类型，并写入buf中。
 func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {

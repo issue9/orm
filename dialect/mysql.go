@@ -102,6 +102,10 @@ func (m *mysql) TruncateTableSQL(model *model.Model) string {
 	return "TRUNCATE TABLE #" + model.Name
 }
 
+func (m *mysql) TransactionalDDL() bool {
+	return false
+}
+
 func (m *mysql) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")

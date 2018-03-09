@@ -25,7 +25,7 @@ type WhereStmter interface {
 	WhereStmt() *WhereStmt
 }
 
-// Engine 是 DB 与 Tx 的共有接口。
+// Engine 数据库执行的基本接口。
 type Engine interface {
 	// 执行一条查询语句，并返回相应的 sql.Rows 实例。
 	// 功能等同于标准库 database/sql 的 DB.Query()
@@ -69,6 +69,10 @@ type Dialect interface {
 
 	// 清空表内容，重置 AI。
 	TruncateTableSQL(m *model.Model) string
+
+	// 是否允许在事务中执行 DDL
+	//
+	TransactionalDDL() bool
 }
 
 func exec(e Engine, stmt SQLer) (sql.Result, error) {
