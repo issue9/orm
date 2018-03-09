@@ -17,8 +17,9 @@ import (
 	"github.com/issue9/orm/internal/tags"
 )
 
-// ErrInvalidKind 表示该类型不是结构体或是结构体的指针
-var ErrInvalidKind = errors.New("不支持的 reflect.Kind()，只能是结构体或是结构体指针")
+// ErrInvalidKind 只有结构体或是结构体的指针，才会被正确解析成数据库模型，
+// 其它类型的数据传递给 New() 函数，最终会返回此错误。
+var ErrInvalidKind = errors.New("数据模型只能是结构体或是结构体指针")
 
 // model 缓存
 var models = &modelsMap{items: map[reflect.Type]*Model{}}
@@ -28,42 +29,25 @@ type modelsMap struct {
 	items map[reflect.Type]*Model
 }
 
-// Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
-//  "name(tbl_name);engine(myISAM);charset(utf-8)"
-type Metaer interface {
-	Meta() string
-}
-
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
-	Name string // 表的名称
-
+	Name          string                 // 表的名称
 	Cols          map[string]*Column     // 所有的列
 	KeyIndexes    map[string][]*Column   // 索引列
 	UniqueIndexes map[string][]*Column   // 唯一索引列
 	FK            map[string]*ForeignKey // 外键
 	PK            []*Column              // 主键
 	AI            *Column                // 自增列
-	OCC           *Column                // 锁观锁
+	OCC           *Column                // 乐观锁
 	Check         map[string]string      // Check 键名为约束名，键值为约束表达式
 	Meta          map[string][]string    // 表级别的数据，如存储引擎，表名和字符集等。
 
 	constraints map[string]conType // 约束名缓存
 }
 
-// ForeignKey 外键
-type ForeignKey struct {
-	Col                      *Column
-	RefTableName, RefColName string
-	UpdateRule, DeleteRule   string
-}
-
 // New 从一个 obj 声明一个 Model 实例。
 // obj 可以是一个 struct 实例或是指针。
 func New(obj interface{}) (*Model, error) {
-	models.Lock()
-	defer models.Unlock()
-
 	rval := reflect.ValueOf(obj)
 	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
@@ -74,7 +58,9 @@ func New(obj interface{}) (*Model, error) {
 		return nil, ErrInvalidKind
 	}
 
-	// 是否已经缓存的数组
+	models.Lock()
+	defer models.Unlock()
+
 	if m, found := models.items[rtype]; found {
 		return m, nil
 	}
@@ -102,7 +88,7 @@ func New(obj interface{}) (*Model, error) {
 	return m, nil
 }
 
-// 将rval中的结构解析到m中。支持匿名字段
+// 将 rval 中的结构解析到 m 中。支持匿名字段
 func (m *Model) parseColumns(rval reflect.Value) error {
 	rtype := rval.Type()
 	num := rtype.NumField()
@@ -120,16 +106,6 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 	}
 
 	return nil
-}
-
-func (m *Model) newColumn(field reflect.StructField) *Column {
-	return &Column{
-		GoType: field.Type,
-		Zero:   reflect.Zero(field.Type).Interface(),
-		Name:   field.Name,
-		model:  m,
-		GoName: field.Name,
-	}
 }
 
 // 分析一个字段。
@@ -410,8 +386,8 @@ func (m *Model) hasConstraint(name string, except conType) conType {
 	return none
 }
 
-// ClearModels 清除所有的Model缓存。
-func ClearModels() {
+// Clear 清除所有的 Model 缓存。
+func Clear() {
 	models.Lock()
 	defer models.Unlock()
 

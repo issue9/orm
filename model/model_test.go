@@ -14,7 +14,7 @@ import (
 func TestModels(t *testing.T) {
 	a := assert.New(t)
 
-	ClearModels()
+	Clear()
 	a.Equal(0, len(models.items))
 
 	m, err := New(&modeltest.User{})
@@ -34,13 +34,13 @@ func TestModels(t *testing.T) {
 		NotNil(m).
 		Equal(2, len(models.items))
 
-	ClearModels()
+	Clear()
 	a.Equal(0, len(models.items))
 }
 
 // 传递给 NewModel 是一个指针时的各种情况
 func TestModel(t *testing.T) {
-	ClearModels()
+	Clear()
 	a := assert.New(t)
 
 	m, err := New(&modeltest.Admin{})

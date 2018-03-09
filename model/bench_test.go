@@ -11,21 +11,21 @@ import (
 	"github.com/issue9/orm/internal/modeltest"
 )
 
-// BenchmarkNewModelNoCached	  100000	     23724 ns/op
+// go1.10 BenchmarkNewModelNoCached-4   	  200000	      8161 ns/op
 func BenchmarkNewModelNoCached(b *testing.B) {
-	ClearModels()
+	Clear()
 	a := assert.New(b)
 
 	for i := 0; i < b.N; i++ {
 		m, err := New(&modeltest.User{})
-		ClearModels()
+		Clear()
 		a.NotError(err).NotNil(m)
 	}
 }
 
-// BenchmarkNewModelCached	 3000000	       480 ns/op
+// go1.10 BenchmarkNewModelCached-4     	10000000	       187 ns/op
 func BenchmarkNewModelCached(b *testing.B) {
-	ClearModels()
+	Clear()
 	a := assert.New(b)
 
 	for i := 0; i < b.N; i++ {

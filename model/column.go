@@ -26,6 +26,16 @@ type Column struct {
 	Default    string // 默认值
 }
 
+func (m *Model) newColumn(field reflect.StructField) *Column {
+	return &Column{
+		GoType: field.Type,
+		Zero:   reflect.Zero(field.Type).Interface(),
+		Name:   field.Name,
+		model:  m,
+		GoName: field.Name,
+	}
+}
+
 // IsAI 当前列是否为自增列
 func (c *Column) IsAI() bool {
 	return (c.model != nil) && (c.model.AI == c)
