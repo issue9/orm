@@ -92,11 +92,11 @@ func (s *sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (s *sqlite3) TruncateTableSQL(model *model.Model) string {
+func (s *sqlite3) TruncateTableSQL(table, ai string) string {
 	return sqlbuilder.New("DELETE FROM ").
-		WriteString("#" + model.Name).
+		WriteString(table).
 		WriteString(";update sqlite_sequence set seq=0 where name='").
-		WriteString("#" + model.Name).
+		WriteString(table).
 		WriteString("';").
 		String()
 }

@@ -79,14 +79,14 @@ func (p *postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (p *postgres) TruncateTableSQL(model *model.Model) string {
-	w := sqlbuilder.New("TRUNCATE TABLE ").WriteString(model.Name)
+func (p *postgres) TruncateTableSQL(table, ai string) string {
+	w := sqlbuilder.New("TRUNCATE TABLE ").WriteString(table)
 
-	if model.AI != nil {
+	if ai != "" {
 		w.WriteString("; ALTER SEQUENCE ").
-			WriteString("#" + model.Name).
+			WriteString(table).
 			WriteByte('_').
-			WriteString("{" + model.AI.Name + "}").
+			WriteString(ai).
 			WriteString("_seq RESTART WITH 1")
 	}
 

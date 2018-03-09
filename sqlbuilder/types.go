@@ -68,7 +68,7 @@ type Dialect interface {
 	CreateTableSQL(m *model.Model) (string, error)
 
 	// 清空表内容，重置 AI。
-	TruncateTableSQL(m *model.Model) string
+	TruncateTableSQL(table, aiColumn string) string
 
 	// 是否允许在事务中执行 DDL
 	//

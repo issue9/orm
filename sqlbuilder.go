@@ -171,8 +171,12 @@ func truncate(e Engine, v interface{}) error {
 		return err
 	}
 
-	sql := e.Dialect().TruncateTableSQL(m)
-	_, err = e.Exec(sql)
+	sql := sqlbuilder.Truncate(e, e.Dialect()).Table("#" + m.Name)
+	if m.AI != nil {
+		sql.AI("{" + m.AI.Name + "}")
+	}
+
+	_, err = sql.Exec()
 	return err
 }
 
