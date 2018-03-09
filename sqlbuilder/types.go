@@ -72,6 +72,10 @@ type Dialect interface {
 
 	// 是否允许在事务中执行 DDL
 	//
+	// 比如在 postgresql 中，如果创建一个带索引的表，会采用在事务中，
+	// 分多条语句创建表。
+	// 而像 mysql 等不支持事务内 DDL 的数据库，则会采用普通的方式，
+	// 依次提交语句。
 	TransactionalDDL() bool
 }
 

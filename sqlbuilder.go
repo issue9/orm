@@ -117,8 +117,8 @@ func count(e Engine, v interface{}) (int64, error) {
 	return sql.QueryInt("count")
 }
 
-// 创建表。可能有多条执行语句，所以只能是事务。
-func create(e *Tx, v interface{}) error {
+// 创建表。可能有多条执行语句。
+func create(e Engine, v interface{}) error {
 	m, _, err := getModel(v)
 	if err != nil {
 		return err

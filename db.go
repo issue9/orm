@@ -169,6 +169,10 @@ func (db *DB) Count(v interface{}) (int64, error) {
 
 // Create 创建一张表。
 func (db *DB) Create(v interface{}) error {
+	if !db.Dialect().TransactionalDDL() {
+		return create(db, v)
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
