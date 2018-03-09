@@ -9,19 +9,19 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/issue9/orm/types"
+	"github.com/issue9/orm/sqlbuilder"
 )
 
 // DB 数据库操作实例。
 type DB struct {
 	stdDB       *sql.DB
-	dialect     types.Dialect
+	dialect     sqlbuilder.Dialect
 	tablePrefix string
 	replacer    *strings.Replacer
 }
 
 // NewDB 声明一个新的 DB 实例。
-func NewDB(driverName, dataSourceName, tablePrefix string, dialect types.Dialect) (*DB, error) {
+func NewDB(driverName, dataSourceName, tablePrefix string, dialect sqlbuilder.Dialect) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect types.Dialect
 }
 
 // NewDBWithStdDB 从 sql.DB 构建一个 DB 实例。
-func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect types.Dialect) (*DB, error) {
+func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect sqlbuilder.Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	return &DB{
 		stdDB:       db,
@@ -58,13 +58,13 @@ func (db *DB) StdDB() *sql.DB {
 	return db.stdDB
 }
 
-// Dialect 返回对应的 types.Dialect 接口实例。
-func (db *DB) Dialect() types.Dialect {
+// Dialect 返回对应的 sqlbuilder.Dialect 接口实例。
+func (db *DB) Dialect() sqlbuilder.Dialect {
 	return db.dialect
 }
 
 // Query 执行一条查询语句，并返回相应的 sql.Rows 实例。
-// 具体参数说明可参考 types.Engine 接口文档。
+// 具体参数说明可参考 sqlbuilder.Engine 接口文档。
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	query = db.replacer.Replace(query)
 	query, err := db.dialect.SQL(query)

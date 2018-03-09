@@ -11,14 +11,13 @@ import (
 
 	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
-	"github.com/issue9/orm/types"
 )
 
-// Sqlite3 返回一个适配 sqlite3 的 types.Dialect 接口
+// Sqlite3 返回一个适配 sqlite3 的 sqlbuilder.Dialect 接口
 //
 // Meta 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
-func Sqlite3() types.Dialect {
+func Sqlite3() sqlbuilder.Dialect {
 	return &sqlite3{}
 }
 

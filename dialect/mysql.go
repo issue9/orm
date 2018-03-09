@@ -12,15 +12,14 @@ import (
 
 	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
-	"github.com/issue9/orm/types"
 )
 
-// Mysql 返回一个适配 mysql 的 types.Dialect 接口
+// Mysql 返回一个适配 mysql 的 sqlbuilder.Dialect 接口
 //
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql() types.Dialect {
+func Mysql() sqlbuilder.Dialect {
 	return &mysql{}
 }
 

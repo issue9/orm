@@ -16,7 +16,7 @@ type Engine interface {
 	sqlbuilder.Engine
 
 	// 获取与之关联的 Dialect 接口。
-	Dialect() Dialect
+	Dialect() sqlbuilder.Dialect
 
 	Insert(v interface{}) (sql.Result, error)
 
@@ -34,5 +34,3 @@ type Engine interface {
 
 	Truncate(v interface{}) error
 }
-
-type Dialect = sqlbuilder.Dialect

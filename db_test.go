@@ -13,6 +13,7 @@ import (
 	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/internal/modeltest"
+	"github.com/issue9/orm/sqlbuilder"
 	"github.com/issue9/orm/types"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -29,7 +30,7 @@ var (
 
 	prefix = "prefix_"
 	dsn    string
-	d      types.Dialect
+	d      sqlbuilder.Dialect
 )
 
 // 销毁数据库。默认仅对 sqlite3 启作用，删除该数据库文件。
@@ -64,7 +65,7 @@ func newDB(a *assert.Assertion) *DB {
 }
 
 // table表中是否存在 size 条记录，若不是，则触发 error
-func hasCount(db types.Engine, a *assert.Assertion, table string, size int) {
+func hasCount(db sqlbuilder.Engine, a *assert.Assertion, table string, size int) {
 	rows, err := db.Query("SELECT COUNT(*) as cnt FROM #" + table)
 	a.NotError(err).NotNil(rows)
 	defer func() {

@@ -13,11 +13,10 @@ import (
 
 	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
-	"github.com/issue9/orm/types"
 )
 
-// Postgres 返回一个适配 postgresql 的 types.Dialect 接口
-func Postgres() types.Dialect {
+// Postgres 返回一个适配 postgresql 的 sqlbuilder.Dialect 接口
+func Postgres() sqlbuilder.Dialect {
 	return &postgres{}
 }
 

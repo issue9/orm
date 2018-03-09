@@ -12,7 +12,6 @@ import (
 
 	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
-	"github.com/issue9/orm/types"
 )
 
 const pkName = "pk" // 默认的主键约束名
@@ -26,7 +25,7 @@ var (
 )
 
 type base interface {
-	types.Dialect
+	sqlbuilder.Dialect
 
 	// 将 col 转换成 sql 类型，并写入 buf 中。
 	sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error
