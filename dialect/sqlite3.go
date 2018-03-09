@@ -24,10 +24,6 @@ func Sqlite3() types.Dialect {
 
 type sqlite3 struct{}
 
-func (s *sqlite3) Name() string {
-	return "sqlite3"
-}
-
 func (s *sqlite3) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }

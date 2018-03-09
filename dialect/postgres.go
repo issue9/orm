@@ -23,10 +23,6 @@ func Postgres() types.Dialect {
 
 type postgres struct{}
 
-func (p *postgres) Name() string {
-	return "postgres"
-}
-
 func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'
 }

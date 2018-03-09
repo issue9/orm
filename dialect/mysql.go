@@ -26,10 +26,6 @@ func Mysql() types.Dialect {
 
 type mysql struct{}
 
-func (m *mysql) Name() string {
-	return "mysql"
-}
-
 func (m *mysql) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
