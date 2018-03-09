@@ -29,7 +29,7 @@ func TestSelect(t *testing.T) {
 	a := assert.New(t)
 	e, err := orm.NewDB("sqlite3", "./test.db", "test_", dialect.Sqlite3())
 	a.NotError(err)
-	s := sqlbuilder.Select(e).Select("c1", "column2 as c2", "c3").
+	s := sqlbuilder.Select(e, e.Dialect()).Select("c1", "column2 as c2", "c3").
 		From("table").
 		And("c1=?", 1).
 		Or("c2=@c2", sql.Named("c2", 2)).

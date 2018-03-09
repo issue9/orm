@@ -8,13 +8,11 @@ import (
 	"context"
 	"database/sql"
 	"sort"
-
-	"github.com/issue9/orm/types"
 )
 
 // UpdateStmt 更新语句
 type UpdateStmt struct {
-	engine types.Engine
+	engine Engine
 	table  string
 	where  *WhereStmt
 	values []*updateSet
@@ -27,7 +25,7 @@ type updateSet struct {
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
-func Update(e types.Engine) *UpdateStmt {
+func Update(e Engine) *UpdateStmt {
 	return &UpdateStmt{
 		engine: e,
 		where:  newWhereStmt(),

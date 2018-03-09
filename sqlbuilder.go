@@ -110,7 +110,7 @@ func count(e types.Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	sql := sqlbuilder.Select(e).Count("COUNT(*) AS count").From("{#" + m.Name + "}")
+	sql := sqlbuilder.Select(e, e.Dialect()).Count("COUNT(*) AS count").From("{#" + m.Name + "}")
 	if err = whereAny(sql, m, rval); err != nil {
 		return 0, err
 	}
@@ -212,7 +212,7 @@ func find(e types.Engine, v interface{}) error {
 		return err
 	}
 
-	sql := sqlbuilder.Select(e).
+	sql := sqlbuilder.Select(e, e.Dialect()).
 		Select("*").
 		From("{#" + m.Name + "}")
 	if err = where(sql, m, rval); err != nil {
@@ -230,7 +230,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 		return err
 	}
 
-	sql := sqlbuilder.Select(tx).
+	sql := sqlbuilder.Select(tx, tx.Dialect()).
 		Select("*").
 		From("{#" + m.Name + "}").
 		ForUpdate()

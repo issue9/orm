@@ -7,18 +7,16 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
-
-	"github.com/issue9/orm/types"
 )
 
 // DropTableStmt 删除表语句
 type DropTableStmt struct {
-	engine types.Engine
+	engine Engine
 	table  string
 }
 
 // DropTable 声明一条删除表的语句
-func DropTable(e types.Engine) *DropTableStmt {
+func DropTable(e Engine) *DropTableStmt {
 	return &DropTableStmt{
 		engine: e,
 	}

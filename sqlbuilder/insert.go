@@ -7,20 +7,18 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
-
-	"github.com/issue9/orm/types"
 )
 
 // InsertStmt 表示插入操作的 SQL 语句
 type InsertStmt struct {
-	engine types.Engine
+	engine Engine
 	table  string
 	cols   []string
 	args   [][]interface{}
 }
 
 // Insert 声明一条插入语句
-func Insert(e types.Engine) *InsertStmt {
+func Insert(e Engine) *InsertStmt {
 	return &InsertStmt{
 		engine: e,
 		cols:   make([]string, 0, 10),

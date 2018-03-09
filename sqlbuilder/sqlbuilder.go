@@ -7,11 +7,7 @@ package sqlbuilder
 
 import (
 	"bytes"
-	"context"
-	"database/sql"
 	"errors"
-
-	"github.com/issue9/orm/types"
 )
 
 var (
@@ -33,20 +29,6 @@ var (
 	// ErrArgsNotMatch 在生成的 SQL 语句中，传递的参数与语句的占位符数量不匹配。
 	ErrArgsNotMatch = errors.New("列与值的数量不匹配")
 )
-
-// SQLer 定义 SQL 语句的基本接口
-type SQLer interface {
-	// 获取 SQL 语句以及其关联的参数
-	SQL() (query string, args []interface{}, err error)
-
-	// 重置整个 SQL 语句。
-	Reset()
-}
-
-// WhereStmter 带 Where 语句的 SQL
-type WhereStmter interface {
-	WhereStmt() *WhereStmt
-}
 
 // SQLBuilder 对 bytes.Buffer 的一个简单封装。
 // 当 Write* 系列函数出错时，直接 panic。
@@ -105,52 +87,4 @@ func (b *SQLBuilder) Bytes() []byte {
 // Len 获取长度
 func (b *SQLBuilder) Len() int {
 	return b.buffer().Len()
-}
-
-func exec(e types.Engine, stmt SQLer) (sql.Result, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.Exec(query, args...)
-}
-
-func execContext(ctx context.Context, e types.Engine, stmt SQLer) (sql.Result, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.ExecContext(ctx, query, args...)
-}
-
-func prepare(e types.Engine, stmt SQLer) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.Prepare(query)
-}
-
-func prepareContext(ctx context.Context, e types.Engine, stmt SQLer) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.PrepareContext(ctx, query)
-}
-
-func query(e types.Engine, stmt SQLer) (*sql.Rows, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.Query(query, args...)
-}
-
-func queryContext(ctx context.Context, e types.Engine, stmt SQLer) (*sql.Rows, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.QueryContext(ctx, query, args...)
 }

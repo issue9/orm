@@ -10,12 +10,12 @@ import (
 	"strconv"
 
 	"github.com/issue9/orm/fetch"
-	"github.com/issue9/orm/types"
 )
 
 // SelectStmt 查询语句
 type SelectStmt struct {
-	engine    types.Engine
+	engine    Engine
+	dialect   Dialect
 	table     string
 	where     *WhereStmt
 	cols      []string
@@ -43,10 +43,11 @@ type join struct {
 }
 
 // Select 声明一条 Select 语句
-func Select(e types.Engine) *SelectStmt {
+func Select(e Engine, d Dialect) *SelectStmt {
 	return &SelectStmt{
-		engine: e,
-		where:  newWhereStmt(),
+		engine:  e,
+		dialect: d,
+		where:   newWhereStmt(),
 	}
 }
 
@@ -267,7 +268,7 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 
 // Limit 生成 SQL 的 Limit 语句
 func (stmt *SelectStmt) Limit(limit int, offset ...int) *SelectStmt {
-	query, vals := stmt.engine.Dialect().LimitSQL(limit, offset...)
+	query, vals := stmt.dialect.LimitSQL(limit, offset...)
 	stmt.limitQuery = query
 	stmt.limitVals = vals
 	return stmt

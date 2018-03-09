@@ -7,19 +7,17 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
-
-	"github.com/issue9/orm/types"
 )
 
 // DeleteStmt 表示删除操作的 SQL 语句
 type DeleteStmt struct {
-	engine types.Engine
+	engine Engine
 	table  string
 	where  *WhereStmt
 }
 
 // Delete 声明一条删除语句
-func Delete(e types.Engine) *DeleteStmt {
+func Delete(e Engine) *DeleteStmt {
 	return &DeleteStmt{
 		engine: e,
 		where:  newWhereStmt(),
