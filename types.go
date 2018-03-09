@@ -2,8 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// Package types 前置的接口声明
-package types
+package orm
 
 import (
 	"database/sql"

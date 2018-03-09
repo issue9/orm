@@ -14,14 +14,13 @@ import (
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/internal/modeltest"
 	"github.com/issue9/orm/sqlbuilder"
-	"github.com/issue9/orm/types"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var _ types.Engine = &DB{}
+var _ Engine = &DB{}
 
 var (
 	// 通过修改此值来确定使用哪个数据库驱动来测试
