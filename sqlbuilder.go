@@ -160,7 +160,7 @@ func drop(e types.Engine, v interface{}) error {
 		return err
 	}
 
-	_, err = sqlbuilder.DropTable(e, "{#"+m.Name+"}").Exec()
+	_, err = sqlbuilder.DropTable(e).Table("{#" + m.Name + "}").Exec()
 	return err
 }
 
@@ -183,7 +183,7 @@ func insert(e types.Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	sql := sqlbuilder.Insert(e, "{#"+m.Name+"}")
+	sql := sqlbuilder.Insert(e).Table("{#" + m.Name + "}")
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -253,7 +253,7 @@ func update(e types.Engine, v interface{}, cols ...string) (sql.Result, error) {
 		return nil, err
 	}
 
-	sql := sqlbuilder.Update(e, "{#"+m.Name+"}")
+	sql := sqlbuilder.Update(e).Table("{#" + m.Name + "}")
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -291,7 +291,7 @@ func del(e types.Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	sql := sqlbuilder.Delete(e, "{#"+m.Name+"}")
+	sql := sqlbuilder.Delete(e).Table("{#" + m.Name + "}")
 	if err = where(sql, m, rval); err != nil {
 		return nil, err
 	}
@@ -301,7 +301,7 @@ func del(e types.Engine, v interface{}) (sql.Result, error) {
 
 // rval 为结构体指针组成的数据
 func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, error) {
-	sql := sqlbuilder.Insert(e, "")
+	sql := sqlbuilder.Insert(e)
 	keys := []string{}         // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 

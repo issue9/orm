@@ -16,7 +16,8 @@ var _ SQLer = &UpdateStmt{}
 func TestDropTable(t *testing.T) {
 	a := assert.New(t)
 
-	drop := DropTable(nil, "table").
+	drop := DropTable(nil).
+		Table("table").
 		Table("tbl2")
 	sql, args, err := drop.SQL()
 	a.NotError(err).Nil(args)

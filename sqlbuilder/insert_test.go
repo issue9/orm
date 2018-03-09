@@ -16,7 +16,7 @@ var _ SQLer = &InsertStmt{}
 
 func TestInsert(t *testing.T) {
 	a := assert.New(t)
-	i := Insert(nil, "table")
+	i := Insert(nil).Table("table")
 	a.NotNil(i)
 
 	i.Columns("c1", "c2", "c3").Values(1, 2, 3).Values(4, 5, 6)
@@ -40,7 +40,7 @@ func TestInsert(t *testing.T) {
 
 func TestInsert_KeyValue(t *testing.T) {
 	a := assert.New(t)
-	i := Insert(nil, "table")
+	i := Insert(nil).Table("table")
 	i.KeyValue("c1", 1).KeyValue("c2", sql.Named("c2", 2))
 	query, args, err := i.SQL()
 	a.NotError(err)
@@ -66,7 +66,7 @@ func TestInsert_KeyValue(t *testing.T) {
 
 func TestInsertError(t *testing.T) {
 	a := assert.New(t)
-	i := Insert(nil, "table")
+	i := Insert(nil).Table("#table")
 	a.NotNil(i)
 
 	query, args, err := i.Columns("c1", "c2").SQL()

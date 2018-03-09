@@ -18,10 +18,9 @@ type DropTableStmt struct {
 }
 
 // DropTable 声明一条删除表的语句
-func DropTable(e types.Engine, table string) *DropTableStmt {
+func DropTable(e types.Engine) *DropTableStmt {
 	return &DropTableStmt{
 		engine: e,
-		table:  table,
 	}
 }
 

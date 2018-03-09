@@ -28,7 +28,7 @@ var (
 type base interface {
 	types.Dialect
 
-	// 将col转换成sql类型，并写入buf中。
+	// 将 col 转换成 sql 类型，并写入 buf 中。
 	sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error
 }
 

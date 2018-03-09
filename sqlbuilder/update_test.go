@@ -19,7 +19,7 @@ var (
 
 func TestUpdate_columnsHasDup(t *testing.T) {
 	a := assert.New(t)
-	u := Update(nil, "table")
+	u := Update(nil).Table("table")
 
 	u.values = []*updateSet{
 		&updateSet{
@@ -92,7 +92,7 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	a := assert.New(t)
-	u := Update(nil, "table")
+	u := Update(nil).Table("table")
 	a.NotNil(u)
 
 	// 不带 where 部分

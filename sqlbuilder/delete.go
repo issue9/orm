@@ -19,10 +19,9 @@ type DeleteStmt struct {
 }
 
 // Delete 声明一条删除语句
-func Delete(e types.Engine, table string) *DeleteStmt {
+func Delete(e types.Engine) *DeleteStmt {
 	return &DeleteStmt{
 		engine: e,
-		table:  table,
 		where:  newWhereStmt(),
 	}
 }

@@ -19,7 +19,8 @@ var (
 func TestDelete(t *testing.T) {
 	a := assert.New(t)
 
-	d := Delete(nil, "#table").
+	d := Delete(nil).
+		Table("#table").
 		Where("id=?", 1).
 		Or("id=?", 2).
 		And("id=?", 3)

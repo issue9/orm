@@ -27,10 +27,9 @@ type updateSet struct {
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
-func Update(e types.Engine, table string) *UpdateStmt {
+func Update(e types.Engine) *UpdateStmt {
 	return &UpdateStmt{
 		engine: e,
-		table:  table,
 		where:  newWhereStmt(),
 		values: []*updateSet{},
 	}

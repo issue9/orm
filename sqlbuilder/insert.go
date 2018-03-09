@@ -20,10 +20,9 @@ type InsertStmt struct {
 }
 
 // Insert 声明一条插入语句
-func Insert(e types.Engine, table string) *InsertStmt {
+func Insert(e types.Engine) *InsertStmt {
 	return &InsertStmt{
 		engine: e,
-		table:  table,
 		cols:   make([]string, 0, 10),
 		args:   make([][]interface{}, 0, 10),
 	}
