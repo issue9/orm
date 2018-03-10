@@ -59,10 +59,10 @@ func (s *sqlite3) CreateTableSQL(model *model.Model) (string, error) {
 
 	// 约束
 	if len(model.PK) > 0 && !model.PK[0].IsAI() { // PK，若有自增，则已经在上面指定
-		createPKSQL(s, w, model.PK, pkName)
+		createPKSQL(w, model.PK, pkName)
 		w.WriteByte(',')
 	}
-	createConstraints(s, w, model)
+	createConstraints(w, model)
 	w.TruncateLast(1).WriteByte(')')
 
 	if err := s.createTableOptions(w, model); err != nil {

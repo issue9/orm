@@ -14,7 +14,7 @@ import (
 	"github.com/issue9/orm/sqlbuilder"
 )
 
-// Mysql 返回一个适配 mysql 的 sqlbuilder.Dialect 接口
+// Mysql 返回一个适配 mysql 的 Dialect 接口
 //
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
@@ -61,10 +61,10 @@ func (m *mysql) CreateTableSQL(model *model.Model) (string, error) {
 
 	// 约束
 	if len(model.PK) > 0 && !model.PK[0].IsAI() { // PK，若有自增，则已经在上面指定
-		createPKSQL(m, w, model.PK, pkName)
+		createPKSQL(w, model.PK, pkName)
 		w.WriteByte(',')
 	}
-	createConstraints(m, w, model)
+	createConstraints(w, model)
 	w.TruncateLast(1).WriteByte(')')
 
 	if err := m.createTableOptions(w, model); err != nil {

@@ -46,43 +46,40 @@ func TestCreatColSQL(t *testing.T) {
 
 func TestCreatePKSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &mysql{}
 	buf := sqlbuilder.New("")
 	col1 := &model.Column{Name: "id"}
 	col2 := &model.Column{Name: "username"}
 	cols := []*model.Column{col1, col2}
 
-	createPKSQL(dialect, buf, cols, "pkname")
+	createPKSQL(buf, cols, "pkname")
 	wont := "CONSTRAINT pkname PRIMARY KEY({id},{username})"
 	sqltest.Equal(a, buf.String(), wont)
 
 	buf.Reset()
-	createPKSQL(dialect, buf, cols[:1], "pkname")
+	createPKSQL(buf, cols[:1], "pkname")
 	wont = "CONSTRAINT pkname PRIMARY KEY({id})"
 	sqltest.Equal(a, buf.String(), wont)
 }
 
 func TestCreateUniqueSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &mysql{}
 	buf := sqlbuilder.New("")
 	col1 := &model.Column{Name: "id"}
 	col2 := &model.Column{Name: "username"}
 	cols := []*model.Column{col1, col2}
 
-	createUniqueSQL(dialect, buf, cols, "pkname")
+	createUniqueSQL(buf, cols, "pkname")
 	wont := "CONSTRAINT pkname UNIQUE({id},{username})"
 	sqltest.Equal(a, buf.String(), wont)
 
 	buf.Reset()
-	createUniqueSQL(dialect, buf, cols[:1], "pkname")
+	createUniqueSQL(buf, cols[:1], "pkname")
 	wont = "CONSTRAINT pkname UNIQUE({id})"
 	sqltest.Equal(a, buf.String(), wont)
 }
 
 func TestCreateFKSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &mysql{}
 	buf := sqlbuilder.New("")
 	fk := &model.ForeignKey{
 		Col:          &model.Column{Name: "id"},
@@ -91,17 +88,16 @@ func TestCreateFKSQL(t *testing.T) {
 		UpdateRule:   "NO ACTION",
 	}
 
-	createFKSQL(dialect, buf, fk, "fkname")
+	createFKSQL(buf, fk, "fkname")
 	wont := "CONSTRAINT fkname FOREIGN KEY({id}) REFERENCES refTable({refCol}) ON UPDATE NO ACTION"
 	sqltest.Equal(a, buf.String(), wont)
 }
 
 func TestCreateCheckSQL(t *testing.T) {
 	a := assert.New(t)
-	dialect := &mysql{}
 	buf := sqlbuilder.New("")
 
-	createCheckSQL(dialect, buf, "id>5", "chkname")
+	createCheckSQL(buf, "id>5", "chkname")
 	wont := "CONSTRAINT chkname CHECK(id>5)"
 	sqltest.Equal(a, buf.String(), wont)
 }

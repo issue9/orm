@@ -56,7 +56,7 @@ func createColSQL(b base, buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 }
 
 // create table 语句中 pk 约束的语句
-func createPKSQL(b base, buf *sqlbuilder.SQLBuilder, cols []*model.Column, pkName string) {
+func createPKSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, pkName string) {
 	//CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(pkName).
@@ -71,7 +71,7 @@ func createPKSQL(b base, buf *sqlbuilder.SQLBuilder, cols []*model.Column, pkNam
 }
 
 // create table 语句中的 unique 约束部分的语句。
-func createUniqueSQL(b base, buf *sqlbuilder.SQLBuilder, cols []*model.Column, indexName string) {
+func createUniqueSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, indexName string) {
 	//CONSTRAINT unique_name UNIQUE (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(indexName).
@@ -86,7 +86,7 @@ func createUniqueSQL(b base, buf *sqlbuilder.SQLBuilder, cols []*model.Column, i
 }
 
 // create table 语句中 fk 的约束部分的语句
-func createFKSQL(b base, buf *sqlbuilder.SQLBuilder, fk *model.ForeignKey, fkName string) {
+func createFKSQL(buf *sqlbuilder.SQLBuilder, fk *model.ForeignKey, fkName string) {
 	//CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ").WriteString(fkName)
 
@@ -109,7 +109,7 @@ func createFKSQL(b base, buf *sqlbuilder.SQLBuilder, fk *model.ForeignKey, fkNam
 }
 
 // create table 语句中 check 约束部分的语句
-func createCheckSQL(b base, buf *sqlbuilder.SQLBuilder, expr, chkName string) {
+func createCheckSQL(buf *sqlbuilder.SQLBuilder, expr, chkName string) {
 	//CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(chkName).
@@ -119,22 +119,22 @@ func createCheckSQL(b base, buf *sqlbuilder.SQLBuilder, expr, chkName string) {
 }
 
 // 创建标准的几种约束(除 PK 约束，该约束有专门的函数 createPKSQL() 产生)：unique, foreign key, check
-func createConstraints(b base, buf *sqlbuilder.SQLBuilder, model *model.Model) {
+func createConstraints(buf *sqlbuilder.SQLBuilder, model *model.Model) {
 	// Unique Index
 	for name, index := range model.UniqueIndexes {
-		createUniqueSQL(b, buf, index, name)
+		createUniqueSQL(buf, index, name)
 		buf.WriteByte(',')
 	}
 
 	// foreign  key
 	for name, fk := range model.FK {
-		createFKSQL(b, buf, fk, name)
+		createFKSQL(buf, fk, name)
 		buf.WriteByte(',')
 	}
 
 	// Check
 	for name, chk := range model.Check {
-		createCheckSQL(b, buf, chk, name)
+		createCheckSQL(buf, chk, name)
 		buf.WriteByte(',')
 	}
 }
