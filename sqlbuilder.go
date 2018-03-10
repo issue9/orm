@@ -260,7 +260,16 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 			continue
 		}
 
-		sql.Set("{"+name+"}", field.Interface())
+		if m.OCC == col { // 乐观锁
+			sql.Increase("{"+name+"}", 1)
+		} else {
+			sql.Set("{"+name+"}", field.Interface())
+		}
+	}
+
+	if m.OCC != nil {
+		field := rval.FieldByName(m.OCC.GoName)
+		sql.And("{"+m.OCC.Name+"}=?", field.Interface())
 	}
 
 	if err := where(sql, m, rval); err != nil {
