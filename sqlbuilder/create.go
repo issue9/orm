@@ -48,6 +48,14 @@ func (stmt *CreateIndexStmt) Columns(col ...string) *CreateIndexStmt {
 
 // SQL 生成 SQL 语句
 func (stmt *CreateIndexStmt) SQL() (string, []interface{}, error) {
+	if stmt.table == "" {
+		return "", nil, ErrTableIsEmpty
+	}
+
+	if len(stmt.cols) == 0 {
+		return "", nil, ErrColumnsIsEmpty
+	}
+
 	sql := New("CREATE INDEX ").
 		WriteString(stmt.name).
 		WriteString(" ON ").

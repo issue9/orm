@@ -36,15 +36,10 @@ func where(sql sqlbuilder.WhereStmter, m *model.Model, rval reflect.Value) error
 
 	// 获取构成 where 的键名和键值
 	getKV := func(cols []*model.Column) bool {
-		if len(cols) == 0 {
-			return false
-		}
-
 		for _, col := range cols {
 			field := rval.FieldByName(col.GoName)
 
-			if !field.IsValid() ||
-				col.Zero == field.Interface() {
+			if !field.IsValid() || col.Zero == field.Interface() {
 				vals = vals[:0]
 				keys = keys[:0]
 				return false
@@ -53,7 +48,7 @@ func where(sql sqlbuilder.WhereStmter, m *model.Model, rval reflect.Value) error
 			keys = append(keys, col.Name)
 			vals = append(vals, field.Interface())
 		}
-		return true
+		return len(keys) > 0 // 如果 keys 中有数据，表示已经采集成功，否则表示 cols 的长度为 0
 	}
 
 	if !getKV(m.PK) { // 没有主键，则尝试唯一约束
@@ -162,7 +157,6 @@ func drop(e Engine, v interface{}) error {
 }
 
 // 清空表，并重置 AI 计数。
-// 系统会默认给表名加上表名前缀。
 func truncate(e Engine, v interface{}) error {
 	m, err := model.New(v)
 	if err != nil {

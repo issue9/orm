@@ -5,34 +5,10 @@
 package sqlbuilder
 
 import (
-	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert"
 )
-
-var (
-	_ execer  = &DeleteStmt{}
-	_ execer  = &UpdateStmt{}
-	_ execer  = &InsertStmt{}
-	_ execer  = &UpdateStmt{}
-	_ queryer = &SelectStmt{}
-)
-
-type execer interface {
-	Exec() (sql.Result, error)
-	ExecContext(ctx context.Context) (sql.Result, error)
-	Prepare() (*sql.Stmt, error)
-	PrepareContext(ctx context.Context) (*sql.Stmt, error)
-}
-
-type queryer interface {
-	Query() (*sql.Rows, error)
-	QueryContext(ctx context.Context) (*sql.Rows, error)
-	Prepare() (*sql.Stmt, error)
-	PrepareContext(ctx context.Context) (*sql.Stmt, error)
-}
 
 func TestSQLBuilder(t *testing.T) {
 	a := assert.New(t)
