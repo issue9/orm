@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package orm
+package orm_test
 
 import (
 	"os"
@@ -10,17 +10,17 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/conv"
+	"github.com/issue9/orm"
 	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/internal/modeltest"
-	"github.com/issue9/orm/sqlbuilder"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var _ Engine = &DB{}
+var _ orm.Engine = &orm.DB{}
 
 var (
 	// 通过修改此值来确定使用哪个数据库驱动来测试
@@ -29,7 +29,7 @@ var (
 
 	prefix = "prefix_"
 	dsn    string
-	d      sqlbuilder.Dialect
+	d      orm.Dialect
 )
 
 // 销毁数据库。默认仅对 sqlite3 启作用，删除该数据库文件。
@@ -43,7 +43,7 @@ func closeDB(a *assert.Assertion) {
 	}
 }
 
-func newDB(a *assert.Assertion) *DB {
+func newDB(a *assert.Assertion) *orm.DB {
 	switch driver {
 	case "mysql":
 		dsn = "root@/orm_test?charset=utf8"
@@ -58,13 +58,13 @@ func newDB(a *assert.Assertion) *DB {
 		panic("仅支持mysql,sqlite3,postgres三种数据库测试")
 	}
 
-	db, err := NewDB(driver, dsn, prefix, d)
+	db, err := orm.NewDB(driver, dsn, prefix, d)
 	a.NotError(err).NotNil(db)
 	return db
 }
 
 // table表中是否存在 size 条记录，若不是，则触发 error
-func hasCount(db sqlbuilder.Engine, a *assert.Assertion, table string, size int) {
+func hasCount(db orm.Engine, a *assert.Assertion, table string, size int) {
 	rows, err := db.Query("SELECT COUNT(*) as cnt FROM #" + table)
 	a.NotError(err).NotNil(rows)
 	defer func() {
@@ -84,13 +84,12 @@ func TestNewDB(t *testing.T) {
 		a.NotError(db.Close())
 	}()
 
-	a.Equal(db.tablePrefix, prefix)
 	a.NotNil(db.StdDB()).NotNil(db.Dialect())
 }
 
 // 初始化测试数据，同时可当作 DB.Inert 的测试
 // 清空其它数据，初始化成原始的测试数据
-func initData(db *DB, a *assert.Assertion) {
+func initData(db *orm.DB, a *assert.Assertion) {
 	a.NotError(db.Drop(&modeltest.User{}))
 	a.NotError(db.Drop(&modeltest.Admin{}))
 	a.NotError(db.Drop(&modeltest.Group{})) // admin 外键依赖 group
@@ -144,7 +143,7 @@ func initData(db *DB, a *assert.Assertion) {
 	a.Equal(a1.Username, "username1")
 }
 
-func clearData(db *DB, a *assert.Assertion) {
+func clearData(db *orm.DB, a *assert.Assertion) {
 	a.NotError(db.Drop(&modeltest.Admin{}))
 	a.NotError(db.Drop(&modeltest.User{}))
 	a.NotError(db.Drop(&modeltest.UserInfo{}))

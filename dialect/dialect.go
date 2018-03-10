@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/issue9/orm"
 	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
@@ -25,7 +26,7 @@ var (
 )
 
 type base interface {
-	sqlbuilder.Dialect
+	orm.Dialect
 
 	// 将 col 转换成 sql 类型，并写入 buf 中。
 	sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error

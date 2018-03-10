@@ -11,12 +11,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/issue9/orm"
 	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
-// Postgres 返回一个适配 postgresql 的 sqlbuilder.Dialect 接口
-func Postgres() sqlbuilder.Dialect {
+// Postgres 返回一个适配 postgresql 的 Dialect 接口
+func Postgres() orm.Dialect {
 	return &postgres{}
 }
 

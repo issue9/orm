@@ -7,8 +7,6 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
-
-	"github.com/issue9/orm/model"
 )
 
 // SQLer 定义 SQL 语句的基本接口
@@ -63,9 +61,6 @@ type Dialect interface {
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
 	// 返回的是对应数据库的 limit 语句以及语句中占位符对应的值。
 	LimitSQL(limit int, offset ...int) (string, []interface{})
-
-	// 生成创建表的 SQL 语句。
-	CreateTableSQL(m *model.Model) (string, error)
 
 	// 清空表内容，重置 AI。
 	TruncateTableSQL(table, aiColumn string) string

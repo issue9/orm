@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/issue9/orm"
 	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
@@ -19,7 +20,7 @@ import (
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql() sqlbuilder.Dialect {
+func Mysql() orm.Dialect {
 	return &mysql{}
 }
 

@@ -7,6 +7,7 @@ package orm
 import (
 	"database/sql"
 
+	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -15,7 +16,7 @@ type Engine interface {
 	sqlbuilder.Engine
 
 	// 获取与之关联的 Dialect 接口。
-	Dialect() sqlbuilder.Dialect
+	Dialect() Dialect
 
 	Insert(v interface{}) (sql.Result, error)
 
@@ -32,4 +33,12 @@ type Engine interface {
 	Drop(v interface{}) error
 
 	Truncate(v interface{}) error
+}
+
+// Dialect 数据库驱动特有的语言特性实现
+type Dialect interface {
+	sqlbuilder.Dialect
+
+	// 生成创建表的 SQL 语句。
+	CreateTableSQL(m *model.Model) (string, error)
 }

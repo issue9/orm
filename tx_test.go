@@ -2,16 +2,17 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package orm
+package orm_test
 
 import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm"
 	"github.com/issue9/orm/internal/modeltest"
 )
 
-var _ Engine = &Tx{}
+var _ orm.Engine = &orm.Tx{}
 
 func TestTx_InsertMany(t *testing.T) {
 	a := assert.New(t)
