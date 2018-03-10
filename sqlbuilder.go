@@ -117,7 +117,10 @@ func count(e Engine, v interface{}) (int64, error) {
 	return sql.QueryInt("count")
 }
 
-// 创建表。可能有多条执行语句。
+// 创建表。
+//
+// 部分数据库可能并没有提供在 CREATE TABLE 中直接指定 index 约束的功能。
+// 所以此处把创建表和创建索引分成两步操作。
 func create(e Engine, v interface{}) error {
 	m, _, err := getModel(v)
 	if err != nil {
@@ -132,20 +135,15 @@ func create(e Engine, v interface{}) error {
 		return err
 	}
 
-	// CREATE INDEX，部分数据库并没有直接有 create table with index 功能
-	sql := sqlbuilder.New("")
+	sql := sqlbuilder.CreateIndex(e)
 	for name, cols := range m.KeyIndexes {
-		sql.Reset().
-			WriteString("CREATE INDEX ").
-			WriteByte('{').WriteString(name).WriteByte('}').
-			WriteString(" ON ").
-			WriteString("{#").WriteString(m.Name).WriteString("}(")
+		sql.Reset()
+		sql.Table("{#" + m.Name + "}").Name(name)
 		for _, col := range cols {
-			sql.WriteByte('{').WriteString(col.Name).WriteString("},")
+			sql.Columns("{" + col.Name + "}")
 		}
-		sql.TruncateLast(1)
-		sql.WriteByte(')')
-		if _, err := e.Exec(sql.String()); err != nil {
+
+		if _, err := sql.Exec(); err != nil {
 			return err
 		}
 	}
