@@ -6,8 +6,9 @@ package sqlbuilder
 
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
-	buffer *SQLBuilder
-	args   []interface{}
+	buffer     *SQLBuilder
+	args       []interface{}
+	groupDepth int
 }
 
 func newWhereStmt() *WhereStmt {
@@ -18,29 +19,30 @@ func newWhereStmt() *WhereStmt {
 }
 
 // Reset 重置内容
-func (w *WhereStmt) Reset() {
-	w.buffer.Reset()
-	w.args = w.args[:0]
+func (stmt *WhereStmt) Reset() {
+	stmt.buffer.Reset()
+	stmt.args = stmt.args[:0]
+	stmt.groupDepth = 0
 }
 
 // SQL 生成 SQL 语句和对应的参数返回
-func (w *WhereStmt) SQL() (string, []interface{}, error) {
+func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 	cnt := 0
-	for _, c := range w.buffer.Bytes() {
+	for _, c := range stmt.buffer.Bytes() {
 		if c == '?' || c == '@' {
 			cnt++
 		}
 	}
-	if cnt != len(w.args) {
+	if cnt != len(stmt.args) {
 		return "", nil, ErrArgsNotMatch
 	}
 
-	return w.buffer.String(), w.args, nil
+	return stmt.buffer.String(), stmt.args, nil
 }
 
-func (w *WhereStmt) writeAnd(and bool) {
-	if w.buffer.Len() == 0 {
-		w.buffer.WriteString(" WHERE ")
+func (stmt *WhereStmt) writeAnd(and bool) {
+	if stmt.buffer.Len() == 0 {
+		stmt.buffer.WriteString(" WHERE ")
 		return
 	}
 
@@ -48,25 +50,58 @@ func (w *WhereStmt) writeAnd(and bool) {
 	if !and {
 		v = " OR "
 	}
-	w.buffer.WriteString(v)
+	stmt.buffer.WriteString(v)
 }
 
 // and 表示当前的语句是 and 还是 or；
 // cond 表示条件语句部分，比如 "id=?"
 // args 则表示 cond 中表示的值，可以是直接的值或是 sql.NamedArg
-func (w *WhereStmt) where(and bool, cond string, args ...interface{}) {
-	w.writeAnd(and)
+func (stmt *WhereStmt) where(and bool, cond string, args ...interface{}) *WhereStmt {
+	stmt.writeAnd(and)
+	stmt.buffer.WriteString(cond)
+	stmt.args = append(stmt.args, args...)
 
-	w.buffer.WriteString(cond)
-	w.args = append(w.args, args...)
+	return stmt
 }
 
 // And 添加一条 and 语句
-func (w *WhereStmt) And(cond string, args ...interface{}) {
-	w.where(true, cond, args...)
+func (stmt *WhereStmt) And(cond string, args ...interface{}) *WhereStmt {
+	return stmt.where(true, cond, args...)
 }
 
 // Or 添加一条 OR 语句
-func (w *WhereStmt) Or(cond string, args ...interface{}) {
-	w.where(false, cond, args...)
+func (stmt *WhereStmt) Or(cond string, args ...interface{}) *WhereStmt {
+	return stmt.where(false, cond, args...)
+}
+
+func (stmt *WhereStmt) groupWhere(and bool, cond string, args ...interface{}) *WhereStmt {
+	stmt.writeAnd(and)
+	stmt.buffer.WriteByte('(')
+	stmt.buffer.WriteString(cond)
+	stmt.args = append(stmt.args, args...)
+	stmt.groupDepth++
+
+	return stmt
+}
+
+// AndGroup 开始一个子条件语句
+func (stmt *WhereStmt) AndGroup(cond string, args ...interface{}) *WhereStmt {
+	return stmt.groupWhere(true, cond, args...)
+}
+
+// OrGroup 开始一个子条件语句
+func (stmt *WhereStmt) OrGroup(cond string, args ...interface{}) *WhereStmt {
+	return stmt.groupWhere(false, cond, args...)
+}
+
+// EndGroup 结束一个子条件语句
+func (stmt *WhereStmt) EndGroup() *WhereStmt {
+	stmt.buffer.WriteByte(')')
+	stmt.groupDepth--
+
+	if stmt.groupDepth < 0 {
+		panic("() 必须结对出现")
+	}
+
+	return stmt
 }
