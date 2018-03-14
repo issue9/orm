@@ -18,6 +18,7 @@ type UpdateStmt struct {
 	values []*updateSet
 }
 
+// 表示一条 SET 语句。比如 set key=val
 type updateSet struct {
 	column string
 	value  interface{}
@@ -134,9 +135,12 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	if err != nil {
 		return "", nil, err
 	}
+	if wq != "" {
+		buf.WriteString(" WHERE ")
+		buf.WriteString(wq)
+		args = append(args, wa...)
+	}
 
-	buf.WriteString(wq)
-	args = append(args, wa...)
 	return buf.String(), args, nil
 }
 

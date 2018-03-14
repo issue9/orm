@@ -41,7 +41,7 @@ func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 
-	return "DELETE FROM " + stmt.table + query, args, nil
+	return "DELETE FROM " + stmt.table + " WHERE " + query, args, nil
 }
 
 // Reset 重置语句

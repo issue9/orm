@@ -6,9 +6,8 @@ package sqlbuilder
 
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
-	buffer     *SQLBuilder
-	args       []interface{}
-	groupDepth int
+	buffer *SQLBuilder
+	args   []interface{}
 }
 
 func newWhereStmt() *WhereStmt {
@@ -22,7 +21,6 @@ func newWhereStmt() *WhereStmt {
 func (stmt *WhereStmt) Reset() {
 	stmt.buffer.Reset()
 	stmt.args = stmt.args[:0]
-	stmt.groupDepth = 0
 }
 
 // SQL 生成 SQL 语句和对应的参数返回
@@ -42,7 +40,7 @@ func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 
 func (stmt *WhereStmt) writeAnd(and bool) {
 	if stmt.buffer.Len() == 0 {
-		stmt.buffer.WriteString(" WHERE ")
+		stmt.buffer.WriteByte(' ')
 		return
 	}
 
@@ -74,34 +72,24 @@ func (stmt *WhereStmt) Or(cond string, args ...interface{}) *WhereStmt {
 	return stmt.where(false, cond, args...)
 }
 
-func (stmt *WhereStmt) groupWhere(and bool, cond string, args ...interface{}) *WhereStmt {
+func (stmt *WhereStmt) addWhere(and bool, w *WhereStmt) *WhereStmt {
 	stmt.writeAnd(and)
 	stmt.buffer.WriteByte('(')
-	stmt.buffer.WriteString(cond)
-	stmt.args = append(stmt.args, args...)
-	stmt.groupDepth++
 
-	return stmt
-}
+	stmt.buffer.WriteString(w.buffer.String())
+	stmt.args = append(stmt.args, w.args...)
 
-// AndGroup 开始一个子条件语句
-func (stmt *WhereStmt) AndGroup(cond string, args ...interface{}) *WhereStmt {
-	return stmt.groupWhere(true, cond, args...)
-}
-
-// OrGroup 开始一个子条件语句
-func (stmt *WhereStmt) OrGroup(cond string, args ...interface{}) *WhereStmt {
-	return stmt.groupWhere(false, cond, args...)
-}
-
-// EndGroup 结束一个子条件语句
-func (stmt *WhereStmt) EndGroup() *WhereStmt {
 	stmt.buffer.WriteByte(')')
-	stmt.groupDepth--
-
-	if stmt.groupDepth < 0 {
-		panic("() 必须结对出现")
-	}
 
 	return stmt
+}
+
+// AndWhere 开始一个子条件语句
+func (stmt *WhereStmt) AndWhere(w *WhereStmt) *WhereStmt {
+	return stmt.addWhere(true, w)
+}
+
+// OrWhere 开始一个子条件语句
+func (stmt *WhereStmt) OrWhere(w *WhereStmt) *WhereStmt {
+	return stmt.addWhere(false, w)
 }

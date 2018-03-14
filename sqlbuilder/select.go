@@ -128,6 +128,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	if err != nil {
 		return "", nil, err
 	}
+	buf.WriteString(" WHERE ")
 	buf.WriteString(wq)
 	args = append(args, wa...)
 
