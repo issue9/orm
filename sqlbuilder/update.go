@@ -16,6 +16,9 @@ type UpdateStmt struct {
 	table  string
 	where  *WhereStmt
 	values []*updateSet
+
+	occColumn string      // 乐观锁的列名
+	occValue  interface{} // 乐观锁的当前值
 }
 
 // 表示一条 SET 语句。比如 set key=val
@@ -70,6 +73,14 @@ func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
 	return stmt
 }
 
+// OCC 指定一个用于乐观锁的字段。
+func (stmt *UpdateStmt) OCC(col string, val interface{}) *UpdateStmt {
+	stmt.occColumn = col
+	stmt.occValue = val
+	stmt.Increase(col, 1)
+	return stmt
+}
+
 // WhereStmt 实现 WhereStmter 接口
 func (stmt *UpdateStmt) WhereStmt() *WhereStmt {
 	return stmt.where
@@ -97,6 +108,9 @@ func (stmt *UpdateStmt) Reset() {
 	stmt.table = ""
 	stmt.where.Reset()
 	stmt.values = stmt.values[:0]
+
+	stmt.occColumn = ""
+	stmt.occValue = nil
 }
 
 // SQL 获取 SQL 语句以及对应的参数
@@ -131,10 +145,11 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	}
 	buf.TruncateLast(1)
 
-	wq, wa, err := stmt.where.SQL()
+	wq, wa, err := stmt.getWhereSQL()
 	if err != nil {
 		return "", nil, err
 	}
+
 	if wq != "" {
 		buf.WriteString(" WHERE ")
 		buf.WriteString(wq)
@@ -142,6 +157,25 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	}
 
 	return buf.String(), args, nil
+}
+
+func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
+	if stmt.occColumn == "" {
+		return stmt.where.SQL()
+	}
+
+	w := newWhereStmt()
+
+	occ := newWhereStmt()
+	if named, ok := stmt.occValue.(sql.NamedArg); ok && named.Name != "" {
+		occ.And(stmt.occColumn+"=@"+named.Name, stmt.occValue)
+	} else {
+		occ.And(stmt.occColumn+"=?", stmt.occValue)
+	}
+
+	w.AndWhere(stmt.where).AndWhere(occ)
+
+	return w.SQL()
 }
 
 // 检测列名是否存在重复，先排序，再与后一元素比较。

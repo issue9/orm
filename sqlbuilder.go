@@ -249,6 +249,7 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 	}
 
 	sql := sqlbuilder.Update(e).Table("{#" + m.Name + "}")
+	var occValue interface{}
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -261,15 +262,15 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 		}
 
 		if m.OCC == col { // 乐观锁
-			sql.Increase("{"+name+"}", 1)
+			occValue = field.Interface()
+			continue
 		} else {
 			sql.Set("{"+name+"}", field.Interface())
 		}
 	}
 
 	if m.OCC != nil {
-		field := rval.FieldByName(m.OCC.GoName)
-		sql.And("{"+m.OCC.Name+"}=?", field.Interface())
+		sql.OCC("{"+m.OCC.Name+"}", occValue)
 	}
 
 	if err := where(sql, m, rval); err != nil {
