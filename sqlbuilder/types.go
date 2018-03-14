@@ -60,7 +60,9 @@ type Dialect interface {
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
 	// 返回的是对应数据库的 limit 语句以及语句中占位符对应的值。
-	LimitSQL(limit int, offset ...int) (string, []interface{})
+	//
+	// limit 和 offset 可以是 sql.NamedArg 类型。
+	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
 
 	// 清空表内容，重置 AI。
 	TruncateTableSQL(table, aiColumn string) string

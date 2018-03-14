@@ -76,7 +76,7 @@ func (p *postgres) CreateTableSQL(model *model.Model) (string, error) {
 	return w.String(), nil
 }
 
-func (p *postgres) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 

@@ -89,7 +89,7 @@ func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Mode
 	return nil
 }
 
-func (s *sqlite3) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 

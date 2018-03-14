@@ -270,7 +270,7 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 }
 
 // Limit 生成 SQL 的 Limit 语句
-func (stmt *SelectStmt) Limit(limit int, offset ...int) *SelectStmt {
+func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectStmt {
 	query, vals := stmt.dialect.LimitSQL(limit, offset...)
 	stmt.limitQuery = query
 	stmt.limitVals = vals

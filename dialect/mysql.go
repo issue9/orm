@@ -95,7 +95,7 @@ func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Model)
 	return nil
 }
 
-func (m *mysql) LimitSQL(limit int, offset ...int) (string, []interface{}) {
+func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	return mysqlLimitSQL(limit, offset...)
 }
 

@@ -5,6 +5,7 @@
 package dialect
 
 import (
+	"database/sql"
 	"reflect"
 	"testing"
 
@@ -112,6 +113,11 @@ func TestMysqlLimitSQL(t *testing.T) {
 	query, ret = mysqlLimitSQL(5)
 	a.Equal(ret, []int{5})
 	sqltest.Equal(a, query, "LIMIT ?")
+
+	// 带 sql.namedArg
+	query, ret = mysqlLimitSQL(sql.Named("limit", 1), 2)
+	a.Equal(ret, []interface{}{sql.Named("limit", 1), 2})
+	sqltest.Equal(a, query, "LIMIT @limit offset ?")
 }
 
 func TestOracleLimitSQL(t *testing.T) {
@@ -124,4 +130,9 @@ func TestOracleLimitSQL(t *testing.T) {
 	query, ret = oracleLimitSQL(5)
 	a.Equal(ret, []int{5})
 	sqltest.Equal(a, query, "FETCH NEXT ? ROWS ONLY ")
+
+	// 带 sql.namedArg
+	query, ret = oracleLimitSQL(sql.Named("limit", 1), 2)
+	a.Equal(ret, []interface{}{2, sql.Named("limit", 1)})
+	sqltest.Equal(a, query, "offset ? rows fetch next @limit rows only")
 }

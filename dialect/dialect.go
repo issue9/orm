@@ -142,20 +142,52 @@ func createConstraints(buf *sqlbuilder.SQLBuilder, model *model.Model) {
 
 // mysq系列数据库分页语法的实现。支持以下数据库：
 // MySQL, H2, HSQLDB, Postgres, SQLite3
-func mysqlLimitSQL(limit int, offset ...int) (string, []interface{}) {
-	if len(offset) == 0 {
-		return " LIMIT ? ", []interface{}{limit}
+func mysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+	query := " LIMIT "
+
+	if named, ok := limit.(sql.NamedArg); ok && named.Name != "" {
+		query += "@" + named.Name
+	} else {
+		query += "?"
 	}
 
-	return " LIMIT ? OFFSET ? ", []interface{}{limit, offset[0]}
+	if len(offset) == 0 {
+		return query + " ", []interface{}{limit}
+	}
+
+	query += " OFFSET "
+	o := offset[0]
+	if named, ok := o.(sql.NamedArg); ok && named.Name != "" {
+		query += "@" + named.Name
+	} else {
+		query += "?"
+	}
+
+	return query + " ", []interface{}{limit, offset[0]}
 }
 
 // oracle系列数据库分页语法的实现。支持以下数据库：
 // Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
-func oracleLimitSQL(limit int, offset ...int) (string, []interface{}) {
+func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+	query := "FETCH NEXT "
+
+	if named, ok := limit.(sql.NamedArg); ok && named.Name != "" {
+		query += "@" + named.Name
+	} else {
+		query += "?"
+	}
+	query += " ROWS ONLY "
+
 	if len(offset) == 0 {
-		return " FETCH NEXT ? ROWS ONLY ", []interface{}{limit}
+		return query, []interface{}{limit}
 	}
 
-	return " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ", []interface{}{offset[0], limit}
+	o := offset[0]
+	if named, ok := o.(sql.NamedArg); ok && named.Name != "" {
+		query = "OFFSET @" + named.Name + " ROWS " + query
+	} else {
+		query = "OFFSET ? ROWS " + query
+	}
+
+	return query, []interface{}{offset[0], limit}
 }
