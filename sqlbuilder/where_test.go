@@ -60,4 +60,12 @@ func TestWhere_addWhere(t *testing.T) {
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, 2, 3, 4, 5})
 	sqltest.Equal(a, query, "id=? AND(id=? OR id=? OR(id=?)) and id=?")
+
+	// Reset
+	w.Reset()
+	w.AndWhere(w1).OrWhere(w2)
+	query, args, err = w.SQL()
+	a.NotError(err)
+	a.Equal(args, []interface{}{2, 3, 4, 4})
+	sqltest.Equal(a, query, "(id=? or id=? or(id=?)) or (id=?)")
 }
