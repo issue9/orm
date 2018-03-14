@@ -69,7 +69,7 @@ func (stmt *SelectStmt) Reset() {
 
 	stmt.countExpr = ""
 
-	stmt.joins = stmt.joins[:]
+	stmt.joins = stmt.joins[:0]
 	stmt.orders.Reset()
 	stmt.group = ""
 
@@ -128,9 +128,11 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	buf.WriteString(" WHERE ")
-	buf.WriteString(wq)
-	args = append(args, wa...)
+	if wq != "" {
+		buf.WriteString(" WHERE ")
+		buf.WriteString(wq)
+		args = append(args, wa...)
+	}
 
 	// group by
 	if stmt.group != "" {

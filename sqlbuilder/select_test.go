@@ -63,4 +63,11 @@ func TestSelect(t *testing.T) {
 	a.NotError(err)
 	a.Equal(args, []interface{}{5})
 	sqltest.Equal(a, query, "select distinct c1,c2,c3 from table1 as t left join users as u on a.id=u.id where id=? order by id asc")
+
+	// s.reset，没有  where
+	s.Reset()
+	s.Select("c1,c2").From("#tb1")
+	query, args, err = s.SQL()
+	a.NotError(err).Empty(args)
+	sqltest.Equal(a, query, "select c1,c2 from #tb1")
 }
