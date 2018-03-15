@@ -17,17 +17,14 @@ e.Create(&User{})
 
 // 更新 id 为 1 的记录
 e.Update(&User{Id:1,FirstName:"abc"})
-e.Where("id=?", 1).Table("#tbl_name").Update(true, "FirstName", "abc")
+e.SQL().Update().Where("id=?", 1).Table("#tbl_name").Exec()
 
 // 删除 id 为 1 的记录
 e.Delete(&User{Id:1})
-e.Where("id=?", 1).Table("#tbl_name").Delete(true, []interface{}{"id":1})
+e.SQL().Delete().Where("id=?", 1).Table("#tbl_name").Exec()
 
 // 插入数据
 e.Insert(&User{FirstName:"abc"})
-
-// 查找数据
-maps,err := e.Where("id<?", 5).Table("#tbl_name").SelectMap(true, "*")
 ```
 
 ### 安装
