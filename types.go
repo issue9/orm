@@ -69,3 +69,18 @@ func (sql *SQL) Insert() *sqlbuilder.InsertStmt {
 func (sql *SQL) Select() *sqlbuilder.SelectStmt {
 	return sqlbuilder.Select(sql.engine, sql.engine.Dialect())
 }
+
+// CreateIndex 生成创建索引的语句
+func (sql *SQL) CreateIndex() *sqlbuilder.CreateIndexStmt {
+	return sqlbuilder.CreateIndex(sql.engine)
+}
+
+// DropTable 生成删除表的语句
+func (sql *SQL) DropTable() *sqlbuilder.DropTableStmt {
+	return sqlbuilder.DropTable(sql.engine)
+}
+
+// Truncate 生成清空表的语句
+func (sql *SQL) Truncate() *sqlbuilder.TruncateStmt {
+	return sqlbuilder.Truncate(sql.engine, sql.engine.Dialect())
+}
