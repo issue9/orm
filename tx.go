@@ -16,6 +16,7 @@ import (
 type Tx struct {
 	db    *DB
 	stdTx *sql.Tx
+	sql   *SQL
 }
 
 // StdTx 返回标准库的 *sql.Tx 对象。
@@ -187,6 +188,11 @@ func (tx *Tx) Drop(v interface{}) error {
 // Truncate 清除表内容，重置 ai，但保留表结构。
 func (tx *Tx) Truncate(v interface{}) error {
 	return truncate(tx, v)
+}
+
+// SQL 返回 SQL 实例
+func (tx *Tx) SQL() *SQL {
+	return tx.sql
 }
 
 // MultInsert 插入一个或多个数据。

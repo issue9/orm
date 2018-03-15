@@ -16,6 +16,7 @@ type DB struct {
 	dialect     Dialect
 	tablePrefix string
 	replacer    *strings.Replacer
+	sql         *SQL
 }
 
 // NewDB 声明一个新的 DB 实例。
@@ -31,7 +32,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB
 // NewDBWithStdDB 从 sql.DB 构建一个 DB 实例。
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
-	return &DB{
+	inst := &DB{
 		stdDB:       db,
 		dialect:     dialect,
 		tablePrefix: tablePrefix,
@@ -40,7 +41,10 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 			"{", string(l),
 			"}", string(r),
 		),
-	}, nil
+	}
+	inst.sql = &SQL{engine: inst}
+
+	return inst, nil
 }
 
 // Close 关闭当前数据库，释放所有的链接。
@@ -194,6 +198,11 @@ func (db *DB) Truncate(v interface{}) error {
 	return truncate(db, v)
 }
 
+// SQL 返回 SQL 实例
+func (db *DB) SQL() *SQL {
+	return db.sql
+}
+
 // Begin 开始一个新的事务
 func (db *DB) Begin() (*Tx, error) {
 	tx, err := db.stdDB.Begin()
@@ -201,8 +210,11 @@ func (db *DB) Begin() (*Tx, error) {
 		return nil, err
 	}
 
-	return &Tx{
+	inst := &Tx{
 		db:    db,
 		stdTx: tx,
-	}, nil
+	}
+	inst.sql = &SQL{engine: inst}
+
+	return inst, nil
 }

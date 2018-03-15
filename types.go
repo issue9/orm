@@ -33,6 +33,8 @@ type Engine interface {
 	Drop(v interface{}) error
 
 	Truncate(v interface{}) error
+
+	SQL() *SQL
 }
 
 // Dialect 数据库驱动特有的语言特性实现
@@ -41,4 +43,29 @@ type Dialect interface {
 
 	// 生成创建表的 SQL 语句。
 	CreateTableSQL(m *model.Model) (string, error)
+}
+
+// SQL 用于生成 SQL 语句
+type SQL struct {
+	engine Engine
+}
+
+// Delete 生成删除语句
+func (sql *SQL) Delete() *sqlbuilder.DeleteStmt {
+	return sqlbuilder.Delete(sql.engine)
+}
+
+// Update 生成更新语句
+func (sql *SQL) Update() *sqlbuilder.UpdateStmt {
+	return sqlbuilder.Update(sql.engine)
+}
+
+// Insert 生成插入语句
+func (sql *SQL) Insert() *sqlbuilder.InsertStmt {
+	return sqlbuilder.Insert(sql.engine)
+}
+
+// Select 生成插入语句
+func (sql *SQL) Select() *sqlbuilder.SelectStmt {
+	return sqlbuilder.Select(sql.engine, sql.engine.Dialect())
 }
