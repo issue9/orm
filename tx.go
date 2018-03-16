@@ -9,7 +9,7 @@ import (
 	"database/sql"
 	"reflect"
 
-	"github.com/issue9/orm/model"
+	"github.com/issue9/orm/fetch"
 )
 
 // Tx 事务对象
@@ -170,7 +170,7 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		_, err = sql.Exec()
 		return err
 	default:
-		return model.ErrInvalidKind
+		return fetch.ErrInvalidKind
 	}
 }
 

@@ -15,9 +15,8 @@ import (
 	t "github.com/issue9/orm/internal/tags"
 )
 
-// ErrInvalidKind 无效的数据类型，在 Obj 系列函数中，
-// 限字数据的 Kind 类型，若传递的值不正确返回此错误。
-var ErrInvalidKind = errors.New("无效的类型")
+// ErrInvalidKind 表示当前功能对数据的 Kind 值有特殊需求。
+var ErrInvalidKind = errors.New("无效的 Kind 类型")
 
 // Obj 将 rows 中的数据导出到 obj 中。
 //

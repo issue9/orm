@@ -14,12 +14,9 @@ import (
 	"sync"
 	"unicode"
 
+	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/internal/tags"
 )
-
-// ErrInvalidKind 只有结构体或是结构体的指针，才会被正确解析成数据库模型，
-// 其它类型的数据传递给 New() 函数，最终会返回此错误。
-var ErrInvalidKind = errors.New("数据模型只能是结构体或是结构体指针")
 
 // model 缓存
 var models = &modelsMap{items: map[reflect.Type]*Model{}}
@@ -55,7 +52,7 @@ func New(obj interface{}) (*Model, error) {
 	rtype := rval.Type()
 
 	if rtype.Kind() != reflect.Struct {
-		return nil, ErrInvalidKind
+		return nil, fetch.ErrInvalidKind
 	}
 
 	models.Lock()
