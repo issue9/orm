@@ -74,6 +74,8 @@ func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
 }
 
 // OCC 指定一个用于乐观锁的字段。
+//
+// val 表示乐观锁原始的值。
 func (stmt *UpdateStmt) OCC(col string, val interface{}) *UpdateStmt {
 	stmt.occColumn = col
 	stmt.occValue = val

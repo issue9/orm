@@ -96,7 +96,7 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 func (s *sqlite3) TruncateTableSQL(table, ai string) string {
 	return sqlbuilder.New("DELETE FROM ").
 		WriteString(table).
-		WriteString(";update sqlite_sequence set seq=0 where name='").
+		WriteString(";DELETE FROM SQLITE_SEQUENCE WHERE name='").
 		WriteString(table).
 		WriteString("';").
 		String()

@@ -4,6 +4,10 @@
 
 package sqlbuilder
 
+import (
+	"strings"
+)
+
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
 	buffer *SQLBuilder
@@ -73,10 +77,15 @@ func (stmt *WhereStmt) Or(cond string, args ...interface{}) *WhereStmt {
 }
 
 func (stmt *WhereStmt) addWhere(and bool, w *WhereStmt) *WhereStmt {
+	cond := w.buffer.String()
+	if strings.TrimSpace(cond) == "" {
+		return stmt
+	}
+
 	stmt.writeAnd(and)
 	stmt.buffer.WriteByte('(')
 
-	stmt.buffer.WriteString(w.buffer.String())
+	stmt.buffer.WriteString(cond)
 	stmt.args = append(stmt.args, w.args...)
 
 	stmt.buffer.WriteByte(')')

@@ -25,7 +25,7 @@ var (
 	_ sqlbuilder.WhereStmter = &sqlbuilder.SelectStmt{}
 )
 
-func TestSelect(t *testing.T) {
+func TestSelect_sqlite3(t *testing.T) {
 	a := assert.New(t)
 	e, err := orm.NewDB("sqlite3", "./test.db", "test_", dialect.Sqlite3())
 	a.NotError(err)
