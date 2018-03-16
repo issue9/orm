@@ -19,6 +19,22 @@ type Tx struct {
 	sql   *SQL
 }
 
+// Begin 开始一个新的事务
+func (db *DB) Begin() (*Tx, error) {
+	tx, err := db.stdDB.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	inst := &Tx{
+		db:    db,
+		stdTx: tx,
+	}
+	inst.sql = &SQL{engine: inst}
+
+	return inst, nil
+}
+
 // StdTx 返回标准库的 *sql.Tx 对象。
 func (tx *Tx) StdTx() *sql.Tx {
 	return tx.stdTx

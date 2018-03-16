@@ -202,19 +202,3 @@ func (db *DB) Truncate(v interface{}) error {
 func (db *DB) SQL() *SQL {
 	return db.sql
 }
-
-// Begin 开始一个新的事务
-func (db *DB) Begin() (*Tx, error) {
-	tx, err := db.stdDB.Begin()
-	if err != nil {
-		return nil, err
-	}
-
-	inst := &Tx{
-		db:    db,
-		stdTx: tx,
-	}
-	inst.sql = &SQL{engine: inst}
-
-	return inst, nil
-}

@@ -6,6 +6,7 @@ package fetch
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"unicode"
@@ -13,6 +14,10 @@ import (
 	"github.com/issue9/conv"
 	t "github.com/issue9/orm/internal/tags"
 )
+
+// ErrInvalidKind 无效的数据类型，在 Obj 系列函数中，
+// 限字数据的 Kind 类型，若传递的值不正确返回此错误。
+var ErrInvalidKind = errors.New("无效的类型")
 
 // Obj 将 rows 中的数据导出到 obj 中。
 //
@@ -54,12 +59,12 @@ func Obj(obj interface{}, rows *sql.Rows) (int, error) {
 		case reflect.Struct: // 结构指针，只能导出一个
 			return fetchOnceObj(elem, rows)
 		default:
-			return 0, fmt.Errorf("不允许的数据类型：[%v]", val.Kind())
+			return 0, ErrInvalidKind
 		}
 	case reflect.Slice: // slice 只能按其大小导出。
 		return fetchObjToFixedSlice(val, rows)
 	default:
-		return 0, fmt.Errorf("不允许的数据类型：[%v]", val.Kind())
+		return 0, ErrInvalidKind
 	}
 }
 
@@ -67,12 +72,11 @@ func Obj(obj interface{}, rows *sql.Rows) (int, error) {
 // 键值为字段的值。支持匿名字段，不会转换不可导出(小写字母开头)的
 // 字段，也不会转换 struct tag 以-开头的字段。
 func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
-	for v.Kind() == reflect.Ptr { // 嵌套类型可能为指针
+	for v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-
 	if v.Kind() != reflect.Struct {
-		return fmt.Errorf("parseObj:v参数的类型只能是reflect.Struct或是struct的指针,当前为[%v]", v.Kind())
+		return ErrInvalidKind
 	}
 
 	vt := v.Type()
@@ -80,7 +84,7 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 	for i := 0; i < num; i++ {
 		field := vt.Field(i)
 
-		if field.Anonymous { // 匿名对象
+		if field.Anonymous {
 			parseObj(v.Field(i), ret)
 			continue
 		}
@@ -93,7 +97,7 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 
 			if name, found := t.Get(tags, "name"); found {
 				if _, found := (*ret)[name[0]]; found {
-					return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
+					return ErrInvalidKind
 				}
 				(*ret)[name[0]] = v.Field(i)
 				continue
@@ -103,7 +107,7 @@ func parseObj(v reflect.Value, ret *map[string]reflect.Value) error {
 		// 未指定 struct tag，则尝试直接使用字段名。
 		if unicode.IsUpper(rune(field.Name[0])) {
 			if _, found := (*ret)[field.Name]; found {
-				return fmt.Errorf("parseObj:已存在相同名字的字段[%v]", field.Name)
+				return fmt.Errorf("已存在相同名字的字段 %s", field.Name)
 			}
 			(*ret)[field.Name] = v.Field(i)
 		}
@@ -151,9 +155,8 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	for itemType.Kind() == reflect.Ptr {
 		itemType = itemType.Elem()
 	}
-	// 判断数组元素的类型是否为 struct
 	if itemType.Kind() != reflect.Struct {
-		return 0, fmt.Errorf("fetchObjToFixedSlice:元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
+		return 0, ErrInvalidKind
 	}
 
 	// 先导出数据到 map 中
@@ -197,9 +200,8 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	for itemType.Kind() == reflect.Ptr {
 		itemType = itemType.Elem()
 	}
-	// 判断数组元素的类型是否为 struct
 	if itemType.Kind() != reflect.Struct {
-		return 0, fmt.Errorf("元素类型只能为reflect.Struct或是struct指针，当前为[%v]", itemType.Kind())
+		return 0, ErrInvalidKind
 	}
 
 	// 先导出数据到 map 中

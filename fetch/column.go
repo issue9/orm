@@ -10,6 +10,10 @@ import (
 	"reflect"
 )
 
+func columnNotExists(col string) error {
+	return fmt.Errorf("指定的列名 %s 不存在", col)
+}
+
 // Column 导出 rows 中某列的所有或一行数据。
 // once 若为 true，则只导出第一条数据。
 // colName 指定需要导出的列名，若不指定了不存在的名称，返回 error。
@@ -31,7 +35,7 @@ func Column(once bool, colName string, rows *sql.Rows) ([]interface{}, error) {
 	}
 
 	if index == -1 {
-		return nil, fmt.Errorf("Column:指定的列名[%v]不存在", colName)
+		return nil, columnNotExists(colName)
 	}
 
 	var data []interface{}
@@ -69,7 +73,7 @@ func ColumnString(once bool, colName string, rows *sql.Rows) ([]string, error) {
 	}
 
 	if index == -1 {
-		return nil, fmt.Errorf("Column:指定的列名[%v]不存在", colName)
+		return nil, columnNotExists(colName)
 	}
 
 	var data []string
