@@ -147,4 +147,12 @@ func TestUpdate_occ(t *testing.T) {
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, 2, 1, 4, 3})
 	sqltest.Equal(a, query, "update table set c1=?,c2=?, c3=c3+? where (c4=?) and (c3=?)")
+
+	// 多条件，乐观锁，命名参数
+	u.Reset()
+	u.Set("c1", 1).Set("c2", 2).OCC("c3", sql.Named("c3", 3)).Where("c4=?", 4).Table("table")
+	query, args, err = u.SQL()
+	a.NotError(err)
+	a.Equal(args, []interface{}{1, 2, 1, 4, sql.Named("c3", 3)})
+	sqltest.Equal(a, query, "update table set c1=?,c2=?, c3=c3+? where (c4=?) and (c3=@c3)")
 }
