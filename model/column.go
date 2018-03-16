@@ -5,7 +5,6 @@
 package model
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -49,10 +48,13 @@ func (c *Column) setLen(vals []string) (err error) {
 	case 1:
 		c.Len1, err = strconv.Atoi(vals[0])
 	case 2:
-		c.Len1, err = strconv.Atoi(vals[0])
+		if c.Len1, err = strconv.Atoi(vals[0]); err != nil {
+			return err
+		}
+
 		c.Len2, err = strconv.Atoi(vals[1])
 	default:
-		err = fmt.Errorf("setLen:[%v]字段的len属性指定了过多的参数:[%v]", c.Name, vals)
+		return propertyError(c.Name, "len", "过多的参数")
 	}
 
 	return
@@ -62,7 +64,7 @@ func (c *Column) setLen(vals []string) (err error) {
 // nullable; or nullable(true);
 func (c *Column) setNullable(vals []string) (err error) {
 	if c.IsAI() {
-		return fmt.Errorf("setNullable:自增列[%v]不能为nullable", c.Name)
+		return propertyError(c.Name, "nullable", "自增列不能设置此值")
 	}
 
 	switch len(vals) {
@@ -73,7 +75,7 @@ func (c *Column) setNullable(vals []string) (err error) {
 			return err
 		}
 	default:
-		return fmt.Errorf("setNullable:[%v]字段的nullable属性指定了太多的值:[%v]", c.Name, vals)
+		return propertyError(c.Name, "nullable", "过多的参数值")
 	}
 
 	return nil

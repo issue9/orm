@@ -6,7 +6,6 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -40,6 +39,10 @@ type Model struct {
 	Meta          map[string][]string    // 表级别的数据，如存储引擎，表名和字符集等。
 
 	constraints map[string]conType // 约束名缓存
+}
+
+func propertyError(field, name, message string) error {
+	return fmt.Errorf("%s 的 %s 属性发生以下错误: %s", field, name, message)
 }
 
 // New 从一个 obj 声明一个 Model 实例。
@@ -128,7 +131,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 		switch k {
 		case "name": // name(colname)
 			if len(v) != 1 {
-				return fmt.Errorf("parseColumn:name属性指定了太多的参数：[%v]", v)
+				return propertyError(col.Name, "name", "过多的参数值")
 			}
 			col.Name = v[0]
 		case "index":
@@ -150,7 +153,7 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 		case "occ":
 			err = m.setOCC(col, v)
 		default:
-			err = fmt.Errorf("parseColumn:未知的struct tag属性:[%v]", k)
+			err = propertyError(col.Name, k, "未知的属性")
 		}
 
 		if err != nil {
@@ -179,21 +182,21 @@ func (m *Model) parseMeta(obj interface{}) error {
 		switch k {
 		case "name":
 			if len(v) != 1 {
-				return fmt.Errorf("parseMeta:Meta接口的name属性指定了太多参数：[%v]", v)
+				return propertyError("Metaer", "name", "太多的值")
 			}
 
 			m.Name = v[0]
 		case "check":
 			if len(v) != 2 {
-				return fmt.Errorf("parseMeta:Meta接口的check属性的参数只能为2个，当前值为:[%v]", v)
+				return propertyError("Metaer", "check", "参数个数不正确")
 			}
 
 			if _, found := m.Check[v[0]]; found {
-				return fmt.Errorf("parseMeta:已经存在相同名称[%v]的Check约束", v[0])
+				return propertyError("Metaer", "check", "已经存在相同名称的 check 约束")
 			}
 
 			if typ := m.hasConstraint(v[0], check); typ != none {
-				return fmt.Errorf("parseMeta:已经存在相同的约束名[%v]，位于[%v]中", v[0], typ)
+				return propertyError("Metaer", "check", "与其它约束名称相同")
 			}
 
 			m.constraints[v[0]] = check
@@ -209,18 +212,18 @@ func (m *Model) parseMeta(obj interface{}) error {
 // occ(true) or occ
 func (m *Model) setOCC(c *Column, vals []string) error {
 	if c.IsAI() || c.Nullable {
-		return errors.New("自增列和允许为空的列不能作为乐观锁列")
+		return propertyError(c.Name, "occ", "自增列和允许为空的列不能作为乐观锁列")
 	}
 
 	if m.OCC != nil {
-		return errors.New("已经存在一个乐观锁")
+		return propertyError(c.Name, "occ", "已经指定了一个乐观锁")
 	}
 
 	switch c.GoType.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 	default:
-		return errors.New("乐观锁只能是数值类型")
+		return propertyError(c.Name, "occ", "值只能是数值")
 	}
 
 	switch len(vals) {
@@ -235,7 +238,7 @@ func (m *Model) setOCC(c *Column, vals []string) error {
 			m.OCC = c
 		}
 	default:
-		return fmt.Errorf("[%v]字段的 occ 属性指定了太多的值:[%v]", c.Name, vals)
+		return propertyError(c.Name, "occ", "指定了太多的值")
 	}
 
 	return nil
@@ -244,17 +247,17 @@ func (m *Model) setOCC(c *Column, vals []string) error {
 // default(5)
 func (m *Model) setDefault(col *Column, vals []string) error {
 	if m.AI == col {
-		return errors.New("setDefault:自增列不能设置默认值")
+		return propertyError(col.Name, "default", "自增列不能设置默认值")
 	}
 
 	for _, c := range m.PK {
 		if c == col {
-			return errors.New("setDefault:不能为主键设置默认值")
+			return propertyError(col.Name, "default", "不能为主键设置默认值")
 		}
 	}
 
 	if len(vals) != 1 {
-		return fmt.Errorf("setDefault:[%v]字段的default属性指定了太多的参数：[%v]", col.Name, vals)
+		return propertyError(col.Name, "default", "太多的值")
 	}
 
 	col.HasDefault = true
@@ -266,11 +269,11 @@ func (m *Model) setDefault(col *Column, vals []string) error {
 // index(idx_name)
 func (m *Model) setIndex(col *Column, vals []string) error {
 	if len(vals) != 1 {
-		return fmt.Errorf("setIndex:[%v]字段的index属性指定了太多的参数:[%v]", col.Name, vals)
+		return propertyError(col.Name, "index", "太多的值")
 	}
 
 	if typ := m.hasConstraint(vals[0], index); typ != none {
-		return fmt.Errorf("setIndex:已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
+		return propertyError(col.Name, "index", "已经存在相同的约束名")
 	}
 
 	m.constraints[vals[0]] = index
@@ -281,15 +284,15 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 // pk
 func (m *Model) setPK(col *Column, vals []string) error {
 	if col.HasDefault {
-		return fmt.Errorf("setPK:不能将一个含有默认值的列[%v]设置为主键", col.Name)
+		return propertyError(col.Name, "pk", "不能将一个含有默认值的列设置为主键")
 	}
 
 	if len(vals) != 0 {
-		return fmt.Errorf("setPK:[%v]字段的pk属性指定了太多的参数:[%v]", col.Name, vals)
+		return propertyError(col.Name, "pk", "太多的值")
 	}
 
 	if m.AI != nil {
-		return fmt.Errorf("setPK:已经存在自增列，不需要再次指定主键")
+		return propertyError(col.Name, "pk", "已经存在自增列，不需要再次指定主键")
 	}
 
 	m.PK = append(m.PK, col)
@@ -299,11 +302,11 @@ func (m *Model) setPK(col *Column, vals []string) error {
 // unique(unique_name)
 func (m *Model) setUnique(col *Column, vals []string) error {
 	if len(vals) != 1 {
-		return fmt.Errorf("setUnique:[%v]字段的unique属性只能带一个参数:[%v]", col.Name, vals)
+		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
 
 	if typ := m.hasConstraint(vals[0], unique); typ != none {
-		return fmt.Errorf("setUnique:已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
+		return propertyError(col.Name, "unique", "已经存在相同的约束名")
 	}
 
 	m.constraints[vals[0]] = unique
@@ -315,15 +318,15 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
 func (m *Model) setFK(col *Column, vals []string) error {
 	if len(vals) < 3 {
-		return errors.New("setFK:fk参数必须大于3个")
+		return propertyError(col.Name, "fk", "参数不够")
 	}
 
 	if typ := m.hasConstraint(vals[0], fk); typ != none {
-		return fmt.Errorf("setFK:已经存在相同的约束名[%v]，位于[%v]中", vals[0], typ)
+		return propertyError(col.Name, "fk", "已经存在相同的约束名")
 	}
 
 	if _, found := m.FK[vals[0]]; found {
-		return fmt.Errorf("setFK:重复的外键约束名:[%v]", vals[0])
+		return propertyError(col.Name, "fk", "重复的外键约束名")
 	}
 
 	fkInst := &ForeignKey{
@@ -347,22 +350,22 @@ func (m *Model) setFK(col *Column, vals []string) error {
 // ai(colName,start,step)
 func (m *Model) setAI(col *Column, vals []string) (err error) {
 	if col.HasDefault {
-		return fmt.Errorf("setAI:不能将一个含有默认值的列[%v]设置为自增", col.Name)
+		return propertyError(col.Name, "ai", "不能将一个含有默认值的列设置为自增")
 	}
 
 	if len(vals) != 0 {
-		return fmt.Errorf("setAI:[%v]字段的ai属性指定了太多的参数:[%v]", col.Name, vals)
+		return propertyError(col.Name, "ai", "太多的值")
 	}
 
 	if col.Nullable {
-		return fmt.Errorf("setAI:nullable列不能为自增列[%v]", col.Name)
+		return propertyError(col.Name, "ai", "不能与 nullable 并存")
 	}
 
 	switch col.GoType.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 	default:
-		return errors.New("setAI:自增列只能是整数类型")
+		return propertyError(col.Name, "ai", "类型只能是数值")
 	}
 
 	m.AI = col
