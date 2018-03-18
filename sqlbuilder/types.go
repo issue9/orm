@@ -53,7 +53,6 @@ type Dialect interface {
 	// 根据当前的数据库，对 SQL 作调整。
 	//
 	// 比如占位符 postgresql 可以使用 $1 等形式。
-	// 以及部分驱动可能不支持最新的命名参数，也会做调整。
 	SQL(sql string) (string, error)
 
 	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句。
