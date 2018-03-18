@@ -16,12 +16,18 @@ import (
 	"github.com/issue9/orm/sqlbuilder"
 )
 
-// Postgres 返回一个适配 postgresql 的 Dialect 接口
-func Postgres() orm.Dialect {
-	return &postgres{}
-}
+var postgresInst *postgres
 
 type postgres struct{}
+
+// Postgres 返回一个适配 postgresql 的 Dialect 接口
+func Postgres() orm.Dialect {
+	if postgresInst == nil {
+		postgresInst = &postgres{}
+	}
+
+	return postgresInst
+}
 
 func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'

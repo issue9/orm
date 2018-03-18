@@ -14,15 +14,21 @@ import (
 	"github.com/issue9/orm/sqlbuilder"
 )
 
+var sqlite3Inst *sqlite3
+
+type sqlite3 struct{}
+
 // Sqlite3 返回一个适配 sqlite3 的 orm.Dialect 接口
 //
 // Meta 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
 func Sqlite3() orm.Dialect {
-	return &sqlite3{}
-}
+	if sqlite3Inst == nil {
+		sqlite3Inst = &sqlite3{}
+	}
 
-type sqlite3 struct{}
+	return sqlite3Inst
+}
 
 func (s *sqlite3) QuoteTuple() (byte, byte) {
 	return '`', '`'
