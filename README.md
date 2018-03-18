@@ -7,6 +7,7 @@ orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https:
  1. sqlite3:  github.com/mattn/go-sqlite3
  2. mysql:    github.com/go-sql-driver/mysql
  3. postgres: github.com/lib/pq
+
 其它数据库，用户可以通过实现 Dialect 接口，来实现相应的支持。
 
 
