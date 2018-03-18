@@ -84,11 +84,7 @@ func (p *postgres) TruncateTableSQL(table, ai string) string {
 	w := sqlbuilder.New("TRUNCATE TABLE ").WriteString(table)
 
 	if ai != "" {
-		w.WriteString("; ALTER SEQUENCE ").
-			WriteString(table).
-			WriteByte('_').
-			WriteString(ai).
-			WriteString("_seq RESTART WITH 1")
+		w.WriteString(" RESTART IDENTITY")
 	}
 
 	return w.String()
