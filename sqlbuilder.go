@@ -122,26 +122,17 @@ func create(e Engine, v interface{}) error {
 		return err
 	}
 
-	s, err := e.Dialect().CreateTableSQL(m)
+	sqls, err := e.Dialect().CreateTableSQL(m)
 	if err != nil {
 		return err
 	}
-	if _, err := e.Exec(s); err != nil {
-		return err
-	}
 
-	sql := sqlbuilder.CreateIndex(e)
-	for name, cols := range m.KeyIndexes {
-		sql.Reset()
-		sql.Table("{#" + m.Name + "}").Name(name)
-		for _, col := range cols {
-			sql.Columns("{" + col.Name + "}")
-		}
-
-		if _, err := sql.Exec(); err != nil {
+	for _, sql := range sqls {
+		if _, err := e.Exec(sql); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

@@ -51,7 +51,7 @@ func (p *postgres) SQL(sql string) (string, error) {
 	return string(ret), nil
 }
 
-func (p *postgres) CreateTableSQL(model *model.Model) (string, error) {
+func (p *postgres) CreateTableSQL(model *model.Model) ([]string, error) {
 	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
@@ -60,7 +60,7 @@ func (p *postgres) CreateTableSQL(model *model.Model) (string, error) {
 	// 自增和普通列输出是相同的，自增列仅是类型名不相同
 	for _, col := range model.Cols {
 		if err := createColSQL(p, w, col); err != nil {
-			return "", err
+			return nil, err
 		}
 		w.WriteByte(',')
 	}
@@ -73,7 +73,12 @@ func (p *postgres) CreateTableSQL(model *model.Model) (string, error) {
 	w.TruncateLast(1).WriteByte(')')
 
 	// TODO meta
-	return w.String(), nil
+
+	indexs, err := createIndexSQL(model)
+	if err != nil {
+		return nil, err
+	}
+	return append([]string{w.String()}, indexs...), nil
 }
 
 func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {

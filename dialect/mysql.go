@@ -34,7 +34,7 @@ func (m *mysql) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (m *mysql) CreateTableSQL(model *model.Model) (string, error) {
+func (m *mysql) CreateTableSQL(model *model.Model) ([]string, error) {
 	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
@@ -43,7 +43,7 @@ func (m *mysql) CreateTableSQL(model *model.Model) (string, error) {
 	// 自增列
 	if model.AI != nil {
 		if err := createColSQL(m, w, model.AI); err != nil {
-			return "", err
+			return nil, err
 		}
 		w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
 	}
@@ -55,7 +55,7 @@ func (m *mysql) CreateTableSQL(model *model.Model) (string, error) {
 		}
 
 		if err := createColSQL(m, w, col); err != nil {
-			return "", err
+			return nil, err
 		}
 		w.WriteByte(',')
 	}
@@ -66,13 +66,17 @@ func (m *mysql) CreateTableSQL(model *model.Model) (string, error) {
 		w.WriteByte(',')
 	}
 	createConstraints(w, model)
+
+	// index
+	m.createIndexSQL(w, model)
+
 	w.TruncateLast(1).WriteByte(')')
 
 	if err := m.createTableOptions(w, model); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return w.String(), nil
+	return []string{w.String()}, nil
 }
 
 func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Model) error {
@@ -93,6 +97,22 @@ func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Model)
 	}
 
 	return nil
+}
+
+func (m *mysql) createIndexSQL(w *sqlbuilder.SQLBuilder, model *model.Model) {
+	for indexName, cols := range model.KeyIndexes {
+		// INDEX index_name (id,lastName)
+		w.WriteString(" INDEX ").
+			WriteString(indexName).
+			WriteByte('(')
+		for _, col := range cols {
+			w.WriteByte('{').WriteString(col.Name).WriteByte('}')
+			w.WriteByte(',')
+		}
+		w.TruncateLast(1) // 去掉最后一个逗号
+
+		w.WriteString("),")
+	}
 }
 
 func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {

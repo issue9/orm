@@ -42,7 +42,9 @@ type Dialect interface {
 	sqlbuilder.Dialect
 
 	// 生成创建表的 SQL 语句。
-	CreateTableSQL(m *model.Model) (string, error)
+	//
+	// 创建表可能生成多条语句，比如创建表，以及相关的创建索引语句。
+	CreateTableSQL(m *model.Model) ([]string, error)
 }
 
 // SQL 用于生成 SQL 语句

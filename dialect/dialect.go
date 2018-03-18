@@ -58,7 +58,7 @@ func createColSQL(b base, buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 
 // create table 语句中 pk 约束的语句
 func createPKSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, pkName string) {
-	//CONSTRAINT pk_name PRIMARY KEY (id,lastName)
+	// CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(pkName).
 		WriteString(" PRIMARY KEY(")
@@ -73,7 +73,7 @@ func createPKSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, pkName string
 
 // create table 语句中的 unique 约束部分的语句。
 func createUniqueSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, indexName string) {
-	//CONSTRAINT unique_name UNIQUE (id,lastName)
+	// CONSTRAINT unique_name UNIQUE (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(indexName).
 		WriteString(" UNIQUE(")
@@ -88,7 +88,7 @@ func createUniqueSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, indexName
 
 // create table 语句中 fk 的约束部分的语句
 func createFKSQL(buf *sqlbuilder.SQLBuilder, fk *model.ForeignKey, fkName string) {
-	//CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
+	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ").WriteString(fkName)
 
 	buf.WriteString(" FOREIGN KEY(")
@@ -111,7 +111,7 @@ func createFKSQL(buf *sqlbuilder.SQLBuilder, fk *model.ForeignKey, fkName string
 
 // create table 语句中 check 约束部分的语句
 func createCheckSQL(buf *sqlbuilder.SQLBuilder, expr, chkName string) {
-	//CONSTRAINT chk_name CHECK (id>0 AND username='admin')
+	// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(chkName).
 		WriteString(" CHECK(").
@@ -140,7 +140,31 @@ func createConstraints(buf *sqlbuilder.SQLBuilder, model *model.Model) {
 	}
 }
 
-// mysq系列数据库分页语法的实现。支持以下数据库：
+func createIndexSQL(model *model.Model) ([]string, error) {
+	if len(model.KeyIndexes) == 0 {
+		return nil, nil
+	}
+
+	sqls := make([]string, 0, len(model.KeyIndexes))
+	buf := sqlbuilder.CreateIndex(nil)
+	for name, cols := range model.KeyIndexes {
+		buf.Reset()
+		buf.Table("{#" + model.Name + "}").Name(name)
+		for _, col := range cols {
+			buf.Columns("{" + col.Name + "}")
+		}
+
+		sql, _, err := buf.SQL()
+		if err != nil {
+			return nil, err
+		}
+		sqls = append(sqls, sql)
+	}
+
+	return sqls, nil
+}
+
+// mysql 系列数据库分页语法的实现。支持以下数据库：
 // MySQL, H2, HSQLDB, Postgres, SQLite3
 func mysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	query := " LIMIT "
