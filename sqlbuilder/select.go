@@ -70,7 +70,9 @@ func (stmt *SelectStmt) Reset() {
 	stmt.countExpr = ""
 
 	stmt.joins = stmt.joins[:0]
-	stmt.orders.Reset()
+	if stmt.orders != nil {
+		stmt.orders.Reset()
+	}
 	stmt.group = ""
 
 	stmt.havingQuery = ""
