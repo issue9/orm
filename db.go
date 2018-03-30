@@ -206,6 +206,143 @@ func (db *DB) Truncate(v interface{}) error {
 	return truncate(db, v)
 }
 
+// MultInsert 插入一个或多个数据。
+func (db *DB) MultInsert(objs ...interface{}) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.MultInsert(objs...); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// MultSelect 选择符合要求的一条或是多条记录。
+func (db *DB) MultSelect(objs ...interface{}) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.MultSelect(objs...); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// MultUpdate 更新一条或多条类型。
+func (db *DB) MultUpdate(objs ...interface{}) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.MultUpdate(objs...); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// MultDelete 删除一条或是多条数据。
+func (db *DB) MultDelete(objs ...interface{}) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.MultDelete(objs...); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// MultCreate 创建数据表。
+func (db *DB) MultCreate(objs ...interface{}) error {
+	if !db.Dialect().TransactionalDDL() {
+		for _, v := range objs {
+			if err := db.Create(v); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.MultCreate(objs...); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// MultDrop 删除表结构及数据。
+func (db *DB) MultDrop(objs ...interface{}) error {
+	if !db.Dialect().TransactionalDDL() {
+		for _, v := range objs {
+			if err := db.Drop(v); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.MultDrop(objs...); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// MultTruncate 清除表内容，重置 ai，但保留表结构。
+func (db *DB) MultTruncate(objs ...interface{}) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.MultTruncate(objs...); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
 // SQL 返回 SQL 实例
 func (db *DB) SQL() *SQL {
 	return db.sql

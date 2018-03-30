@@ -36,6 +36,20 @@ type Engine interface {
 
 	Truncate(v interface{}) error
 
+	MultInsert(objs ...interface{}) error
+
+	MultSelect(objs ...interface{}) error
+
+	MultUpdate(objs ...interface{}) error
+
+	MultDelete(objs ...interface{}) error
+
+	MultCreate(objs ...interface{}) error
+
+	MultDrop(objs ...interface{}) error
+
+	MultTruncate(objs ...interface{}) error
+
 	SQL() *SQL
 }
 
