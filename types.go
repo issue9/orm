@@ -22,7 +22,9 @@ type Engine interface {
 
 	Delete(v interface{}) (sql.Result, error)
 
-	Update(v interface{}, cols ...string) (sql.Result, error)
+	Update(v interface{}) (sql.Result, error)
+
+	MustUpdate(v interface{}, cols ...string) (sql.Result, error)
 
 	Select(v interface{}) error
 

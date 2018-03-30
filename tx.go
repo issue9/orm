@@ -175,7 +175,12 @@ func (tx *Tx) InsertMany(v interface{}) error {
 }
 
 // Update 更新一条类型。
-func (tx *Tx) Update(v interface{}, cols ...string) (sql.Result, error) {
+func (tx *Tx) Update(v interface{}) (sql.Result, error) {
+	return update(tx, v)
+}
+
+// MustUpdate 更新一条类型。
+func (tx *Tx) MustUpdate(v interface{}, cols ...string) (sql.Result, error) {
 	return update(tx, v, cols...)
 }
 
