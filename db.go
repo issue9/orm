@@ -145,19 +145,11 @@ func (db *DB) Delete(v interface{}) (sql.Result, error) {
 	return del(db, v)
 }
 
-// Update 更新数据，零值不会被提交。
+// Update 更新数据，零值不会被提交，cols 指定的列，即使是零值也会被更新。
 //
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回 error
-func (db *DB) Update(v interface{}) (sql.Result, error) {
-	return update(db, v)
-}
-
-// MustUpdate 更新数据，零值不会被提交，cols 指定的列，即使是零值也会被更新。
-//
-// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
-// 若两者都不存在，则将返回 error
-func (db *DB) MustUpdate(v interface{}, cols ...string) (sql.Result, error) {
+func (db *DB) Update(v interface{}, cols ...string) (sql.Result, error) {
 	return update(db, v, cols...)
 }
 
