@@ -104,7 +104,7 @@ func count(e Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	sql := sqlbuilder.Select(e, e.Dialect()).Count("COUNT(*) AS count").From("{#" + m.Name + "}")
+	sql := e.SQL().Select().Count("COUNT(*) AS count").From("{#" + m.Name + "}")
 	if err = whereAny(sql, m, rval); err != nil {
 		return 0, err
 	}
@@ -143,7 +143,7 @@ func drop(e Engine, v interface{}) error {
 		return err
 	}
 
-	_, err = sqlbuilder.DropTable(e).Table("{#" + m.Name + "}").Exec()
+	_, err = e.SQL().DropTable().Table("{#" + m.Name + "}").Exec()
 	return err
 }
 
@@ -154,7 +154,7 @@ func truncate(e Engine, v interface{}) error {
 		return err
 	}
 
-	sql := sqlbuilder.Truncate(e, e.Dialect()).Table("#" + m.Name)
+	sql := e.SQL().Truncate().Table("#" + m.Name)
 	if m.AI != nil {
 		sql.AI("{" + m.AI.Name + "}")
 	}
@@ -169,7 +169,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	sql := sqlbuilder.Insert(e).Table("{#" + m.Name + "}")
+	sql := e.SQL().Insert().Table("{#" + m.Name + "}")
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -198,7 +198,7 @@ func find(e Engine, v interface{}) error {
 		return err
 	}
 
-	sql := sqlbuilder.Select(e, e.Dialect()).
+	sql := e.SQL().Select().
 		Select("*").
 		From("{#" + m.Name + "}")
 	if err = where(sql, m, rval); err != nil {
@@ -216,7 +216,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 		return err
 	}
 
-	sql := sqlbuilder.Select(tx, tx.Dialect()).
+	sql := tx.SQL().Select().
 		Select("*").
 		From("{#" + m.Name + "}").
 		ForUpdate()
@@ -239,7 +239,7 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 		return nil, err
 	}
 
-	sql := sqlbuilder.Update(e).Table("{#" + m.Name + "}")
+	sql := e.SQL().Update().Table("{#" + m.Name + "}")
 	var occValue interface{}
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
@@ -287,7 +287,7 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	sql := sqlbuilder.Delete(e).Table("{#" + m.Name + "}")
+	sql := e.SQL().Delete().Table("{#" + m.Name + "}")
 	if err = where(sql, m, rval); err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 
 // rval 为结构体指针组成的数据
 func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, error) {
-	sql := sqlbuilder.Insert(e)
+	sql := e.SQL().Insert()
 	keys := []string{}         // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 

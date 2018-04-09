@@ -192,7 +192,7 @@ func (tx *Tx) Count(v interface{}) (int64, error) {
 
 // Create 创建数据表。
 func (tx *Tx) Create(v interface{}) error {
-	if !tx.db.Dialect().TransactionalDDL() {
+	if !tx.Dialect().TransactionalDDL() {
 		return tx.db.Create(v)
 	}
 
@@ -256,7 +256,7 @@ func (tx *Tx) MultDelete(objs ...interface{}) error {
 
 // MultCreate 创建数据表。
 func (tx *Tx) MultCreate(objs ...interface{}) error {
-	if !tx.db.Dialect().TransactionalDDL() {
+	if !tx.Dialect().TransactionalDDL() {
 		return tx.db.MultCreate(objs...)
 	}
 
