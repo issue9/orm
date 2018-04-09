@@ -65,8 +65,8 @@ func TestGet(t *testing.T) {
 
 	for _, test := range tests {
 		for name, items := range test.data {
+			t.Log(test.tag)
 			val, found := Get(test.tag, name)
-			println(test.tag)
 			a.True(found).Equal(val, items)
 
 			val, found = Get(test.tag, name+"-temp")
