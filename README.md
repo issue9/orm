@@ -1,6 +1,7 @@
 orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https://travis-ci.org/issue9/orm)
 [![Go version](https://img.shields.io/badge/Go-1.8-brightgreen.svg?style=flat)](https://golang.org)
 [![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/mux)
+[![codecov](https://codecov.io/gh/issue9/orm/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/orm)
 ======
 
 目前内置了对以下数据库的支持：
@@ -16,8 +17,8 @@ orm [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https:
 默认情况下，orm 包并不会加载任何数据库的实例。所以想要用哪个数据库，需要手动初始化：
 ```go
 import (
-    _ github.com/mattn/go-sqlite3    // 加载数据库驱动
-    _ github.com/issue9/orm/dialect  // sqlite3 的 dialect 声明在此处
+    github.com/issue9/orm/dialect  // sqlite3 的 dialect 声明在此处
+    _ github.com/mattn/go-sqlite3  // 加载数据库驱动
 )
 
 // 初始化一个 DB，表前缀为 prefix_
