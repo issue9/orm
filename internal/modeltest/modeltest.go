@@ -55,3 +55,15 @@ type Admin struct {
 func (m *Admin) Meta() string {
 	return "check(chk_name,id>0);engine(innodb);charset(utf-8);name(administrators)"
 }
+
+// Account 带一个 OCC 字段
+type Account struct {
+	UID     int64 `orm:"name(uid);pk"`
+	Account int64 `orm:"name(account)"`
+	Version int64 `orm:"name(version);occ(true);default(1)"`
+}
+
+// Meta 指定表属性
+func (m *Account) Meta() string {
+	return "name(account)"
+}
