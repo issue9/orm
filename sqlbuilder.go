@@ -169,6 +169,12 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
+	if obj, ok := v.(BeforeInserter); ok {
+		if err = obj.BeforeInsert(); err != nil {
+			return nil, err
+		}
+	}
+
 	sql := e.SQL().Insert().Table("{#" + m.Name + "}")
 	for name, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
@@ -216,6 +222,12 @@ func forUpdate(tx *Tx, v interface{}) error {
 		return err
 	}
 
+	if obj, ok := v.(BeforeUpdater); ok {
+		if err = obj.BeforeUpdate(); err != nil {
+			return err
+		}
+	}
+
 	sql := tx.SQL().Select().
 		Select("*").
 		From("{#" + m.Name + "}").
@@ -237,6 +249,12 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 	m, rval, err := getModel(v)
 	if err != nil {
 		return nil, err
+	}
+
+	if obj, ok := v.(BeforeUpdater); ok {
+		if err = obj.BeforeUpdate(); err != nil {
+			return nil, err
+		}
 	}
 
 	sql := e.SQL().Update().Table("{#" + m.Name + "}")

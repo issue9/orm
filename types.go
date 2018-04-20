@@ -11,6 +11,16 @@ import (
 	"github.com/issue9/orm/sqlbuilder"
 )
 
+// BeforeUpdater 在更新之前调用的函数
+type BeforeUpdater interface {
+	BeforeUpdate() error
+}
+
+// BeforeInserter 在插入之前调用的函数
+type BeforeInserter interface {
+	BeforeInsert() error
+}
+
 // Engine 是 DB 与 Tx 的共有接口。
 type Engine interface {
 	sqlbuilder.Engine
