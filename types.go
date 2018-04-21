@@ -65,6 +65,11 @@ type Engine interface {
 type Dialect interface {
 	sqlbuilder.Dialect
 
+	// 根据当前的数据库，对 SQL 作调整。
+	//
+	// 比如占位符 postgresql 可以使用 $1 等形式。
+	SQL(sql string) (string, error)
+
 	// 生成创建表的 SQL 语句。
 	//
 	// 创建表可能生成多条语句，比如创建表，以及相关的创建索引语句。

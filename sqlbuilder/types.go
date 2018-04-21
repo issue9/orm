@@ -50,11 +50,6 @@ type Dialect interface {
 	// 返回符合当前数据库规范的引号对。
 	QuoteTuple() (openQuote, closeQuote byte)
 
-	// 根据当前的数据库，对 SQL 作调整。
-	//
-	// 比如占位符 postgresql 可以使用 $1 等形式。
-	SQL(sql string) (string, error)
-
 	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句。
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
