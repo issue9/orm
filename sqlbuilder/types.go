@@ -47,9 +47,6 @@ type Engine interface {
 
 // Dialect 接口用于描述与数据库相关的一些语言特性。
 type Dialect interface {
-	// 返回符合当前数据库规范的引号对。
-	QuoteTuple() (openQuote, closeQuote byte)
-
 	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句。
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
@@ -57,14 +54,6 @@ type Dialect interface {
 	//
 	// limit 和 offset 可以是 sql.NamedArg 类型。
 	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
-
-	// 是否允许在事务中执行 DDL
-	//
-	// 比如在 postgresql 中，如果创建一个带索引的表，会采用在事务中，
-	// 分多条语句创建表。
-	// 而像 mysql 等不支持事务内 DDL 的数据库，则会采用普通的方式，
-	// 依次提交语句。
-	TransactionalDDL() bool
 }
 
 func exec(e Engine, stmt SQLer) (sql.Result, error) {

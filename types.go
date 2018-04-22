@@ -65,6 +65,17 @@ type Engine interface {
 type Dialect interface {
 	sqlbuilder.Dialect
 
+	// 返回符合当前数据库规范的引号对。
+	QuoteTuple() (openQuote, closeQuote byte)
+
+	// 是否允许在事务中执行 DDL
+	//
+	// 比如在 postgresql 中，如果创建一个带索引的表，会采用在事务中，
+	// 分多条语句创建表。
+	// 而像 mysql 等不支持事务内 DDL 的数据库，则会采用普通的方式，
+	// 依次提交语句。
+	TransactionalDDL() bool
+
 	// 根据当前的数据库，对 SQL 作调整。
 	//
 	// 比如占位符 postgresql 可以使用 $1 等形式。
