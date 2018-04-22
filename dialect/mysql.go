@@ -125,8 +125,8 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (m *mysql) TruncateTableSQL(table, ai string) string {
-	return "TRUNCATE TABLE " + table
+func (m *mysql) TruncateTableSQL(model *model.Model) []string {
+	return []string{"TRUNCATE TABLE #" + model.Name}
 }
 
 func (m *mysql) TransactionalDDL() bool {

@@ -91,14 +91,14 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (p *postgres) TruncateTableSQL(table, ai string) string {
-	w := sqlbuilder.New("TRUNCATE TABLE ").WriteString(table)
+func (p *postgres) TruncateTableSQL(m *model.Model) []string {
+	w := sqlbuilder.New("TRUNCATE TABLE #").WriteString(m.Name)
 
-	if ai != "" {
+	if m.AI != nil {
 		w.WriteString(" RESTART IDENTITY")
 	}
 
-	return w.String()
+	return []string{w.String()}
 }
 
 func (p *postgres) TransactionalDDL() bool {

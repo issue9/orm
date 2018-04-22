@@ -147,22 +147,6 @@ func drop(e Engine, v interface{}) error {
 	return err
 }
 
-// 清空表，并重置 AI 计数。
-func truncate(e Engine, v interface{}) error {
-	m, err := model.New(v)
-	if err != nil {
-		return err
-	}
-
-	sql := e.SQL().Truncate().Table("#" + m.Name)
-	if m.AI != nil {
-		sql.AI("{" + m.AI.Name + "}")
-	}
-
-	_, err = sql.Exec()
-	return err
-}
-
 func insert(e Engine, v interface{}) (sql.Result, error) {
 	m, rval, err := getModel(v)
 	if err != nil {

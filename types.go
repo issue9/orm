@@ -70,6 +70,9 @@ type Dialect interface {
 	// 比如占位符 postgresql 可以使用 $1 等形式。
 	SQL(sql string) (string, error)
 
+	// 清空表内容，重置 AI。
+	TruncateTableSQL(m *model.Model) []string
+
 	// 生成创建表的 SQL 语句。
 	//
 	// 创建表可能生成多条语句，比如创建表，以及相关的创建索引语句。
@@ -109,9 +112,4 @@ func (sql *SQL) CreateIndex() *sqlbuilder.CreateIndexStmt {
 // DropTable 生成删除表的语句
 func (sql *SQL) DropTable() *sqlbuilder.DropTableStmt {
 	return sqlbuilder.DropTable(sql.engine)
-}
-
-// Truncate 生成清空表的语句
-func (sql *SQL) Truncate() *sqlbuilder.TruncateStmt {
-	return sqlbuilder.Truncate(sql.engine, sql.engine.Dialect())
 }

@@ -58,9 +58,6 @@ type Dialect interface {
 	// limit 和 offset 可以是 sql.NamedArg 类型。
 	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
 
-	// 清空表内容，重置 AI。
-	TruncateTableSQL(table, aiColumn string) string
-
 	// 是否允许在事务中执行 DDL
 	//
 	// 比如在 postgresql 中，如果创建一个带索引的表，会采用在事务中，

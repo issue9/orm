@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"github.com/issue9/orm/fetch"
+	"github.com/issue9/orm/model"
 )
 
 // Tx 事务对象
@@ -161,7 +162,7 @@ func (tx *Tx) InsertMany(v interface{}) error {
 	case reflect.Struct: // 单个元素
 		_, err := tx.Insert(v)
 		return err
-	case reflect.Array, reflect.Slice: // 支持多个插入，则由此处跳出 switch
+	case reflect.Array, reflect.Slice:
 		sql, err := buildInsertManySQL(tx, rval)
 		if err != nil {
 			return err
@@ -206,7 +207,19 @@ func (tx *Tx) Drop(v interface{}) error {
 
 // Truncate 清除表内容，重置 ai，但保留表结构。
 func (tx *Tx) Truncate(v interface{}) error {
-	return truncate(tx, v)
+	m, err := model.New(v)
+	if err != nil {
+		return err
+	}
+
+	sqls := tx.Dialect().TruncateTableSQL(m)
+	for _, sql := range sqls {
+		if _, err := tx.Exec(sql); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // SQL 返回 SQL 实例

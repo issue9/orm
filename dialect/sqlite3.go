@@ -104,13 +104,17 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (s *sqlite3) TruncateTableSQL(table, ai string) string {
-	return sqlbuilder.New("DELETE FROM ").
-		WriteString(table).
-		WriteString(";DELETE FROM SQLITE_SEQUENCE WHERE name='").
-		WriteString(table).
-		WriteString("';").
+func (s *sqlite3) TruncateTableSQL(m *model.Model) []string {
+	ret := make([]string, 2)
+	ret[0] = sqlbuilder.New("DELETE FROM #").
+		WriteString(m.Name).
 		String()
+	ret[1] = sqlbuilder.New("DELETE FROM SQLITE_SEQUENCE WHERE name='#").
+		WriteString(m.Name).
+		WriteByte('\'').
+		String()
+
+	return ret
 }
 
 func (s *sqlite3) TransactionalDDL() bool {

@@ -8,6 +8,8 @@ import (
 	"context"
 	"database/sql"
 	"strings"
+
+	"github.com/issue9/orm/model"
 )
 
 // DB 数据库操作实例。
@@ -195,7 +197,34 @@ func (db *DB) Drop(v interface{}) error {
 
 // Truncate 清空一张表。
 func (db *DB) Truncate(v interface{}) error {
-	return truncate(db, v)
+	m, err := model.New(v)
+	if err != nil {
+		return err
+	}
+
+	sqls := db.Dialect().TruncateTableSQL(m)
+
+	// 单语句，直接执行
+	if len(sqls) == 1 {
+		_, err = db.Exec(sqls[0])
+		return err
+	}
+
+	// 多语句，则初如化事务，再执行
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	for _, sql := range sqls {
+		if _, err := tx.Exec(sql); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 // MultInsert 插入一个或多个数据。

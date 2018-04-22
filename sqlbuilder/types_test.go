@@ -15,7 +15,6 @@ var (
 	_ execer  = &InsertStmt{}
 	_ execer  = &UpdateStmt{}
 	_ execer  = &CreateIndexStmt{}
-	_ execer  = &TruncateStmt{}
 	_ queryer = &SelectStmt{}
 )
 
