@@ -10,6 +10,12 @@ import (
 	"github.com/issue9/orm/sqlbuilder"
 )
 
+// Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
+//  "name(tbl_name);engine(myISAM);charset(utf-8)"
+type Metaer interface {
+	Meta() string
+}
+
 // BeforeUpdater 在更新之前调用的函数
 type BeforeUpdater interface {
 	BeforeUpdate() error
@@ -122,10 +128,4 @@ func (sql *SQL) CreateIndex() *sqlbuilder.CreateIndexStmt {
 // DropTable 生成删除表的语句
 func (sql *SQL) DropTable() *sqlbuilder.DropTableStmt {
 	return sqlbuilder.DropTable(sql.engine)
-}
-
-// Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
-//  "name(tbl_name);engine(myISAM);charset(utf-8)"
-type Metaer interface {
-	Meta() string
 }

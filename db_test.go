@@ -87,7 +87,7 @@ func TestNewDB(t *testing.T) {
 	a.NotNil(db.StdDB()).NotNil(db.Dialect())
 }
 
-// 初始化测试数据，同时可当作 DB.Inert 的测试
+// 初始化测试数据，同时可当作 DB.Insert 的测试
 // 清空其它数据，初始化成原始的测试数据
 func initData(db *orm.DB, a *assert.Assertion) {
 	a.NotError(db.Drop(&modeltest.User{}))

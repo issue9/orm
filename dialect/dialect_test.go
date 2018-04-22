@@ -15,6 +15,18 @@ import (
 	"github.com/issue9/orm/sqlbuilder"
 )
 
+type model1 struct{}
+
+func (m *model1) Meta() string {
+	return "name(model1)"
+}
+
+type model2 struct{}
+
+func (m *model2) Meta() string {
+	return "check(chk_name,id>0);engine(innodb);charset(utf-8);name(model2);rowid(false)"
+}
+
 func TestCreatColSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}

@@ -17,6 +17,27 @@ import (
 
 var _ base = &sqlite3{}
 
+func TestSqlite3_CreateTableOptions(t *testing.T) {
+	a := assert.New(t)
+	sql := sqlbuilder.New("")
+	a.NotNil(sql)
+	var s = &sqlite3{}
+
+	// 空的 meta
+	mod, err := orm.NewModel(&model1{})
+	a.NotError(err).NotNil(mod)
+	s.createTableOptions(sql, mod)
+	a.Equal(sql.Len(), 0)
+
+	// engine
+	sql.Reset()
+	mod, err = orm.NewModel(&model2{})
+	a.NotError(err).NotNil(mod)
+	s.createTableOptions(sql, mod)
+	a.True(sql.Len() > 0)
+	sqltest.Equal(a, sql.String(), "without rowid")
+}
+
 func TestSqlite3_sqlType(t *testing.T) {
 	a := assert.New(t)
 	var s = &sqlite3{}
