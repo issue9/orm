@@ -7,6 +7,8 @@ package orm
 import (
 	"testing"
 
+	"github.com/issue9/orm/internal/modeltest"
+
 	"github.com/issue9/assert"
 )
 
@@ -18,6 +20,7 @@ func TestColumn_SetLen(t *testing.T) {
 	a.NotError(col.setLen([]string{"1", "2"})).Equal(col.Len1, 1).Equal(col.Len2, 2)
 	a.Error(col.setLen([]string{"1", "2", "3"}))
 	a.Error(col.setLen([]string{"1", "one"}))
+	a.Error(col.setLen([]string{"one", "one"}))
 }
 
 func TestColumn_SetNullable(t *testing.T) {
@@ -33,4 +36,11 @@ func TestColumn_SetNullable(t *testing.T) {
 
 	a.Error(col.setNullable([]string{"1", "2"}))
 	a.Error(col.setNullable([]string{"T1"}))
+
+	// 将 AI 设置为 nullabl
+	m, err := NewModel(&modeltest.User{})
+	a.NotError(err).NotNil(m)
+	m.AI = col
+	col.model = m
+	a.Error(col.setNullable([]string{"true"}))
 }

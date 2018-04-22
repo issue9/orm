@@ -55,7 +55,6 @@ func TestModels(t *testing.T) {
 	a.Equal(0, len(models.items))
 }
 
-// 传递给 NewModel 是一个指针时的各种情况
 func TestModel(t *testing.T) {
 	Clear()
 	a := assert.New(t)
