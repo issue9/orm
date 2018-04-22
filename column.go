@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package model
+package orm
 
 import (
 	"reflect"
@@ -23,6 +23,13 @@ type Column struct {
 
 	HasDefault bool
 	Default    string // 默认值
+}
+
+// ForeignKey 外键
+type ForeignKey struct {
+	Col                      *Column
+	RefTableName, RefColName string
+	UpdateRule, DeleteRule   string
 }
 
 func (m *Model) newColumn(field reflect.StructField) *Column {

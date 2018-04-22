@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm"
 	"github.com/issue9/orm/internal/sqltest"
-	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -22,7 +22,7 @@ func TestSqlite3_sqlType(t *testing.T) {
 	var s = &sqlite3{}
 
 	buf := sqlbuilder.New("")
-	col := &model.Column{}
+	col := &orm.Column{}
 	a.Error(s.sqlType(buf, col))
 
 	col.GoType = reflect.TypeOf(1)

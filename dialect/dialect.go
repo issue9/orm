@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/issue9/orm"
-	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -29,11 +28,11 @@ type base interface {
 	orm.Dialect
 
 	// 将 col 转换成 sql 类型，并写入 buf 中。
-	sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error
+	sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error
 }
 
 // 用于产生在 createTable 中使用的普通列信息表达式，不包含 autoincrement 和 primary key 的关键字。
-func createColSQL(b base, buf *sqlbuilder.SQLBuilder, col *model.Column) error {
+func createColSQL(b base, buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 	// col_name VARCHAR(100) NOT NULL DEFAULT 'abc'
 	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
 	buf.WriteByte(' ')
@@ -57,7 +56,7 @@ func createColSQL(b base, buf *sqlbuilder.SQLBuilder, col *model.Column) error {
 }
 
 // create table 语句中 pk 约束的语句
-func createPKSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, pkName string) {
+func createPKSQL(buf *sqlbuilder.SQLBuilder, cols []*orm.Column, pkName string) {
 	// CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(pkName).
@@ -72,7 +71,7 @@ func createPKSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, pkName string
 }
 
 // create table 语句中的 unique 约束部分的语句。
-func createUniqueSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, indexName string) {
+func createUniqueSQL(buf *sqlbuilder.SQLBuilder, cols []*orm.Column, indexName string) {
 	// CONSTRAINT unique_name UNIQUE (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(indexName).
@@ -87,7 +86,7 @@ func createUniqueSQL(buf *sqlbuilder.SQLBuilder, cols []*model.Column, indexName
 }
 
 // create table 语句中 fk 的约束部分的语句
-func createFKSQL(buf *sqlbuilder.SQLBuilder, fk *model.ForeignKey, fkName string) {
+func createFKSQL(buf *sqlbuilder.SQLBuilder, fk *orm.ForeignKey, fkName string) {
 	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ").WriteString(fkName)
 
@@ -120,7 +119,7 @@ func createCheckSQL(buf *sqlbuilder.SQLBuilder, expr, chkName string) {
 }
 
 // 创建标准的几种约束(除 PK 约束，该约束有专门的函数 createPKSQL() 产生)：unique, foreign key, check
-func createConstraints(buf *sqlbuilder.SQLBuilder, model *model.Model) {
+func createConstraints(buf *sqlbuilder.SQLBuilder, model *orm.Model) {
 	// Unique Index
 	for name, index := range model.UniqueIndexes {
 		createUniqueSQL(buf, index, name)
@@ -140,7 +139,7 @@ func createConstraints(buf *sqlbuilder.SQLBuilder, model *model.Model) {
 	}
 }
 
-func createIndexSQL(model *model.Model) ([]string, error) {
+func createIndexSQL(model *orm.Model) ([]string, error) {
 	if len(model.KeyIndexes) == 0 {
 		return nil, nil
 	}

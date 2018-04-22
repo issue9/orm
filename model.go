@@ -2,8 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// Package model 定义数据模型信息
-package model
+package orm
 
 import (
 	"fmt"
@@ -17,8 +16,19 @@ import (
 	"github.com/issue9/orm/internal/tags"
 )
 
+// 预定的约束类型，方便 Model 中使用。
+const (
+	none conType = iota
+	index
+	unique
+	fk
+	check
+)
+
 // model 缓存
 var models = &modelsMap{items: map[reflect.Type]*Model{}}
+
+type conType int8
 
 type modelsMap struct {
 	sync.Mutex
@@ -45,9 +55,26 @@ func propertyError(field, name, message string) error {
 	return fmt.Errorf("%s 的 %s 属性发生以下错误: %s", field, name, message)
 }
 
-// New 从一个 obj 声明一个 Model 实例。
+func (t conType) String() string {
+	switch t {
+	case none:
+		return "<none>"
+	case index:
+		return "KEY INDEX"
+	case unique:
+		return "UNIQUE INDEX"
+	case fk:
+		return "FOREIGN KEY"
+	case check:
+		return "CHECK"
+	default:
+		return "<unknown>"
+	}
+}
+
+// NewModel 从一个 obj 声明一个 Model 实例。
 // obj 可以是一个 struct 实例或是指针。
-func New(obj interface{}) (*Model, error) {
+func NewModel(obj interface{}) (*Model, error) {
 	rval := reflect.ValueOf(obj)
 	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()

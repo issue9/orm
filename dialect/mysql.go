@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/issue9/orm"
-	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -40,7 +39,7 @@ func (m *mysql) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (m *mysql) CreateTableSQL(model *model.Model) ([]string, error) {
+func (m *mysql) CreateTableSQL(model *orm.Model) ([]string, error) {
 	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
@@ -85,7 +84,7 @@ func (m *mysql) CreateTableSQL(model *model.Model) ([]string, error) {
 	return []string{w.String()}, nil
 }
 
-func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Model) error {
+func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
 	if len(model.Meta["engine"]) == 1 {
 		w.WriteString(" ENGINE=")
 		w.WriteString(model.Meta["engine"][0])
@@ -105,7 +104,7 @@ func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Model)
 	return nil
 }
 
-func (m *mysql) createIndexSQL(w *sqlbuilder.SQLBuilder, model *model.Model) {
+func (m *mysql) createIndexSQL(w *sqlbuilder.SQLBuilder, model *orm.Model) {
 	for indexName, cols := range model.KeyIndexes {
 		// INDEX index_name (id,lastName)
 		w.WriteString(" INDEX ").
@@ -125,7 +124,7 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (m *mysql) TruncateTableSQL(model *model.Model) []string {
+func (m *mysql) TruncateTableSQL(model *orm.Model) []string {
 	return []string{"TRUNCATE TABLE #" + model.Name}
 }
 
@@ -133,7 +132,7 @@ func (m *mysql) TransactionalDDL() bool {
 	return false
 }
 
-func (m *mysql) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {
+func (m *mysql) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

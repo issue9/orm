@@ -10,12 +10,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
-func getModel(v interface{}) (*model.Model, reflect.Value, error) {
-	m, err := model.New(v)
+func getModel(v interface{}) (*Model, reflect.Value, error) {
+	m, err := NewModel(v)
 	if err != nil {
 		return nil, reflect.Value{}, err
 	}
@@ -28,14 +27,14 @@ func getModel(v interface{}) (*model.Model, reflect.Value, error) {
 	return m, rval, nil
 }
 
-// 根据 model 中的主键或是唯一索引为 sql 产生 where 语句，
+// 根据 Model 中的主键或是唯一索引为 sql 产生 where 语句，
 // 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
-func where(sql sqlbuilder.WhereStmter, m *model.Model, rval reflect.Value) error {
+func where(sql sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
 	// 获取构成 where 的键名和键值
-	getKV := func(cols []*model.Column) bool {
+	getKV := func(cols []*Column) bool {
 		for _, col := range cols {
 			field := rval.FieldByName(col.GoName)
 
@@ -71,7 +70,7 @@ func where(sql sqlbuilder.WhereStmter, m *model.Model, rval reflect.Value) error
 }
 
 // 根据 rval 中任意非零值产生 where 语句
-func whereAny(sql sqlbuilder.WhereStmter, m *model.Model, rval reflect.Value) error {
+func whereAny(sql sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -138,7 +137,7 @@ func create(e Engine, v interface{}) error {
 
 // 删除一张表。
 func drop(e Engine, v interface{}) error {
-	m, err := model.New(v)
+	m, err := NewModel(v)
 	if err != nil {
 		return err
 	}

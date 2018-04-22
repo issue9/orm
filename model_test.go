@@ -2,14 +2,31 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package model
+package orm
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/internal/modeltest"
 )
+
+func TestContType(t *testing.T) {
+	a := assert.New(t)
+
+	a.Equal("<none>", none.String()).
+		Equal("KEY INDEX", fmt.Sprint(index)).
+		Equal("UNIQUE INDEX", unique.String()).
+		Equal("FOREIGN KEY", fk.String()).
+		Equal("CHECK", check.String())
+
+	var c1 conType
+	a.Equal("<none>", c1.String())
+
+	c1 = 100
+	a.Equal("<unknown>", c1.String())
+}
 
 func TestModels(t *testing.T) {
 	a := assert.New(t)
@@ -17,19 +34,19 @@ func TestModels(t *testing.T) {
 	Clear()
 	a.Equal(0, len(models.items))
 
-	m, err := New(&modeltest.User{})
+	m, err := NewModel(&modeltest.User{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 相同的 model 实例，不会增加数量
-	m, err = New(&modeltest.User{})
+	m, err = NewModel(&modeltest.User{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 添加新的 model
-	m, err = New(&modeltest.Admin{})
+	m, err = NewModel(&modeltest.Admin{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(2, len(models.items))
@@ -43,7 +60,7 @@ func TestModel(t *testing.T) {
 	Clear()
 	a := assert.New(t)
 
-	m, err := New(&modeltest.Admin{})
+	m, err := NewModel(&modeltest.Admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols

@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/issue9/orm"
-	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -57,7 +56,7 @@ func (p *postgres) SQL(sql string) (string, error) {
 	return string(ret), nil
 }
 
-func (p *postgres) CreateTableSQL(model *model.Model) ([]string, error) {
+func (p *postgres) CreateTableSQL(model *orm.Model) ([]string, error) {
 	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
@@ -91,7 +90,7 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (p *postgres) TruncateTableSQL(m *model.Model) []string {
+func (p *postgres) TruncateTableSQL(m *orm.Model) []string {
 	w := sqlbuilder.New("TRUNCATE TABLE #").WriteString(m.Name)
 
 	if m.AI != nil {
@@ -107,7 +106,7 @@ func (p *postgres) TransactionalDDL() bool {
 
 // implement base.sqlType
 // 将col转换成sql类型，并写入buf中。
-func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {
+func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}

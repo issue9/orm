@@ -7,7 +7,6 @@ package orm
 import (
 	"database/sql"
 
-	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -82,12 +81,12 @@ type Dialect interface {
 	SQL(sql string) (string, error)
 
 	// 清空表内容，重置 AI。
-	TruncateTableSQL(m *model.Model) []string
+	TruncateTableSQL(m *Model) []string
 
 	// 生成创建表的 SQL 语句。
 	//
 	// 创建表可能生成多条语句，比如创建表，以及相关的创建索引语句。
-	CreateTableSQL(m *model.Model) ([]string, error)
+	CreateTableSQL(m *Model) ([]string, error)
 }
 
 // SQL 用于生成 SQL 语句
@@ -123,4 +122,10 @@ func (sql *SQL) CreateIndex() *sqlbuilder.CreateIndexStmt {
 // DropTable 生成删除表的语句
 func (sql *SQL) DropTable() *sqlbuilder.DropTableStmt {
 	return sqlbuilder.DropTable(sql.engine)
+}
+
+// Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
+//  "name(tbl_name);engine(myISAM);charset(utf-8)"
+type Metaer interface {
+	Meta() string
 }

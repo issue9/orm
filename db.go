@@ -8,8 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"strings"
-
-	"github.com/issue9/orm/model"
 )
 
 // DB 数据库操作实例。
@@ -197,7 +195,7 @@ func (db *DB) Drop(v interface{}) error {
 
 // Truncate 清空一张表。
 func (db *DB) Truncate(v interface{}) error {
-	m, err := model.New(v)
+	m, err := NewModel(v)
 	if err != nil {
 		return err
 	}

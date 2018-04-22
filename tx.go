@@ -10,7 +10,6 @@ import (
 	"reflect"
 
 	"github.com/issue9/orm/fetch"
-	"github.com/issue9/orm/model"
 )
 
 // Tx 事务对象
@@ -207,7 +206,7 @@ func (tx *Tx) Drop(v interface{}) error {
 
 // Truncate 清除表内容，重置 ai，但保留表结构。
 func (tx *Tx) Truncate(v interface{}) error {
-	m, err := model.New(v)
+	m, err := NewModel(v)
 	if err != nil {
 		return err
 	}

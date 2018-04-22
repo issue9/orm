@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm"
 	"github.com/issue9/orm/internal/sqltest"
-	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -19,7 +19,7 @@ func TestCreatColSQL(t *testing.T) {
 	a := assert.New(t)
 	dialect := &mysql{}
 	buf := sqlbuilder.New("")
-	col := &model.Column{}
+	col := &orm.Column{}
 
 	col.Name = "id"
 	col.GoType = reflect.TypeOf(1)
@@ -48,9 +48,9 @@ func TestCreatColSQL(t *testing.T) {
 func TestCreatePKSQL(t *testing.T) {
 	a := assert.New(t)
 	buf := sqlbuilder.New("")
-	col1 := &model.Column{Name: "id"}
-	col2 := &model.Column{Name: "username"}
-	cols := []*model.Column{col1, col2}
+	col1 := &orm.Column{Name: "id"}
+	col2 := &orm.Column{Name: "username"}
+	cols := []*orm.Column{col1, col2}
 
 	createPKSQL(buf, cols, "pkname")
 	wont := "CONSTRAINT pkname PRIMARY KEY({id},{username})"
@@ -65,9 +65,9 @@ func TestCreatePKSQL(t *testing.T) {
 func TestCreateUniqueSQL(t *testing.T) {
 	a := assert.New(t)
 	buf := sqlbuilder.New("")
-	col1 := &model.Column{Name: "id"}
-	col2 := &model.Column{Name: "username"}
-	cols := []*model.Column{col1, col2}
+	col1 := &orm.Column{Name: "id"}
+	col2 := &orm.Column{Name: "username"}
+	cols := []*orm.Column{col1, col2}
 
 	createUniqueSQL(buf, cols, "pkname")
 	wont := "CONSTRAINT pkname UNIQUE({id},{username})"
@@ -82,8 +82,8 @@ func TestCreateUniqueSQL(t *testing.T) {
 func TestCreateFKSQL(t *testing.T) {
 	a := assert.New(t)
 	buf := sqlbuilder.New("")
-	fk := &model.ForeignKey{
-		Col:          &model.Column{Name: "id"},
+	fk := &orm.ForeignKey{
+		Col:          &orm.Column{Name: "id"},
 		RefTableName: "refTable",
 		RefColName:   "refCol",
 		UpdateRule:   "NO ACTION",

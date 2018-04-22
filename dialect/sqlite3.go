@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/issue9/orm"
-	"github.com/issue9/orm/model"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -38,7 +37,7 @@ func (s *sqlite3) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (s *sqlite3) CreateTableSQL(model *model.Model) ([]string, error) {
+func (s *sqlite3) CreateTableSQL(model *orm.Model) ([]string, error) {
 	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").
 		WriteString(model.Name).
@@ -83,7 +82,7 @@ func (s *sqlite3) CreateTableSQL(model *model.Model) ([]string, error) {
 	return append([]string{w.String()}, indexs...), nil
 }
 
-func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *model.Model) error {
+func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
 	if len(model.Meta["rowid"]) == 1 {
 		val, err := strconv.ParseBool(model.Meta["rowid"][0])
 		if err != nil {
@@ -104,7 +103,7 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (s *sqlite3) TruncateTableSQL(m *model.Model) []string {
+func (s *sqlite3) TruncateTableSQL(m *orm.Model) []string {
 	ret := make([]string, 2)
 	ret[0] = sqlbuilder.New("DELETE FROM #").
 		WriteString(m.Name).
@@ -122,7 +121,7 @@ func (s *sqlite3) TransactionalDDL() bool {
 }
 
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) sqlType(buf *sqlbuilder.SQLBuilder, col *model.Column) error {
+func (s *sqlite3) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 	if col == nil {
 		return errors.New("sqlType:col参数是个空值")
 	}
