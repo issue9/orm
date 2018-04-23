@@ -277,10 +277,8 @@ func (m *Model) setDefault(col *Column, vals []string) error {
 		return propertyError(col.Name, "default", "自增列不能设置默认值")
 	}
 
-	for _, c := range m.PK {
-		if c == col {
-			return propertyError(col.Name, "default", "不能为主键设置默认值")
-		}
+	if len(m.PK) == 1 && m.PK[0] == col {
+		return propertyError(col.Name, "default", "不能为主键设置默认值")
 	}
 
 	if len(vals) != 1 {
@@ -310,10 +308,6 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 
 // pk
 func (m *Model) setPK(col *Column, vals []string) error {
-	if col.HasDefault {
-		return propertyError(col.Name, "pk", "不能将一个含有默认值的列设置为主键")
-	}
-
 	if len(vals) != 0 {
 		return propertyError(col.Name, "pk", "太多的值")
 	}
