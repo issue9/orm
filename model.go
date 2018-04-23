@@ -407,8 +407,8 @@ func (m *Model) hasConstraint(name string, except conType) conType {
 	return none
 }
 
-// Clear 清除所有的 Model 缓存。
-func Clear() {
+// ClearModels 清除所有的 Model 缓存。
+func ClearModels() {
 	models.Lock()
 	defer models.Unlock()
 

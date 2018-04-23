@@ -16,19 +16,19 @@ import (
 
 // go1.10 BenchmarkNewModelNoCached-4   	  200000	      8161 ns/op
 func BenchmarkNewModelNoCached(b *testing.B) {
-	orm.Clear()
+	orm.ClearModels()
 	a := assert.New(b)
 
 	for i := 0; i < b.N; i++ {
 		m, err := orm.NewModel(&modeltest.User{})
-		orm.Clear()
+		orm.ClearModels()
 		a.NotError(err).NotNil(m)
 	}
 }
 
 // go1.10 BenchmarkNewModelCached-4     	10000000	       187 ns/op
 func BenchmarkNewModelCached(b *testing.B) {
-	orm.Clear()
+	orm.ClearModels()
 	a := assert.New(b)
 
 	for i := 0; i < b.N; i++ {

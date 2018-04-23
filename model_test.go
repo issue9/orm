@@ -32,7 +32,7 @@ func TestContType(t *testing.T) {
 func TestModels(t *testing.T) {
 	a := assert.New(t)
 
-	Clear()
+	ClearModels()
 	a.Equal(0, len(models.items))
 
 	m, err := NewModel(&modeltest.User{})
@@ -52,12 +52,12 @@ func TestModels(t *testing.T) {
 		NotNil(m).
 		Equal(2, len(models.items))
 
-	Clear()
+	ClearModels()
 	a.Equal(0, len(models.items))
 }
 
 func TestNewModel(t *testing.T) {
-	Clear()
+	ClearModels()
 	a := assert.New(t)
 
 	m, err := NewModel(&modeltest.Admin{})
