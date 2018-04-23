@@ -226,8 +226,9 @@ func (m *Model) parseMeta(obj interface{}) error {
 				return propertyError("Metaer", "check", "与其它约束名称相同")
 			}
 
-			m.constraints[v[0]] = check
-			m.Check[v[0]] = v[1]
+			name := strings.ToLower(v[0])
+			m.constraints[name] = check
+			m.Check[name] = v[1]
 		default:
 			m.Meta[k] = v
 		}
@@ -301,8 +302,9 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 		return propertyError(col.Name, "index", "已经存在相同的约束名")
 	}
 
-	m.constraints[vals[0]] = index
-	m.KeyIndexes[vals[0]] = append(m.KeyIndexes[vals[0]], col)
+	name := strings.ToLower(vals[0])
+	m.constraints[name] = index
+	m.KeyIndexes[name] = append(m.KeyIndexes[name], col)
 	return nil
 }
 
@@ -330,8 +332,9 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 		return propertyError(col.Name, "unique", "已经存在相同的约束名")
 	}
 
-	m.constraints[vals[0]] = unique
-	m.UniqueIndexes[vals[0]] = append(m.UniqueIndexes[vals[0]], col)
+	name := strings.ToLower(vals[0])
+	m.constraints[name] = unique
+	m.UniqueIndexes[name] = append(m.UniqueIndexes[name], col)
 
 	return nil
 }
@@ -363,8 +366,9 @@ func (m *Model) setFK(col *Column, vals []string) error {
 		fkInst.DeleteRule = vals[4]
 	}
 
-	m.constraints[vals[0]] = fk
-	m.FK[vals[0]] = fkInst
+	name := strings.ToLower(vals[0])
+	m.constraints[name] = fk
+	m.FK[name] = fkInst
 	return nil
 }
 
@@ -398,8 +402,9 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 
 // 是否存在指定名称的约束名，name 不区分大小写。
 // 若已经存在返回表示该约束类型的常量，否则返回 none。
+//
+// NOTE:约束名不区分大小写
 func (m *Model) hasConstraint(name string, except conType) conType {
-	// 约束名不区分大小写
 	if typ, found := m.constraints[strings.ToLower(name)]; found && typ != except {
 		return typ
 	}

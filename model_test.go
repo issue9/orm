@@ -189,3 +189,14 @@ func TestModel_setDefault(t *testing.T) {
 	a.NotError(m.setDefault(col, []string{"1"}))
 	a.True(col.HasDefault).Equal(col.Default, "1")
 }
+
+func TestModel_hasConstraint(t *testing.T) {
+	a := assert.New(t)
+	m := &Model{}
+
+	a.Equal(m.hasConstraint("index", index), none)
+
+	m.constraints = map[string]conType{"index": index}
+	a.Equal(m.hasConstraint("index", index), none)
+	a.Equal(m.hasConstraint("INDEX", fk), index)
+}
