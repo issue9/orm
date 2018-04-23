@@ -190,6 +190,52 @@ func TestModel_setDefault(t *testing.T) {
 	a.True(col.HasDefault).Equal(col.Default, "1")
 }
 
+func TestModel_setPK(t *testing.T) {
+	a := assert.New(t)
+	m := &Model{}
+	col := &Column{}
+
+	// 过多的参数
+	a.Error(m.setPK(col, []string{"123"}))
+
+	// AI 列不能为 PK
+	m.AI = col
+	a.Error(m.setPK(col, nil))
+
+	m.AI = nil
+	a.NotError(m.setPK(col, nil))
+	a.NotError(m.setPK(&Column{}, nil))
+	a.Equal(len(m.PK), 2)
+}
+
+func TestModel_setAI(t *testing.T) {
+	a := assert.New(t)
+	m := &Model{}
+
+	col := &Column{
+		HasDefault: true,
+	}
+
+	// 带有默认值的列，不能作 AI 列
+	a.Error(m.setAI(col, nil))
+
+	// nullable 的列不能作 AI 列
+	col.HasDefault = false
+	col.Nullable = true
+	a.Error(m.setAI(col, nil))
+
+	// 太多的参数
+	col.Nullable = false
+	a.Error(m.setAI(col, []string{"true", "false"}))
+
+	// 列类型只能是整数型
+	col.GoType = reflect.TypeOf(1.1)
+	a.Error(m.setAI(col, nil))
+
+	col.GoType = reflect.TypeOf(1)
+	a.NotError(m.setAI(col, nil))
+}
+
 func TestModel_hasConstraint(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}

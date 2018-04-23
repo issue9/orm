@@ -372,7 +372,7 @@ func (m *Model) setFK(col *Column, vals []string) error {
 	return nil
 }
 
-// ai(colName,start,step)
+// ai
 func (m *Model) setAI(col *Column, vals []string) (err error) {
 	if col.HasDefault {
 		return propertyError(col.Name, "ai", "不能将一个含有默认值的列设置为自增")
