@@ -26,14 +26,14 @@ const (
 )
 
 // model 缓存
-var models = &modelsMap{items: map[reflect.Type]*Model{}}
-
-type conType int8
-
-type modelsMap struct {
+var models = &struct {
 	sync.Mutex
 	items map[reflect.Type]*Model
+}{
+	items: map[reflect.Type]*Model{},
 }
+
+type conType int8
 
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
@@ -107,8 +107,10 @@ func NewModel(obj interface{}) (*Model, error) {
 		return nil, err
 	}
 
-	if err := m.parseMeta(obj); err != nil {
-		return nil, err
+	if meta, ok := obj.(Metaer); ok {
+		if err := m.parseMeta(meta.Meta()); err != nil {
+			return nil, err
+		}
 	}
 
 	models.items[rtype] = m
@@ -127,7 +129,17 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 			continue
 		}
 
-		if err := m.parseColumn(field); err != nil {
+		if unicode.IsLower(rune(field.Name[0])) { // 忽略以小写字母开头的字段
+			continue
+		}
+
+		tag := field.Tag.Get("orm")
+		if tag == "-" {
+			continue
+		}
+
+		col := m.newColumn(field)
+		if err := m.parseColumn(col, tag); err != nil {
 			return err
 		}
 	}
@@ -136,24 +148,13 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 }
 
 // 分析一个字段。
-func (m *Model) parseColumn(field reflect.StructField) (err error) {
-	if unicode.IsLower(rune(field.Name[0])) { // 忽略以小写字母开头的字段
-		return nil
-	}
-
-	tagTxt := field.Tag.Get("orm")
-	if tagTxt == "-" {
-		return nil
-	}
-
-	col := m.newColumn(field)
-
-	if len(tagTxt) == 0 { // 没有附加的 struct tag，直接取得几个关键信息返回。
+func (m *Model) parseColumn(col *Column, tag string) (err error) {
+	if len(tag) == 0 { // 没有附加的 struct tag，直接取得几个关键信息返回。
 		m.Cols[col.Name] = col
 		return nil
 	}
 
-	tags := tags.Parse(tagTxt)
+	tags := tags.Parse(tag)
 	for k, v := range tags {
 		switch k {
 		case "name": // name(colname)
@@ -194,13 +195,8 @@ func (m *Model) parseColumn(field reflect.StructField) (err error) {
 }
 
 // 分析 meta 接口数据。
-func (m *Model) parseMeta(obj interface{}) error {
-	meta, ok := obj.(Metaer)
-	if !ok {
-		return nil
-	}
-
-	tags := tags.Parse(meta.Meta())
+func (m *Model) parseMeta(tag string) error {
+	tags := tags.Parse(tag)
 	if len(tags) == 0 {
 		return nil
 	}

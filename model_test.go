@@ -113,6 +113,51 @@ func TestNewModel(t *testing.T) {
 	a.Equal(m.Name, "administrators")
 }
 
+func TestModel_parseColumn(t *testing.T) {
+	a := assert.New(t)
+	m := &Model{
+		Cols: map[string]*Column{},
+	}
+	col := &Column{}
+
+	// 不存在 struct tag，则以 col.Name 作为键名
+	a.NotError(m.parseColumn(col, ""))
+	a.Equal(m.Cols[col.Name], col)
+
+	// name 值过多
+	a.Error(m.parseColumn(col, "name(m1,m2)"))
+
+	// 不存在的属性名称
+	a.Error(m.parseColumn(col, "not-exists-property(p1)"))
+}
+
+func TestModel_parseMeta(t *testing.T) {
+	a := assert.New(t)
+	m := &Model{
+		constraints: map[string]conType{},
+		Check:       map[string]string{},
+	}
+
+	// 空值不算错误
+	a.NotError(m.parseMeta(""))
+
+	// name 属性过多
+	a.Error(m.parseMeta("name(m1,m2)"))
+
+	// check 属性过多或是过少
+	a.Error(m.parseMeta("check(ck,id>0 AND id<10,error)"))
+
+	// check 添加成功
+	a.NotError(m.parseMeta("check(ck,id>0 AND id<10)"))
+
+	// check 与已有 check 名称相同
+	a.Error(m.parseMeta("check(ck,id>0)"))
+
+	// check 与其它约束名相同
+	m.constraints = map[string]conType{"fk": fk}
+	a.Error(m.parseMeta("check(fk,id>0)"))
+}
+
 func TestModel_setOCC(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
