@@ -305,6 +305,13 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 	for i := 0; i < rval.Len(); i++ {
 		irval := rval.Index(i)
 
+		// 判断 beforeInsert
+		if obj, ok := irval.Interface().(BeforeInserter); ok {
+			if err := obj.BeforeInsert(); err != nil {
+				return nil, err
+			}
+		}
+
 		m, irval, err := getModel(irval.Interface())
 		if err != nil {
 			return nil, err
