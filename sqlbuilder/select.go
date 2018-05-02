@@ -47,7 +47,7 @@ func Select(e Engine, d Dialect) *SelectStmt {
 	return &SelectStmt{
 		engine:  e,
 		dialect: d,
-		where:   newWhereStmt(),
+		where:   Where(),
 	}
 }
 

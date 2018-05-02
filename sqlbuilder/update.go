@@ -32,7 +32,7 @@ type updateSet struct {
 func Update(e Engine) *UpdateStmt {
 	return &UpdateStmt{
 		engine: e,
-		where:  newWhereStmt(),
+		where:  Where(),
 		values: []*updateSet{},
 	}
 }
@@ -166,9 +166,9 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
 		return stmt.where.SQL()
 	}
 
-	w := newWhereStmt()
+	w := Where()
 
-	occ := newWhereStmt()
+	occ := Where()
 	if named, ok := stmt.occValue.(sql.NamedArg); ok && named.Name != "" {
 		occ.And(stmt.occColumn+"=@"+named.Name, stmt.occValue)
 	} else {

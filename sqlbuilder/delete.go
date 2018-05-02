@@ -20,7 +20,7 @@ type DeleteStmt struct {
 func Delete(e Engine) *DeleteStmt {
 	return &DeleteStmt{
 		engine: e,
-		where:  newWhereStmt(),
+		where:  Where(),
 	}
 }
 

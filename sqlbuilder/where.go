@@ -4,9 +4,7 @@
 
 package sqlbuilder
 
-import (
-	"strings"
-)
+import "strings"
 
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
@@ -14,7 +12,8 @@ type WhereStmt struct {
 	args   []interface{}
 }
 
-func newWhereStmt() *WhereStmt {
+// Where 生成一条 Where 语句
+func Where() *WhereStmt {
 	return &WhereStmt{
 		buffer: New(""),
 		args:   make([]interface{}, 0, 10),
