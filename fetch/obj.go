@@ -189,7 +189,7 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 }
 
 // 将 rows 中的所有记录导出到 val 中，val 必须为 slice 的指针。
-// 若 val 的长度不够，会根据 rowsa 中的长度调整。
+// 若 val 的长度不够，会根据 rows 中的长度调整。
 // 可能只有部分数据被成功导入，而后发生 error，
 // 此时只能通过第一个返回参数来判断有多少数据是成功导入的。
 func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
