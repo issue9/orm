@@ -32,6 +32,10 @@ func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'
 }
 
+func (p *postgres) LastInsertID(table, col string) (sql string, append bool) {
+	return "RETURNING {col}", true
+}
+
 // 在有 ? 占位符的情况下，语句中不能包含$字符串
 func (p *postgres) SQL(sql string) (string, error) {
 	if strings.IndexByte(sql, '?') < 0 {

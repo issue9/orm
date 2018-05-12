@@ -146,6 +146,41 @@ func drop(e Engine, v interface{}) error {
 	return err
 }
 
+func lastInsertID(e Engine, v interface{}) (int64, error) {
+	m, rval, err := getModel(v)
+	if err != nil {
+		return 0, err
+	}
+
+	if m.AI == nil {
+		return 0, errors.New("该对象并没有自增列")
+	}
+
+	if obj, ok := v.(BeforeInserter); ok {
+		if err = obj.BeforeInsert(); err != nil {
+			return 0, err
+		}
+	}
+
+	sql := e.SQL().Insert().Table("{#" + m.Name + "}")
+	for name, col := range m.Cols {
+		field := rval.FieldByName(col.GoName)
+		if !field.IsValid() {
+			return 0, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
+		}
+
+		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
+		if col.Zero == field.Interface() &&
+			(col.IsAI() || col.HasDefault) {
+			continue
+		}
+
+		sql.KeyValue("{"+name+"}", field.Interface())
+	}
+
+	return sql.LastInsertID(m.Name, m.AI.Name)
+}
+
 func insert(e Engine, v interface{}) (sql.Result, error) {
 	m, rval, err := getModel(v)
 	if err != nil {

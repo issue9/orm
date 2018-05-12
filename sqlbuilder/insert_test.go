@@ -2,21 +2,26 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlbuilder
+package sqlbuilder_test
 
 import (
 	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm"
+	"github.com/issue9/orm/dialect"
 	"github.com/issue9/orm/internal/sqltest"
+	"github.com/issue9/orm/sqlbuilder"
 )
 
-var _ SQLer = &InsertStmt{}
+var _ sqlbuilder.SQLer = &sqlbuilder.InsertStmt{}
 
 func TestInsert(t *testing.T) {
 	a := assert.New(t)
-	i := Insert(nil).Table("table")
+	e, err := orm.NewDB("sqlite3", "./test.db", "test_", dialect.Sqlite3())
+	a.NotError(err)
+	i := sqlbuilder.Insert(e, e.Dialect()).Table("table")
 	a.NotNil(i)
 
 	i.Columns("c1", "c2", "c3").Values(1, 2, 3).Values(4, 5, 6)
@@ -26,7 +31,6 @@ func TestInsert(t *testing.T) {
 	sqltest.Equal(a, query, "insert into table (c1,c2,c3) values (?,?,?),(?,?,?)")
 
 	i.Reset()
-	a.Empty(i.cols).Empty(i.args)
 	i.Table("tb1").
 		Table("tb2").
 		Columns("c1", "c2").
@@ -40,7 +44,7 @@ func TestInsert(t *testing.T) {
 
 func TestInsert_KeyValue(t *testing.T) {
 	a := assert.New(t)
-	i := Insert(nil).Table("table")
+	i := sqlbuilder.Insert(nil, nil).Table("table")
 	i.KeyValue("c1", 1).KeyValue("c2", sql.Named("c2", 2))
 	query, args, err := i.SQL()
 	a.NotError(err)
@@ -66,7 +70,7 @@ func TestInsert_KeyValue(t *testing.T) {
 
 func TestInsertError(t *testing.T) {
 	a := assert.New(t)
-	i := Insert(nil).Table("#table")
+	i := sqlbuilder.Insert(nil, nil).Table("#table")
 	a.NotNil(i)
 
 	query, args, err := i.Columns("c1", "c2").SQL()

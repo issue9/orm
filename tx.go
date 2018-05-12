@@ -62,6 +62,32 @@ func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{
 	return tx.stdTx.QueryContext(ctx, query, args...)
 }
 
+// QueryRow 执行一条查询语句。
+//
+// 如果生成语句出错，则会 panic
+func (tx *Tx) QueryRow(query string, args ...interface{}) *sql.Row {
+	query = tx.db.replacer.Replace(query)
+	query, err := tx.db.dialect.SQL(query)
+	if err != nil {
+		panic(err)
+	}
+
+	return tx.stdTx.QueryRow(query, args...)
+}
+
+// QueryRowContext 执行一条查询语句。
+//
+// 如果生成语句出错，则会 panic
+func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	query = tx.db.replacer.Replace(query)
+	query, err := tx.db.dialect.SQL(query)
+	if err != nil {
+		panic(err)
+	}
+
+	return tx.stdTx.QueryRowContext(ctx, query, args...)
+}
+
 // Exec 执行一条 SQL 语句。
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 	query = tx.db.replacer.Replace(query)
@@ -123,6 +149,11 @@ func (tx *Tx) Commit() error {
 // 回滚之后，整个 Tx 对象将不再有效。
 func (tx *Tx) Rollback() error {
 	return tx.stdTx.Rollback()
+}
+
+// LastInsertID 插入数据，并获取其自增的 ID。
+func (tx *Tx) LastInsertID(v interface{}) (int64, error) {
+	return lastInsertID(tx, v)
 }
 
 // Insert 插入一个或多个数据。

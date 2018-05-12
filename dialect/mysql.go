@@ -39,6 +39,10 @@ func (m *mysql) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
+func (m *mysql) LastInsertID(table, col string) (sql string, append bool) {
+	return "", false
+}
+
 func (m *mysql) CreateTableSQL(model *orm.Model) ([]string, error) {
 	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").

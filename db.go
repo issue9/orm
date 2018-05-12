@@ -66,8 +66,33 @@ func (db *DB) Dialect() Dialect {
 	return db.dialect
 }
 
+// QueryRow 执行一条查询语句，并返回相应的 sql.Rows 实例。
+//
+// 如果生成语句出错，则会 panic
+func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
+	query = db.replacer.Replace(query)
+	query, err := db.dialect.SQL(query)
+	if err != nil {
+		panic(err)
+	}
+
+	return db.stdDB.QueryRow(query, args...)
+}
+
+// QueryRowContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
+//
+// 如果生成语句出错，则会 panic
+func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	query = db.replacer.Replace(query)
+	query, err := db.dialect.SQL(query)
+	if err != nil {
+		panic(err)
+	}
+
+	return db.stdDB.QueryRowContext(ctx, query, args...)
+}
+
 // Query 执行一条查询语句，并返回相应的 sql.Rows 实例。
-// 具体参数说明可参考 Engine 接口文档。
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	query = db.replacer.Replace(query)
 	query, err := db.dialect.SQL(query)
@@ -131,6 +156,11 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, erro
 	}
 
 	return db.stdDB.PrepareContext(ctx, query)
+}
+
+// LastInsertID 插入数据，并获取其自增的 ID。
+func (db *DB) LastInsertID(v interface{}) (int64, error) {
+	return lastInsertID(db, v)
 }
 
 // Insert 插入数据，若需一次性插入多条数据，请使用 tx.Insert()。

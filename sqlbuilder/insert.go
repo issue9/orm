@@ -11,18 +11,20 @@ import (
 
 // InsertStmt 表示插入操作的 SQL 语句
 type InsertStmt struct {
-	engine Engine
-	table  string
-	cols   []string
-	args   [][]interface{}
+	engine  Engine
+	dialect Dialect
+	table   string
+	cols    []string
+	args    [][]interface{}
 }
 
 // Insert 声明一条插入语句
-func Insert(e Engine) *InsertStmt {
+func Insert(e Engine, d Dialect) *InsertStmt {
 	return &InsertStmt{
-		engine: e,
-		cols:   make([]string, 0, 10),
-		args:   make([][]interface{}, 0, 10),
+		engine:  e,
+		dialect: d,
+		cols:    make([]string, 0, 10),
+		args:    make([][]interface{}, 0, 10),
 	}
 }
 
@@ -142,4 +144,58 @@ func (stmt *InsertStmt) Prepare() (*sql.Stmt, error) {
 // PrepareContext 预编译
 func (stmt *InsertStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
 	return prepareContext(ctx, stmt.engine, stmt)
+}
+
+// LastInsertID 执行 SQL 语句
+//
+// 并根据表名和自增列 ID 返回当前行的自增 ID 值。
+func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
+	sql, append := stmt.dialect.LastInsertID(stmt.table, col)
+	if sql == "" {
+		rslt, err := stmt.Exec()
+		if err != nil {
+			return 0, err
+		}
+
+		return rslt.LastInsertId()
+	}
+
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return 0, err
+	}
+	if append {
+		query += sql
+	}
+
+	var id int64
+	err = stmt.engine.QueryRow(query, args...).Scan(&id)
+	return id, err
+}
+
+// LastInsertIDContext 执行 SQL 语句
+//
+// 并根据表名和自增列 ID 返回当前行的自增 ID 值。
+func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col string) (int64, error) {
+	sql, append := stmt.dialect.LastInsertID(stmt.table, col)
+	if sql == "" {
+		rslt, err := stmt.ExecContext(ctx)
+		if err != nil {
+			return 0, err
+		}
+
+		return rslt.LastInsertId()
+	}
+
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return 0, err
+	}
+	if append {
+		query += sql
+	}
+
+	var id int64
+	err = stmt.engine.QueryRowContext(ctx, query, args...).Scan(&id)
+	return id, err
 }

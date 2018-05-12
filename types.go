@@ -33,6 +33,8 @@ type Engine interface {
 	// 获取与之关联的 Dialect 接口。
 	Dialect() Dialect
 
+	LastInsertID(v interface{}) (int64, error)
+
 	Insert(v interface{}) (sql.Result, error)
 
 	Delete(v interface{}) (sql.Result, error)
@@ -112,7 +114,7 @@ func (sql *SQL) Update() *sqlbuilder.UpdateStmt {
 
 // Insert 生成插入语句
 func (sql *SQL) Insert() *sqlbuilder.InsertStmt {
-	return sqlbuilder.Insert(sql.engine)
+	return sqlbuilder.Insert(sql.engine, sql.engine.Dialect())
 }
 
 // Select 生成插入语句

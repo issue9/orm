@@ -36,6 +36,10 @@ type Engine interface {
 
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 
+	QueryRow(query string, args ...interface{}) *sql.Row
+
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+
 	Exec(query string, args ...interface{}) (sql.Result, error)
 
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
@@ -54,6 +58,15 @@ type Dialect interface {
 	//
 	// limit 和 offset 可以是 sql.NamedArg 类型。
 	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
+
+	// 自定义获取 LastInsertID 的获取方式。
+	//
+	// 类似于 postgresql 等都需要额外定义。
+	//
+	// 返回参数 sql 表示额外的语句，如果为空，则执行的是标准的 SQL 插入语句。
+	// append 表示在 sql 不为空的情况下，sql 与现有的插入语句的结合方式，
+	// 如果为 true 表示直接添加在插入语句之后，否则为一条新的语句。
+	LastInsertID(table, col string) (sql string, append bool)
 }
 
 func exec(e Engine, stmt SQLer) (sql.Result, error) {
