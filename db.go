@@ -31,17 +31,26 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB
 
 // NewDBWithStdDB 从 sql.DB 构建一个 DB 实例。
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
-	l, r := dialect.QuoteTuple()
 	inst := &DB{
 		stdDB:       db,
 		dialect:     dialect,
 		tablePrefix: tablePrefix,
-		replacer: strings.NewReplacer(
+	}
+
+	l, r := dialect.QuoteTuple()
+	if tablePrefix == "" {
+		inst.replacer = strings.NewReplacer(
 			"#", tablePrefix,
 			"{", string(l),
 			"}", string(r),
-		),
+		)
+	} else {
+		inst.replacer = strings.NewReplacer(
+			"{", string(l),
+			"}", string(r),
+		)
 	}
+
 	inst.sql = &SQL{engine: inst}
 
 	return inst, nil
