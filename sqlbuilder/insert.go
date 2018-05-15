@@ -164,7 +164,12 @@ func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if append {
+	if !append {
+		_, err = stmt.Exec()
+		if err != nil {
+			return 0, err
+		}
+	} else {
 		query += sql
 	}
 
@@ -191,7 +196,12 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 	if err != nil {
 		return 0, err
 	}
-	if append {
+	if !append {
+		_, err = stmt.ExecContext(ctx)
+		if err != nil {
+			return 0, err
+		}
+	} else {
 		query += sql
 	}
 
