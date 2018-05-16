@@ -105,8 +105,8 @@ func TestNewModel(t *testing.T) {
 
 	// meta
 	a.Equal(m.Meta, map[string][]string{
-		"engine":  []string{"innodb"},
-		"charset": []string{"utf-8"},
+		"mysql_engine":  []string{"innodb"},
+		"mysql_charset": []string{"utf-8"},
 	})
 
 	// Meta返回的name属性

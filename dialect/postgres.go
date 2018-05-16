@@ -81,8 +81,6 @@ func (p *postgres) CreateTableSQL(model *orm.Model) ([]string, error) {
 	createConstraints(w, model)
 	w.TruncateLast(1).WriteByte(')')
 
-	// TODO meta
-
 	indexs, err := createIndexSQL(model)
 	if err != nil {
 		return nil, err

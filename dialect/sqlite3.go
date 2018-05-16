@@ -87,8 +87,8 @@ func (s *sqlite3) CreateTableSQL(model *orm.Model) ([]string, error) {
 }
 
 func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
-	if len(model.Meta["rowid"]) == 1 {
-		val, err := strconv.ParseBool(model.Meta["rowid"][0])
+	if len(model.Meta["sqlite3_rowid"]) == 1 {
+		val, err := strconv.ParseBool(model.Meta["sqlite3_rowid"][0])
 		if err != nil {
 			return err
 		}
@@ -96,7 +96,7 @@ func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model)
 		if !val {
 			w.WriteString("WITHOUT ROWID")
 		}
-	} else if len(model.Meta["rowid"]) > 0 {
+	} else if len(model.Meta["sqlite3_rowid"]) > 0 {
 		return errors.New("rowid 只接受一个参数")
 	}
 

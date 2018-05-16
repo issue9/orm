@@ -27,7 +27,7 @@ type User struct {
 
 // Meta 指定表属性
 func (m *User) Meta() string {
-	return "check(chk_name,id>0);engine(innodb);charset(utf-8);name(users)"
+	return "check(chk_name,id>0);mysql_engine(innodb);mysql_charset(utf-8);name(users)"
 }
 
 // UserInfo 带主键和唯一约束(两个字段组成)
@@ -40,7 +40,7 @@ type UserInfo struct {
 
 // Meta 指定表属性
 func (m *UserInfo) Meta() string {
-	return "check(chk_name,uid>0);engine(innodb);charset(utf-8);name(user_info)"
+	return "check(chk_name,uid>0);mysql_engine(innodb);mysql_charset(utf-8);name(user_info)"
 }
 
 // Admin 带自增和两个唯一约束
@@ -53,7 +53,7 @@ type Admin struct {
 
 // Meta 指定表属性
 func (m *Admin) Meta() string {
-	return "check(chk_name,id>0);engine(innodb);charset(utf-8);name(administrators)"
+	return "check(chk_name,id>0);mysql_engine(innodb);mysql_charset(utf-8);name(administrators)"
 }
 
 // Account 带一个 OCC 字段
