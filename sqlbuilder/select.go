@@ -120,7 +120,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 			buf.WriteString(join.table)
 			buf.WriteString(" ON ")
 			buf.WriteString(join.on)
-			buf.WriteByte(',')
+			buf.WriteByte(' ')
 		}
 		buf.TruncateLast(1)
 	}
