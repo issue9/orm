@@ -130,7 +130,9 @@ check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一
 在字段 struct tag 中指定会显得有点怪异。
 
 
-#### odel.Metaer:
+#### 接口:
+
+##### Metaer
 
 在 Go 不能将 struct tag 作用于结构体，所以为了指定一些表级别的属性，
 只能通过接口的形式，在接口方法中返回一段类似于 struct tag 的字符串，
@@ -138,6 +140,21 @@ check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一
 
 在 model.Metaer 中除了可以指定 name(table_name) 和 check(name,expr) 两个属性之外，
 还可指定一些自定义的属性，这些属性都将会被保存到 Model.Meta 中。
+
+
+##### AfterFetcher
+
+在拉到数据之后，对该对象执行的一些额外操作。如果需要根据字段做额外工作的，可以使用该接口。
+
+
+##### BeferInserter
+
+在执行插入之前，需要执行的操作。
+
+
+##### BeforeUpdater
+
+在执行更新之前，需要执行的操作。
 
 
 #### 约束名：
