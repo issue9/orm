@@ -7,6 +7,7 @@ package orm
 import (
 	"database/sql"
 
+	"github.com/issue9/orm/fetch"
 	"github.com/issue9/orm/sqlbuilder"
 )
 
@@ -25,6 +26,9 @@ type BeforeUpdater interface {
 type BeforeInserter interface {
 	BeforeInsert() error
 }
+
+// AfterFetcher 从数据库查询到数据之后，需要执行的操作。
+type AfterFetcher = fetch.AfterFetcher
 
 // Engine 是 DB 与 Tx 的共有接口。
 type Engine interface {

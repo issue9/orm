@@ -15,6 +15,11 @@ import (
 	t "github.com/issue9/orm/internal/tags"
 )
 
+// AfterFetcher 在数据从数据库拉取之后执行的操作。
+type AfterFetcher interface {
+	AfterFetch() error
+}
+
 // ErrInvalidKind 表示当前功能对数据的 Kind 值有特殊需求。
 var ErrInvalidKind = errors.New("无效的 Kind 类型")
 
@@ -142,6 +147,10 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) (int, error) {
 		}
 	}
 
+	if err = afterFetch(val.Interface()); err != nil {
+		return 0, err
+	}
+
 	return 1, nil
 }
 
@@ -183,6 +192,10 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 				return i, err // 已经有 i 条数据被正确导出
 			}
 		} // end for objItem
+
+		if err = afterFetch(val.Index(i).Interface()); err != nil {
+			return 0, err
+		}
 	}
 
 	return l, nil
@@ -233,7 +246,21 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 				return i, err
 			}
 		} // end for objItem
+
+		if err = afterFetch(elem.Index(i).Interface()); err != nil {
+			return 0, err
+		}
 	}
 
 	return len(mapped), nil
+}
+
+func afterFetch(v interface{}) error {
+	if f, ok := v.(AfterFetcher); ok {
+		if err := f.AfterFetch(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/issue9/assert"
 
@@ -28,7 +29,13 @@ type FetchUser struct {
 	Username string `orm:"index(index)"`
 	Group    int    `orm:"name(group);fk(fk_group,group,id)"`
 
-	Regdate int `orm:"-"`
+	Regdate int64 `orm:"-"`
+}
+
+// AfterFetcher 接口
+func (u *FetchUser) AfterFetch() error {
+	u.Regdate = time.Now().Unix()
+	return nil
 }
 
 func TestParseObj(t *testing.T) {
@@ -105,6 +112,7 @@ func TestObj(t *testing.T) {
 	defer closeDB(db, a)
 
 	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+	now := time.Now().Unix()
 
 	// test1:objs的长度与导出的数据长度相等
 	rows, err := db.Query(sql)
@@ -118,8 +126,8 @@ func TestObj(t *testing.T) {
 	a.NotError(Obj(&objs, rows))
 
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -132,8 +140,8 @@ func TestObj(t *testing.T) {
 	a.NotError(Obj(&objs, rows))
 	a.Equal(len(objs), 2)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -146,7 +154,7 @@ func TestObj(t *testing.T) {
 	a.NotError(Obj(objs, rows)) // 非指针传递
 	a.Equal(len(objs), 1)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -159,8 +167,8 @@ func TestObj(t *testing.T) {
 	}
 	a.NotError(Obj(&objs, rows))
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now},
 		&FetchUser{},
 	}, objs)
 	a.NotError(rows.Close())
@@ -181,7 +189,7 @@ func TestObj(t *testing.T) {
 	}
 	a.NotError(Obj(&array, rows))
 	a.Equal([1]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
 	}, array)
 	a.NotError(rows.Close())
 
