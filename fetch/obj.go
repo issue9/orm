@@ -27,7 +27,7 @@ var ErrInvalidKind = errors.New("无效的 Kind 类型")
 //
 // obj 只有在类型为 slice 指针时，才有可能随着 rows 的长度变化，
 // 否则其长度是固定的，若查询结果为空值，则不会对 obj 的内容做任何更改。
-// 可以为以下四种类型：
+// 可以为以下几种类型：
 //
 // struct 指针：
 // 将 rows 中的第一条记录转换成 obj 对象。
@@ -203,6 +203,7 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 
 // 将 rows 中的所有记录导出到 val 中，val 必须为 slice 的指针。
 // 若 val 的长度不够，会根据 rows 中的长度调整。
+//
 // 可能只有部分数据被成功导入，而后发生 error，
 // 此时只能通过第一个返回参数来判断有多少数据是成功导入的。
 func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {

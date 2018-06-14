@@ -147,15 +147,17 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		args = append(args, stmt.havingVals...)
 	}
 
-	// order by
-	if stmt.orders != nil && stmt.orders.Len() > 0 {
-		buf.WriteString(stmt.orders.String())
-	}
+	if stmt.countExpr == "" {
+		// order by
+		if stmt.orders != nil && stmt.orders.Len() > 0 {
+			buf.WriteString(stmt.orders.String())
+		}
 
-	// limit
-	if stmt.countExpr == "" && stmt.limitQuery != "" {
-		buf.WriteString(stmt.limitQuery)
-		args = append(args, stmt.limitVals...)
+		// limit
+		if stmt.limitQuery != "" {
+			buf.WriteString(stmt.limitQuery)
+			args = append(args, stmt.limitVals...)
+		}
 	}
 
 	// for update
