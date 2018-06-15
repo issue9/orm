@@ -45,7 +45,7 @@ func TestSelect_sqlite3(t *testing.T) {
 	query, args, err = s.SQL()
 	a.NotError(err)
 	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
-	sqltest.Equal(a, query, "select count(*) as cnt from table where c1=? or c2=@c2 order by c1 desc")
+	sqltest.Equal(a, query, "select count(*) as cnt from table where c1=? or c2=@c2")
 
 	// reset
 	s.Reset()
