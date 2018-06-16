@@ -15,6 +15,11 @@ import (
 	t "github.com/issue9/orm/internal/tags"
 )
 
+// 输出无法转换时的字段信息
+func converError(field, message string) error {
+	return fmt.Errorf("字段 %s 转换出错：%s", field, message)
+}
+
 // AfterFetcher 在数据从数据库拉取之后执行的操作。
 type AfterFetcher interface {
 	AfterFetch() error
@@ -143,7 +148,7 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) (int, error) {
 			continue
 		}
 		if err = conv.Value(v, item); err != nil {
-			return 0, err
+			return 0, converError(index, err.Error())
 		}
 	}
 
@@ -189,7 +194,7 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 				continue
 			}
 			if err = conv.Value(v, item); err != nil {
-				return i, err // 已经有 i 条数据被正确导出
+				return i, converError(index, err.Error()) // 已经有 i 条数据被正确导出
 			}
 		} // end for objItem
 
@@ -244,7 +249,7 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 				continue
 			}
 			if err = conv.Value(e, item); err != nil {
-				return i, err
+				return i, converError(index, err.Error())
 			}
 		} // end for objItem
 
