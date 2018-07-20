@@ -10,6 +10,24 @@ import (
 	"github.com/issue9/assert"
 )
 
+func BenchmarkMap(b *testing.B) {
+	a := assert.New(b)
+	db := initDB(a)
+	defer closeDB(db, a)
+
+	// 正常匹配数据，读取多行
+	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+
+	for i := 0; i < b.N; i++ {
+		rows, err := db.Query(sql)
+		a.NotError(err)
+
+		mapped, err := Map(false, rows)
+		a.NotError(err).NotNil(mapped)
+		rows.Close()
+	}
+}
+
 func TestMap(t *testing.T) {
 	a := assert.New(t)
 	db := initDB(a)
