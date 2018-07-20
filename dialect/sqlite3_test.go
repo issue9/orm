@@ -67,11 +67,6 @@ func TestSqlite3_sqlType(t *testing.T) {
 	a.NotError(s.sqlType(buf, col))
 	sqltest.Equal(a, buf.String(), "REAL")
 
-	col.GoType = reflect.TypeOf([]byte{'1', '2'})
-	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "TEXT")
-
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	a.NotError(s.sqlType(buf, col))

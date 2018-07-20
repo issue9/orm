@@ -144,12 +144,7 @@ func (s *sqlite3) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 		buf.WriteString("INTEGER")
 	case reflect.Float32, reflect.Float64:
 		buf.WriteString("REAL")
-	case reflect.Array, reflect.Slice:
-		k := col.GoType.Elem().Kind()
-		if (k != reflect.Uint8) && (k != reflect.Int32) {
-			return errors.New("sqlType:不支持数组类型")
-		}
-		buf.WriteString("TEXT")
+	//case reflect.Array, reflect.Slice:
 	case reflect.Struct:
 		switch col.GoType {
 		case nullBool:

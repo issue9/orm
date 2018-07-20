@@ -195,17 +195,7 @@ func (m *mysql) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 		} else {
 			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 		}
-	case reflect.Slice, reflect.Array: // []rune,[]byte当作字符串处理
-		k := col.GoType.Elem().Kind()
-		if (k != reflect.Uint8) && (k != reflect.Int32) {
-			return fmt.Errorf("sqlType:不支持[%v]类型的数组", k)
-		}
-
-		if col.Len1 == -1 || col.Len1 > 65533 {
-			buf.WriteString("LONGTEXT")
-		} else {
-			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
-		}
+	//case reflect.Slice, reflect.Array:
 	case reflect.Struct:
 		switch col.GoType {
 		case nullBool:

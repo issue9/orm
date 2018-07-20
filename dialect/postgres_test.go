@@ -46,11 +46,6 @@ func TestPostgres_sqlType(t *testing.T) {
 	a.NotError(p.sqlType(buf, col))
 	sqltest.Equal(a, buf.String(), "DOUBLE(5,6)")
 
-	col.GoType = reflect.TypeOf([]byte{'1', '2'})
-	buf.Reset()
-	a.NotError(p.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "VARCHAR(5)")
-
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))

@@ -149,17 +149,7 @@ func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 		} else {
 			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 		}
-	case reflect.Slice, reflect.Array: // []rune,[]byte当作字符串处理
-		k := col.GoType.Elem().Kind()
-		if (k != reflect.Uint8) && (k != reflect.Int32) {
-			return errors.New("sqlType:不支持数组类型")
-		}
-
-		if col.Len1 == -1 || col.Len1 > 65533 {
-			buf.WriteString("TEXT")
-		} else {
-			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
-		}
+	//case reflect.Slice, reflect.Array:
 	case reflect.Struct:
 		switch col.GoType {
 		case nullBool:

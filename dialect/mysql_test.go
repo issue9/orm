@@ -75,12 +75,6 @@ func TestMysql_sqlType(t *testing.T) {
 	a.NotError(m.sqlType(buf, col))
 	sqltest.Equal(a, buf.String(), "DOUBLE(5,6)")
 
-	// []byte with len
-	col.GoType = reflect.TypeOf([]byte{'1', '2'})
-	buf.Reset()
-	a.NotError(m.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "VARCHAR(5)")
-
 	// NullInt64
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
