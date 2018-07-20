@@ -38,6 +38,26 @@ func (u *FetchUser) AfterFetch() error {
 	return nil
 }
 
+func BenchmarkObj(b *testing.B) {
+	a := assert.New(b)
+	db := initDB(a)
+	defer closeDB(db, a)
+
+	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+	objs := []*FetchUser{
+		&FetchUser{},
+		&FetchUser{},
+	}
+
+	for i := 0; i < b.N; i++ {
+		rows, err := db.Query(sql)
+		a.NotError(err)
+
+		a.NotError(Obj(&objs, rows))
+		rows.Close()
+	}
+}
+
 func TestParseObj(t *testing.T) {
 	a := assert.New(t)
 	obj := &FetchUser{ID: 5}
