@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 
@@ -56,36 +55,6 @@ func BenchmarkObj(b *testing.B) {
 		a.NotError(Obj(&objs, rows))
 		rows.Close()
 	}
-}
-
-func TestParseObj(t *testing.T) {
-	a := assert.New(t)
-	obj := &FetchUser{ID: 5}
-	mapped := map[string]reflect.Value{}
-
-	v := reflect.ValueOf(obj).Elem()
-	a.True(v.IsValid())
-
-	err := parseObj(v, &mapped)
-	a.NotError(err).Equal(4, len(mapped), "长度不相等，导出元素为:[%v]", mapped)
-
-	// 忽略的字段
-	_, found := mapped["Regdate"]
-	a.False(found)
-
-	// 判断字段是否存在
-	vi, found := mapped["id"]
-	a.True(found).True(vi.IsValid())
-
-	// 设置字段的值
-	mapped["id"].Set(reflect.ValueOf(36))
-	a.Equal(36, obj.ID)
-	mapped["Email"].SetString("email")
-	a.Equal("email", obj.Email)
-	mapped["Username"].SetString("username")
-	a.Equal("username", obj.Username)
-	mapped["group"].SetInt(1)
-	a.Equal(1, obj.Group)
 }
 
 // 初始化一个sql.DB(sqlite3)，方便后面的测试用例使用。
@@ -213,7 +182,7 @@ func TestObj(t *testing.T) {
 	}, array)
 	a.NotError(rows.Close())
 
-	// test7:obj为一个struct指针。
+	// test7:obj 为一个 struct 指针。
 	rows, err = db.Query(sql)
 	obj := FetchUser{}
 	a.NotError(Obj(&obj, rows))
