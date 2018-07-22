@@ -140,7 +140,7 @@ func getColumns(v reflect.Value, cols []string) ([]interface{}, error) {
 	for _, col := range cols {
 		if item, found := items[col]; found {
 			ret = append(ret, item.Addr().Interface())
-		} else {
+		} else { // 从数据库导出了该列，但是该列名不存在于模型中
 			var val interface{}
 			ret = append(ret, &val)
 		}

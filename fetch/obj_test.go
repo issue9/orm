@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -95,6 +96,20 @@ func closeDB(db *sql.DB, a *assert.Assertion) {
 		FileNotExists(testDBFile)
 }
 
+func TestGetColumns(t *testing.T) {
+	a := assert.New(t)
+	obj := &FetchUser{}
+
+	cols, err := getColumns(reflect.ValueOf(obj), []string{"id"})
+	a.NotError(err).NotNil(cols)
+	a.Equal(len(cols), 1)
+
+	// 当列不存在数据模型时
+	cols, err = getColumns(reflect.ValueOf(obj), []string{"id", "not-exists"})
+	a.NotError(err).NotNil(cols)
+	a.Equal(len(cols), 2)
+}
+
 func TestObj(t *testing.T) {
 	a := assert.New(t)
 	db := initDB(a)
@@ -116,10 +131,6 @@ func TestObj(t *testing.T) {
 		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
 		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now},
 	}, objs)
-	a.Equal(objs[0].FetchEmail.Email, "email-0")
-	a.Equal(objs[1].FetchEmail.Email, "email-1")
-	a.Equal(objs[0].ID, 0)
-	a.Equal(objs[1].ID, 1)
 	a.NotError(rows.Close())
 
 	// test2:objs的长度小于导出数据的长度，objs应该自动增加长度。
@@ -149,7 +160,7 @@ func TestObj(t *testing.T) {
 	}, objs)
 	a.NotError(rows.Close())
 
-	// test4:objs的长度大于导出数据的长度。
+	// test4:objs 的长度大于导出数据的长度。
 	rows, err = db.Query(sql)
 	objs = []*FetchUser{
 		&FetchUser{},
@@ -191,11 +202,28 @@ func TestObj(t *testing.T) {
 	a.Equal(FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}}, obj)
 	a.NotError(rows.Close())
 
-	// test8:obj为一个struct。这将返回错误信息
+	// test8:obj 为一个 struct。这将返回错误信息
 	rows, err = db.Query(sql)
 	obj = FetchUser{}
 	cnt, err = Obj(obj, rows)
 	a.Error(err).Equal(0, cnt)
+	a.NotError(rows.Close())
+
+	sql = `SELECT * FROM user WHERE id<2 ORDER BY id`
+
+	// test8: objs 的长度与导出的数据长度相等
+	rows, err = db.Query(sql)
+	a.NotError(err).NotNil(rows)
+
+	objs = []*FetchUser{
+		&FetchUser{},
+		&FetchUser{},
+	}
+	a.NotError(Obj(&objs, rows))
+	a.Equal([]*FetchUser{
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now, Username: "username-0", Group: 1},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now, Username: "username-1", Group: 1},
+	}, objs)
 	a.NotError(rows.Close())
 }
 
