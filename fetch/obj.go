@@ -86,9 +86,10 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 	num := vt.NumField()
 	for i := 0; i < num; i++ {
 		field := vt.Field(i)
+		vf := v.Field(i)
 
 		if field.Anonymous {
-			parseObject(v.Field(i), ret)
+			parseObject(vf, ret)
 			continue
 		}
 
@@ -97,10 +98,27 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 			continue
 		}
 
-		if _, found := (*ret)[name]; found {
-			return fmt.Errorf("已存在相同名字的字段 %s", name)
+		for vf.Kind() == reflect.Ptr {
+			if vf.IsNil() {
+				vf.Set(reflect.New(vf.Type().Elem()))
+			}
+			vf = vf.Elem()
 		}
-		(*ret)[name] = v.Field(i)
+
+		if vf.Kind() == reflect.Struct {
+			items := make(map[string]reflect.Value, 10)
+			if err := parseObject(vf, &items); err != nil {
+				return err
+			}
+
+			for subname, val := range items {
+				(*ret)[name+"."+subname] = val
+			}
+		} else if _, found := (*ret)[name]; found {
+			return fmt.Errorf("已存在相同名字的字段 %s", name)
+		} else {
+			(*ret)[name] = vf
+		}
 	} // end for
 
 	return nil
