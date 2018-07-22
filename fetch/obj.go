@@ -97,31 +97,38 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 			continue
 		}
 
-		tags := field.Tag.Get("orm")
-		if len(tags) > 0 { // 存在struct tag
-			if tags[0] == '-' { // 该字段被标记为忽略
-				continue
-			}
-
-			if name, found := t.Get(tags, "name"); found {
-				if _, found := (*ret)[name[0]]; found {
-					return fmt.Errorf("已存在相同名字的字段 %s", name)
-				}
-				(*ret)[name[0]] = v.Field(i)
-				continue
-			}
+		name := getName(field)
+		if name == "" {
+			continue
 		}
 
-		// 未指定 struct tag，则尝试直接使用字段名。
-		if unicode.IsUpper(rune(field.Name[0])) {
-			if _, found := (*ret)[field.Name]; found {
-				return fmt.Errorf("已存在相同名字的字段 %s", field.Name)
-			}
-			(*ret)[field.Name] = v.Field(i)
+		if _, found := (*ret)[name]; found {
+			return fmt.Errorf("已存在相同名字的字段 %s", name)
 		}
+		(*ret)[name] = v.Field(i)
 	} // end for
 
 	return nil
+}
+
+func getName(field reflect.StructField) string {
+	tags := field.Tag.Get("orm")
+	if len(tags) > 0 { // 存在 struct tag
+		if tags[0] == '-' { // 该字段被标记为忽略
+			return ""
+		}
+
+		if name, found := t.Get(tags, "name"); found {
+			return name[0]
+		}
+	}
+
+	// 未指定 struct tag，则尝试直接使用字段名。
+	if unicode.IsUpper(rune(field.Name[0])) {
+		return field.Name
+	}
+
+	return ""
 }
 
 func getColumns(v reflect.Value, cols []string) ([]interface{}, error) {
