@@ -105,7 +105,7 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 
 			if name, found := t.Get(tags, "name"); found {
 				if _, found := (*ret)[name[0]]; found {
-					return ErrInvalidKind
+					return fmt.Errorf("已存在相同名字的字段 %s", name)
 				}
 				(*ret)[name[0]] = v.Field(i)
 				continue
@@ -123,11 +123,6 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 
 	return nil
 }
-
-var (
-	interfaceValue interface{}
-	interfaceType  = reflect.TypeOf(interfaceValue)
-)
 
 func getColumns(v reflect.Value, cols []string) ([]interface{}, error) {
 	ret := make([]interface{}, 0, len(cols))
