@@ -79,7 +79,7 @@ func Obj(obj interface{}, rows *sql.Rows) (int, error) {
 // 将 v 转换成 map[string]reflect.Value 形式，其中键名为对象的字段名，
 // 键值为字段的值。支持匿名字段，不会转换不可导出(小写字母开头)的
 // 字段，也不会转换 struct tag 以-开头的字段。
-func parseObj1(v reflect.Value, ret *map[string]interface{}) error {
+func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 	for v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
@@ -93,7 +93,7 @@ func parseObj1(v reflect.Value, ret *map[string]interface{}) error {
 		field := vt.Field(i)
 
 		if field.Anonymous {
-			parseObj1(v.Field(i), ret)
+			parseObject(v.Field(i), ret)
 			continue
 		}
 
@@ -107,7 +107,7 @@ func parseObj1(v reflect.Value, ret *map[string]interface{}) error {
 				if _, found := (*ret)[name[0]]; found {
 					return ErrInvalidKind
 				}
-				(*ret)[name[0]] = v.Field(i).Addr().Interface()
+				(*ret)[name[0]] = v.Field(i)
 				continue
 			}
 		}
@@ -117,11 +117,36 @@ func parseObj1(v reflect.Value, ret *map[string]interface{}) error {
 			if _, found := (*ret)[field.Name]; found {
 				return fmt.Errorf("已存在相同名字的字段 %s", field.Name)
 			}
-			(*ret)[field.Name] = v.Field(i).Addr().Interface()
+			(*ret)[field.Name] = v.Field(i)
 		}
 	} // end for
 
 	return nil
+}
+
+var (
+	interfaceValue interface{}
+	interfaceType  = reflect.TypeOf(interfaceValue)
+)
+
+func getColumns(v reflect.Value, cols []string) ([]interface{}, error) {
+	ret := make([]interface{}, 0, len(cols))
+
+	items := make(map[string]reflect.Value, len(cols))
+	if err := parseObject(v, &items); err != nil {
+		return nil, err
+	}
+
+	for _, col := range cols {
+		if item, found := items[col]; found {
+			ret = append(ret, item.Addr().Interface())
+		} else {
+			var val interface{}
+			ret = append(ret, &val)
+		}
+	}
+
+	return ret, nil
 }
 
 // 将 rows 中的一条记录写入到 val 中，必须保证 val 的类型为 reflect.Struct。
@@ -132,15 +157,10 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) (int, error) {
 		return 0, err
 	}
 
-	objItem := make(map[string]interface{}, len(cols))
-	if err = parseObj1(val, &objItem); err != nil {
+	buff, err := getColumns(val, cols)
+	if err != nil {
 		return 0, err
 	}
-	buff := make([]interface{}, 0, len(cols))
-	for _, col := range cols {
-		buff = append(buff, objItem[col])
-	}
-
 	for rows.Next() {
 		if err := rows.Scan(buff...); err != nil {
 			return 0, err
@@ -175,15 +195,10 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 
 	l := val.Len()
 	for i := 0; (i < l) && rows.Next(); i++ {
-		objItem := make(map[string]interface{}, len(cols))
-		if err = parseObj1(val.Index(i), &objItem); err != nil {
+		buff, err := getColumns(val.Index(i), cols)
+		if err != nil {
 			return 0, err
 		}
-		buff := make([]interface{}, 0, len(cols))
-		for _, col := range cols {
-			buff = append(buff, objItem[col])
-		}
-
 		if err := rows.Scan(buff...); err != nil {
 			return 0, err
 		}
@@ -226,15 +241,10 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 			val.Elem().Set(elem)
 		}
 
-		objItem := make(map[string]interface{}, len(cols))
-		if err = parseObj1(elem.Index(i), &objItem); err != nil {
+		buff, err := getColumns(elem.Index(i), cols)
+		if err != nil {
 			return 0, err
 		}
-		buff := make([]interface{}, 0, len(cols))
-		for _, col := range cols {
-			buff = append(buff, objItem[col])
-		}
-
 		if err := rows.Scan(buff...); err != nil {
 			return 0, err
 		}

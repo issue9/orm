@@ -111,13 +111,15 @@ func TestObj(t *testing.T) {
 		&FetchUser{},
 		&FetchUser{},
 	}
-
 	a.NotError(Obj(&objs, rows))
-
 	a.Equal([]*FetchUser{
 		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
 		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now},
 	}, objs)
+	a.Equal(objs[0].FetchEmail.Email, "email-0")
+	a.Equal(objs[1].FetchEmail.Email, "email-1")
+	a.Equal(objs[0].ID, 0)
+	a.Equal(objs[1].ID, 1)
 	a.NotError(rows.Close())
 
 	// test2:objs的长度小于导出数据的长度，objs应该自动增加长度。
