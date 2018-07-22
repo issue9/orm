@@ -14,11 +14,6 @@ import (
 	t "github.com/issue9/orm/internal/tags"
 )
 
-// 输出无法转换时的字段信息
-func converError(field, message string) error {
-	return fmt.Errorf("字段 %s 转换出错：%s", field, message)
-}
-
 // AfterFetcher 在数据从数据库拉取之后执行的操作。
 type AfterFetcher interface {
 	AfterFetch() error
