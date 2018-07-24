@@ -224,6 +224,24 @@ sql = "update #tbl_name set name=? where id=?"
 r, err := e.Exec(sql, []interface{}{"name1", 5})
 ```
 
+
+##### 多表查询
+
+```go
+type order {
+    ID int `orm:"name(id);ai"`
+    UID int `orm:"name(uid)"`
+    User *User `orm:"name(u)"` // sql 语句的 u. 开头的列导入到此对象中
+}
+
+sql := "SELECT o.*, u.id AS 'u.id',u.name AS 'u.name' FROM orders AS o LEFT JOIN  users AS u ON o.uid= u.id where id=?"
+
+// 以下查询会将 u.name 和 u.id 导入到 User 指向的对象中
+data := []*order{}
+rows,err := e.Query(sql, []interface{}{5})
+r, err := fetch.Object(rows, &data)
+```
+
 ##### InsertLastID:
 
 像 postgresql 之类的数据库，插入语句返回的 sql.Result 并不支持 LastInsertId()
