@@ -24,6 +24,13 @@ var ErrInvalidKind = errors.New("无效的 Kind 类型")
 
 // Obj 将 rows 中的数据导出到 obj 中。
 //
+// Deprecated: 使用 Object 代替
+func Obj(obj interface{}, rows *sql.Rows) (int, error) {
+	return Object(rows, obj)
+}
+
+// Object 将 rows 中的数据导出到 obj 中。
+//
 // obj 只有在类型为 slice 指针时，才有可能随着 rows 的长度变化，
 // 否则其长度是固定的，若查询结果为空值，则不会对 obj 的内容做任何更改。
 // 可以为以下几种类型：
@@ -48,7 +55,7 @@ var ErrInvalidKind = errors.New("无效的 Kind 类型")
 //  }
 //
 // 第一个参数用于表示有多少数据被正确导入到 obj 中
-func Obj(obj interface{}, rows *sql.Rows) (int, error) {
+func Object(rows *sql.Rows, obj interface{}) (int, error) {
 	val := reflect.ValueOf(obj)
 
 	switch val.Kind() {
