@@ -311,7 +311,7 @@ func (stmt *SelectStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 
 // QueryObj 将符合当前条件的所有记录依次写入 objs 中。
 //
-// 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Obj 函数的相关介绍。
+// 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Object 函数的相关介绍。
 func (stmt *SelectStmt) QueryObj(objs interface{}) (int, error) {
 	rows, err := stmt.Query()
 	if err != nil {
@@ -319,7 +319,7 @@ func (stmt *SelectStmt) QueryObj(objs interface{}) (int, error) {
 	}
 	defer rows.Close()
 
-	return fetch.Obj(objs, rows)
+	return fetch.Object(rows, objs)
 }
 
 // QueryInt 查询指定列的第一行数据，并将其转换成 int
