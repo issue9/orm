@@ -29,7 +29,7 @@ func getModel(v interface{}) (*Model, reflect.Value, error) {
 
 // 根据 Model 中的主键或是唯一索引为 sql 产生 where 语句，
 // 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
-func where(sql sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
+func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -38,7 +38,7 @@ func where(sql sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 		for _, col := range cols {
 			field := rval.FieldByName(col.GoName)
 
-			if !field.IsValid() || col.Zero == field.Interface() {
+			if col.IsZero(field) {
 				vals = vals[:0]
 				keys = keys[:0]
 				return false
@@ -63,21 +63,21 @@ func where(sql sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	}
 
 	for index, key := range keys {
-		sql.WhereStmt().And("{"+key+"}=?", vals[index])
+		sb.WhereStmt().And("{"+key+"}=?", vals[index])
 	}
 
 	return nil
 }
 
 // 根据 rval 中任意非零值产生 where 语句
-func whereAny(sql sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
+func whereAny(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
 	for _, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 
-		if !field.IsValid() || col.Zero == field.Interface() {
+		if col.IsZero(field) {
 			continue
 		}
 
@@ -90,7 +90,7 @@ func whereAny(sql sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	}
 
 	for index, key := range keys {
-		sql.WhereStmt().And("{"+key+"}=?", vals[index])
+		sb.WhereStmt().And("{"+key+"}=?", vals[index])
 	}
 
 	return nil
@@ -170,8 +170,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		}
 
 		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if col.Zero == field.Interface() &&
-			(col.IsAI() || col.HasDefault) {
+		if col.IsZero(field) && (col.IsAI() || col.HasDefault) {
 			continue
 		}
 
@@ -201,8 +200,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		}
 
 		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if col.Zero == field.Interface() &&
-			(col.IsAI() || col.HasDefault) {
+		if col.IsZero(field) && (col.IsAI() || col.HasDefault) {
 			continue
 		}
 
@@ -284,7 +282,7 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 		}
 
 		// 零值，但是不属于指定需要更新的列
-		if !inStrSlice(name, cols) && col.Zero == field.Interface() {
+		if !inStrSlice(name, cols) && col.IsZero(field) {
 			continue
 		}
 
@@ -363,8 +361,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 				}
 
 				// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-				if col.Zero == field.Interface() &&
-					(col.IsAI() || col.HasDefault) {
+				if col.IsZero(field) && (col.IsAI() || col.HasDefault) {
 					continue
 				}
 
@@ -389,8 +386,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 				}
 
 				// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-				if col.Zero == field.Interface() &&
-					(col.IsAI() || col.HasDefault) {
+				if col.IsZero(field) && (col.IsAI() || col.HasDefault) {
 					continue
 				}
 

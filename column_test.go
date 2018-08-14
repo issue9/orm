@@ -5,6 +5,8 @@
 package orm
 
 import (
+	"database/sql"
+	"reflect"
 	"testing"
 
 	"github.com/issue9/orm/internal/modeltest"
@@ -21,6 +23,28 @@ func TestColumn_SetLen(t *testing.T) {
 	a.Error(col.setLen([]string{"1", "2", "3"}))
 	a.Error(col.setLen([]string{"1", "one"}))
 	a.Error(col.setLen([]string{"one", "one"}))
+}
+
+func TestColumn_IsZero(t *testing.T) {
+	a := assert.New(t)
+	col := &Column{}
+
+	col.GoType = reflect.TypeOf(int(5))
+	col.zero = reflect.Zero(col.GoType).Interface()
+	a.True(col.IsZero(reflect.ValueOf(int(0))))
+	a.False(col.IsZero(reflect.ValueOf(1)))
+
+	col.GoType = reflect.TypeOf([]byte{})
+	col.zero = reflect.Zero(col.GoType).Interface()
+	a.True(col.IsZero(reflect.ValueOf([]byte{})))
+	a.True(col.IsZero(reflect.ValueOf([]byte(""))))
+	a.False(col.IsZero(reflect.ValueOf([]byte{'0'})))
+
+	col.GoType = reflect.TypeOf(sql.RawBytes{})
+	col.zero = reflect.Zero(col.GoType).Interface()
+	a.True(col.IsZero(reflect.ValueOf([]byte{})))
+	a.True(col.IsZero(reflect.ValueOf([]byte(""))))
+	a.False(col.IsZero(reflect.ValueOf([]byte{'0'})))
 }
 
 func TestColumn_SetNullable(t *testing.T) {

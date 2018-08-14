@@ -18,7 +18,7 @@ type Column struct {
 	Len2     int          // 长度2，仅对部分类型启作用
 	Nullable bool         // 是否可以为 NULL
 	GoType   reflect.Type // Go 语言中的数据类型
-	Zero     interface{}  // GoType 的零值
+	zero     interface{}  // GoType 的零值
 	GoName   string       // 结构字段名
 
 	HasDefault bool
@@ -35,11 +35,28 @@ type ForeignKey struct {
 func (m *Model) newColumn(field reflect.StructField) *Column {
 	return &Column{
 		GoType: field.Type,
-		Zero:   reflect.Zero(field.Type).Interface(),
+		zero:   reflect.Zero(field.Type).Interface(),
 		Name:   field.Name,
 		model:  m,
 		GoName: field.Name,
 	}
+}
+
+// IsZero 是否为零值
+func (c *Column) IsZero(v reflect.Value) bool {
+	if !v.IsValid() {
+		return false
+	}
+
+	if c.GoType.Comparable() {
+		return c.zero == v.Interface()
+	}
+
+	if v.Kind() == reflect.Slice {
+		return v.Len() == 0
+	}
+
+	return false
 }
 
 // IsAI 当前列是否为自增列
