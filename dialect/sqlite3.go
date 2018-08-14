@@ -144,9 +144,14 @@ func (s *sqlite3) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 		buf.WriteString("INTEGER")
 	case reflect.Float32, reflect.Float64:
 		buf.WriteString("REAL")
-	//case reflect.Array, reflect.Slice:
+	case reflect.Array, reflect.Slice:
+		if col.GoType.Elem().Kind() == reflect.Int8 {
+			buf.WriteString("BLOB")
+		}
 	case reflect.Struct:
 		switch col.GoType {
+		case rawBytes:
+			buf.WriteString("BLOB")
 		case nullBool:
 			buf.WriteString("INTEGER")
 		case nullFloat64:

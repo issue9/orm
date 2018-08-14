@@ -21,6 +21,7 @@ var (
 	nullInt64   = reflect.TypeOf(sql.NullInt64{})
 	nullBool    = reflect.TypeOf(sql.NullBool{})
 	nullFloat64 = reflect.TypeOf(sql.NullFloat64{})
+	rawBytes    = reflect.TypeOf(sql.RawBytes{})
 	timeType    = reflect.TypeOf(time.Time{})
 )
 
