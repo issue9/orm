@@ -30,9 +30,15 @@ import "strings"
 // 将第二种风格的 struct tag 转换成第一种风格的。
 var styleReplace = strings.NewReplacer("(", ",", ")", "")
 
+// Tag 解析后的单个标签标签内容
+type Tag struct {
+	Name string
+	Args []string
+}
+
 // Parse 分析 tag 的内容，并以 map 的形式返回
-func Parse(tag string) map[string][]string {
-	ret := make(map[string][]string)
+func Parse(tag string) []*Tag {
+	ret := make([]*Tag, 0, 10)
 
 	if len(tag) == 0 {
 		return nil
@@ -49,14 +55,17 @@ func Parse(tag string) map[string][]string {
 		}
 		part = strings.Trim(part, ",")
 		items := strings.Split(part, ",")
-		ret[items[0]] = items[1:]
+		ret = append(ret, &Tag{
+			Name: items[0],
+			Args: items[1:],
+		})
 	}
 
 	return ret
 }
 
 // Get 从 tag 中查找名称为 name 的内容。
-// 第二个参数用于判断该项是否存在。
+// 第二个参数用于判断该项是否存在。若存在多个同外的，则只返回第一个。
 func Get(tag, name string) ([]string, bool) {
 	if len(tag) == 0 {
 		return nil, false

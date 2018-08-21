@@ -155,33 +155,33 @@ func (m *Model) parseColumn(col *Column, tag string) (err error) {
 	}
 
 	tags := tags.Parse(tag)
-	for k, v := range tags {
-		switch k {
+	for _, tag := range tags {
+		switch tag.Name {
 		case "name": // name(colname)
-			if len(v) != 1 {
+			if len(tag.Args) != 1 {
 				return propertyError(col.Name, "name", "过多的参数值")
 			}
-			col.Name = v[0]
+			col.Name = tag.Args[0]
 		case "index":
-			err = m.setIndex(col, v)
+			err = m.setIndex(col, tag.Args)
 		case "pk":
-			err = m.setPK(col, v)
+			err = m.setPK(col, tag.Args)
 		case "unique":
-			err = m.setUnique(col, v)
+			err = m.setUnique(col, tag.Args)
 		case "nullable":
-			err = col.setNullable(v)
+			err = col.setNullable(tag.Args)
 		case "ai":
-			err = m.setAI(col, v)
+			err = m.setAI(col, tag.Args)
 		case "len":
-			err = col.setLen(v)
+			err = col.setLen(tag.Args)
 		case "fk":
-			err = m.setFK(col, v)
+			err = m.setFK(col, tag.Args)
 		case "default":
-			err = m.setDefault(col, v)
+			err = m.setDefault(col, tag.Args)
 		case "occ":
-			err = m.setOCC(col, v)
+			err = m.setOCC(col, tag.Args)
 		default:
-			err = propertyError(col.Name, k, "未知的属性")
+			err = propertyError(col.Name, tag.Name, "未知的属性")
 		}
 
 		if err != nil {
@@ -201,32 +201,32 @@ func (m *Model) parseMeta(tag string) error {
 		return nil
 	}
 
-	for k, v := range tags {
-		switch k {
+	for _, v := range tags {
+		switch v.Name {
 		case "name":
-			if len(v) != 1 {
+			if len(v.Args) != 1 {
 				return propertyError("Metaer", "name", "太多的值")
 			}
 
-			m.Name = v[0]
+			m.Name = v.Args[0]
 		case "check":
-			if len(v) != 2 {
+			if len(v.Args) != 2 {
 				return propertyError("Metaer", "check", "参数个数不正确")
 			}
 
-			if _, found := m.Check[v[0]]; found {
+			if _, found := m.Check[v.Args[0]]; found {
 				return propertyError("Metaer", "check", "已经存在相同名称的 check 约束")
 			}
 
-			if typ := m.hasConstraint(v[0], check); typ != none {
+			if typ := m.hasConstraint(v.Args[0], check); typ != none {
 				return propertyError("Metaer", "check", "与其它约束名称相同")
 			}
 
-			name := strings.ToLower(v[0])
+			name := strings.ToLower(v.Args[0])
 			m.constraints[name] = check
-			m.Check[name] = v[1]
+			m.Check[name] = v.Args[1]
 		default:
-			m.Meta[k] = v
+			m.Meta[v.Name] = v.Args
 		}
 	}
 
