@@ -7,6 +7,7 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strconv"
 
 	"github.com/issue9/orm/fetch"
@@ -333,6 +334,10 @@ func (stmt *SelectStmt) QueryInt(colName string) (int64, error) {
 	cols, err := fetch.ColumnString(true, colName, rows)
 	if err != nil {
 		return 0, err
+	}
+
+	if len(cols) == 0 {
+		return 0, fmt.Errorf("不存在列：%s", colName)
 	}
 
 	return strconv.ParseInt(cols[0], 10, 64)
