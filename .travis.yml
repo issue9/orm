@@ -17,7 +17,6 @@ install:
   - go get github.com/mattn/go-sqlite3
   - go get github.com/lib/pq
 
-
 script: env GO111MODULE=on go test -v -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
 
 after_success: bash <(curl -s https://codecov.io/bash)
