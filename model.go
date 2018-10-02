@@ -113,8 +113,46 @@ func NewModel(obj interface{}) (*Model, error) {
 		}
 	}
 
+	if err := m.check(); err != nil {
+		return nil, err
+	}
+
 	models.items[rtype] = m
 	return m, nil
+}
+
+// 对整个对象做一次检测，查看是否合法
+// 必须要在 Model 初始化完成之后调用。
+func (m *Model) check() error {
+	if m.AI != nil {
+		if len(m.PK) > 1 { // 肯定不是 AI 列
+			return propertyError(m.AI.Name, "pk", "不能与自增列并存")
+		}
+
+		if len(m.PK) == 1 && m.PK[0] != m.AI {
+			return propertyError(m.AI.Name, "pk", "不能与自增列并存")
+		}
+
+		if m.AI.Nullable {
+			return propertyError(m.AI.Name, "nullable", "不能与自增列并存")
+		}
+
+		if m.AI.HasDefault {
+			return propertyError(m.AI.Name, "default", "不能与自增列并存")
+		}
+	}
+
+	if len(m.PK) == 1 && m.PK[0].HasDefault {
+		return propertyError(m.PK[0].Name, "default", "不能为单一主键")
+	}
+
+	for _, c := range m.Cols {
+		if err := c.checkLen(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // 将 rval 中的结构解析到 m 中。支持匿名字段
@@ -187,10 +225,6 @@ func (m *Model) parseColumn(col *Column, tag string) (err error) {
 		if err != nil {
 			return err
 		}
-	}
-
-	if err = col.checkLen(); err != nil {
-		return err
 	}
 
 	// col.Name 可能在上面的 for 循环中被更改，所以要在最后再添加到 m.Cols 中
@@ -275,14 +309,6 @@ func (m *Model) setOCC(c *Column, vals []string) error {
 
 // default(5)
 func (m *Model) setDefault(col *Column, vals []string) error {
-	if m.AI == col {
-		return propertyError(col.Name, "default", "自增列不能设置默认值")
-	}
-
-	if len(m.PK) == 1 && m.PK[0] == col {
-		return propertyError(col.Name, "default", "不能为主键设置默认值")
-	}
-
 	if len(vals) != 1 {
 		return propertyError(col.Name, "default", "太多的值")
 	}
@@ -313,10 +339,6 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 func (m *Model) setPK(col *Column, vals []string) error {
 	if len(vals) != 0 {
 		return propertyError(col.Name, "pk", "太多的值")
-	}
-
-	if m.AI != nil {
-		return propertyError(col.Name, "pk", "已经存在自增列，不需要再次指定主键")
 	}
 
 	m.PK = append(m.PK, col)
@@ -375,16 +397,8 @@ func (m *Model) setFK(col *Column, vals []string) error {
 
 // ai
 func (m *Model) setAI(col *Column, vals []string) (err error) {
-	if col.HasDefault {
-		return propertyError(col.Name, "ai", "不能将一个含有默认值的列设置为自增")
-	}
-
 	if len(vals) != 0 {
 		return propertyError(col.Name, "ai", "太多的值")
-	}
-
-	if col.Nullable {
-		return propertyError(col.Name, "ai", "不能与 nullable 并存")
 	}
 
 	switch col.GoType.Kind() {

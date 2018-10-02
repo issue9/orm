@@ -113,6 +113,83 @@ func TestNewModel(t *testing.T) {
 	a.Equal(m.Name, "administrators")
 }
 
+func TestModel_check(t *testing.T) {
+	a := assert.New(t)
+
+	ai := &Column{
+		GoType: reflect.TypeOf(1),
+	}
+
+	pk1 := &Column{
+		GoType: reflect.TypeOf(1),
+	}
+
+	pk2 := &Column{
+		GoType: reflect.TypeOf(2),
+	}
+
+	nullable := &Column{
+		GoType:   reflect.TypeOf(2),
+		Nullable: true,
+	}
+
+	def := &Column{
+		GoType:     reflect.TypeOf(2),
+		HasDefault: true,
+		Default:    "1",
+	}
+
+	m := &Model{
+		Cols: map[string]*Column{
+			"ai":       ai,
+			"pk1":      pk1,
+			"pk2":      pk2,
+			"nullable": nullable,
+			"def":      def,
+		},
+		AI: ai,
+	}
+
+	a.NotError(m.check())
+
+	// 单列主键，必须与 AI 相同
+	m.PK = []*Column{pk1}
+	a.Error(m.check())
+
+	// 多列主键，肯定不与 AI 相同
+	m.PK = append(m.PK, pk2)
+	a.Error(m.check())
+
+	// AI 不能是 nullable
+	m.PK = nil
+	m.AI = nullable
+	a.Error(m.check())
+
+	// AI 不能是 HasDefault=true
+	m.AI = def
+	a.Error(m.check())
+
+	// 多列主键约束
+	m.AI = nil
+	m.PK = []*Column{pk1, pk2}
+	a.NotError(m.check())
+
+	// 多列主键约束，可以有 nullable 和 default
+	m.AI = nil
+	m.PK = []*Column{pk1, pk2, nullable, def}
+	a.NotError(m.check())
+
+	// 单列主键，可以是 nullable
+	m.AI = nil
+	m.PK = []*Column{nullable}
+	a.NotError(m.check())
+
+	// 单列主键，不能是 default
+	m.AI = nil
+	m.PK = []*Column{def}
+	a.Error(m.check())
+}
+
 func TestModel_parseColumn(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{
@@ -129,10 +206,6 @@ func TestModel_parseColumn(t *testing.T) {
 
 	// 不存在的属性名称
 	a.Error(m.parseColumn(col, "not-exists-property(p1)"))
-
-	// string，但是未指定 len
-	col.GoType = reflect.TypeOf("string")
-	a.Error(m.parseColumn(col, "name(testtttttttt)"))
 }
 
 func TestModel_parseMeta(t *testing.T) {
@@ -224,15 +297,6 @@ func TestModel_setDefault(t *testing.T) {
 	a.NotError(m.setDefault(col, []string{"1"}))
 	a.True(col.HasDefault).Equal(col.Default, "1")
 
-	// 不能同时是 AI
-	m.AI = col
-	a.Error(m.setDefault(col, []string{"1"}))
-
-	// 不能与主键相同
-	m.AI = nil
-	m.PK = []*Column{col}
-	a.Error(m.setDefault(col, []string{"1"}))
-
 	// 可以是主键的一部分
 	m.PK = []*Column{col, col}
 	a.NotError(m.setDefault(col, []string{"1"}))
@@ -246,15 +310,6 @@ func TestModel_setPK(t *testing.T) {
 
 	// 过多的参数
 	a.Error(m.setPK(col, []string{"123"}))
-
-	// AI 列不能为 PK
-	m.AI = col
-	a.Error(m.setPK(col, nil))
-
-	m.AI = nil
-	a.NotError(m.setPK(col, nil))
-	a.NotError(m.setPK(&Column{}, nil))
-	a.Equal(len(m.PK), 2)
 }
 
 func TestModel_setAI(t *testing.T) {
@@ -262,19 +317,11 @@ func TestModel_setAI(t *testing.T) {
 	m := &Model{}
 
 	col := &Column{
+		GoType:     reflect.TypeOf(1),
 		HasDefault: true,
 	}
 
-	// 带有默认值的列，不能作 AI 列
-	a.Error(m.setAI(col, nil))
-
-	// nullable 的列不能作 AI 列
-	col.HasDefault = false
-	col.Nullable = true
-	a.Error(m.setAI(col, nil))
-
 	// 太多的参数
-	col.Nullable = false
 	a.Error(m.setAI(col, []string{"true", "false"}))
 
 	// 列类型只能是整数型
