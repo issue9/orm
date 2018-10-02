@@ -188,6 +188,11 @@ func (m *Model) parseColumn(col *Column, tag string) (err error) {
 			return err
 		}
 	}
+
+	if (col.GoType.Kind() == reflect.String) && (col.Len1 == 0) {
+		return propertyError(col.Name, "len", "字符类型，必须指定 len 属性")
+	}
+
 	// col.Name 可能在上面的 for 循环中被更改，所以要在最后再添加到 m.Cols 中
 	m.Cols[col.Name] = col
 

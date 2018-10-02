@@ -129,6 +129,10 @@ func TestModel_parseColumn(t *testing.T) {
 
 	// 不存在的属性名称
 	a.Error(m.parseColumn(col, "not-exists-property(p1)"))
+
+	// string，但是未指定 len
+	col.GoType = reflect.TypeOf("string")
+	a.Error(m.parseColumn(col, "name(testtttttttt)"))
 }
 
 func TestModel_parseMeta(t *testing.T) {
