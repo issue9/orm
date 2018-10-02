@@ -64,6 +64,29 @@ func (c *Column) IsAI() bool {
 	return (c.model != nil) && (c.model.AI == c)
 }
 
+// 检测长试是否合法，必须要  Column 初始化已经完成。
+func (c *Column) checkLen() error {
+	if c.GoType.Kind() == reflect.String {
+		if c.Len1 == 0 {
+			return propertyError(c.Name, "len", "字符类型，必须指定 len 属性")
+		}
+
+		if c.Len1 < -1 {
+			return propertyError(c.Name, "len", "必须大于 0 或是 -1")
+		}
+	} else {
+		if c.Len1 < 0 { // 不能为负数
+			return propertyError(c.Name, "len", "不能小于 0")
+		}
+
+		if c.Len2 < 0 { // 不能为负数
+			return propertyError(c.Name, "len", "不能小于 0")
+		}
+	}
+
+	return nil
+}
+
 // 从参数中获取 Column 的 len1 和 len2 变量。
 // len(len1,len2)
 func (c *Column) setLen(vals []string) (err error) {

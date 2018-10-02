@@ -47,6 +47,32 @@ func TestColumn_IsZero(t *testing.T) {
 	a.False(col.IsZero(reflect.ValueOf([]byte{'0'})))
 }
 
+func TestColumn_checkLen(t *testing.T) {
+	a := assert.New(t)
+
+	col := &Column{
+		GoType: reflect.TypeOf("string"),
+		Len1:   -1,
+	}
+	a.NotError(col.checkLen())
+
+	col.Len1 = 0
+	a.Error(col.checkLen())
+
+	col.Len1 = -2
+	a.Error(col.checkLen())
+
+	col.GoType = reflect.TypeOf(1)
+	col.Len1 = -2
+	a.Error(col.checkLen())
+
+	col.Len1 = -1
+	a.Error(col.checkLen())
+
+	col.Len1 = 0
+	a.NotError(col.checkLen())
+}
+
 func TestColumn_SetNullable(t *testing.T) {
 	a := assert.New(t)
 
