@@ -193,6 +193,10 @@ func (tx *Tx) InsertMany(v interface{}) error {
 		_, err := tx.Insert(v)
 		return err
 	case reflect.Array, reflect.Slice:
+		if rval.Len() == 0 { // 为空，则什么也不做
+			return nil
+		}
+
 		sql, err := buildInsertManySQL(tx, rval)
 		if err != nil {
 			return err
