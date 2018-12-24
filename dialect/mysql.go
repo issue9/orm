@@ -138,11 +138,11 @@ func (m *mysql) TransactionalDDL() bool {
 
 func (m *mysql) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 	if col == nil {
-		return errors.New("sqlType:col参数是个空值")
+		return errors.New("sqlType:col 参数是个空值")
 	}
 
 	if col.GoType == nil {
-		return errors.New("sqlType:无效的col.GoType值")
+		return errors.New("sqlType:无效的 col.GoType 值")
 	}
 
 	addIntLen := func() {
@@ -196,7 +196,7 @@ func (m *mysql) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 		}
 	case reflect.Slice, reflect.Array:
-		if col.GoType.Elem().Kind() == reflect.Int8 {
+		if col.GoType.Elem().Kind() == reflect.Uint8 {
 			buf.WriteString("BLOB")
 		}
 	case reflect.Struct:

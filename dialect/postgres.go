@@ -150,7 +150,7 @@ func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 		}
 	case reflect.Slice, reflect.Array:
-		if col.GoType.Elem().Kind() == reflect.Int8 {
+		if col.GoType.Elem().Kind() == reflect.Uint8 {
 			buf.WriteString("BYTEA")
 		}
 	case reflect.Struct:

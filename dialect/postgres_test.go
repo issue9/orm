@@ -50,6 +50,11 @@ func TestPostgres_sqlType(t *testing.T) {
 	buf.Reset()
 	a.NotError(p.sqlType(buf, col))
 	sqltest.Equal(a, buf.String(), "BIGINT")
+
+	col.GoType = reflect.TypeOf(sql.RawBytes("123"))
+	buf.Reset()
+	a.NotError(p.sqlType(buf, col))
+	sqltest.Equal(a, buf.String(), "BYTEA")
 }
 
 func TestPostgres_SQL(t *testing.T) {
