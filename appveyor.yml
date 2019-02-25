@@ -22,8 +22,5 @@ environment:
 
 stack: go 1.11
 
-before_test:
-  - go vet ./...
-
 test_script:
   - go test -v -coverprofile=coverage.txt -covermode=atomic ./...

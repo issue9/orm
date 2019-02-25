@@ -3,20 +3,16 @@ language: go
 os:
   - linux
   - osx
+  - windows
 
 go:
   - tip
   - 1.11
-  - "1.10"
 
-install:
-  - go get github.com/issue9/assert
-  - go get github.com/issue9/conv
-
-  - go get github.com/go-sql-driver/mysql
-  - go get github.com/mattn/go-sqlite3
-  - go get github.com/lib/pq
-
-script: env GO111MODULE=on go test -v -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
+script: env GO111MODULE=on go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
 after_success: bash <(curl -s https://codecov.io/bash)
+
+matrix:
+  allow_failures:
+    - go: tip
