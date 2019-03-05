@@ -142,7 +142,7 @@ func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 		if col.Len1 == 0 || col.Len2 == 0 {
 			return errors.New("请指定长度")
 		}
-		buf.WriteString(fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2))
+		buf.WriteString(fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2))
 	case reflect.String:
 		if col.Len1 == -1 || col.Len1 > 65533 {
 			buf.WriteString("TEXT")
@@ -163,7 +163,7 @@ func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 			if col.Len1 == 0 || col.Len2 == 0 {
 				return errors.New("请指定长度")
 			}
-			buf.WriteString(fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2))
+			buf.WriteString(fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2))
 		case nullInt64:
 			if col.IsAI() {
 				buf.WriteString("BIGSERIAL")
