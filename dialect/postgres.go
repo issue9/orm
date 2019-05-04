@@ -177,7 +177,7 @@ func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 				buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 			}
 		case timeType:
-			buf.WriteString("TIME")
+			buf.WriteString("TIMESTAMP")
 		}
 	default:
 		return fmt.Errorf("sqlType:不支持的类型:[%v]", col.GoType.Name())
