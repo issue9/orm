@@ -48,6 +48,17 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 	return inst, nil
 }
 
+// Ping 检查是否还存活
+//
+// ctx 可以为 nil，表示处理方式与标准库的 Ping() 相同。
+func (db *DB) Ping(ctx context.Context) error {
+	if ctx == nil {
+		return db.StdDB().Ping()
+	}
+
+	return db.StdDB().PingContext(ctx)
+}
+
 // Close 关闭当前数据库，释放所有的链接。
 //
 // 关闭之后，之前通过 DB.StdDB() 返回的实例也将失效。
