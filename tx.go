@@ -14,21 +14,21 @@ import (
 
 // Tx 事务对象
 type Tx struct {
-	db    *DB
-	stdTx *sql.Tx
-	sql   *SQL
+	*sql.Tx
+	db  *DB
+	sql *SQL
 }
 
 // Begin 开始一个新的事务
 func (db *DB) Begin() (*Tx, error) {
-	tx, err := db.stdDB.Begin()
+	tx, err := db.DB.Begin()
 	if err != nil {
 		return nil, err
 	}
 
 	inst := &Tx{
-		db:    db,
-		stdTx: tx,
+		Tx: tx,
+		db: db,
 	}
 	inst.sql = &SQL{engine: inst}
 
@@ -36,8 +36,10 @@ func (db *DB) Begin() (*Tx, error) {
 }
 
 // StdTx 返回标准库的 *sql.Tx 对象。
+//
+// Deprecated: 可以直接采用 tx.Tx 代替
 func (tx *Tx) StdTx() *sql.Tx {
-	return tx.stdTx
+	return tx.Tx
 }
 
 // Query 执行一条查询语句。
@@ -48,7 +50,7 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 		return nil, err
 	}
 
-	return tx.stdTx.Query(query, args...)
+	return tx.Tx.Query(query, args...)
 }
 
 // QueryContext 执行一条查询语句。
@@ -59,7 +61,7 @@ func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{
 		return nil, err
 	}
 
-	return tx.stdTx.QueryContext(ctx, query, args...)
+	return tx.Tx.QueryContext(ctx, query, args...)
 }
 
 // QueryRow 执行一条查询语句。
@@ -72,7 +74,7 @@ func (tx *Tx) QueryRow(query string, args ...interface{}) *sql.Row {
 		panic(err)
 	}
 
-	return tx.stdTx.QueryRow(query, args...)
+	return tx.Tx.QueryRow(query, args...)
 }
 
 // QueryRowContext 执行一条查询语句。
@@ -85,7 +87,7 @@ func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interfa
 		panic(err)
 	}
 
-	return tx.stdTx.QueryRowContext(ctx, query, args...)
+	return tx.Tx.QueryRowContext(ctx, query, args...)
 }
 
 // Exec 执行一条 SQL 语句。
@@ -96,7 +98,7 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	return tx.stdTx.Exec(query, args...)
+	return tx.Tx.Exec(query, args...)
 }
 
 // ExecContext 执行一条 SQL 语句。
@@ -107,7 +109,7 @@ func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}
 		return nil, err
 	}
 
-	return tx.stdTx.ExecContext(ctx, query, args...)
+	return tx.Tx.ExecContext(ctx, query, args...)
 }
 
 // Prepare 将一条 SQL 语句进行预编译。
@@ -118,7 +120,7 @@ func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
 		return nil, err
 	}
 
-	return tx.stdTx.Prepare(query)
+	return tx.Tx.Prepare(query)
 }
 
 // PrepareContext 将一条 SQL 语句进行预编译。
@@ -129,26 +131,12 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, erro
 		return nil, err
 	}
 
-	return tx.stdTx.PrepareContext(ctx, query)
+	return tx.Tx.PrepareContext(ctx, query)
 }
 
 // Dialect 返回对应的 Dialect 实例
 func (tx *Tx) Dialect() Dialect {
 	return tx.db.Dialect()
-}
-
-// Commit 提交事务。
-//
-// 提交之后，整个 Tx 对象将不再有效。
-func (tx *Tx) Commit() error {
-	return tx.stdTx.Commit()
-}
-
-// Rollback 回滚事务。
-//
-// 回滚之后，整个 Tx 对象将不再有效。
-func (tx *Tx) Rollback() error {
-	return tx.stdTx.Rollback()
 }
 
 // LastInsertID 插入数据，并获取其自增的 ID。

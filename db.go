@@ -12,7 +12,7 @@ import (
 
 // DB 数据库操作实例。
 type DB struct {
-	stdDB       *sql.DB
+	*sql.DB
 	dialect     Dialect
 	tablePrefix string
 	replacer    *strings.Replacer
@@ -33,7 +33,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
 	l, r := dialect.QuoteTuple()
 	inst := &DB{
-		stdDB:       db,
+		DB:          db,
 		dialect:     dialect,
 		tablePrefix: tablePrefix,
 		replacer: strings.NewReplacer(
@@ -48,28 +48,11 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 	return inst, nil
 }
 
-// Ping 检查是否还存活
-//
-// ctx 可以为 nil，表示处理方式与标准库的 Ping() 相同。
-func (db *DB) Ping(ctx context.Context) error {
-	if ctx == nil {
-		return db.StdDB().Ping()
-	}
-
-	return db.StdDB().PingContext(ctx)
-}
-
-// Close 关闭当前数据库，释放所有的链接。
-//
-// 关闭之后，之前通过 DB.StdDB() 返回的实例也将失效。
-// 通过调用 DB.StdDB().Close() 也将使当前实例失效。
-func (db *DB) Close() error {
-	return db.stdDB.Close()
-}
-
 // StdDB 返回标准包中的 sql.DB 指针。
+//
+// Deprecated: 可以直接采用 db.DB 代替
 func (db *DB) StdDB() *sql.DB {
-	return db.stdDB
+	return db.DB
 }
 
 // Dialect 返回对应的 Dialect 接口实例。
@@ -87,7 +70,7 @@ func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 		panic(err)
 	}
 
-	return db.stdDB.QueryRow(query, args...)
+	return db.DB.QueryRow(query, args...)
 }
 
 // QueryRowContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
@@ -100,7 +83,7 @@ func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interfa
 		panic(err)
 	}
 
-	return db.stdDB.QueryRowContext(ctx, query, args...)
+	return db.DB.QueryRowContext(ctx, query, args...)
 }
 
 // Query 执行一条查询语句，并返回相应的 sql.Rows 实例。
@@ -111,7 +94,7 @@ func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 		return nil, err
 	}
 
-	return db.stdDB.Query(query, args...)
+	return db.DB.Query(query, args...)
 }
 
 // QueryContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
@@ -122,7 +105,7 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{
 		return nil, err
 	}
 
-	return db.stdDB.QueryContext(ctx, query, args...)
+	return db.DB.QueryContext(ctx, query, args...)
 }
 
 // Exec 执行 SQL 语句。
@@ -133,7 +116,7 @@ func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	return db.stdDB.Exec(query, args...)
+	return db.DB.Exec(query, args...)
 }
 
 // ExecContext 执行 SQL 语句。
@@ -144,7 +127,7 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 		return nil, err
 	}
 
-	return db.stdDB.ExecContext(ctx, query, args...)
+	return db.DB.ExecContext(ctx, query, args...)
 }
 
 // Prepare 预编译查询语句。
@@ -155,7 +138,7 @@ func (db *DB) Prepare(query string) (*sql.Stmt, error) {
 		return nil, err
 	}
 
-	return db.stdDB.Prepare(query)
+	return db.DB.Prepare(query)
 }
 
 // PrepareContext 预编译查询语句。
@@ -166,7 +149,7 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, erro
 		return nil, err
 	}
 
-	return db.stdDB.PrepareContext(ctx, query)
+	return db.DB.PrepareContext(ctx, query)
 }
 
 // LastInsertID 插入数据，并获取其自增的 ID。
