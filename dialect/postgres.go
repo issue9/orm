@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/issue9/orm"
-	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/v2"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 var postgresInst *postgres

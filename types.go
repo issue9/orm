@@ -7,8 +7,8 @@ package orm
 import (
 	"database/sql"
 
-	"github.com/issue9/orm/fetch"
-	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/v2/fetch"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：

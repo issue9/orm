@@ -9,9 +9,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/issue9/orm/internal/modeltest"
-
 	"github.com/issue9/assert"
+
+	"github.com/issue9/orm/v2/internal/modeltest"
 )
 
 func TestColumn_SetLen(t *testing.T) {

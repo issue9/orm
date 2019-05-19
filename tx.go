@@ -9,7 +9,7 @@ import (
 	"database/sql"
 	"reflect"
 
-	"github.com/issue9/orm/fetch"
+	"github.com/issue9/orm/v2/fetch"
 )
 
 // Tx 事务对象

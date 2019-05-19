@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm"
-	"github.com/issue9/orm/dialect"
-	"github.com/issue9/orm/internal/sqltest"
-	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/v2"
+	"github.com/issue9/orm/v2/dialect"
+	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/sqlbuilder"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"

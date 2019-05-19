@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/issue9/orm/fetch"
+	"github.com/issue9/orm/v2/fetch"
 )
 
 // SelectStmt 查询语句

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 func getModel(v interface{}) (*Model, reflect.Value, error) {

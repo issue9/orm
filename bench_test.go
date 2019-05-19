@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm"
-	"github.com/issue9/orm/internal/modeltest"
-	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/v2"
+	"github.com/issue9/orm/v2/internal/modeltest"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // go1.10 BenchmarkNewModelNoCached-4   	  200000	      8161 ns/op

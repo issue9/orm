@@ -10,8 +10,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/issue9/orm"
-	"github.com/issue9/orm/sqlbuilder"
+	"github.com/issue9/orm/v2"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 const pkName = "pk" // 默认的主键约束名

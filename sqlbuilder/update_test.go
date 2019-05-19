@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/internal/sqltest"
+
+	"github.com/issue9/orm/v2/internal/sqltest"
 )
 
 var (

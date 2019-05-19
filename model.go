@@ -12,8 +12,8 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/issue9/orm/fetch"
-	"github.com/issue9/orm/internal/tags"
+	"github.com/issue9/orm/v2/fetch"
+	"github.com/issue9/orm/v2/internal/tags"
 )
 
 // 预定的约束类型，方便 Model 中使用。

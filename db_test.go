@@ -10,10 +10,10 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/conv"
-	"github.com/issue9/orm"
-	"github.com/issue9/orm/dialect"
-	"github.com/issue9/orm/fetch"
-	"github.com/issue9/orm/internal/modeltest"
+	"github.com/issue9/orm/v2"
+	"github.com/issue9/orm/v2/dialect"
+	"github.com/issue9/orm/v2/fetch"
+	"github.com/issue9/orm/v2/internal/modeltest"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
