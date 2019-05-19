@@ -110,11 +110,11 @@ func (p *postgres) TransactionalDDL() bool {
 // 将col转换成sql类型，并写入buf中。
 func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 	if col == nil {
-		return errors.New("sqlType:col参数是个空值")
+		return errors.New("sqlType:col 参数是个空值")
 	}
 
 	if col.GoType == nil {
-		return errors.New("sqlType:无效的col.GoType值")
+		return errors.New("sqlType:无效的 col.GoType 值")
 	}
 
 	switch col.GoType.Kind() {
@@ -177,7 +177,7 @@ func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
 				buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
 			}
 		case timeType:
-			buf.WriteString("TIMESTAMP")
+			buf.WriteString(fmt.Sprintf("TIMESTAMP(%d)", col.Len1))
 		}
 	default:
 		return fmt.Errorf("sqlType:不支持的类型:[%v]", col.GoType.Name())
