@@ -326,6 +326,10 @@ func TestObject_no_strict(t *testing.T) {
 	}, objs)
 	a.NotError(rows.Close())
 
+	// 严格模式将出错，有一条记录部分数据为 NULL
+	cnt, err = Object(true, rows, &objs)
+	a.Error(err).Equal(cnt, 0)
+
 	// test2:objs 的长度小于导出数据的长度，objs 应该自动增加长度。
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
