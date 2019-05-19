@@ -70,7 +70,7 @@ func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 }
 
 // 根据 rval 中任意非零值产生 where 语句
-func whereAny(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
+func countWhere(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
@@ -83,10 +83,6 @@ func whereAny(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 
 		keys = append(keys, col.Name)
 		vals = append(vals, field.Interface())
-	}
-
-	if len(keys) == 0 {
-		return fmt.Errorf("没有非零值字段，无法为 %s 产生 where 部分语句", m.Name)
 	}
 
 	for index, key := range keys {
@@ -104,7 +100,7 @@ func count(e Engine, v interface{}) (int64, error) {
 	}
 
 	sql := e.SQL().Select().Count("COUNT(*) AS count").From("{#" + m.Name + "}")
-	if err = whereAny(sql, m, rval); err != nil {
+	if err = countWhere(sql, m, rval); err != nil {
 		return 0, err
 	}
 

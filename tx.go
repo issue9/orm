@@ -216,6 +216,7 @@ func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
 
 // Count 查询符合 v 条件的记录数量。
 // v 中的所有非零字段都将参与查询。
+// 如果 v 为空值，则相当于 select count(*) from xx;
 func (tx *Tx) Count(v interface{}) (int64, error) {
 	return count(tx, v)
 }

@@ -53,7 +53,7 @@ func newDB(a *assert.Assertion) *orm.DB {
 		dsn = "user=caixw dbname=orm_test sslmode=disable"
 		d = dialect.Postgres()
 	default:
-		panic("仅支持mysql,sqlite3,postgres三种数据库测试")
+		panic("仅支持 mysql,sqlite3,postgres 三种数据库测试")
 	}
 
 	db, err := orm.NewDB(driver, dsn, prefix, d)
@@ -120,7 +120,7 @@ func initData(db *orm.DB, a *assert.Assertion) {
 		LastName:  "l1",
 		Sex:       "female",
 	})
-	insert(&modeltest.UserInfo{ // sex使用默认值
+	insert(&modeltest.UserInfo{ // sex 使用默认值
 		UID:       2,
 		FirstName: "f2",
 		LastName:  "l2",
@@ -250,6 +250,10 @@ func TestDB_Count(t *testing.T) {
 		},
 	)
 	a.NotError(err).Equal(1, count)
+
+	// 无条件
+	count, err = db.Count(&modeltest.UserInfo{})
+	a.NotError(err).Equal(2, count)
 
 	// 条件不存在
 	count, err = db.Count(
