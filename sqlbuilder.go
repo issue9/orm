@@ -227,7 +227,7 @@ func find(e Engine, v interface{}) error {
 		return err
 	}
 
-	_, err = sql.QueryObj(v)
+	_, err = sql.QueryObj(true, v)
 	return err
 }
 
@@ -252,7 +252,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 		return err
 	}
 
-	_, err = sql.QueryObj(v)
+	_, err = sql.QueryObj(true, v)
 	return err
 }
 

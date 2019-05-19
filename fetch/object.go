@@ -11,6 +11,8 @@ import (
 	"reflect"
 	"unicode"
 
+	"github.com/issue9/conv"
+
 	t "github.com/issue9/orm/internal/tags"
 )
 
@@ -22,14 +24,15 @@ type AfterFetcher interface {
 // ErrInvalidKind 表示当前功能对数据的 Kind 值有特殊需求。
 var ErrInvalidKind = errors.New("无效的 Kind 类型")
 
-// Obj 将 rows 中的数据导出到 obj 中。
-//
-// Deprecated: 使用 Object 代替
-func Obj(obj interface{}, rows *sql.Rows) (int, error) {
-	return Object(rows, obj)
+// 输出无法转换时的字段信息
+func converError(field, message string) error {
+	return fmt.Errorf("字段 %s 转换出错：%s", field, message)
 }
 
 // Object 将 rows 中的数据导出到 obj 中。
+//
+// strict 严格模式，如果为 true，不会将 null 转换成当前类型的空值。
+// 在多表查询的情况下，如果有空记录，则 strict 模式下，可能会出错（nil 无法转换)。
 //
 // obj 只有在类型为 slice 指针时，才有可能随着 rows 的长度变化，
 // 否则其长度是固定的，若查询结果为空值，则不会对 obj 的内容做任何更改。
@@ -55,7 +58,7 @@ func Obj(obj interface{}, rows *sql.Rows) (int, error) {
 //  }
 //
 // 第一个参数用于表示有多少数据被正确导入到 obj 中
-func Object(rows *sql.Rows, obj interface{}) (int, error) {
+func Object(strict bool, rows *sql.Rows, obj interface{}) (int, error) {
 	val := reflect.ValueOf(obj)
 
 	switch val.Kind() {
@@ -63,16 +66,16 @@ func Object(rows *sql.Rows, obj interface{}) (int, error) {
 		elem := val.Elem()
 		switch elem.Kind() {
 		case reflect.Slice: // slice 指针，可以增长
-			return fetchObjToSlice(val, rows)
+			return fetchObjToSlice(strict, val, rows)
 		case reflect.Array: // 数组指针，只能按其大小导出
-			return fetchObjToFixedSlice(elem, rows)
+			return fetchObjToFixedSlice(strict, elem, rows)
 		case reflect.Struct: // 结构指针，只能导出一个
-			return fetchOnceObj(elem, rows)
+			return fetchOnceObj(strict, elem, rows)
 		default:
 			return 0, ErrInvalidKind
 		}
 	case reflect.Slice: // slice 只能按其大小导出。
-		return fetchObjToFixedSlice(val, rows)
+		return fetchObjToFixedSlice(strict, val, rows)
 	default:
 		return 0, ErrInvalidKind
 	}
@@ -83,7 +86,11 @@ func Object(rows *sql.Rows, obj interface{}) (int, error) {
 // 字段，也不会转换 struct tag 以-开头的字段。
 func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 	for v.Kind() == reflect.Ptr {
-		v = v.Elem()
+		if v.IsNil() {
+			v.Set(reflect.New(v.Type().Elem()))
+		} else {
+			v = v.Elem()
+		}
 	}
 	if v.Kind() != reflect.Struct {
 		return ErrInvalidKind
@@ -173,7 +180,11 @@ func getColumns(v reflect.Value, cols []string) ([]interface{}, error) {
 
 // 将 rows 中的一条记录写入到 val 中，必须保证 val 的类型为 reflect.Struct。
 // 仅供 Obj() 调用。
-func fetchOnceObj(val reflect.Value, rows *sql.Rows) (int, error) {
+func fetchOnceObj(strict bool, val reflect.Value, rows *sql.Rows) (int, error) {
+	if !strict {
+		return fetchOnceObjNoStrict(val, rows)
+	}
+
 	cols, err := rows.Columns()
 	if err != nil {
 		return 0, err
@@ -197,11 +208,47 @@ func fetchOnceObj(val reflect.Value, rows *sql.Rows) (int, error) {
 	return 0, nil
 }
 
+func fetchOnceObjNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
+	mapped, err := Map(true, rows)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(mapped) == 0 { // 没有导出的数据
+		return 0, nil
+	}
+
+	objItem := make(map[string]reflect.Value, len(mapped[0]))
+	if err = parseObject(val, &objItem); err != nil {
+		return 0, err
+	}
+
+	for index, item := range objItem {
+		v, found := mapped[0][index]
+		if !found {
+			continue
+		}
+		if err = conv.Value(v, item); err != nil {
+			return 0, converError(index, err.Error())
+		}
+	}
+
+	if err = afterFetch(val.Interface()); err != nil {
+		return 0, err
+	}
+
+	return 1, nil
+}
+
 // 将 rows 中的记录按 obj 的长度数量导出到 obj 中。
 // val 的类型必须是 reflect.Slice 或是 reflect.Array.
 // 可能只有部分数据被成功导入，而后发生 error，
 // 此时只能通过第一个返回参数来判断有多少数据是成功导入的。
-func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
+func fetchObjToFixedSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, error) {
+	if !strict {
+		return fetchObjToFixedSliceNoStrict(val, rows)
+	}
+
 	itemType := val.Type().Elem()
 	for itemType.Kind() == reflect.Ptr {
 		itemType = itemType.Elem()
@@ -233,12 +280,59 @@ func fetchObjToFixedSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	return l, nil
 }
 
+func fetchObjToFixedSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
+	itemType := val.Type().Elem()
+	for itemType.Kind() == reflect.Ptr {
+		itemType = itemType.Elem()
+	}
+	if itemType.Kind() != reflect.Struct {
+		return 0, ErrInvalidKind
+	}
+
+	// 先导出数据到 map 中
+	mapped, err := Map(false, rows)
+	if err != nil {
+		return 0, err
+	}
+
+	l := len(mapped)
+	if l > val.Len() {
+		l = val.Len()
+	}
+
+	for i := 0; i < l; i++ {
+		objItem := make(map[string]reflect.Value, len(mapped[i]))
+		if err = parseObject(val.Index(i), &objItem); err != nil {
+			return 0, err
+		}
+		for index, item := range objItem {
+			v, found := mapped[i][index]
+			if !found {
+				continue
+			}
+			if err = conv.Value(v, item); err != nil {
+				return i, converError(index, err.Error()) // 已经有 i 条数据被正确导出
+			}
+		} // end for objItem
+
+		if err = afterFetch(val.Index(i).Interface()); err != nil {
+			return 0, err
+		}
+	}
+
+	return l, nil
+}
+
 // 将 rows 中的所有记录导出到 val 中，val 必须为 slice 的指针。
 // 若 val 的长度不够，会根据 rows 中的长度调整。
 //
 // 可能只有部分数据被成功导入，而后发生 error，
 // 此时只能通过第一个返回参数来判断有多少数据是成功导入的。
-func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
+func fetchObjToSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, error) {
+	if !strict {
+		return fetchObjToSliceNoStrict(val, rows)
+	}
+
 	elem := val.Elem()
 
 	itemType := elem.Type().Elem()
@@ -277,6 +371,56 @@ func fetchObjToSlice(val reflect.Value, rows *sql.Rows) (int, error) {
 	}
 
 	return count, nil
+}
+
+func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
+	elem := val.Elem()
+
+	itemType := elem.Type().Elem()
+	for itemType.Kind() == reflect.Ptr {
+		itemType = itemType.Elem()
+	}
+	if itemType.Kind() != reflect.Struct {
+		return 0, ErrInvalidKind
+	}
+
+	// 先导出数据到 map 中
+	mapped, err := Map(false, rows)
+	if err != nil {
+		return 0, err
+	}
+
+	// 使 elem 表示的数组长度最起码和 mapped 一样。
+	size := len(mapped) - elem.Len()
+	if size > 0 {
+		for i := 0; i < size; i++ {
+			elem = reflect.Append(elem, reflect.New(itemType))
+		}
+		val.Elem().Set(elem)
+	}
+
+	for i := 0; i < len(mapped); i++ {
+		objItem := make(map[string]reflect.Value, len(mapped[i]))
+		if err = parseObject(elem.Index(i), &objItem); err != nil {
+			return 0, err
+		}
+
+		for index, item := range objItem {
+			e, found := mapped[i][index]
+			if !found {
+				continue
+			}
+			if err = conv.Value(e, item); err != nil {
+				return i, converError(index, err.Error())
+			}
+		} // end for objItem
+
+		if err = afterFetch(elem.Index(i).Interface()); err != nil {
+			return 0, err
+		}
+	}
+
+	return len(mapped), nil
 }
 
 func afterFetch(v interface{}) error {

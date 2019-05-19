@@ -82,7 +82,7 @@ func TestNewDB(t *testing.T) {
 		a.NotError(db.Close())
 	}()
 
-	a.NotNil(db.StdDB()).NotNil(db.Dialect())
+	a.NotNil(db.DB).NotNil(db.Dialect())
 }
 
 // 初始化测试数据，同时可当作 DB.Insert 的测试

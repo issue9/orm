@@ -48,13 +48,6 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 	return inst, nil
 }
 
-// StdDB 返回标准包中的 sql.DB 指针。
-//
-// Deprecated: 可以直接采用 db.DB 代替
-func (db *DB) StdDB() *sql.DB {
-	return db.DB
-}
-
 // Dialect 返回对应的 Dialect 接口实例。
 func (db *DB) Dialect() Dialect {
 	return db.dialect

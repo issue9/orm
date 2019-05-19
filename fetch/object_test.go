@@ -21,6 +21,8 @@ const testDBFile = "./test.db"
 
 type FetchEmail struct {
 	Email string `orm:"unique(unique_index);nullable;pk"`
+
+	Regdate int64 `orm:"-"`
 }
 
 type FetchUser struct {
@@ -28,8 +30,6 @@ type FetchUser struct {
 	ID       int    `orm:"name(id);ai(1,2);"`
 	Username string `orm:"index(index)"`
 	Group    int    `orm:"name(group);fk(fk_group,group,id)"`
-
-	Regdate int64 `orm:"-"`
 }
 
 type Log struct {
@@ -41,7 +41,7 @@ type Log struct {
 }
 
 // AfterFetcher 接口
-func (u *FetchUser) AfterFetch() error {
+func (u *FetchEmail) AfterFetch() error {
 	u.Regdate = time.Now().Unix()
 	return nil
 }
@@ -82,8 +82,8 @@ func initDB(a *assert.Assertion) *sql.DB {
 
 	stmt, err = tx.Prepare("insert into logs(id, created,content,uid) values(?, ?, ?, ?)")
 	a.NotError(err).NotNil(stmt)
-	for i := 0; i < 100; i++ {
-		_, err = stmt.Exec(i, now, fmt.Sprintf("content-%d", i), i%2+1)
+	for i := 1; i < 100; i++ {
+		_, err = stmt.Exec(i, now, fmt.Sprintf("content-%d", i), i)
 		a.NotError(err)
 	}
 	tx.Commit()
@@ -92,7 +92,7 @@ func initDB(a *assert.Assertion) *sql.DB {
 	return db
 }
 
-// 关闭 sql.DB(sqlite3) 的数据库连结。
+// 关闭 sql.DB(sqlite3) 的数据库连接。
 func closeDB(db *sql.DB, a *assert.Assertion) {
 	a.NotError(db.Close()).
 		NotError(os.Remove(testDBFile)).
@@ -114,7 +114,7 @@ func BenchmarkObject(b *testing.B) {
 		rows, err := db.Query(sql)
 		a.NotError(err)
 
-		cnt, err := Object(rows, &objs)
+		cnt, err := Object(true, rows, &objs)
 		a.NotError(err).NotEmpty(cnt)
 		rows.Close()
 	}
@@ -148,6 +148,16 @@ func TestParseObject(t *testing.T) {
 	a.Equal("username", obj.User.Username)
 	mapped["user.group"].SetInt(1)
 	a.Equal(1, obj.User.Group)
+
+	type m struct {
+		*FetchEmail
+		ID int
+	}
+	o := &m{ID: 5}
+	mapped = map[string]reflect.Value{}
+	v = reflect.ValueOf(o).Elem()
+	a.NotError(parseObject(v, &mapped))
+	a.Equal(2, len(mapped), "长度不相等，导出元素为:[%v]", mapped)
 }
 
 func TestGetColumns(t *testing.T) {
@@ -164,7 +174,7 @@ func TestGetColumns(t *testing.T) {
 	a.Equal(len(cols), 2)
 }
 
-func TestObject(t *testing.T) {
+func TestObject_strict(t *testing.T) {
 	a := assert.New(t)
 	db := initDB(a)
 	defer closeDB(db, a)
@@ -180,11 +190,11 @@ func TestObject(t *testing.T) {
 		&FetchUser{},
 		&FetchUser{},
 	}
-	cnt, err := Object(rows, &objs)
+	cnt, err := Object(true, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -194,11 +204,11 @@ func TestObject(t *testing.T) {
 	objs = []*FetchUser{
 		&FetchUser{},
 	}
-	cnt, err = Object(rows, &objs)
+	cnt, err = Object(true, rows, &objs)
 	a.NotError(err).Equal(len(objs), cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -208,10 +218,10 @@ func TestObject(t *testing.T) {
 	objs = []*FetchUser{
 		&FetchUser{},
 	}
-	cnt, err = Object(rows, objs) // 非指针传递
+	cnt, err = Object(true, rows, objs) // 非指针传递
 	a.NotError(err).Equal(len(objs), cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -222,11 +232,11 @@ func TestObject(t *testing.T) {
 		&FetchUser{},
 		&FetchUser{},
 	}
-	cnt, err = Object(rows, &objs)
+	cnt, err = Object(true, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
 		&FetchUser{},
 	}, objs)
 	a.NotError(rows.Close())
@@ -236,7 +246,7 @@ func TestObject(t *testing.T) {
 	array := [1]*FetchUser{
 		&FetchUser{},
 	}
-	cnt, err = Object(rows, array)
+	cnt, err = Object(true, rows, array)
 	a.Error(err).Equal(cnt, 0) // 非指针传递，出错
 	a.NotError(rows.Close())
 
@@ -245,17 +255,17 @@ func TestObject(t *testing.T) {
 	array = [1]*FetchUser{
 		&FetchUser{},
 	}
-	cnt, err = Object(rows, &array)
+	cnt, err = Object(true, rows, &array)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([1]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}},
 	}, array)
 	a.NotError(rows.Close())
 
 	// test7:obj 为一个 struct 指针。
 	rows, err = db.Query(sql)
 	obj := FetchUser{}
-	cnt, err = Object(rows, &obj)
+	cnt, err = Object(true, rows, &obj)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal(FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}}, obj)
 	a.NotError(rows.Close())
@@ -263,7 +273,7 @@ func TestObject(t *testing.T) {
 	// test8:obj 为一个 struct。这将返回错误信息
 	rows, err = db.Query(sql)
 	obj = FetchUser{}
-	cnt, err = Object(rows, obj)
+	cnt, err = Object(true, rows, obj)
 	a.Error(err).Empty(cnt)
 	a.NotError(rows.Close())
 
@@ -277,11 +287,139 @@ func TestObject(t *testing.T) {
 		&FetchUser{},
 		&FetchUser{},
 	}
-	cnt, err = Object(rows, &objs)
+	cnt, err = Object(true, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0"}, Regdate: now, Username: "username-0", Group: 1},
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1"}, Regdate: now, Username: "username-1", Group: 1},
+		&FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}, Username: "username-0", Group: 1},
+		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}, Username: "username-1", Group: 1},
+	}, objs)
+	a.NotError(rows.Close())
+}
+
+func TestObject_no_strict(t *testing.T) {
+	a := assert.New(t)
+	db := initDB(a)
+	defer closeDB(db, a)
+
+	// 导出一条数据有对应的 logs，一条没有对应的 logs
+	sql := `SELECT u.id,u.Email,l.id as lid FROM user AS u LEFT JOIN logs AS l ON l.uid=u.id WHERE u.id<2 ORDER BY u.id`
+	now := time.Now().Unix()
+
+	type userlog struct {
+		*FetchUser
+		LID int64 `orm:"name(lid)"`
+	}
+
+	// test1:objs 的长度与导出的数据长度相等
+	rows, err := db.Query(sql)
+	a.NotError(err).NotNil(rows)
+
+	objs := []*userlog{
+		&userlog{},
+		&userlog{},
+	}
+	cnt, err := Object(false, rows, &objs)
+	a.NotError(err).NotEmpty(cnt)
+	a.Equal([]*userlog{
+		&userlog{FetchUser: &FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}}, LID: 0},
+		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
+	}, objs)
+	a.NotError(rows.Close())
+
+	// test2:objs 的长度小于导出数据的长度，objs 应该自动增加长度。
+	rows, err = db.Query(sql)
+	a.NotError(err).NotNil(rows)
+	objs = []*userlog{
+		&userlog{},
+	}
+	cnt, err = Object(false, rows, &objs)
+	a.NotError(err).Equal(len(objs), cnt)
+	a.Equal([]*userlog{
+		&userlog{FetchUser: &FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}}, LID: 0},
+		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
+	}, objs)
+	a.NotError(rows.Close())
+
+	// test3:objs 的长度小于导出数据的长度，objs 不会增加长度。
+	rows, err = db.Query(sql)
+	a.NotError(err).NotNil(rows)
+	objs = []*userlog{
+		&userlog{},
+	}
+	cnt, err = Object(false, rows, objs) // 非指针传递
+	a.NotError(err).Equal(len(objs), cnt)
+	a.Equal([]*userlog{
+		&userlog{FetchUser: &FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}}, LID: 0},
+	}, objs)
+	a.NotError(rows.Close())
+
+	// test4:objs 的长度大于导出数据的长度。
+	rows, err = db.Query(sql)
+	objs = []*userlog{
+		&userlog{},
+		&userlog{},
+		&userlog{},
+	}
+	cnt, err = Object(false, rows, &objs)
+	a.NotError(err).NotEmpty(cnt)
+	a.Equal([]*userlog{
+		&userlog{FetchUser: &FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}}, LID: 0},
+		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
+		&userlog{},
+	}, objs)
+	a.NotError(rows.Close())
+
+	// test5:非数组指针传递。
+	rows, err = db.Query(sql)
+	array := [1]*userlog{
+		&userlog{},
+	}
+	cnt, err = Object(false, rows, array)
+	a.Error(err).Equal(cnt, 0) // 非指针传递，出错
+	a.NotError(rows.Close())
+
+	// test6:数组指针传递，不会增长数组长度。
+	rows, err = db.Query(sql)
+	array = [1]*userlog{
+		&userlog{},
+	}
+	cnt, err = Object(false, rows, &array)
+	a.NotError(err).NotEmpty(cnt)
+	a.Equal([1]*userlog{
+		&userlog{FetchUser: &FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}}, LID: 0},
+	}, array)
+	a.NotError(rows.Close())
+
+	// test7:obj 为一个 struct 指针。
+	rows, err = db.Query(sql)
+	obj := userlog{}
+	cnt, err = Object(false, rows, &obj)
+	a.NotError(err).NotEmpty(cnt)
+	a.Equal(userlog{FetchUser: &FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}}, LID: 0}, obj)
+	a.NotError(rows.Close())
+
+	// test8:obj 为一个 struct。这将返回错误信息
+	rows, err = db.Query(sql)
+	obj = userlog{}
+	cnt, err = Object(false, rows, obj)
+	a.Error(err).Empty(cnt)
+	a.NotError(rows.Close())
+
+	sql = `SELECT u.*,l.id AS lid FROM user AS u LEFT JOIN logs AS l on l.uid=u.id WHERE u.id<2 ORDER BY u.id`
+
+	// test8: objs 的长度与导出的数据长度相等
+	rows, err = db.Query(sql)
+	a.NotError(err).NotNil(rows)
+
+	objs = []*userlog{
+		&userlog{},
+		&userlog{},
+	}
+	cnt, err = Object(false, rows, &objs)
+	a.NotError(err).NotEmpty(cnt)
+	a.Equal([]*userlog{
+		&userlog{FetchUser: &FetchUser{ID: 0, FetchEmail: FetchEmail{Email: "email-0", Regdate: now}, Username: "username-0", Group: 1}, LID: 0},
+		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}, Username: "username-1", Group: 1}, LID: 1},
 	}, objs)
 	a.NotError(rows.Close())
 }
@@ -291,13 +429,13 @@ func TestObjectNest(t *testing.T) {
 	db := initDB(a)
 	defer closeDB(db, a)
 
-	sql := `SELECT l.*,u.id as [user.id],u.username as [user.username]  FROM logs AS l LEFT JOIN user as u ON u.id=l.uid WHERE l.id<2 ORDER BY l.id`
+	sql := `SELECT l.*,u.id as [user.id],u.username as [user.username]  FROM logs AS l LEFT JOIN user as u ON u.id=l.uid WHERE l.id<3 ORDER BY l.id`
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
 	objs := []*Log{
 		&Log{User: &FetchUser{}},
 	}
-	cnt, err := Object(rows, &objs)
+	cnt, err := Object(true, rows, &objs)
 	a.NotError(err).Equal(cnt, len(objs))
 	a.Equal(objs[0].User.ID, objs[0].UID)
 	a.Equal(objs[1].User.ID, objs[1].UID)
@@ -317,7 +455,7 @@ func TestObjectNotFound(t *testing.T) {
 		&FetchUser{},
 		&FetchUser{},
 	}
-	cnt, err := Object(rows, &objs)
+	cnt, err := Object(true, rows, &objs)
 	a.NotError(err).Equal(cnt, 0)
 	a.Equal([]*FetchUser{
 		&FetchUser{},
@@ -330,7 +468,7 @@ func TestObjectNotFound(t *testing.T) {
 	array := [1]*FetchUser{
 		&FetchUser{},
 	}
-	cnt, err = Object(rows, array)
+	cnt, err = Object(true, rows, array)
 	a.Error(err).Equal(0, cnt) // 非指针传递，出错
 	a.NotError(rows.Close())
 }

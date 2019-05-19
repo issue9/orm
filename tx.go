@@ -49,13 +49,6 @@ func (db *DB) begin(tx *sql.Tx) (*Tx, error) {
 	return inst, nil
 }
 
-// StdTx 返回标准库的 *sql.Tx 对象。
-//
-// Deprecated: 可以直接采用 tx.Tx 代替
-func (tx *Tx) StdTx() *sql.Tx {
-	return tx.Tx
-}
-
 // Query 执行一条查询语句。
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	query = tx.db.replacer.Replace(query)
