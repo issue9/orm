@@ -310,10 +310,10 @@ func (stmt *SelectStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 	return queryContext(ctx, stmt.engine, stmt)
 }
 
-// QueryObj 将符合当前条件的所有记录依次写入 objs 中。
+// QueryObject 将符合当前条件的所有记录依次写入 objs 中。
 //
 // 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Object 函数的相关介绍。
-func (stmt *SelectStmt) QueryObj(strict bool, objs interface{}) (int, error) {
+func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (int, error) {
 	rows, err := stmt.Query()
 	if err != nil {
 		return 0, err
