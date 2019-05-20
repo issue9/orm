@@ -112,6 +112,26 @@ func TestTx_InsertMany(t *testing.T) {
 	a.NotError(tx.Rollback())
 }
 
+func TestTx_LastInsertID(t *testing.T) {
+	a := assert.New(t)
+	db := newDB(a)
+	defer clearData(db, a)
+
+	a.NotError(db.Drop(&modeltest.User{}))
+	a.NotError(db.Create(&modeltest.User{}))
+
+	tx, err := db.Begin()
+	a.NotError(err)
+
+	id, err := tx.LastInsertID(&modeltest.User{Username: "1"})
+	a.NotError(err).Equal(id, 1)
+
+	id, err = tx.LastInsertID(&modeltest.User{Username: "2"})
+	a.NotError(err).Equal(id, 2)
+
+	a.NotError(tx.Commit())
+}
+
 func TestTx_Insert(t *testing.T) {
 	a := assert.New(t)
 

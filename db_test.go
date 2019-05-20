@@ -144,6 +144,7 @@ func initData(db *orm.DB, a *assert.Assertion) {
 func clearData(db *orm.DB, a *assert.Assertion) {
 	a.NotError(db.Drop(&modeltest.Admin{}))
 	a.NotError(db.Drop(&modeltest.User{}))
+	a.NotError(db.Drop(&modeltest.Group{})) // admin 外键依赖 group
 	a.NotError(db.Drop(&modeltest.UserInfo{}))
 	a.NotError(db.Close())
 	closeDB(a)
@@ -159,6 +160,21 @@ func TestDB_Update_error(t *testing.T) {
 	// 非结构体传入
 	r, err := db.Update(123)
 	a.Error(err).Nil(r)
+}
+
+func TestDB_LastInsertID(t *testing.T) {
+	a := assert.New(t)
+	db := newDB(a)
+	defer clearData(db, a)
+
+	a.NotError(db.Drop(&modeltest.User{}))
+	a.NotError(db.Create(&modeltest.User{}))
+
+	id, err := db.LastInsertID(&modeltest.User{Username: "1"})
+	a.NotError(err).Equal(id, 1)
+
+	id, err = db.LastInsertID(&modeltest.User{Username: "2"})
+	a.NotError(err).Equal(id, 2)
 }
 
 func TestDB_Update(t *testing.T) {
