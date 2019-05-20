@@ -57,13 +57,7 @@ func (db *DB) Dialect() Dialect {
 //
 // 如果生成语句出错，则会 panic
 func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
-	query = db.replacer.Replace(query)
-	query, err := db.dialect.SQL(query)
-	if err != nil {
-		panic(err)
-	}
-
-	return db.DB.QueryRow(query, args...)
+	return db.QueryRowContext(context.Background(), query, args...)
 }
 
 // QueryRowContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
@@ -81,13 +75,7 @@ func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interfa
 
 // Query 执行一条查询语句，并返回相应的 sql.Rows 实例。
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	query = db.replacer.Replace(query)
-	query, err := db.dialect.SQL(query)
-	if err != nil {
-		return nil, err
-	}
-
-	return db.DB.Query(query, args...)
+	return db.QueryContext(context.Background(), query, args...)
 }
 
 // QueryContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
@@ -103,13 +91,7 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{
 
 // Exec 执行 SQL 语句。
 func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
-	query = db.replacer.Replace(query)
-	query, err := db.dialect.SQL(query)
-	if err != nil {
-		return nil, err
-	}
-
-	return db.DB.Exec(query, args...)
+	return db.ExecContext(context.Background(), query, args...)
 }
 
 // ExecContext 执行 SQL 语句。
@@ -125,13 +107,7 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 
 // Prepare 预编译查询语句。
 func (db *DB) Prepare(query string) (*sql.Stmt, error) {
-	query = db.replacer.Replace(query)
-	query, err := db.dialect.SQL(query)
-	if err != nil {
-		return nil, err
-	}
-
-	return db.DB.Prepare(query)
+	return db.PrepareContext(context.Background(), query)
 }
 
 // PrepareContext 预编译查询语句。
