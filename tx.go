@@ -169,6 +169,9 @@ func (tx *Tx) ForUpdate(v interface{}) error {
 // InsertMany 插入多条相同的数据。若需要向某张表中插入多条记录，
 // InsertMany() 会比 Insert() 性能上好很多。
 //
+// max 表示一次最多插入的数量，如果超过此值，会分批执行，
+// 但是依然在一个事务中完成。
+//
 // 与 MultInsert() 方法最大的不同在于:
 //  // MultInsert() 可以每个参数的类型都不一样：
 //  vs := []interface{}{&user{...}, &userInfo{...}}
@@ -177,7 +180,7 @@ func (tx *Tx) ForUpdate(v interface{}) error {
 //  us := []*users{&user{}, &user{}}
 //  db.InsertMany(us)
 //  db.Insert(us...) // 这样也行，但是性能会差好多
-func (tx *Tx) InsertMany(v interface{}) error {
+func (tx *Tx) InsertMany(v interface{}, max int) error {
 	rval := reflect.ValueOf(v)
 	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
@@ -187,21 +190,31 @@ func (tx *Tx) InsertMany(v interface{}) error {
 	case reflect.Struct: // 单个元素
 		_, err := tx.Insert(v)
 		return err
-	case reflect.Array, reflect.Slice:
-		if rval.Len() == 0 { // 为空，则什么也不做
-			return nil
-		}
+	case reflect.Array, reflect.Slice: // 跳出 switch
+	default:
+		return fetch.ErrInvalidKind
+	}
 
-		sql, err := buildInsertManySQL(tx, rval)
+	if rval.Len() == 0 { // 为空，则什么也不做
+		return nil
+	}
+
+	for i := 0; i < rval.Len(); i += max {
+		j := i + max
+		if j > rval.Len() {
+			j = rval.Len()
+		}
+		sql, err := buildInsertManySQL(tx, rval.Slice(i, j))
 		if err != nil {
 			return err
 		}
 
-		_, err = sql.Exec()
-		return err
-	default:
-		return fetch.ErrInvalidKind
+		if _, err = sql.Exec(); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 // Update 更新一条类型。

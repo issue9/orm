@@ -28,7 +28,7 @@ func TestTx_InsertMany(t *testing.T) {
 			FirstName: "f1",
 			LastName:  "l1",
 		},
-	}))
+	}, 10))
 	a.NotError(tx.InsertMany([]*modeltest.UserInfo{
 		&modeltest.UserInfo{
 			UID:       2,
@@ -38,7 +38,7 @@ func TestTx_InsertMany(t *testing.T) {
 			UID:       3,
 			FirstName: "f3",
 			LastName:  "l3",
-		}}))
+		}}, 10))
 	a.NotError(tx.Commit())
 
 	u1 := &modeltest.UserInfo{UID: 1}
