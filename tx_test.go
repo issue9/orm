@@ -29,16 +29,44 @@ func TestTx_InsertMany(t *testing.T) {
 			LastName:  "l1",
 		},
 	}, 10))
+
+	// 分批插入
 	a.NotError(tx.InsertMany([]*modeltest.UserInfo{
 		&modeltest.UserInfo{
 			UID:       2,
 			FirstName: "f2",
 			LastName:  "l2",
-		}, &modeltest.UserInfo{
+		},
+		&modeltest.UserInfo{
 			UID:       3,
 			FirstName: "f3",
 			LastName:  "l3",
-		}}, 10))
+		},
+		&modeltest.UserInfo{
+			UID:       4,
+			FirstName: "f4",
+			LastName:  "l4",
+		},
+		&modeltest.UserInfo{
+			UID:       5,
+			FirstName: "f5",
+			LastName:  "l5",
+		},
+		&modeltest.UserInfo{
+			UID:       6,
+			FirstName: "f6",
+			LastName:  "l6",
+		},
+	}, 2))
+
+	// 单个元素插入
+	a.NotError(tx.InsertMany(
+		&modeltest.UserInfo{
+			UID:       7,
+			FirstName: "f7",
+			LastName:  "l7",
+		}, 10))
+
 	a.NotError(tx.Commit())
 
 	u1 := &modeltest.UserInfo{UID: 1}
@@ -52,6 +80,36 @@ func TestTx_InsertMany(t *testing.T) {
 	u3 := &modeltest.UserInfo{UID: 3}
 	a.NotError(db.Select(u3))
 	a.Equal(u3, &modeltest.UserInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
+
+	u4 := &modeltest.UserInfo{UID: 4}
+	a.NotError(db.Select(u4))
+	a.Equal(u4, &modeltest.UserInfo{UID: 4, FirstName: "f4", LastName: "l4", Sex: "male"})
+
+	u5 := &modeltest.UserInfo{UID: 5}
+	a.NotError(db.Select(u5))
+	a.Equal(u5, &modeltest.UserInfo{UID: 5, FirstName: "f5", LastName: "l5", Sex: "male"})
+
+	u6 := &modeltest.UserInfo{UID: 6}
+	a.NotError(db.Select(u6))
+	a.Equal(u6, &modeltest.UserInfo{UID: 6, FirstName: "f6", LastName: "l6", Sex: "male"})
+
+	u7 := &modeltest.UserInfo{UID: 7}
+	a.NotError(db.Select(u7))
+	a.Equal(u7, &modeltest.UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
+
+	// 类型错误
+	tx, err = db.Begin()
+	a.NotError(err)
+	a.NotError(tx.Create(&modeltest.UserInfo{}))
+	a.Error(tx.InsertMany(5, 10))
+	a.NotError(tx.Rollback())
+
+	// 类型错误
+	tx, err = db.Begin()
+	a.NotError(err)
+	a.NotError(tx.Create(&modeltest.UserInfo{}))
+	a.Error(tx.InsertMany([]int{1, 2, 3}, 10))
+	a.NotError(tx.Rollback())
 }
 
 func TestTx_Insert(t *testing.T) {
