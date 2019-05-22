@@ -158,6 +158,16 @@ func TestParseObject(t *testing.T) {
 	v = reflect.ValueOf(o).Elem()
 	a.NotError(parseObject(v, &mapped))
 	a.Equal(2, len(mapped), "长度不相等，导出元素为:[%v]", mapped)
+
+	type mm struct {
+		FetchEmail
+		ID int
+	}
+	oo := &mm{ID: 5}
+	mapped = map[string]reflect.Value{}
+	v = reflect.ValueOf(oo).Elem()
+	a.NotError(parseObject(v, &mapped))
+	a.Equal(2, len(mapped), "长度不相等，导出元素为:[%v]", mapped)
 }
 
 func TestGetColumns(t *testing.T) {

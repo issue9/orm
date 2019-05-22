@@ -103,7 +103,9 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 		vf := v.Field(i)
 
 		if field.Anonymous {
-			parseObject(vf, ret)
+			if err := parseObject(vf, ret); err != nil {
+				return err
+			}
 			continue
 		}
 
