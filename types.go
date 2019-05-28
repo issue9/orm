@@ -84,6 +84,9 @@ type Engine interface {
 type Dialect interface {
 	sqlbuilder.Dialect
 
+	// 名称
+	Name() string
+
 	// 返回符合当前数据库规范的引号对。
 	QuoteTuple() (openQuote, closeQuote byte)
 

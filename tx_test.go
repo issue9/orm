@@ -9,6 +9,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/dialect"
 	"github.com/issue9/orm/v2/internal/modeltest"
 )
 
@@ -147,24 +148,30 @@ func TestTx_Insert(t *testing.T) {
 		Username: "u1",
 	})
 	a.NotError(err)
-	id, err := r.LastInsertId()
-	a.NotError(err).Equal(id, 1)
+	if db.Dialect().Name() != "postgres" { // postgresql 默认情况下不支持 lastID
+		id, err := r.LastInsertId()
+		a.NotError(err).Equal(id, 1)
+	}
 
 	r, err = tx.Insert(&modeltest.User{
 		ID:       2,
 		Username: "u2",
 	})
 	a.NotError(err)
-	id, err = r.LastInsertId()
-	a.NotError(err).Equal(id, 2)
+	if db.Dialect() != dialect.Postgres() {
+		id, err := r.LastInsertId()
+		a.NotError(err).Equal(id, 2)
+	}
 
 	r, err = tx.Insert(&modeltest.User{
 		ID:       3,
 		Username: "u3",
 	})
 	a.NotError(err)
-	id, err = r.LastInsertId()
-	a.NotError(err).Equal(id, 3)
+	if db.Dialect().Name() != "postgres" {
+		id, err := r.LastInsertId()
+		a.NotError(err).Equal(id, 3)
+	}
 
 	a.NotError(tx.Commit())
 

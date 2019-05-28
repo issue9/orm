@@ -29,6 +29,10 @@ func Sqlite3() orm.Dialect {
 	return sqlite3Inst
 }
 
+func (s *sqlite3) Name() string {
+	return "sqlite3"
+}
+
 func (s *sqlite3) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }

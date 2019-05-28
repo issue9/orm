@@ -28,6 +28,10 @@ func Postgres() orm.Dialect {
 	return postgresInst
 }
 
+func (p *postgres) Name() string {
+	return "postgres"
+}
+
 func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'
 }

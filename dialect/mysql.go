@@ -31,6 +31,10 @@ func Mysql() orm.Dialect {
 	return mysqlInst
 }
 
+func (m *mysql) Name() string {
+	return "mysql"
+}
+
 func (m *mysql) QuoteTuple() (byte, byte) {
 	return '`', '`'
 }
