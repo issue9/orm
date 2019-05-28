@@ -100,13 +100,13 @@ func TestNewModel(t *testing.T) {
 		Equal(fk.DeleteRule, "")
 
 	// check
-	chk, found := m.Check["chk_name"]
-	a.True(found).Equal(chk, "id>0")
+	chk, found := m.Check["admin_chk_name"]
+	a.True(found).Equal(chk, "{group}>0")
 
 	// meta
 	a.Equal(m.Meta, map[string][]string{
 		"mysql_engine":  []string{"innodb"},
-		"mysql_charset": []string{"utf-8"},
+		"mysql_charset": []string{"utf8"},
 	})
 
 	// Meta返回的name属性

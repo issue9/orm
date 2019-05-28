@@ -35,7 +35,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 	a.NotError(err).NotNil(mod)
 	m.createTableOptions(sql, mod)
 	a.True(sql.Len() > 0)
-	sqltest.Equal(a, sql.String(), "engine=innodb character set=utf-8")
+	sqltest.Equal(a, sql.String(), "engine=innodb character set=utf8")
 }
 
 func TestMysql_sqlType(t *testing.T) {

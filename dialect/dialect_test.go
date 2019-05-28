@@ -24,7 +24,7 @@ func (m *model1) Meta() string {
 type model2 struct{}
 
 func (m *model2) Meta() string {
-	return "check(chk_name,id>0);mysql_engine(innodb);mysql_charset(utf-8);name(model2);sqlite3_rowid(false)"
+	return "check(chk_name,id>0);mysql_engine(innodb);mysql_charset(utf8);name(model2);sqlite3_rowid(false)"
 }
 
 func TestCreatColSQL(t *testing.T) {
