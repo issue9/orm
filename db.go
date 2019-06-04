@@ -8,6 +8,8 @@ import (
 	"context"
 	"database/sql"
 	"strings"
+
+	"github.com/issue9/orm/v2/model"
 )
 
 // DB 数据库操作实例。
@@ -17,6 +19,12 @@ type DB struct {
 	tablePrefix string
 	replacer    *strings.Replacer
 	sql         *SQL
+}
+
+// NewModel 从一个 obj 声明一个 Model 实例。
+// obj 可以是一个 struct 实例或是指针。
+func NewModel(obj interface{}) (*Model, error) {
+	return model.NewModel(obj)
 }
 
 // NewDB 声明一个新的 DB 实例。

@@ -9,33 +9,11 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/modeltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-// go1.10 BenchmarkNewModelNoCached-4   	  200000	      8161 ns/op
-func BenchmarkNewModelNoCached(b *testing.B) {
-	orm.ClearModels()
-	a := assert.New(b)
 
-	for i := 0; i < b.N; i++ {
-		m, err := orm.NewModel(&modeltest.User{})
-		orm.ClearModels()
-		a.NotError(err).NotNil(m)
-	}
-}
-
-// go1.10 BenchmarkNewModelCached-4     	10000000	       187 ns/op
-func BenchmarkNewModelCached(b *testing.B) {
-	orm.ClearModels()
-	a := assert.New(b)
-
-	for i := 0; i < b.N; i++ {
-		m, err := orm.NewModel(&modeltest.User{})
-		a.NotError(err).NotNil(m)
-	}
-}
 
 // mysql: BenchmarkDB_Insert-4     	    5000	    280546 ns/op
 func BenchmarkDB_Insert(b *testing.B) {
