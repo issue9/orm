@@ -88,7 +88,7 @@ func TestColumn_SetNullable(t *testing.T) {
 	a.Error(col.setNullable([]string{"T1"}))
 
 	// 将 AI 设置为 nullabl
-	m, err := NewModel(&modeltest.User{})
+	m, err := New(&modeltest.User{})
 	a.NotError(err).NotNil(m)
 	m.AI = col
 	col.model = m

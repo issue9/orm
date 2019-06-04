@@ -73,9 +73,9 @@ func (t conType) String() string {
 	}
 }
 
-// NewModel 从一个 obj 声明一个 Model 实例。
+// New 从一个 obj 声明一个 Model 实例。
 // obj 可以是一个 struct 实例或是指针。
-func NewModel(obj interface{}) (*Model, error) {
+func New(obj interface{}) (*Model, error) {
 	rval := reflect.ValueOf(obj)
 	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()

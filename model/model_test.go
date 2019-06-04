@@ -35,19 +35,19 @@ func TestModels(t *testing.T) {
 	ClearModels()
 	a.Equal(0, len(models.items))
 
-	m, err := NewModel(&modeltest.User{})
+	m, err := New(&modeltest.User{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 相同的 model 实例，不会增加数量
-	m, err = NewModel(&modeltest.User{})
+	m, err = New(&modeltest.User{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(1, len(models.items))
 
 	// 添加新的 model
-	m, err = NewModel(&modeltest.Admin{})
+	m, err = New(&modeltest.Admin{})
 	a.NotError(err).
 		NotNil(m).
 		Equal(2, len(models.items))
@@ -60,7 +60,7 @@ func TestNewModel(t *testing.T) {
 	ClearModels()
 	a := assert.New(t)
 
-	m, err := NewModel(&modeltest.Admin{})
+	m, err := New(&modeltest.Admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols
