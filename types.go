@@ -72,6 +72,8 @@ type Engine interface {
 	MultTruncate(objs ...interface{}) error
 
 	SQL() *SQL
+
+	NewModel(v interface{}) (*Model, error)
 }
 
 // Dialect 数据库驱动特有的语言特性实现

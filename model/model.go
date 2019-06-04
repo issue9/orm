@@ -16,17 +16,6 @@ import (
 	"github.com/issue9/orm/v2/internal/tags"
 )
 
-// 预定的约束类型，方便 Model 中使用。
-const (
-	none conType = iota
-	index
-	unique
-	fk
-	check
-)
-
-type conType int8
-
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
 	Name          string                 // 表的名称
@@ -45,23 +34,6 @@ type Model struct {
 
 func propertyError(field, name, message string) error {
 	return fmt.Errorf("%s 的 %s 属性发生以下错误: %s", field, name, message)
-}
-
-func (t conType) String() string {
-	switch t {
-	case none:
-		return "<none>"
-	case index:
-		return "KEY INDEX"
-	case unique:
-		return "UNIQUE INDEX"
-	case fk:
-		return "FOREIGN KEY"
-	case check:
-		return "CHECK"
-	default:
-		return "<unknown>"
-	}
 }
 
 // New 从一个 obj 声明一个 Model 实例。

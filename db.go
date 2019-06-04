@@ -8,6 +8,8 @@ import (
 	"context"
 	"database/sql"
 	"strings"
+
+	"github.com/issue9/orm/v2/model"
 )
 
 // DB 数据库操作实例。
@@ -17,6 +19,7 @@ type DB struct {
 	tablePrefix string
 	replacer    *strings.Replacer
 	sql         *SQL
+	models      *model.Models
 }
 
 // NewDB 声明一个新的 DB 实例。
@@ -41,6 +44,7 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 			"{", string(l),
 			"}", string(r),
 		),
+		models: model.NewModels(),
 	}
 
 	inst.sql = &SQL{engine: inst}
@@ -191,7 +195,7 @@ func (db *DB) Drop(v interface{}) error {
 
 // Truncate 清空一张表。
 func (db *DB) Truncate(v interface{}) error {
-	m, err := NewModel(v)
+	m, err := db.NewModel(v)
 	if err != nil {
 		return err
 	}

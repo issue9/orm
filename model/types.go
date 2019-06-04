@@ -16,3 +16,31 @@ type ForeignKey struct {
 	RefTableName, RefColName string
 	UpdateRule, DeleteRule   string
 }
+
+// 预定的约束类型，方便 Model 中使用。
+const (
+	none conType = iota
+	index
+	unique
+	fk
+	check
+)
+
+type conType int8
+
+func (t conType) String() string {
+	switch t {
+	case none:
+		return "<none>"
+	case index:
+		return "KEY INDEX"
+	case unique:
+		return "UNIQUE INDEX"
+	case fk:
+		return "FOREIGN KEY"
+	case check:
+		return "CHECK"
+	default:
+		return "<unknown>"
+	}
+}

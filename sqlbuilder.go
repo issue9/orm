@@ -13,8 +13,8 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-func getModel(v interface{}) (*Model, reflect.Value, error) {
-	m, err := NewModel(v)
+func getModel(e Engine, v interface{}) (*Model, reflect.Value, error) {
+	m, err := e.NewModel(v)
 	if err != nil {
 		return nil, reflect.Value{}, err
 	}
@@ -94,7 +94,7 @@ func countWhere(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 
 // 统计符合 v 条件的记录数量。
 func count(e Engine, v interface{}) (int64, error) {
-	m, rval, err := getModel(v)
+	m, rval, err := getModel(e, v)
 	if err != nil {
 		return 0, err
 	}
@@ -112,7 +112,7 @@ func count(e Engine, v interface{}) (int64, error) {
 // 部分数据库可能并没有提供在 CREATE TABLE 中直接指定 index 约束的功能。
 // 所以此处把创建表和创建索引分成两步操作。
 func create(e Engine, v interface{}) error {
-	m, _, err := getModel(v)
+	m, _, err := getModel(e, v)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func create(e Engine, v interface{}) error {
 
 // 删除一张表。
 func drop(e Engine, v interface{}) error {
-	m, err := NewModel(v)
+	m, err := e.NewModel(v)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func drop(e Engine, v interface{}) error {
 }
 
 func lastInsertID(e Engine, v interface{}) (int64, error) {
-	m, rval, err := getModel(v)
+	m, rval, err := getModel(e, v)
 	if err != nil {
 		return 0, err
 	}
@@ -177,7 +177,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 }
 
 func insert(e Engine, v interface{}) (sql.Result, error) {
-	m, rval, err := getModel(v)
+	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
 func find(e Engine, v interface{}) error {
-	m, rval, err := getModel(v)
+	m, rval, err := getModel(e, v)
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func find(e Engine, v interface{}) error {
 
 // for update 只能作用于事务
 func forUpdate(tx *Tx, v interface{}) error {
-	m, rval, err := getModel(v)
+	m, rval, err := getModel(tx, v)
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
 func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
-	m, rval, err := getModel(v)
+	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +312,7 @@ func inStrSlice(key string, slice []string) bool {
 
 // 将 v 生成 delete 的 sql 语句
 func del(e Engine, v interface{}) (sql.Result, error) {
-	m, rval, err := getModel(v)
+	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +341,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 			}
 		}
 
-		m, irval, err := getModel(irval.Interface())
+		m, irval, err := getModel(e, irval.Interface())
 		if err != nil {
 			return nil, err
 		}

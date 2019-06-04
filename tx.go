@@ -226,7 +226,7 @@ func (tx *Tx) Drop(v interface{}) error {
 
 // Truncate 清除表内容，重置 ai，但保留表结构。
 func (tx *Tx) Truncate(v interface{}) error {
-	m, err := NewModel(v)
+	m, err := tx.db.NewModel(v)
 	if err != nil {
 		return err
 	}

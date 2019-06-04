@@ -6,8 +6,6 @@ package orm
 
 import "github.com/issue9/orm/v2/model"
 
-var models = model.NewModels()
-
 type (
 	// Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
 	//  "name(tbl_name);engine(myISAM);charset(utf8)"
@@ -25,11 +23,17 @@ type (
 
 // NewModel 从一个 obj 声明一个 Model 实例。
 // obj 可以是一个 struct 实例或是指针。
-func NewModel(obj interface{}) (*Model, error) {
-	return models.New(obj)
+func (db *DB) NewModel(obj interface{}) (*Model, error) {
+	return db.models.New(obj)
 }
 
 // ClearModels 清除数据表模型
-func ClearModels() {
-	models.Clear()
+func (db *DB) ClearModels() {
+	db.models.Clear()
+}
+
+// NewModel 从一个 obj 声明一个 Model 实例。
+// obj 可以是一个 struct 实例或是指针。
+func (tx *Tx) NewModel(obj interface{}) (*Model, error) {
+	return tx.db.models.New(obj)
 }

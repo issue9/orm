@@ -12,6 +12,7 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -22,16 +23,18 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 	sql := sqlbuilder.New("")
 	a.NotNil(sql)
 	var s = &sqlite3{}
+	ms := model.NewModels()
+	a.NotNil(ms)
 
 	// 空的 meta
-	mod, err := orm.NewModel(&model1{})
+	mod, err := ms.New(&model1{})
 	a.NotError(err).NotNil(mod)
 	s.createTableOptions(sql, mod)
 	a.Equal(sql.Len(), 0)
 
 	// engine
 	sql.Reset()
-	mod, err = orm.NewModel(&model2{})
+	mod, err = ms.New(&model2{})
 	a.NotError(err).NotNil(mod)
 	s.createTableOptions(sql, mod)
 	a.True(sql.Len() > 0)
