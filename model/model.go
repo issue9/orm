@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"sync"
 	"unicode"
 
 	"github.com/issue9/orm/v2/fetch"
@@ -25,14 +24,6 @@ const (
 	fk
 	check
 )
-
-// model 缓存
-var models = &struct {
-	sync.Mutex
-	items map[reflect.Type]*Model
-}{
-	items: map[reflect.Type]*Model{},
-}
 
 type conType int8
 
@@ -75,7 +66,7 @@ func (t conType) String() string {
 
 // New 从一个 obj 声明一个 Model 实例。
 // obj 可以是一个 struct 实例或是指针。
-func New(obj interface{}) (*Model, error) {
+func (ms *Models) New(obj interface{}) (*Model, error) {
 	rval := reflect.ValueOf(obj)
 	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
@@ -86,10 +77,10 @@ func New(obj interface{}) (*Model, error) {
 		return nil, fetch.ErrInvalidKind
 	}
 
-	models.Lock()
-	defer models.Unlock()
+	ms.locker.Lock()
+	defer ms.locker.Unlock()
 
-	if m, found := models.items[rtype]; found {
+	if m, found := ms.items[rtype]; found {
 		return m, nil
 	}
 
@@ -118,7 +109,7 @@ func New(obj interface{}) (*Model, error) {
 		return nil, err
 	}
 
-	models.items[rtype] = m
+	ms.items[rtype] = m
 	return m, nil
 }
 
@@ -426,12 +417,4 @@ func (m *Model) hasConstraint(name string, except conType) conType {
 	}
 
 	return none
-}
-
-// ClearModels 清除所有的 Model 缓存。
-func ClearModels() {
-	models.Lock()
-	defer models.Unlock()
-
-	models.items = map[reflect.Type]*Model{}
 }

@@ -29,38 +29,12 @@ func TestContType(t *testing.T) {
 	a.Equal("<unknown>", c1.String())
 }
 
-func TestModels(t *testing.T) {
-	a := assert.New(t)
-
-	ClearModels()
-	a.Equal(0, len(models.items))
-
-	m, err := New(&modeltest.User{})
-	a.NotError(err).
-		NotNil(m).
-		Equal(1, len(models.items))
-
-	// 相同的 model 实例，不会增加数量
-	m, err = New(&modeltest.User{})
-	a.NotError(err).
-		NotNil(m).
-		Equal(1, len(models.items))
-
-	// 添加新的 model
-	m, err = New(&modeltest.Admin{})
-	a.NotError(err).
-		NotNil(m).
-		Equal(2, len(models.items))
-
-	ClearModels()
-	a.Equal(0, len(models.items))
-}
-
 func TestNewModel(t *testing.T) {
-	ClearModels()
 	a := assert.New(t)
+	ms := NewModels()
+	a.NotNil(ms)
 
-	m, err := New(&modeltest.Admin{})
+	m, err := ms.New(&modeltest.Admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols
