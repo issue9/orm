@@ -2,8 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// Package modeltest 为 model 提供一些测试实例
-package modeltest
+package orm_test
 
 // Group 带有自增 ID 的普通表结构
 type Group struct {

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2/internal/modeltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -19,18 +18,18 @@ import (
 func BenchmarkDB_Insert(b *testing.B) {
 	a := assert.New(b)
 
-	m := &modeltest.Group{
+	m := &Group{
 		Name:    "name",
 		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&modeltest.Group{})
+		db.Drop(&Group{})
 		closeDB(a)
 	}()
 
-	a.NotError(db.Create(&modeltest.Group{}))
+	a.NotError(db.Create(&Group{}))
 
 	for i := 0; i < b.N; i++ {
 		a.NotError(db.Insert(m))
@@ -41,19 +40,19 @@ func BenchmarkDB_Insert(b *testing.B) {
 func BenchmarkDB_Update(b *testing.B) {
 	a := assert.New(b)
 
-	m := &modeltest.Group{
+	m := &Group{
 		Name:    "name",
 		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&modeltest.Group{})
+		db.Drop(&Group{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&modeltest.Group{}))
+	a.NotError(db.Create(&Group{}))
 	a.NotError(db.Insert(m))
 
 	m.ID = 1 // 自增，从 1 开始
@@ -66,18 +65,18 @@ func BenchmarkDB_Update(b *testing.B) {
 func BenchmarkDB_Select(b *testing.B) {
 	a := assert.New(b)
 
-	m := &modeltest.Group{
+	m := &Group{
 		Name:    "name",
 		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&modeltest.Group{})
+		db.Drop(&Group{})
 		closeDB(a)
 	}()
 
-	a.NotError(db.Create(&modeltest.Group{}))
+	a.NotError(db.Create(&Group{}))
 	a.NotError(db.Insert(m))
 
 	m.ID = 1
@@ -90,19 +89,19 @@ func BenchmarkDB_Select(b *testing.B) {
 func BenchmarkDB_WhereUpdate(b *testing.B) {
 	a := assert.New(b)
 
-	m := &modeltest.Group{
+	m := &Group{
 		Name:    "name",
 		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&modeltest.Group{})
+		db.Drop(&Group{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&modeltest.Group{}))
+	a.NotError(db.Create(&Group{}))
 	a.NotError(db.Insert(m))
 
 	for i := 0; i < b.N; i++ {
@@ -120,22 +119,22 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 func BenchmarkDB_Count(b *testing.B) {
 	a := assert.New(b)
 
-	m := &modeltest.Group{
+	m := &Group{
 		Name:    "name",
 		Created: time.Now().Unix(),
 	}
 
 	db := newDB(a)
 	defer func() {
-		db.Drop(&modeltest.Group{})
+		db.Drop(&Group{})
 		closeDB(a)
 	}()
 
 	// 构造数据
-	a.NotError(db.Create(&modeltest.Group{}))
+	a.NotError(db.Create(&Group{}))
 	a.NotError(db.Insert(m))
 
-	be := &modeltest.Group{Name: "name"}
+	be := &Group{Name: "name"}
 	for i := 0; i < b.N; i++ {
 		count, _ := db.Count(be)
 		if count < 1 {
