@@ -10,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-
-	"github.com/issue9/orm/v2/internal/modeltest"
 )
 
 func TestColumn_SetLen(t *testing.T) {
@@ -90,8 +88,8 @@ func TestColumn_SetNullable(t *testing.T) {
 	ms := NewModels()
 	a.NotNil(ms)
 
-	// 将 AI 设置为 nullabl
-	m, err := ms.New(&modeltest.User{})
+	// 将 AI 设置为 nullable
+	m, err := ms.New(&User{})
 	a.NotError(err).NotNil(m)
 	m.AI = col
 	col.model = m

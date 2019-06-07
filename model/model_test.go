@@ -10,8 +10,32 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2/internal/modeltest"
 )
+
+// User 带自增和一个唯一约束
+type User struct {
+	ID       int    `orm:"name(id);ai;"`
+	Username string `orm:"unique(unique_username);index(index_name);len(50)"`
+	Password string `orm:"name(password);len(20)"`
+	Regdate  int    `orm:"-"`
+}
+
+// Meta 指定表属性
+func (m *User) Meta() string {
+	return "mysql_engine(innodb);mysql_charset(utf8);name(users)"
+}
+
+// Admin 带自增和两个唯一约束
+type Admin struct {
+	User
+	Email string `orm:"name(email);len(20);unique(unique_email)"`
+	Group int64  `orm:"name(group);fk(fk_name,#groups,id,NO ACTION)"`
+}
+
+// Meta 指定表属性
+func (m *Admin) Meta() string {
+	return "check(admin_chk_name,{group}>0);mysql_engine(innodb);mysql_charset(utf8);name(administrators)"
+}
 
 func TestContType(t *testing.T) {
 	a := assert.New(t)
@@ -34,7 +58,7 @@ func TestNewModel(t *testing.T) {
 	ms := NewModels()
 	a.NotNil(ms)
 
-	m, err := ms.New(&modeltest.Admin{})
+	m, err := ms.New(&Admin{})
 	a.NotError(err).NotNil(m)
 
 	// cols

@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2/internal/modeltest"
 )
 
 // go1.10 BenchmarkNewModelNoCached-4   	  200000	      8161 ns/op
@@ -18,7 +17,7 @@ func BenchmarkNewModelNoCached(b *testing.B) {
 	a.NotNil(ms)
 
 	for i := 0; i < b.N; i++ {
-		m, err := ms.New(&modeltest.User{})
+		m, err := ms.New(&User{})
 		ms.Clear()
 		a.NotError(err).NotNil(m)
 	}
@@ -31,7 +30,7 @@ func BenchmarkNewModelCached(b *testing.B) {
 	a.NotNil(ms)
 
 	for i := 0; i < b.N; i++ {
-		m, err := ms.New(&modeltest.User{})
+		m, err := ms.New(&User{})
 		a.NotError(err).NotNil(m)
 	}
 }
