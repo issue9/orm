@@ -141,7 +141,7 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 }
 
 func getName(field reflect.StructField) string {
-	tags := field.Tag.Get("orm")
+	tags := field.Tag.Get(Tag)
 	if len(tags) > 0 { // 存在 struct tag
 		if tags[0] == '-' { // 该字段被标记为忽略
 			return ""

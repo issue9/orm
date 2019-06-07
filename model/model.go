@@ -135,7 +135,7 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 			continue
 		}
 
-		tag := field.Tag.Get("orm")
+		tag := field.Tag.Get(fetch.Tag)
 		if tag == "-" {
 			continue
 		}
