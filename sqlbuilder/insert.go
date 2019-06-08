@@ -128,7 +128,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 
 // Exec 执行 SQL 语句
 func (stmt *InsertStmt) Exec() (sql.Result, error) {
-	return exec(stmt.engine, stmt)
+	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
@@ -138,7 +138,7 @@ func (stmt *InsertStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 
 // Prepare 预编译
 func (stmt *InsertStmt) Prepare() (*sql.Stmt, error) {
-	return prepare(stmt.engine, stmt)
+	return stmt.PrepareContext(context.Background())
 }
 
 // PrepareContext 预编译

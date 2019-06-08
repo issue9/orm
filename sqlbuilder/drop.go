@@ -47,7 +47,7 @@ func (stmt *DropTableStmt) Reset() {
 
 // Exec 执行 SQL 语句
 func (stmt *DropTableStmt) Exec() (sql.Result, error) {
-	return exec(stmt.engine, stmt)
+	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
@@ -57,7 +57,7 @@ func (stmt *DropTableStmt) ExecContext(ctx context.Context) (sql.Result, error) 
 
 // Prepare 预编译
 func (stmt *DropTableStmt) Prepare() (*sql.Stmt, error) {
-	return prepare(stmt.engine, stmt)
+	return stmt.PrepareContext(context.Background())
 }
 
 // PrepareContext 预编译

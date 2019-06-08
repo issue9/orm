@@ -74,7 +74,7 @@ func (stmt *DeleteStmt) Or(cond string, args ...interface{}) *DeleteStmt {
 
 // Exec 执行 SQL 语句
 func (stmt *DeleteStmt) Exec() (sql.Result, error) {
-	return exec(stmt.engine, stmt)
+	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
@@ -84,7 +84,7 @@ func (stmt *DeleteStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 
 // Prepare 预编译
 func (stmt *DeleteStmt) Prepare() (*sql.Stmt, error) {
-	return prepare(stmt.engine, stmt)
+	return stmt.PrepareContext(context.Background())
 }
 
 // PrepareContext 预编译

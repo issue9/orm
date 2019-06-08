@@ -77,7 +77,7 @@ func (stmt *CreateIndexStmt) Reset() {
 
 // Exec 执行 SQL 语句
 func (stmt *CreateIndexStmt) Exec() (sql.Result, error) {
-	return exec(stmt.engine, stmt)
+	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
@@ -87,7 +87,7 @@ func (stmt *CreateIndexStmt) ExecContext(ctx context.Context) (sql.Result, error
 
 // Prepare 预编译
 func (stmt *CreateIndexStmt) Prepare() (*sql.Stmt, error) {
-	return prepare(stmt.engine, stmt)
+	return stmt.PrepareContext(context.Background())
 }
 
 // PrepareContext 预编译

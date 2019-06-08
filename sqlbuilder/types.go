@@ -69,10 +69,6 @@ type Dialect interface {
 	LastInsertID(table, col string) (sql string, append bool)
 }
 
-func exec(e Engine, stmt SQLer) (sql.Result, error) {
-	return execContext(context.Background(), e, stmt)
-}
-
 func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) {
 	query, args, err := stmt.SQL()
 	if err != nil {
@@ -81,20 +77,12 @@ func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) 
 	return e.ExecContext(ctx, query, args...)
 }
 
-func prepare(e Engine, stmt SQLer) (*sql.Stmt, error) {
-	return prepareContext(context.Background(), e, stmt)
-}
-
 func prepareContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Stmt, error) {
 	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err
 	}
 	return e.PrepareContext(ctx, query)
-}
-
-func query(e Engine, stmt SQLer) (*sql.Rows, error) {
-	return queryContext(context.Background(), e, stmt)
 }
 
 func queryContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Rows, error) {
