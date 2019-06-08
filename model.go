@@ -27,11 +27,6 @@ func (db *DB) NewModel(obj interface{}) (*Model, error) {
 	return db.models.New(obj)
 }
 
-// ClearModels 清除数据表模型
-func (db *DB) ClearModels() {
-	db.models.Clear()
-}
-
 // NewModel 从一个 obj 声明一个 Model 实例。
 // obj 可以是一个 struct 实例或是指针。
 func (tx *Tx) NewModel(obj interface{}) (*Model, error) {

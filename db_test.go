@@ -22,7 +22,7 @@ import (
 var (
 	// 通过修改此值来确定使用哪个数据库驱动来测试
 	// 若需要其它两种数据库测试，需要先在创建相应的数据库
-	driver = "postgres"
+	driver = "sqlite3"
 
 	prefix = "prefix_"
 	dsn    string

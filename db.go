@@ -57,6 +57,15 @@ func (db *DB) Dialect() Dialect {
 	return db.dialect
 }
 
+// Close 关闭连接
+//
+// 同时会清除缓存的模型数据
+func (db *DB) Close() error {
+	db.models.Clear()
+
+	return db.DB.Close()
+}
+
 // QueryRow 执行一条查询语句，并返回相应的 sql.Rows 实例。
 //
 // 如果生成语句出错，则会 panic
