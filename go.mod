@@ -6,5 +6,5 @@ require (
 	github.com/issue9/conv v1.1.0
 	github.com/lib/pq v1.1.1
 	github.com/mattn/go-sqlite3 v1.10.0
-	google.golang.org/appengine v1.5.0 // indirect
+	google.golang.org/appengine v1.6.0 // indirect
 )

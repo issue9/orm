@@ -5,60 +5,18 @@
 package orm_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/conv"
 	"github.com/issue9/orm/v2"
-	"github.com/issue9/orm/v2/dialect"
 	"github.com/issue9/orm/v2/fetch"
+	"github.com/issue9/orm/v2/internal/testconfig"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
-
-var (
-	// 通过修改此值来确定使用哪个数据库驱动来测试
-	// 若需要其它两种数据库测试，需要先在创建相应的数据库
-	driver = "sqlite3"
-
-	prefix = "prefix_"
-	dsn    string
-	d      orm.Dialect
-)
-
-// 销毁数据库。默认仅对 sqlite3 启作用，删除该数据库文件。
-func closeDB(a *assert.Assertion) {
-	if driver != "sqlite3" {
-		return
-	}
-
-	if _, err := os.Stat(dsn); err == nil || os.IsExist(err) {
-		a.NotError(os.Remove(dsn))
-	}
-}
-
-func newDB(a *assert.Assertion) *orm.DB {
-	switch driver {
-	case "mysql":
-		dsn = "root@/orm_test?charset=utf8"
-		d = dialect.Mysql()
-	case "sqlite3":
-		dsn = "./orm_test.db"
-		d = dialect.Sqlite3()
-	case "postgres":
-		dsn = "user=caixw dbname=orm_test sslmode=disable"
-		d = dialect.Postgres()
-	default:
-		panic("仅支持 mysql,sqlite3,postgres 三种数据库测试")
-	}
-
-	db, err := orm.NewDB(driver, dsn, prefix, d)
-	a.NotError(err).NotNil(db)
-	return db
-}
 
 // table 表中是否存在 size 条记录，若不是，则触发 error
 func hasCount(db orm.Engine, a *assert.Assertion, table string, size int) {
@@ -76,7 +34,7 @@ func hasCount(db orm.Engine, a *assert.Assertion, table string, size int) {
 func TestNewDB(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer func() {
 		a.NotError(db.Close())
 	}()
@@ -146,13 +104,13 @@ func clearData(db *orm.DB, a *assert.Assertion) {
 	a.NotError(db.Drop(&Group{})) // admin 外键依赖 group
 	a.NotError(db.Drop(&UserInfo{}))
 	a.NotError(db.Close())
-	closeDB(a)
+	testconfig.CloseDB(db, a)
 }
 
 func TestDB_Update_error(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -163,7 +121,7 @@ func TestDB_Update_error(t *testing.T) {
 
 func TestDB_LastInsertID(t *testing.T) {
 	a := assert.New(t)
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer clearData(db, a)
 
 	a.NotError(db.Drop(&User{}))
@@ -179,7 +137,7 @@ func TestDB_LastInsertID(t *testing.T) {
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -216,7 +174,7 @@ func TestDB_Update(t *testing.T) {
 func TestDB_Delete(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -254,7 +212,7 @@ func TestDB_Delete(t *testing.T) {
 func TestDB_Count(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -280,7 +238,7 @@ func TestDB_Count(t *testing.T) {
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -304,7 +262,7 @@ func TestDB_Truncate(t *testing.T) {
 func TestDB_Drop(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 

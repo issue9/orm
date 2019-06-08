@@ -10,12 +10,13 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v2/dialect"
+	"github.com/issue9/orm/v2/internal/testconfig"
 )
 
 func TestTx_InsertMany(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer clearData(db, a)
 
 	tx, err := db.Begin()
@@ -114,7 +115,7 @@ func TestTx_InsertMany(t *testing.T) {
 
 func TestTx_LastInsertID(t *testing.T) {
 	a := assert.New(t)
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer clearData(db, a)
 
 	a.NotError(db.Drop(&User{}))
@@ -135,7 +136,7 @@ func TestTx_LastInsertID(t *testing.T) {
 func TestTx_Insert(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer clearData(db, a)
 
 	tx, err := db.Begin()
@@ -186,7 +187,7 @@ func TestTx_Insert(t *testing.T) {
 func TestTx_Update(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -219,7 +220,7 @@ func TestTx_Update(t *testing.T) {
 func TestTx_Delete(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -254,7 +255,7 @@ func TestTx_Delete(t *testing.T) {
 func TestTx_Count(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -282,7 +283,7 @@ func TestTx_Count(t *testing.T) {
 func TestTx_Truncate(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	initData(db, a)
 	defer clearData(db, a)
 
@@ -309,7 +310,7 @@ func TestTx_Truncate(t *testing.T) {
 func TestTX(t *testing.T) {
 	a := assert.New(t)
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer clearData(db, a)
 
 	a.NotError(db.Create(&User{}))

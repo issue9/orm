@@ -1,0 +1,56 @@
+// Copyright 2019 by caixw, All rights reserved.
+// Use of this source code is governed by a MIT
+// license that can be found in the LICENSE file.
+
+// Package testconfig 为测试内容提供一个统一的数据库环境
+package testconfig
+
+import (
+	"os"
+
+	"github.com/issue9/assert"
+	"github.com/issue9/orm/v2"
+	"github.com/issue9/orm/v2/dialect"
+)
+
+var (
+	// 通过修改此值来确定使用哪个数据库驱动来测试
+	// 若需要其它两种数据库测试，需要先在创建相应的数据库
+	driver = "sqlite3"
+
+	prefix = "prefix_"
+	dsn    string
+	d      orm.Dialect
+)
+
+// CloseDB 销毁数据库。默认仅对 sqlite3 启作用，删除该数据库文件。
+func CloseDB(db *orm.DB, a *assert.Assertion) {
+	a.NotError(db.Close())
+
+	if driver == "sqlite3" {
+		if _, err := os.Stat(dsn); err == nil || os.IsExist(err) {
+			a.NotError(os.Remove(dsn))
+		}
+	}
+}
+
+// NewDB 声明 orm.DB 实例
+func NewDB(a *assert.Assertion) *orm.DB {
+	switch driver {
+	case "mysql":
+		dsn = "root@/orm_test?charset=utf8"
+		d = dialect.Mysql()
+	case "sqlite3":
+		dsn = "./orm_test.db"
+		d = dialect.Sqlite3()
+	case "postgres":
+		dsn = "user=caixw dbname=orm_test sslmode=disable"
+		d = dialect.Postgres()
+	default:
+		panic("仅支持 mysql,sqlite3,postgres 三种数据库测试")
+	}
+
+	db, err := orm.NewDB(driver, dsn, prefix, d)
+	a.NotError(err).NotNil(db)
+	return db
+}

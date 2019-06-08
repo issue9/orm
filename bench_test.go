@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/v2/internal/testconfig"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -21,10 +22,10 @@ func BenchmarkDB_Insert(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer func() {
 		db.Drop(&Group{})
-		closeDB(a)
+		testconfig.CloseDB(db, a)
 	}()
 
 	a.NotError(db.Create(&Group{}))
@@ -43,10 +44,10 @@ func BenchmarkDB_Update(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer func() {
 		db.Drop(&Group{})
-		closeDB(a)
+		testconfig.CloseDB(db, a)
 	}()
 
 	// 构造数据
@@ -68,10 +69,10 @@ func BenchmarkDB_Select(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer func() {
 		db.Drop(&Group{})
-		closeDB(a)
+		testconfig.CloseDB(db, a)
 	}()
 
 	a.NotError(db.Create(&Group{}))
@@ -92,10 +93,10 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer func() {
 		db.Drop(&Group{})
-		closeDB(a)
+		testconfig.CloseDB(db, a)
 	}()
 
 	// 构造数据
@@ -122,10 +123,10 @@ func BenchmarkDB_Count(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	db := newDB(a)
+	db := testconfig.NewDB(a)
 	defer func() {
 		db.Drop(&Group{})
-		closeDB(a)
+		testconfig.CloseDB(db, a)
 	}()
 
 	// 构造数据
