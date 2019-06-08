@@ -107,7 +107,9 @@
 // 以达到相同的目的。
 //
 // 在 model.Metaer 中除了可以指定 name(table_name) 和 check(name,expr) 两个属性之外，
-// 还可指定一些自定义的属性，这些属性都将会被保存到 Model.Meta 中。
+// 每种数据库还可指定一些自定义的属性，这些属性都将会被保存到 Model.Meta 中，
+// 各个数据库的自定义属性以其名称开头，比如 mysql 的 charset 属性，可以使用
+// mysql_charset。
 //
 //
 //

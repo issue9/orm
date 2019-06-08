@@ -18,8 +18,8 @@ func BenchmarkNewModelNoCached(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		m, err := ms.New(&User{})
-		ms.Clear()
 		a.NotError(err).NotNil(m)
+		ms.Clear()
 	}
 }
 

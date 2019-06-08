@@ -13,6 +13,11 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+const (
+	sqlite3Name  = "sqlite3"
+	sqlite3RowID = sqlite3Name + "_rowid"
+)
+
 var sqlite3Inst *sqlite3
 
 type sqlite3 struct{}
@@ -30,7 +35,7 @@ func Sqlite3() orm.Dialect {
 }
 
 func (s *sqlite3) Name() string {
-	return "sqlite3"
+	return sqlite3Name
 }
 
 func (s *sqlite3) QuoteTuple() (byte, byte) {
@@ -91,8 +96,8 @@ func (s *sqlite3) CreateTableSQL(model *orm.Model) ([]string, error) {
 }
 
 func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
-	if len(model.Meta["sqlite3_rowid"]) == 1 {
-		val, err := strconv.ParseBool(model.Meta["sqlite3_rowid"][0])
+	if len(model.Meta[sqlite3RowID]) == 1 {
+		val, err := strconv.ParseBool(model.Meta[sqlite3RowID][0])
 		if err != nil {
 			return err
 		}
@@ -100,7 +105,7 @@ func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model)
 		if !val {
 			w.WriteString("WITHOUT ROWID")
 		}
-	} else if len(model.Meta["sqlite3_rowid"]) > 0 {
+	} else if len(model.Meta[sqlite3RowID]) > 0 {
 		return errors.New("rowid 只接受一个参数")
 	}
 

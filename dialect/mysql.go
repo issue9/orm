@@ -14,6 +14,12 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+const (
+	mysqlName    = "mysql"
+	mysqlEngine  = mysqlName + "_engine"
+	mysqlCharset = mysqlName + "_charset"
+)
+
 var mysqlInst *mysql
 
 type mysql struct{}
@@ -32,7 +38,7 @@ func Mysql() orm.Dialect {
 }
 
 func (m *mysql) Name() string {
-	return "mysql"
+	return mysqlName
 }
 
 func (m *mysql) QuoteTuple() (byte, byte) {
@@ -93,20 +99,20 @@ func (m *mysql) CreateTableSQL(model *orm.Model) ([]string, error) {
 }
 
 func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
-	if len(model.Meta["mysql_engine"]) == 1 {
+	if len(model.Meta[mysqlEngine]) == 1 {
 		w.WriteString(" ENGINE=")
-		w.WriteString(model.Meta["mysql_engine"][0])
+		w.WriteString(model.Meta[mysqlEngine][0])
 		w.WriteByte(' ')
-	} else if len(model.Meta["mysql_engine"]) > 0 {
-		return errors.New("无效的属性值 engine")
+	} else if len(model.Meta[mysqlEngine]) > 0 {
+		return errors.New("无效的属性值：" + mysqlCharset)
 	}
 
-	if len(model.Meta["mysql_charset"]) == 1 {
+	if len(model.Meta[mysqlCharset]) == 1 {
 		w.WriteString(" CHARACTER SET=")
-		w.WriteString(model.Meta["mysql_charset"][0])
+		w.WriteString(model.Meta[mysqlCharset][0])
 		w.WriteByte(' ')
-	} else if len(model.Meta["mysql_charset"]) > 0 {
-		return errors.New("无效的属性值 mysql_charset")
+	} else if len(model.Meta[mysqlCharset]) > 0 {
+		return errors.New("无效的属性值：" + mysqlCharset)
 	}
 
 	return nil

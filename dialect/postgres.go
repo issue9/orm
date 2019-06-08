@@ -15,6 +15,8 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+const postgresName = "postgres"
+
 var postgresInst *postgres
 
 type postgres struct{}
@@ -29,7 +31,7 @@ func Postgres() orm.Dialect {
 }
 
 func (p *postgres) Name() string {
-	return "postgres"
+	return postgresName
 }
 
 func (p *postgres) QuoteTuple() (byte, byte) {
