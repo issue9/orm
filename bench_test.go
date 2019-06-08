@@ -12,8 +12,6 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-
-
 // mysql: BenchmarkDB_Insert-4     	    5000	    280546 ns/op
 func BenchmarkDB_Insert(b *testing.B) {
 	a := assert.New(b)
