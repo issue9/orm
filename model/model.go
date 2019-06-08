@@ -385,5 +385,5 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 // NOTE:约束名不区分大小写
 func (m *Model) hasConstraint(name string, except conType) bool {
 	typ, found := m.constraints[strings.ToLower(name)]
-	return found && (typ != except) && (typ != none)
+	return found && (typ != except)
 }

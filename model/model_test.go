@@ -40,14 +40,13 @@ func (m *Admin) Meta() string {
 func TestContType(t *testing.T) {
 	a := assert.New(t)
 
-	a.Equal("<none>", none.String()).
-		Equal("KEY INDEX", fmt.Sprint(index)).
+	a.Equal("KEY INDEX", fmt.Sprint(index)).
 		Equal("UNIQUE INDEX", unique.String()).
 		Equal("FOREIGN KEY", fk.String()).
 		Equal("CHECK", check.String())
 
 	var c1 conType
-	a.Equal("<none>", c1.String())
+	a.Equal("KEY INDEX", c1.String())
 
 	c1 = 100
 	a.Equal("<unknown>", c1.String())

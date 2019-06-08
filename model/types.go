@@ -19,8 +19,7 @@ type ForeignKey struct {
 
 // 预定的约束类型，方便 Model 中使用。
 const (
-	none conType = iota
-	index
+	index conType = iota
 	unique
 	fk
 	check
@@ -30,8 +29,6 @@ type conType int8
 
 func (t conType) String() string {
 	switch t {
-	case none:
-		return "<none>"
 	case index:
 		return "KEY INDEX"
 	case unique:
