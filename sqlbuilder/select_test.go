@@ -12,6 +12,7 @@ import (
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/dialect"
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/internal/testconfig"
 	"github.com/issue9/orm/v2/sqlbuilder"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -23,6 +24,31 @@ var (
 	_ sqlbuilder.SQLer       = &sqlbuilder.SelectStmt{}
 	_ sqlbuilder.WhereStmter = &sqlbuilder.SelectStmt{}
 )
+
+func TestSelect_Query(t *testing.T) {
+	a := assert.New(t)
+	db := createTable(a)
+	defer testconfig.CloseDB(db, a)
+	insertData(a, db)
+
+	sql := sqlbuilder.Select(db, db.Dialect()).Select("*").
+		From("#user").
+		Where("id<?", 5).
+		Desc("id")
+
+	id, err := sql.QueryInt("id")
+	a.NotError(err).
+		Equal(id, 4)
+
+	obj := &user{}
+	size, err := sql.QueryObject(true, obj)
+	a.NotError(err).Equal(1, size)
+	a.Equal(obj.ID, 4)
+
+	cnt, err := sql.Count("count(*) AS cnt").QueryInt("cnt")
+	a.NotError(err).
+		Equal(cnt, 4)
+}
 
 func TestSelect_sqlite3(t *testing.T) {
 	a := assert.New(t)
