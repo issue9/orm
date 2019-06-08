@@ -150,32 +150,7 @@ func (stmt *InsertStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
 //
 // 并根据表名和自增列 ID 返回当前行的自增 ID 值。
 func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
-	sql, append := stmt.dialect.LastInsertID(stmt.table, col)
-	if sql == "" {
-		rslt, err := stmt.Exec()
-		if err != nil {
-			return 0, err
-		}
-
-		return rslt.LastInsertId()
-	}
-
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return 0, err
-	}
-	if !append {
-		_, err = stmt.Exec()
-		if err != nil {
-			return 0, err
-		}
-	} else {
-		query += sql
-	}
-
-	var id int64
-	err = stmt.engine.QueryRow(query, args...).Scan(&id)
-	return id, err
+	return stmt.LastInsertIDContext(context.Background(), table, col)
 }
 
 // LastInsertIDContext 执行 SQL 语句

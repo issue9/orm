@@ -2,18 +2,33 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlbuilder
+package sqlbuilder_test
 
 import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/v2"
+	"github.com/issue9/orm/v2/sqlbuilder"
+
+	"github.com/issue9/orm/v2/internal/testconfig"
 )
+
+type user struct {
+	ID   int64  `orm:"name(id);ai"`
+	Name string `orm:"name(name);len(20)"`
+}
+
+func createTable(a *assert.Assertion) *orm.DB {
+	db := testconfig.NewDB(a)
+	a.NotError(db.Create(&user{}))
+	return db
+}
 
 func TestSQLBuilder(t *testing.T) {
 	a := assert.New(t)
 
-	b := New("")
+	b := sqlbuilder.New("")
 	b.WriteByte('1')
 	b.WriteString("23")
 
