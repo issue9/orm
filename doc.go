@@ -83,7 +83,7 @@
 //
 //  index(index_name): 普通的关键字索引，同 unique 一样会将名称相同的索引定义为一个联合索引。
 //
-// occ(true|false) 当前列作为乐观锁字段。
+//  occ(true|false) 当前列作为乐观锁字段。
 //
 //  default(value): 指定默认值。相当于定义表结构时的 DEFAULT。
 //  当一个字段如果是个零值(reflect.Zero())时，将会使用它的默认值，
@@ -91,13 +91,14 @@
 //  所以在需要用到零值的字段，最好不要用 default 的 struct tag。
 //
 //  fk(fk_name,refTable,refColName,updateRule,deleteRule):
-//  定义物理外键，最少需要指定 fk_name,refTabl,refColName 三个值。分别对应约束名，
-//  引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
+//  定义物理外键，最少需要指定 fk_name,refTabl,refColName 三个值。
+//  分别对应约束名，引用的表和引用的字段，updateRule,deleteRule，
+//  在不指定的情况下，使用数据库的默认值。
 //
 //  check(chk_name, expr): check 约束。chk_name 为约束名，expr 为该约束的表达式。
-//  check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一样，通过字段的 struct tag 指定。
-//  因为 check 约束的表达式可以通过 and 或是 or 等符号连接多条基本表达式，
-//  在字段 struct tag 中指定会显得有点怪异。
+//  check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一样，
+//  通过字段的 struct tag 指定。因为 check 约束的表达式可以通过 and 或是 or
+//  等符号连接多条基本表达式，在字段 struct tag 中指定会显得有点怪异。
 //
 //
 // model.Metaer:
@@ -115,9 +116,11 @@
 //
 // 约束名：
 //
-// index,unique,check,fk 都是可以指定约束名的，在表中，约束名必须是唯一的，
+// index、unique、check 和 fk 都是可以指定约束名的，在表中，约束名必须是唯一的，
 // 即便是不同类型的约束，比如已经有一个 unique 的约束名叫作 name，那么其它类
 // 型的约束，就不能再取这个名称了。
+// 部分数据库（比如 postgres）可能要求约束名是整个数据库唯一的，
+// 使用都需要自行处理可能重名的问题。
 //
 //
 //
