@@ -346,10 +346,10 @@ func (m *Model) setFK(col *Column, vals []string) error {
 		RefColName:   vals[2],
 	}
 
-	if len(vals) > 3 { // 存在updateRule
+	if len(vals) > 3 { // 存在 updateRule
 		fkInst.UpdateRule = vals[3]
 	}
-	if len(vals) > 4 { // 存在deleteRule
+	if len(vals) > 4 { // 存在 deleteRule
 		fkInst.DeleteRule = vals[4]
 	}
 
