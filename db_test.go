@@ -12,10 +12,6 @@ import (
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/testconfig"
-
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // table 表中是否存在 size 条记录，若不是，则触发 error

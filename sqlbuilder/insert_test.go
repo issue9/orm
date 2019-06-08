@@ -10,9 +10,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2"
-	"github.com/issue9/orm/v2/dialect"
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/internal/testconfig"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -20,8 +19,7 @@ var _ sqlbuilder.SQLer = &sqlbuilder.InsertStmt{}
 
 func TestInsert(t *testing.T) {
 	a := assert.New(t)
-	e, err := orm.NewDB("sqlite3", "./test.db", "test_", dialect.Sqlite3())
-	a.NotError(err)
+	e := testconfig.NewDB(a)
 	i := sqlbuilder.Insert(e, e.Dialect()).Table("table")
 	a.NotNil(i)
 

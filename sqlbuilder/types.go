@@ -70,11 +70,7 @@ type Dialect interface {
 }
 
 func exec(e Engine, stmt SQLer) (sql.Result, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.Exec(query, args...)
+	return execContext(context.Background(), e, stmt)
 }
 
 func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) {
@@ -86,11 +82,7 @@ func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) 
 }
 
 func prepare(e Engine, stmt SQLer) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.Prepare(query)
+	return prepareContext(context.Background(), e, stmt)
 }
 
 func prepareContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Stmt, error) {
@@ -102,11 +94,7 @@ func prepareContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Stmt, error
 }
 
 func query(e Engine, stmt SQLer) (*sql.Rows, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.Query(query, args...)
+	return queryContext(context.Background(), e, stmt)
 }
 
 func queryContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Rows, error) {

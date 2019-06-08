@@ -11,6 +11,11 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/dialect"
+
+	// 供其它包测试用，直接在此引用数据库包会更文件
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -19,11 +24,13 @@ var (
 	driver = "sqlite3"
 
 	prefix = "prefix_"
-	dsn    string
-	d      orm.Dialect
+
+	dsn string
 )
 
-// CloseDB 销毁数据库。默认仅对 sqlite3 启作用，删除该数据库文件。
+// CloseDB 销毁数据库。
+//
+// 如果数据库类型为 sqlite3，则还会删除数据库文件。
 func CloseDB(db *orm.DB, a *assert.Assertion) {
 	a.NotError(db.Close())
 
@@ -36,6 +43,8 @@ func CloseDB(db *orm.DB, a *assert.Assertion) {
 
 // NewDB 声明 orm.DB 实例
 func NewDB(a *assert.Assertion) *orm.DB {
+	var d orm.Dialect
+
 	switch driver {
 	case "mysql":
 		dsn = "root@/orm_test?charset=utf8"
