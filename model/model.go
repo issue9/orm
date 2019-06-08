@@ -221,7 +221,7 @@ func (m *Model) parseMeta(tag string) error {
 				return propertyError("Metaer", "check", "已经存在相同名称的 check 约束")
 			}
 
-			if typ := m.hasConstraint(v.Args[0], check); typ != none {
+			if m.hasConstraint(v.Args[0], check) {
 				return propertyError("Metaer", "check", "与其它约束名称相同")
 			}
 
@@ -289,7 +289,7 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 		return propertyError(col.Name, "index", "太多的值")
 	}
 
-	if typ := m.hasConstraint(vals[0], index); typ != none {
+	if m.hasConstraint(vals[0], index) {
 		return propertyError(col.Name, "index", "已经存在相同的约束名")
 	}
 
@@ -315,7 +315,7 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
 
-	if typ := m.hasConstraint(vals[0], unique); typ != none {
+	if m.hasConstraint(vals[0], unique) {
 		return propertyError(col.Name, "unique", "已经存在相同的约束名")
 	}
 
@@ -332,7 +332,7 @@ func (m *Model) setFK(col *Column, vals []string) error {
 		return propertyError(col.Name, "fk", "参数不够")
 	}
 
-	if typ := m.hasConstraint(vals[0], fk); typ != none {
+	if m.hasConstraint(vals[0], fk) {
 		return propertyError(col.Name, "fk", "已经存在相同的约束名")
 	}
 
@@ -383,10 +383,7 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 // 若已经存在返回表示该约束类型的常量，否则返回 none。
 //
 // NOTE:约束名不区分大小写
-func (m *Model) hasConstraint(name string, except conType) conType {
-	if typ, found := m.constraints[strings.ToLower(name)]; found && typ != except {
-		return typ
-	}
-
-	return none
+func (m *Model) hasConstraint(name string, except conType) bool {
+	typ, found := m.constraints[strings.ToLower(name)]
+	return found && (typ != except) && (typ != none)
 }

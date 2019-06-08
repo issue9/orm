@@ -334,9 +334,9 @@ func TestModel_hasConstraint(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
 
-	a.Equal(m.hasConstraint("index", index), none)
+	a.False(m.hasConstraint("index", index))
 
 	m.constraints = map[string]conType{"index": index}
-	a.Equal(m.hasConstraint("index", index), none)
-	a.Equal(m.hasConstraint("INDEX", fk), index)
+	a.False(m.hasConstraint("index", index)) // 排除 index，则为 false
+	a.True(m.hasConstraint("INDEX", fk))     // 不排除 index，则为 true
 }
