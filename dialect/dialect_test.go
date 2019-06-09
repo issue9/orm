@@ -15,6 +15,15 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+type user struct {
+	ID   int64  `orm:"name(id);ai"`
+	Name string `orm:"name(name);index(i_user_name);len(20)"`
+}
+
+func (u *user) Meta() string {
+	return "name(user)"
+}
+
 type model1 struct{}
 
 func (m *model1) Meta() string {

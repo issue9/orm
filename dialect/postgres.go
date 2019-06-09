@@ -81,7 +81,7 @@ func (p *postgres) CreateTableSQL(model *orm.Model) ([]string, error) {
 	}
 
 	if len(model.PK) > 0 {
-		createPKSQL(w, model.PK, model.Name+pkName) // postgres 主键名需要全局唯一？
+		createPKSQL(w, model.PK, model.Name+pkName) // postgres 主键名需要全局唯一
 		w.WriteByte(',')
 	}
 	createConstraints(w, model)

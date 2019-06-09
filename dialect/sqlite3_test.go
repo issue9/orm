@@ -18,6 +18,25 @@ import (
 
 var _ base = &sqlite3{}
 
+func TestSqlite3_CreateTableSQL(t *testing.T) {
+	a := assert.New(t)
+	ms := model.NewModels()
+	m, err := ms.New(&user{})
+	a.NotError(err).NotNil(m)
+
+	sqls, err := Sqlite3().CreateTableSQL(m)
+	a.NotError(err)
+	a.Equal(2, len(sqls))
+	sqltest.Equal(a, sqls[0], `CREATE TABLE IF NOT EXISTS {#user} (
+		{id} INTEGER NOT NULL  PRIMARY KEY AUTOINCREMENT,
+		{name} TEXT NOT NULL
+	)`)
+
+	sqltest.Equal(a, sqls[1], `CREATE INDEX i_user_name ON {#user} (
+		{name}
+	)`)
+}
+
 func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")

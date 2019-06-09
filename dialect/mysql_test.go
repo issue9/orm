@@ -18,6 +18,21 @@ import (
 
 var _ base = &mysql{}
 
+func TestMysql_CreateTableSQL(t *testing.T) {
+	a := assert.New(t)
+	ms := model.NewModels()
+	m, err := ms.New(&user{})
+	a.NotError(err).NotNil(m)
+
+	sqls, err := Mysql().CreateTableSQL(m)
+	a.NotError(err)
+	sqltest.Equal(a, sqls[0], `CREATE TABLE IF NOT EXISTS {#user} (
+		{id} BIGINT NOT NULL  PRIMARY KEY AUTO_INCREMENT,
+		{name} VARCHAR(20) NOT NULL,
+		INDEX i_user_name({name})
+	)`)
+}
+
 func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")
