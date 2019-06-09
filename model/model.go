@@ -28,8 +28,7 @@ type Model struct {
 	OCC           *Column                // 乐观锁
 	Check         map[string]string      // Check 键名为约束名，键值为约束表达式
 	Meta          map[string][]string    // 表级别的数据，如存储引擎，表名和字符集等。
-
-	constraints map[string]conType // 约束名缓存
+	Constraints   map[string]ConType     // 约束名缓存
 }
 
 func propertyError(field, name, message string) error {
@@ -64,7 +63,7 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 		FK:            map[string]*ForeignKey{},
 		Check:         map[string]string{},
 		Meta:          map[string][]string{},
-		constraints:   map[string]conType{},
+		Constraints:   map[string]ConType{},
 	}
 
 	if err := m.parseColumns(rval); err != nil {
@@ -221,12 +220,12 @@ func (m *Model) parseMeta(tag string) error {
 				return propertyError("Metaer", "check", "已经存在相同名称的 check 约束")
 			}
 
-			if m.hasConstraint(v.Args[0], check) {
+			if m.hasConstraint(v.Args[0], Check) {
 				return propertyError("Metaer", "check", "与其它约束名称相同")
 			}
 
 			name := strings.ToLower(v.Args[0])
-			m.constraints[name] = check
+			m.Constraints[name] = Check
 			m.Check[name] = v.Args[1]
 		default:
 			m.Meta[v.Name] = v.Args
@@ -289,12 +288,12 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 		return propertyError(col.Name, "index", "太多的值")
 	}
 
-	if m.hasConstraint(vals[0], index) {
+	if m.hasConstraint(vals[0], Index) {
 		return propertyError(col.Name, "index", "已经存在相同的约束名")
 	}
 
 	name := strings.ToLower(vals[0])
-	m.constraints[name] = index
+	m.Constraints[name] = Index
 	m.KeyIndexes[name] = append(m.KeyIndexes[name], col)
 	return nil
 }
@@ -315,12 +314,12 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
 
-	if m.hasConstraint(vals[0], unique) {
+	if m.hasConstraint(vals[0], Unique) {
 		return propertyError(col.Name, "unique", "已经存在相同的约束名")
 	}
 
 	name := strings.ToLower(vals[0])
-	m.constraints[name] = unique
+	m.Constraints[name] = Unique
 	m.UniqueIndexes[name] = append(m.UniqueIndexes[name], col)
 
 	return nil
@@ -332,7 +331,7 @@ func (m *Model) setFK(col *Column, vals []string) error {
 		return propertyError(col.Name, "fk", "参数不够")
 	}
 
-	if m.hasConstraint(vals[0], fk) {
+	if m.hasConstraint(vals[0], Fk) {
 		return propertyError(col.Name, "fk", "已经存在相同的约束名")
 	}
 
@@ -354,7 +353,7 @@ func (m *Model) setFK(col *Column, vals []string) error {
 	}
 
 	name := strings.ToLower(vals[0])
-	m.constraints[name] = fk
+	m.Constraints[name] = Fk
 	m.FK[name] = fkInst
 	return nil
 }
@@ -383,8 +382,8 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 // 若已经存在返回表示该约束类型的常量，否则返回 none。
 //
 // NOTE:约束名不区分大小写
-func (m *Model) hasConstraint(name string, except conType) bool {
-	typ, found := m.constraints[strings.ToLower(name)]
+func (m *Model) hasConstraint(name string, except ConType) bool {
+	typ, found := m.Constraints[strings.ToLower(name)]
 	return found && (typ != except)
 }
 

@@ -19,23 +19,24 @@ type ForeignKey struct {
 
 // 预定的约束类型，方便 Model 中使用。
 const (
-	index conType = iota
-	unique
-	fk
-	check
+	Index ConType = iota
+	Unique
+	Fk
+	Check
 )
 
-type conType int8
+// ConType 约束类型
+type ConType int8
 
-func (t conType) String() string {
+func (t ConType) String() string {
 	switch t {
-	case index:
+	case Index:
 		return "KEY INDEX"
-	case unique:
+	case Unique:
 		return "UNIQUE INDEX"
-	case fk:
+	case Fk:
 		return "FOREIGN KEY"
-	case check:
+	case Check:
 		return "CHECK"
 	default:
 		return "<unknown>"

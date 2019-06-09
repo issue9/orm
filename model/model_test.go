@@ -5,7 +5,6 @@
 package model
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -35,21 +34,6 @@ type Admin struct {
 // Meta 指定表属性
 func (m *Admin) Meta() string {
 	return "check(admin_chk_name,{group}>0);mysql_engine(innodb);mysql_charset(utf8);name(administrators)"
-}
-
-func TestContType(t *testing.T) {
-	a := assert.New(t)
-
-	a.Equal("KEY INDEX", fmt.Sprint(index)).
-		Equal("UNIQUE INDEX", unique.String()).
-		Equal("FOREIGN KEY", fk.String()).
-		Equal("CHECK", check.String())
-
-	var c1 conType
-	a.Equal("KEY INDEX", c1.String())
-
-	c1 = 100
-	a.Equal("<unknown>", c1.String())
 }
 
 func TestNewModel(t *testing.T) {
@@ -204,7 +188,7 @@ func TestModel_parseColumn(t *testing.T) {
 func TestModel_parseMeta(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{
-		constraints: map[string]conType{},
+		Constraints: map[string]ConType{},
 		Check:       map[string]string{},
 	}
 
@@ -224,7 +208,7 @@ func TestModel_parseMeta(t *testing.T) {
 	a.Error(m.parseMeta("check(ck,id>0)"))
 
 	// check 与其它约束名相同
-	m.constraints = map[string]conType{"fk": fk}
+	m.Constraints = map[string]ConType{"fk": Fk}
 	a.Error(m.parseMeta("check(fk,id>0)"))
 }
 
@@ -329,9 +313,9 @@ func TestModel_hasConstraint(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
 
-	a.False(m.hasConstraint("index", index))
+	a.False(m.hasConstraint("index", Index))
 
-	m.constraints = map[string]conType{"index": index}
-	a.False(m.hasConstraint("index", index)) // 排除 index，则为 false
-	a.True(m.hasConstraint("INDEX", fk))     // 不排除 index，则为 true
+	m.Constraints = map[string]ConType{"index": Index}
+	a.False(m.hasConstraint("index", Index)) // 排除 index，则为 false
+	a.True(m.hasConstraint("INDEX", Fk))     // 不排除 index，则为 true
 }
