@@ -21,7 +21,7 @@ import (
 var (
 	// 通过修改此值来确定使用哪个数据库驱动来测试
 	// 若需要其它两种数据库测试，需要先在创建相应的数据库
-	driver = "mysql"
+	driver = "postgres"
 
 	prefix = "prefix_"
 
@@ -31,7 +31,9 @@ var (
 // CloseDB 销毁数据库。
 //
 // 如果数据库类型为 sqlite3，则还会删除数据库文件。
-func CloseDB(db *orm.DB, a *assert.Assertion) {
+func CloseDB(db *orm.DB, a *assert.Assertion, dropTable ...interface{}) {
+	a.NotError(db.MultDrop(dropTable...))
+
 	a.NotError(db.Close())
 
 	if driver == "sqlite3" {

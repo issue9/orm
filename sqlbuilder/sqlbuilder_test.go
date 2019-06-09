@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2"
-	"github.com/issue9/orm/v2/sqlbuilder"
 
+	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/testconfig"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 type user struct {
@@ -19,10 +19,47 @@ type user struct {
 	Name string `orm:"name(name);len(20)"`
 }
 
-func createTable(a *assert.Assertion) *orm.DB {
+func (u *user) Meta() string {
+	return "name(user)"
+}
+
+func initDB(a *assert.Assertion) *orm.DB {
 	db := testconfig.NewDB(a)
+
 	a.NotError(db.Create(&user{}))
+
+	sql := sqlbuilder.Insert(db, db.Dialect()).
+		Columns("name").
+		Table("#user").
+		Values("1").
+		Values("2")
+	_, err := sql.Exec()
+	a.NotError(err)
+
+	stmt, err := sql.Prepare()
+	a.NotError(err).NotNil(stmt)
+
+	_, err = stmt.Exec("3", "4")
+	a.NotError(err)
+	_, err = stmt.Exec("5", "6")
+	a.NotError(err)
+
+	sql.Reset()
+
+	sql.Table("#user").
+		Columns("name").
+		Values("7").
+		Values("8")
+	id, err := sql.LastInsertID("user", "id")
+	a.NotError(err).Equal(id, 8)
+
 	return db
+}
+
+func clearDB(a *assert.Assertion, db *orm.DB) {
+	_, err := sqlbuilder.DropTable(db).Table("#user").Exec()
+	a.NotError(err)
+	testconfig.CloseDB(db, a)
 }
 
 func TestSQLBuilder(t *testing.T) {

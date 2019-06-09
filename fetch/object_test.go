@@ -82,8 +82,7 @@ func initDB(a *assert.Assertion) *orm.DB {
 }
 
 func clearDB(a *assert.Assertion, db *orm.DB) {
-	a.NotError(db.MultDrop(&FetchUser{}, &Log{}))
-	testconfig.CloseDB(db, a)
+	testconfig.CloseDB(db, a, &FetchUser{}, &Log{})
 }
 
 func TestObject_strict(t *testing.T) {

@@ -12,12 +12,7 @@ import (
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/dialect"
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/internal/testconfig"
 	"github.com/issue9/orm/v2/sqlbuilder"
-
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -27,9 +22,8 @@ var (
 
 func TestSelect_Query(t *testing.T) {
 	a := assert.New(t)
-	db := createTable(a)
-	defer testconfig.CloseDB(db, a)
-	insertData(a, db)
+	db := initDB(a)
+	defer clearDB(a, db)
 
 	sql := sqlbuilder.Select(db, db.Dialect()).Select("*").
 		From("#user").

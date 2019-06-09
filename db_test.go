@@ -27,23 +27,11 @@ func hasCount(db orm.Engine, a *assert.Assertion, table string, size int) {
 	a.Equal(conv.MustInt(data[0]["cnt"], -1), size)
 }
 
-func TestNewDB(t *testing.T) {
-	a := assert.New(t)
-
-	db := testconfig.NewDB(a)
-	defer func() {
-		a.NotError(db.Close())
-	}()
-
-	a.NotNil(db.DB).NotNil(db.Dialect())
-}
-
 // 初始化测试数据，同时可当作 DB.Insert 的测试
 // 清空其它数据，初始化成原始的测试数据
-func initData(db *orm.DB, a *assert.Assertion) {
-	a.NotError(db.MultDrop(&User{}, &Admin{}))
-	a.NotError(db.Drop(&Group{})) // admin 外键依赖 group
-	a.NotError(db.Drop(&UserInfo{}))
+func initData(a *assert.Assertion) *orm.DB {
+	db := testconfig.NewDB(a)
+
 	a.NotError(db.Create(&Group{}))
 	a.NotError(db.MultCreate(&Admin{}, &UserInfo{}))
 
@@ -90,22 +78,21 @@ func initData(db *orm.DB, a *assert.Assertion) {
 
 	a.NotError(db.Select(a1))
 	a.Equal(a1.Username, "username1")
+
+	return db
 }
 
 func clearData(db *orm.DB, a *assert.Assertion) {
-	a.NotError(db.Drop(&Admin{}))
-	a.NotError(db.Drop(&User{}))
+	a.NotError(db.MultDrop(&Admin{}, &User{}))
 	a.NotError(db.Drop(&Group{})) // admin 外键依赖 group
 	a.NotError(db.Drop(&UserInfo{}))
-	a.NotError(db.Close())
 	testconfig.CloseDB(db, a)
 }
 
 func TestDB_Update_error(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	// 非结构体传入
@@ -131,8 +118,7 @@ func TestDB_LastInsertID(t *testing.T) {
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	// update
@@ -168,8 +154,7 @@ func TestDB_Update(t *testing.T) {
 func TestDB_Delete(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	// delete
@@ -206,8 +191,7 @@ func TestDB_Delete(t *testing.T) {
 func TestDB_Count(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	// 单条件
@@ -232,8 +216,7 @@ func TestDB_Count(t *testing.T) {
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	hasCount(db, a, "administrators", 1)
@@ -256,8 +239,7 @@ func TestDB_Truncate(t *testing.T) {
 func TestDB_Drop(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	a.NotError(db.Drop(&UserInfo{}))

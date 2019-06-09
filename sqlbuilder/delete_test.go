@@ -9,7 +9,6 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/internal/testconfig"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -39,10 +38,8 @@ func TestDelete(t *testing.T) {
 
 func TestDelete_Exec(t *testing.T) {
 	a := assert.New(t)
-	db := createTable(a)
-	defer testconfig.CloseDB(db, a)
-
-	insertData(a, db)
+	db := initDB(a)
+	defer clearDB(a, db)
 
 	sql := sqlbuilder.Delete(db).Table("#user").Where("id=?", 1)
 	_, err := sql.Exec()

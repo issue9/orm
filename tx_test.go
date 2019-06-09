@@ -187,8 +187,7 @@ func TestTx_Insert(t *testing.T) {
 func TestTx_Update(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	tx, err := db.Begin()
@@ -220,8 +219,7 @@ func TestTx_Update(t *testing.T) {
 func TestTx_Delete(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	tx, err := db.Begin()
@@ -255,8 +253,7 @@ func TestTx_Delete(t *testing.T) {
 func TestTx_Count(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	tx, err := db.Begin()
@@ -283,8 +280,7 @@ func TestTx_Count(t *testing.T) {
 func TestTx_Truncate(t *testing.T) {
 	a := assert.New(t)
 
-	db := testconfig.NewDB(a)
-	initData(db, a)
+	db := initData(a)
 	defer clearData(db, a)
 
 	hasCount(db, a, "administrators", 1)
