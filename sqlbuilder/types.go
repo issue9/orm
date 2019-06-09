@@ -63,10 +63,11 @@ type Dialect interface {
 	//
 	// 类似于 postgresql 等都需要额外定义。
 	//
-	// 返回参数 sql 表示额外的语句，如果为空，则执行的是标准的 SQL 插入语句。
+	// 返回参数 sql 表示额外的语句，如果为空，则执行的是标准的 SQL 插入语句；
+	// first 表示返回的 id 值是第一个插入的值；
 	// append 表示在 sql 不为空的情况下，sql 与现有的插入语句的结合方式，
 	// 如果为 true 表示直接添加在插入语句之后，否则为一条新的语句。
-	LastInsertID(table, col string) (sql string, append bool)
+	LastInsertID(table, col string) (sql string, first, append bool)
 }
 
 func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) {

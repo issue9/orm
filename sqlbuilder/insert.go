@@ -149,6 +149,8 @@ func (stmt *InsertStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
 // LastInsertID 执行 SQL 语句
 //
 // 并根据表名和自增列 ID 返回当前行的自增 ID 值。
+//
+// NOTE: 对于指定了自增值的，其结果是未知的。
 func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
 	return stmt.LastInsertIDContext(context.Background(), table, col)
 }
@@ -157,14 +159,22 @@ func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
 //
 // 并根据表名和自增列 ID 返回当前行的自增 ID 值。
 func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col string) (int64, error) {
-	sql, append := stmt.dialect.LastInsertID(stmt.table, col)
+	sql, first, append := stmt.dialect.LastInsertID(stmt.table, col)
 	if sql == "" {
 		rslt, err := stmt.ExecContext(ctx)
 		if err != nil {
 			return 0, err
 		}
 
-		return rslt.LastInsertId()
+		if !first {
+			return rslt.LastInsertId()
+		}
+
+		id, err := rslt.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+		return id + int64(len(stmt.args)) - 1, nil
 	}
 
 	var args []interface{}
@@ -183,6 +193,12 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 	}
 
 	var id int64
-	err := stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id)
-	return id, err
+	if err := stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id); err != nil {
+		return 0, err
+	}
+
+	if first {
+		id = id + int64(len(stmt.args)) - 1
+	}
+	return id, nil
 }
