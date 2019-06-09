@@ -247,3 +247,12 @@ func TestDB_Drop(t *testing.T) {
 	r, err := db.Insert(&Admin{})
 	a.Error(err).Nil(r)
 }
+
+func TestDB_Version(t *testing.T) {
+	a := assert.New(t)
+	db := testconfig.NewDB(a)
+	defer testconfig.CloseDB(db, a)
+
+	v, err := db.Version()
+	a.NotError(err).NotEmpty(v)
+}

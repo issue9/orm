@@ -53,6 +53,10 @@ func (m *mysql) LastInsertID(table, col string) (sql string, append bool) {
 	return "", false
 }
 
+func (m *mysql) VersionSQL() string {
+	return `select version();`
+}
+
 func (m *mysql) CreateTableSQL(model *orm.Model) ([]string, error) {
 	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").

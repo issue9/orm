@@ -50,6 +50,10 @@ func (s *sqlite3) LastInsertID(table, col string) (sql string, append bool) {
 	return "", false
 }
 
+func (s *sqlite3) VersionSQL() string {
+	return `select sqlite_version();`
+}
+
 func (s *sqlite3) CreateTableSQL(model *orm.Model) ([]string, error) {
 	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
 		WriteString("{#").

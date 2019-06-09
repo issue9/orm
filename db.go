@@ -20,6 +20,7 @@ type DB struct {
 	replacer    *strings.Replacer
 	sql         *SQL
 	models      *model.Models
+	version     string
 }
 
 // NewDB 声明一个新的 DB 实例。
@@ -64,6 +65,18 @@ func (db *DB) Close() error {
 	db.models.Clear()
 
 	return db.DB.Close()
+}
+
+// Version 数据库服务端的版本号
+func (db *DB) Version() (string, error) {
+	if db.version == "" {
+		err := db.QueryRow(db.Dialect().VersionSQL()).Scan(&db.version)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return db.version, nil
 }
 
 // QueryRow 执行一条查询语句，并返回相应的 sql.Rows 实例。

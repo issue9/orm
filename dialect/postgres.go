@@ -38,6 +38,10 @@ func (p *postgres) QuoteTuple() (byte, byte) {
 	return '"', '"'
 }
 
+func (p *postgres) VersionSQL() string {
+	return `SHOW server_version;`
+}
+
 func (p *postgres) LastInsertID(table, col string) (sql string, append bool) {
 	return " SELECT lastval()", false
 
