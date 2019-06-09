@@ -2,43 +2,28 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package fetch
+package fetch_test
 
 import (
 	"testing"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/orm/v2/fetch"
+	"github.com/issue9/orm/v2/internal/testconfig"
 )
-
-func BenchmarkMap(b *testing.B) {
-	a := assert.New(b)
-	db := initDB(a)
-	defer closeDB(db, a)
-
-	// 正常匹配数据，读取多行
-	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
-
-	for i := 0; i < b.N; i++ {
-		rows, err := db.Query(sql)
-		a.NotError(err)
-
-		mapped, err := Map(false, rows)
-		a.NotError(err).NotNil(mapped)
-		rows.Close()
-	}
-}
 
 func TestMap(t *testing.T) {
 	a := assert.New(t)
 	db := initDB(a)
-	defer closeDB(db, a)
+	defer testconfig.CloseDB(db, a)
 
 	// 正常匹配数据，读取多行
-	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+	sql := `SELECT id,Email FROM #user WHERE id<2 ORDER BY id`
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
-	mapped, err := Map(false, rows)
+	mapped, err := fetch.Map(false, rows)
 	a.NotError(err).NotNil(mapped)
 
 	a.Equal([]map[string]interface{}{
@@ -51,7 +36,7 @@ func TestMap(t *testing.T) {
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
-	mapped, err = Map(true, rows)
+	mapped, err = fetch.Map(true, rows)
 	a.NotError(err).NotNil(mapped)
 
 	a.Equal([]map[string]interface{}{
@@ -60,11 +45,11 @@ func TestMap(t *testing.T) {
 	a.NotError(rows.Close())
 
 	// 没有匹配的数据，读取多行
-	sql = `SELECT id,Email FROM user WHERE id<0 ORDER BY id`
+	sql = `SELECT id,Email FROM #user WHERE id<0 ORDER BY id`
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
-	mapped, err = Map(false, rows)
+	mapped, err = fetch.Map(false, rows)
 	a.NotError(err)
 
 	a.Equal([]map[string]interface{}{}, mapped)
@@ -74,7 +59,7 @@ func TestMap(t *testing.T) {
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
-	mapped, err = Map(true, rows)
+	mapped, err = fetch.Map(true, rows)
 	a.NotError(err)
 
 	a.Equal([]map[string]interface{}{}, mapped)
@@ -84,14 +69,14 @@ func TestMap(t *testing.T) {
 func TestMapString(t *testing.T) {
 	a := assert.New(t)
 	db := initDB(a)
-	defer closeDB(db, a)
+	defer testconfig.CloseDB(db, a)
 
 	// 正常数据匹配，读取多行
-	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+	sql := `SELECT id,Email FROM #user WHERE id<2 ORDER BY id`
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
-	mapped, err := MapString(false, rows)
+	mapped, err := fetch.MapString(false, rows)
 	a.NotError(err).NotNil(mapped)
 
 	a.Equal(mapped, []map[string]string{
@@ -104,7 +89,7 @@ func TestMapString(t *testing.T) {
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
-	mapped, err = MapString(true, rows)
+	mapped, err = fetch.MapString(true, rows)
 	a.NotError(err).NotNil(mapped)
 
 	a.Equal(mapped, []map[string]string{
@@ -113,11 +98,11 @@ func TestMapString(t *testing.T) {
 	a.NotError(rows.Close())
 
 	// 没有数据匹配，读取多行
-	sql = `SELECT id,Email FROM user WHERE id<0 ORDER BY id`
+	sql = `SELECT id,Email FROM #user WHERE id<0 ORDER BY id`
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
-	mapped, err = MapString(false, rows)
+	mapped, err = fetch.MapString(false, rows)
 	a.NotError(err)
 
 	a.Equal(mapped, []map[string]string{})
@@ -127,7 +112,7 @@ func TestMapString(t *testing.T) {
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
-	mapped, err = MapString(true, rows)
+	mapped, err = fetch.MapString(true, rows)
 	a.NotError(err)
 
 	a.Equal(mapped, []map[string]string{})
