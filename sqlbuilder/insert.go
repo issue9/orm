@@ -167,20 +167,22 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 		return rslt.LastInsertId()
 	}
 
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return 0, err
-	}
+	var args []interface{}
 	if !append {
-		_, err = stmt.ExecContext(ctx)
+		_, err := stmt.ExecContext(ctx)
 		if err != nil {
 			return 0, err
 		}
 	} else {
-		query += sql
+		query, as, err := stmt.SQL()
+		if err != nil {
+			return 0, err
+		}
+		sql = query + sql
+		args = as
 	}
 
 	var id int64
-	err = stmt.engine.QueryRowContext(ctx, query, args...).Scan(&id)
+	err := stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id)
 	return id, err
 }

@@ -10,13 +10,12 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v2/fetch"
-	"github.com/issue9/orm/v2/internal/testconfig"
 )
 
 func BenchmarkObject(b *testing.B) {
 	a := assert.New(b)
 	db := initDB(a)
-	defer testconfig.CloseDB(db, a)
+	defer clearDB(a, db)
 
 	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
 	objs := []*FetchUser{
@@ -37,7 +36,7 @@ func BenchmarkObject(b *testing.B) {
 func BenchmarkMap(b *testing.B) {
 	a := assert.New(b)
 	db := initDB(a)
-	defer testconfig.CloseDB(db, a)
+	defer clearDB(a, db)
 
 	// 正常匹配数据，读取多行
 	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`

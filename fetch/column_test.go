@@ -10,23 +10,25 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v2/fetch"
-	"github.com/issue9/orm/v2/internal/testconfig"
 )
 
 func TestColumn(t *testing.T) {
 	a := assert.New(t)
 	db := initDB(a)
-	defer testconfig.CloseDB(db, a)
+	defer clearDB(a, db)
 
 	// 正常数据匹配，读取多行
-	sql := `SELECT id,email FROM #user WHERE id<2 ORDER BY id`
+	sql := `SELECT id,email FROM #user WHERE id<3 ORDER BY id ASC`
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
 	cols, err := fetch.Column(false, "id", rows)
 	a.NotError(err).NotNil(cols)
 
-	a.Equal([]interface{}{0, 1}, cols)
+	// mysql 返回的是 []byte 类型
+	ok := assert.IsEqual([]interface{}{1, 2}, cols) ||
+		assert.IsEqual([]interface{}{[]byte{'1'}, []byte{'2'}}, cols)
+	a.True(ok)
 	a.NotError(rows.Close())
 
 	// 正常数据匹配，读取一行
@@ -36,11 +38,13 @@ func TestColumn(t *testing.T) {
 	cols, err = fetch.Column(true, "id", rows)
 	a.NotError(err).NotNil(cols)
 
-	a.Equal([]interface{}{0}, cols)
+	ok = assert.IsEqual([]interface{}{1}, cols) ||
+		assert.IsEqual([]interface{}{[]byte{'1'}}, cols)
+	a.True(ok)
 	a.NotError(rows.Close())
 
 	// 没有数据匹配，读取多行
-	sql = `SELECT id,email FROM #user WHERE id<0 ORDER BY id`
+	sql = `SELECT id,email FROM #user WHERE id<0 ORDER BY id ASC`
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
@@ -74,17 +78,17 @@ func TestColumn(t *testing.T) {
 func TestColumnString(t *testing.T) {
 	a := assert.New(t)
 	db := initDB(a)
-	defer testconfig.CloseDB(db, a)
+	defer clearDB(a, db)
 
 	// 正常数据匹配，读取多行
-	sql := `SELECT id,email FROM #user WHERE id<2 ORDER BY id`
+	sql := `SELECT id,email FROM #user WHERE id<3 ORDER BY id`
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
 
 	cols, err := fetch.ColumnString(false, "id", rows)
 	a.NotError(err).NotNil(cols)
 
-	a.Equal([]string{"0", "1"}, cols)
+	a.Equal([]string{"1", "2"}, cols)
 	a.NotError(rows.Close())
 
 	// 正常数据匹配，读取一行
@@ -94,7 +98,7 @@ func TestColumnString(t *testing.T) {
 	cols, err = fetch.ColumnString(true, "id", rows)
 	a.NotError(err).NotNil(cols)
 
-	a.Equal([]string{"0"}, cols)
+	a.Equal([]string{"1"}, cols)
 	a.NotError(rows.Close())
 
 	// 没有数据匹配，读取多行
