@@ -159,7 +159,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 	}
 
 	sql := e.SQL().Insert().Table("{#" + m.Name + "}")
-	for name, col := range m.Cols {
+	for _, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
 			return 0, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
@@ -170,7 +170,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 			continue
 		}
 
-		sql.KeyValue("{"+name+"}", field.Interface())
+		sql.KeyValue("{"+col.Name+"}", field.Interface())
 	}
 
 	return sql.LastInsertID(m.Name, m.AI.Name)
@@ -189,7 +189,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 	}
 
 	sql := e.SQL().Insert().Table("{#" + m.Name + "}")
-	for name, col := range m.Cols {
+	for _, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
 			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
@@ -200,7 +200,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 			continue
 		}
 
-		sql.KeyValue("{"+name+"}", field.Interface())
+		sql.KeyValue("{"+col.Name+"}", field.Interface())
 	}
 
 	return sql.Exec()
@@ -271,14 +271,14 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 
 	sql := e.SQL().Update().Table("{#" + m.Name + "}")
 	var occValue interface{}
-	for name, col := range m.Cols {
+	for _, col := range m.Cols {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
 			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 		}
 
 		// 零值，但是不属于指定需要更新的列
-		if !inStrSlice(name, cols) && col.IsZero(field) {
+		if !inStrSlice(col.Name, cols) && col.IsZero(field) {
 			continue
 		}
 
@@ -286,7 +286,7 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 			occValue = field.Interface()
 			continue
 		} else {
-			sql.Set("{"+name+"}", field.Interface())
+			sql.Set("{"+col.Name+"}", field.Interface())
 		}
 	}
 
@@ -350,7 +350,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 			firstType = irval.Type()
 			sql.Table("{#" + m.Name + "}")
 
-			for name, col := range m.Cols {
+			for _, col := range m.Cols {
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
 					return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
@@ -361,8 +361,8 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 					continue
 				}
 
-				sql.KeyValue("{"+name+"}", field.Interface())
-				keys = append(keys, name)
+				sql.KeyValue("{"+col.Name+"}", field.Interface())
+				keys = append(keys, col.Name)
 			}
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
@@ -371,8 +371,8 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 
 			vals := make([]interface{}, 0, len(keys))
 			for _, name := range keys {
-				col, found := m.Cols[name]
-				if !found {
+				col := m.FindColumn(name)
+				if col == nil {
 					return nil, fmt.Errorf("不存在的列名 %s", name)
 				}
 

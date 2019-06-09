@@ -61,18 +61,18 @@ func TestNewModel(t *testing.T) {
 	a.NotError(err).NotNil(m)
 
 	// cols
-	idCol, found := m.Cols["id"] // 指定名称为小写
-	a.True(found)
+	idCol := m.FindColumn("id") // 指定名称为小写
+	a.NotNil(idCol)
 
-	usernameCol, found := m.Cols["Username"] // 未指定别名，与字段名相同
-	a.True(found).False(usernameCol.Nullable)
+	usernameCol := m.FindColumn("Username") // 未指定别名，与字段名相同
+	a.NotNil(usernameCol).False(usernameCol.Nullable)
 
 	// 通过 struct tag 过滤掉的列
-	regdate, found := m.Cols["Regdate"]
-	a.False(found).Nil(regdate)
+	regdate := m.FindColumn("Regdate")
+	a.Nil(regdate)
 
-	groupCol, found := m.Cols["group"]
-	a.True(found)
+	groupCol := m.FindColumn("group")
+	a.NotNil(groupCol)
 
 	// index
 	index, found := m.KeyIndexes["index_name"]
@@ -137,14 +137,8 @@ func TestModel_check(t *testing.T) {
 	}
 
 	m := &Model{
-		Cols: map[string]*Column{
-			"ai":       ai,
-			"pk1":      pk1,
-			"pk2":      pk2,
-			"nullable": nullable,
-			"def":      def,
-		},
-		AI: ai,
+		Cols: []*Column{ai, pk1, pk2, nullable, def},
+		AI:   ai,
 	}
 
 	a.NotError(m.check())
@@ -190,18 +184,20 @@ func TestModel_check(t *testing.T) {
 func TestModel_parseColumn(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{
-		Cols: map[string]*Column{},
+		Cols: []*Column{},
 	}
-	col := &Column{}
 
 	// 不存在 struct tag，则以 col.Name 作为键名
+	col := &Column{Name: "xx"}
 	a.NotError(m.parseColumn(col, ""))
-	a.Equal(m.Cols[col.Name], col)
+	a.Equal(col.Name, "xx")
 
 	// name 值过多
+	col = &Column{}
 	a.Error(m.parseColumn(col, "name(m1,m2)"))
 
 	// 不存在的属性名称
+	col = &Column{}
 	a.Error(m.parseColumn(col, "not-exists-property(p1)"))
 }
 

@@ -41,13 +41,11 @@ func TestNewDB(t *testing.T) {
 // 初始化测试数据，同时可当作 DB.Insert 的测试
 // 清空其它数据，初始化成原始的测试数据
 func initData(db *orm.DB, a *assert.Assertion) {
-	a.NotError(db.Drop(&User{}))
-	a.NotError(db.Drop(&Admin{}))
+	a.NotError(db.MultDrop(&User{}, &Admin{}))
 	a.NotError(db.Drop(&Group{})) // admin 外键依赖 group
 	a.NotError(db.Drop(&UserInfo{}))
 	a.NotError(db.Create(&Group{}))
-	a.NotError(db.Create(&Admin{}))
-	a.NotError(db.Create(&UserInfo{}))
+	a.NotError(db.MultCreate(&Admin{}, &UserInfo{}))
 
 	insert := func(obj interface{}) {
 		r, err := db.Insert(obj)

@@ -19,7 +19,7 @@ import (
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
 	Name          string                 // 表的名称
-	Cols          map[string]*Column     // 所有的列
+	Cols          []*Column              // 所有的列
 	KeyIndexes    map[string][]*Column   // 索引列
 	UniqueIndexes map[string][]*Column   // 唯一索引列
 	FK            map[string]*ForeignKey // 外键
@@ -57,7 +57,7 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 	}
 
 	m := &Model{
-		Cols:          map[string]*Column{},
+		Cols:          make([]*Column, 0, rtype.NumField()),
 		KeyIndexes:    map[string][]*Column{},
 		UniqueIndexes: map[string][]*Column{},
 		Name:          rtype.Name(),
@@ -152,7 +152,7 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 // 分析一个字段。
 func (m *Model) parseColumn(col *Column, tag string) (err error) {
 	if len(tag) == 0 { // 没有附加的 struct tag，直接取得几个关键信息返回。
-		m.Cols[col.Name] = col
+		m.Cols = append(m.Cols, col)
 		return nil
 	}
 
@@ -192,7 +192,7 @@ func (m *Model) parseColumn(col *Column, tag string) (err error) {
 	}
 
 	// col.Name 可能在上面的 for 循环中被更改，所以要在最后再添加到 m.Cols 中
-	m.Cols[col.Name] = col
+	m.Cols = append(m.Cols, col)
 
 	return nil
 }
@@ -386,4 +386,16 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 func (m *Model) hasConstraint(name string, except conType) bool {
 	typ, found := m.constraints[strings.ToLower(name)]
 	return found && (typ != except)
+}
+
+// FindColumn 查找指定名称的列
+//
+// 不存在该列则返回 nil
+func (m *Model) FindColumn(name string) *Column {
+	for _, col := range m.Cols {
+		if col.Name == name {
+			return col
+		}
+	}
+	return nil
 }
