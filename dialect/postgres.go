@@ -39,7 +39,12 @@ func (p *postgres) QuoteTuple() (byte, byte) {
 }
 
 func (p *postgres) LastInsertID(table, col string) (sql string, append bool) {
-	return " RETURNING {" + col + "}", true
+	return " SELECT lastval()", false
+
+	// 在同时插入多列时， RETURNING 会返回每一列的 ID。
+	// 最终 sql.Result.LastInsertId() 返回的是最小的那个值，
+	// 这在大部分时间不符合要求。
+	// return " RETURNING {" + col + "}", true
 }
 
 // 在有 ? 占位符的情况下，语句中不能包含$字符串
