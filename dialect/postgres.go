@@ -39,7 +39,7 @@ func (p *postgres) QuoteTuple() (byte, byte) {
 }
 
 func (p *postgres) LastInsertID(table, col string) (sql string, append bool) {
-	return "RETURNING {" + col + "}", true
+	return " RETURNING {" + col + "}", true
 }
 
 // 在有 ? 占位符的情况下，语句中不能包含$字符串

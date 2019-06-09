@@ -94,7 +94,10 @@ func createFKSQL(buf *sqlbuilder.SQLBuilder, fk *orm.ForeignKey, fkName string) 
 	buf.WriteString(" FOREIGN KEY(")
 	buf.WriteByte('{').WriteString(fk.Col.Name).WriteByte('}')
 
-	buf.WriteString(") REFERENCES ").WriteString(fk.RefTableName)
+	buf.WriteString(") REFERENCES ").
+		WriteByte('{').
+		WriteString(fk.RefTableName).
+		WriteByte('}')
 
 	buf.WriteByte('(')
 	buf.WriteByte('{').WriteString(fk.RefColName).WriteByte('}')

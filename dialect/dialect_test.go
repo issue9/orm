@@ -111,7 +111,7 @@ func TestCreateFKSQL(t *testing.T) {
 	}
 
 	createFKSQL(buf, fk, "fkname")
-	wont := "CONSTRAINT fkname FOREIGN KEY({id}) REFERENCES refTable({refCol}) ON UPDATE NO ACTION"
+	wont := "CONSTRAINT fkname FOREIGN KEY({id}) REFERENCES {refTable} ({refCol}) ON UPDATE NO ACTION"
 	sqltest.Equal(a, buf.String(), wont)
 }
 
