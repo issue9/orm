@@ -159,7 +159,7 @@ func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
 //
 // 并根据表名和自增列 ID 返回当前行的自增 ID 值。
 func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col string) (int64, error) {
-	step := 1 // BUG(caixw): 假设步长为 1
+	step := int64(1) // BUG(caixw): 假设步长为 1
 
 	sql, first, append := stmt.dialect.LastInsertID(stmt.table, col)
 	if sql == "" {
@@ -168,16 +168,10 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 			return 0, err
 		}
 
-		if !first {
-			return rslt.LastInsertId()
+		if first {
+			return stmt.calcLastInsertID(rslt, step)
 		}
-
-		id, err := rslt.LastInsertId()
-		if err != nil {
-			return 0, err
-		}
-		incr := int64((len(stmt.args) - 1) * step)
-		return id + incr, nil
+		return rslt.LastInsertId()
 	}
 
 	var args []interface{}
@@ -201,8 +195,25 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 	}
 
 	if first {
-		incr := int64((len(stmt.args) - 1) * step)
-		id = id + incr
+		incr := int64((len(stmt.args) - 1)) * step
+		id += incr
 	}
 	return id, nil
+}
+
+func (stmt *InsertStmt) calcLastInsertID(rslt sql.Result, step int64) (int64, error) {
+	id, err := rslt.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	l := int64(len(stmt.args))
+	if l > 0 {
+		l, err = rslt.RowsAffected()
+		if err != nil {
+			return 0, err
+		}
+	}
+	incr := (l - 1) * step
+	return id + incr, nil
 }
