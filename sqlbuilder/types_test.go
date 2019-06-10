@@ -10,24 +10,36 @@ import (
 )
 
 var (
-	_ execer  = &DeleteStmt{}
-	_ execer  = &UpdateStmt{}
-	_ execer  = &InsertStmt{}
-	_ execer  = &UpdateStmt{}
-	_ execer  = &CreateIndexStmt{}
-	_ queryer = &SelectStmt{}
+	_ execPreparer = &DeleteStmt{}
+	_ execPreparer = &UpdateStmt{}
+	_ execPreparer = &InsertStmt{}
+	_ execPreparer = &UpdateStmt{}
+	_ execer       = &CreateIndexStmt{}
+	_ execer       = &DropTableStmt{}
+	_ queryer      = &SelectStmt{}
 )
 
 type execer interface {
 	Exec() (sql.Result, error)
 	ExecContext(ctx context.Context) (sql.Result, error)
-	Prepare() (*sql.Stmt, error)
-	PrepareContext(ctx context.Context) (*sql.Stmt, error)
 }
 
 type queryer interface {
 	Query() (*sql.Rows, error)
 	QueryContext(ctx context.Context) (*sql.Rows, error)
+}
+
+type preparer interface {
 	Prepare() (*sql.Stmt, error)
 	PrepareContext(ctx context.Context) (*sql.Stmt, error)
+}
+
+type execPreparer interface {
+	execer
+	preparer
+}
+
+type queryPreparer interface {
+	queryer
+	preparer
 }

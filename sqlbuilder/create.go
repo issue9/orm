@@ -84,13 +84,3 @@ func (stmt *CreateIndexStmt) Exec() (sql.Result, error) {
 func (stmt *CreateIndexStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 	return execContext(ctx, stmt.engine, stmt)
 }
-
-// Prepare 预编译
-func (stmt *CreateIndexStmt) Prepare() (*sql.Stmt, error) {
-	return stmt.PrepareContext(context.Background())
-}
-
-// PrepareContext 预编译
-func (stmt *CreateIndexStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	return prepareContext(ctx, stmt.engine, stmt)
-}

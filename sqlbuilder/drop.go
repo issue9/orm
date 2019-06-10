@@ -54,13 +54,3 @@ func (stmt *DropTableStmt) Exec() (sql.Result, error) {
 func (stmt *DropTableStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 	return execContext(ctx, stmt.engine, stmt)
 }
-
-// Prepare 预编译
-func (stmt *DropTableStmt) Prepare() (*sql.Stmt, error) {
-	return stmt.PrepareContext(context.Background())
-}
-
-// PrepareContext 预编译
-func (stmt *DropTableStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	return prepareContext(ctx, stmt.engine, stmt)
-}
