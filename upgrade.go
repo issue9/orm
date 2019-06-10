@@ -12,10 +12,9 @@ import (
 
 // Upgrader 提供了对更新表结构的一些操作
 type Upgrader struct {
-	db     *DB
-	engine Engine
-	model  *Model
-	err    error
+	db    *DB
+	model *Model
+	err   error
 }
 
 // Upgrade 生成 Upgrader 对象
@@ -25,21 +24,15 @@ func (db *DB) Upgrade(v interface{}) (*Upgrader, error) {
 		return nil, err
 	}
 
-	u := &Upgrader{
+	return &Upgrader{
 		db:    db,
 		model: m,
-	}
+	}, nil
+}
 
-	if db.Dialect().TransactionalDDL() {
-		u.engine, err = db.Begin()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		u.engine = db
-	}
-
-	return u, nil
+// DB 返回关联的 DB 实例
+func (u *Upgrader) DB() *DB {
+	return u.DB()
 }
 
 // Err 返回执行过程中的错误信息
@@ -69,18 +62,40 @@ func (u *Upgrader) addColumn(name string) {
 	// TODO
 }
 
-// DropColumn 删除表中的列，列名可以不存在于表模型，
+// DropColumns 删除表中的列，列名可以不存在于表模型，
 // 只在数据库中的表包含该列名，就会被删除。
-func (u *Upgrader) DropColumn(name ...string) *Upgrader {
-	for _, n := range name {
-		u.dropColumn(n)
+func (u *Upgrader) DropColumns(name ...string) error {
+	if !u.DB().Dialect().TransactionalDDL() {
+		return u.dropColumns(u.DB(), name...)
 	}
 
-	return u
+	tx, err := u.DB().Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := u.dropColumns(u.DB(), name...); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
-func (u *Upgrader) dropColumn(name string) {
-	sql := sqlbuilder.New()
+func (u *Upgrader) dropColumns(e Engine, name ...string) error {
+	sql := sqlbuilder.DropColumn(e)
+
+	for _, n := range name {
+		sql.Reset()
+		_, err := sql.Table(u.model.Name).
+			Column(n).
+			Exec()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // RenameColumn 修改列名
