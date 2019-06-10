@@ -42,8 +42,8 @@ func (p *postgres) VersionSQL() string {
 	return `SHOW server_version;`
 }
 
-func (p *postgres) LastInsertID(table, col string) (sql string, first, append bool) {
-	return " SELECT lastval();", false, false
+func (p *postgres) LastInsertID(table, col string) (sql string, append bool) {
+	return " RETURNING {" + col + "}", true
 
 	// 在同时插入多列时， RETURNING 会返回每一列的 ID。
 	// 最终 sql.Result.LastInsertId() 返回的是最小的那个值，

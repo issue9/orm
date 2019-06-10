@@ -7,6 +7,7 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+	"errors"
 )
 
 // InsertStmt 表示插入操作的 SQL 语句
@@ -158,19 +159,18 @@ func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
 // LastInsertIDContext 执行 SQL 语句
 //
 // 并根据表名和自增列 ID 返回当前行的自增 ID 值。
-func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col string) (int64, error) {
-	step := int64(1) // BUG(caixw): 假设步长为 1
+func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col string) (id int64, err error) {
+	if len(stmt.args) > 1 {
+		return 0, errors.New("多行插入语句，无法获取 LastInsertIDContext")
+	}
 
-	sql, first, append := stmt.dialect.LastInsertID(stmt.table, col)
+	sql, append := stmt.dialect.LastInsertID(stmt.table, col)
 	if sql == "" {
 		rslt, err := stmt.ExecContext(ctx)
 		if err != nil {
 			return 0, err
 		}
 
-		if first {
-			return stmt.calcLastInsertID(rslt, step)
-		}
 		return rslt.LastInsertId()
 	}
 
@@ -189,31 +189,6 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 		args = as
 	}
 
-	var id int64
-	if err := stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id); err != nil {
-		return 0, err
-	}
-
-	if first {
-		incr := int64((len(stmt.args) - 1)) * step
-		id += incr
-	}
-	return id, nil
-}
-
-func (stmt *InsertStmt) calcLastInsertID(rslt sql.Result, step int64) (int64, error) {
-	id, err := rslt.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-
-	l := int64(len(stmt.args))
-	if l > 0 {
-		l, err = rslt.RowsAffected()
-		if err != nil {
-			return 0, err
-		}
-	}
-	incr := (l - 1) * step
-	return id + incr, nil
+	err = stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id)
+	return
 }

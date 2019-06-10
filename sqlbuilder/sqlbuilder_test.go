@@ -48,10 +48,17 @@ func initDB(a *assert.Assertion) *orm.DB {
 
 	sql.Table("#user").
 		Columns("name").
-		Values("7").
-		Values("8")
+		Values("7")
 	id, err := sql.LastInsertID("user", "id")
-	a.NotError(err).Equal(id, 8)
+	a.NotError(err).Equal(id, 7)
+
+	// 多行插入，不能拿到 lastinsertid
+	sql.Table("#user").
+		Columns("name").
+		Values("8").
+		Values("9")
+	id, err = sql.LastInsertID("user", "id")
+	a.Error(err).Empty(id)
 
 	return db
 }
