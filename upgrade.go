@@ -5,6 +5,7 @@
 package orm
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/issue9/orm/v2/sqlbuilder"
@@ -15,6 +16,8 @@ type Upgrader struct {
 	db    *DB
 	model *Model
 	err   error
+
+	dropCols []string
 }
 
 // Upgrade 生成 Upgrader 对象
@@ -64,38 +67,9 @@ func (u *Upgrader) addColumn(name string) {
 
 // DropColumns 删除表中的列，列名可以不存在于表模型，
 // 只在数据库中的表包含该列名，就会被删除。
-func (u *Upgrader) DropColumns(name ...string) error {
-	if !u.DB().Dialect().TransactionalDDL() {
-		return u.dropColumns(u.DB(), name...)
-	}
-
-	tx, err := u.DB().Begin()
-	if err != nil {
-		return err
-	}
-
-	if err := u.dropColumns(u.DB(), name...); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func (u *Upgrader) dropColumns(e Engine, name ...string) error {
-	sql := sqlbuilder.DropColumn(e)
-
-	for _, n := range name {
-		sql.Reset()
-		_, err := sql.Table(u.model.Name).
-			Column(n).
-			Exec()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+func (u *Upgrader) DropColumns(name ...string) *Upgrader {
+	u.dropCols = append(u.dropCols, name...)
+	return u
 }
 
 // RenameColumn 修改列名
@@ -126,6 +100,54 @@ func (u *Upgrader) Do() error {
 		return u.Err()
 	}
 
+	rollback := func() error {
+		return nil
+	}
+
+	commit := func() error {
+		return nil
+	}
+
+	var e Engine = u.DB()
+	if u.DB().Dialect().TransactionalDDL() {
+		tx, err := u.DB().Begin()
+		if err != nil {
+			return err
+		}
+
+		rollback = func() error {
+			return tx.Rollback()
+		}
+		commit = func() error {
+			return tx.Commit()
+		}
+		e = tx
+	}
+
+	if len(u.dropCols) > 0 {
+		if err := u.dropColumns(e); err != nil {
+			err1 := rollback()
+			return errors.New(err1.Error() + err.Error())
+		}
+	}
+
 	// TODO
+
+	return commit()
+}
+
+func (u *Upgrader) dropColumns(e Engine) error {
+	sql := sqlbuilder.DropColumn(e)
+
+	for _, n := range u.dropCols {
+		sql.Reset()
+		_, err := sql.Table(u.model.Name).
+			Column(n).
+			Exec()
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
