@@ -9,6 +9,25 @@ import (
 	"database/sql"
 )
 
+// Constraint 表示约束类型
+type Constraint int8
+
+// Index 索引的类型
+type Index int8
+
+// 约束类型
+const (
+	ConstraintUnique Constraint = iota // 唯一约束
+	ConstraintFk                       // 外键约束
+	ConstraintCheck                    // Check 约束
+)
+
+// 索引的类型
+const (
+	IndexDefault Index = iota // 普通的索引
+	IndexUnique
+)
+
 // SQLer 定义 SQL 语句的基本接口
 type SQLer interface {
 	// 获取 SQL 语句以及其关联的参数
@@ -91,4 +110,28 @@ func queryContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Rows, error) 
 		return nil, err
 	}
 	return e.QueryContext(ctx, query, args...)
+}
+
+func (t Constraint) String() string {
+	switch t {
+	case ConstraintUnique:
+		return "UNIQUE"
+	case ConstraintFk:
+		return "FOREIGN KEY"
+	case ConstraintCheck:
+		return "CHECK"
+	default:
+		return "<unknown>"
+	}
+}
+
+func (t Index) String() string {
+	switch t {
+	case IndexDefault:
+		return "INDEX"
+	case IndexUnique:
+		return "UNIQUE INDEX"
+	default:
+		return "<unknown>"
+	}
 }

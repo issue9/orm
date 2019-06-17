@@ -18,17 +18,19 @@ import (
 
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
-	Name          string                 // 表的名称
-	Cols          []*Column              // 所有的列
+	Name string              // 表的名称
+	Cols []*Column           // 所有的列
+	AI   *Column             // 自增列
+	OCC  *Column             // 乐观锁
+	Meta map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
+
+	// 约束相关内容
+	Constraints   map[string]ConType     // 约束名缓存
 	KeyIndexes    map[string][]*Column   // 索引列
 	UniqueIndexes map[string][]*Column   // 唯一索引列
 	FK            map[string]*ForeignKey // 外键
 	PK            []*Column              // 主键
-	AI            *Column                // 自增列
-	OCC           *Column                // 乐观锁
 	Check         map[string]string      // Check 键名为约束名，键值为约束表达式
-	Meta          map[string][]string    // 表级别的数据，如存储引擎，表名和字符集等。
-	Constraints   map[string]ConType     // 约束名缓存
 }
 
 func propertyError(field, name, message string) error {

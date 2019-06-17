@@ -15,12 +15,14 @@ type CreateIndexStmt struct {
 	table  string
 	name   string   // 索引名称
 	cols   []string // 索引列
+	typ    Index
 }
 
 // CreateIndex 声明一条 CrateIndexStmt 语句
 func CreateIndex(e Engine) *CreateIndexStmt {
 	return &CreateIndexStmt{
 		engine: e,
+		typ:    IndexDefault,
 	}
 }
 
@@ -30,9 +32,15 @@ func (stmt *CreateIndexStmt) Table(tbl string) *CreateIndexStmt {
 	return stmt
 }
 
-// Name 指定约束名
+// Name 指定索引名
 func (stmt *CreateIndexStmt) Name(col string) *CreateIndexStmt {
 	stmt.name = col
+	return stmt
+}
+
+// Type 指定索引类型
+func (stmt *CreateIndexStmt) Type(t Index) *CreateIndexStmt {
+	stmt.typ = t
 	return stmt
 }
 
@@ -56,8 +64,15 @@ func (stmt *CreateIndexStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
-	sql := New("CREATE INDEX ").
-		WriteString(stmt.name).
+	var sql *SQLBuilder
+
+	if stmt.typ == IndexDefault {
+		sql = New("CREATE INDEX ")
+	} else {
+		sql = New("CREATE UNIQUE INDEX ")
+	}
+
+	sql.WriteString(stmt.name).
 		WriteString(" ON ").
 		WriteString(stmt.table).WriteByte('(')
 	for _, col := range stmt.cols {
@@ -73,6 +88,7 @@ func (stmt *CreateIndexStmt) Reset() {
 	stmt.table = ""
 	stmt.cols = stmt.cols[:0]
 	stmt.name = ""
+	stmt.typ = IndexDefault
 }
 
 // Exec 执行 SQL 语句

@@ -27,4 +27,16 @@ func TestCreateIndex(t *testing.T) {
 	sql.Reset()
 	query, args, err = sql.SQL()
 	a.Error(err).Nil(args).Empty(query)
+	a.Equal(sql.typ, IndexDefault)
+
+	sql = CreateIndex(nil)
+	query, args, err = sql.Table("tbl1").Columns("c1", "c2").Type(IndexUnique).Name("c12").SQL()
+	a.NotError(err).Nil(args)
+	sqltest.Equal(a, query, "create unique index c12 on tbl1(c1,c2)")
+
+	// 重置
+	sql.Reset()
+	query, args, err = sql.SQL()
+	a.Error(err).Nil(args).Empty(query)
+	a.Equal(sql.typ, IndexDefault)
 }
