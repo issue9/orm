@@ -18,7 +18,15 @@ type CreateIndexStmt struct {
 	typ    Index
 }
 
-// CreateIndex 声明一条 CrateIndexStmt 语句
+// DropIndexStmt 删除索引
+type DropIndexStmt struct {
+	engine  Engine
+	dialect Dialect
+	table   string
+	name    string
+}
+
+// CreateIndex 声明一条 CreateIndexStmt 语句
 func CreateIndex(e Engine) *CreateIndexStmt {
 	return &CreateIndexStmt{
 		engine: e,
@@ -99,4 +107,44 @@ func (stmt *CreateIndexStmt) Exec() (sql.Result, error) {
 // ExecContext 执行 SQL 语句
 func (stmt *CreateIndexStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 	return execContext(ctx, stmt.engine, stmt)
+}
+
+// DropIndex 声明一条 DropIndexStmt 语句
+func DropIndex(e Engine, d Dialect) *DropIndexStmt {
+	return &DropIndexStmt{
+		engine:  e,
+		dialect: d,
+	}
+}
+
+// Table 指定表名
+func (stmt *DropIndexStmt) Table(tbl string) *DropIndexStmt {
+	stmt.table = tbl
+	return stmt
+}
+
+// Name 指定索引名
+func (stmt *DropIndexStmt) Name(col string) *DropIndexStmt {
+	stmt.name = col
+	return stmt
+}
+
+// SQL 生成 SQL 语句
+func (stmt *DropIndexStmt) SQL() (string, []interface{}, error) {
+	if stmt.table == "" {
+		return "", nil, ErrTableIsEmpty
+	}
+
+	if stmt.name == "" {
+		return "", nil, ErrColumnsIsEmpty
+	}
+
+	sql, args := stmt.dialect.DropIndexSQL(stmt.table, stmt.name)
+	return sql, args, nil
+}
+
+// Reset 重置
+func (stmt *DropIndexStmt) Reset() {
+	stmt.table = ""
+	stmt.name = ""
 }

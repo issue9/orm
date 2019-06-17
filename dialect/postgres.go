@@ -107,6 +107,10 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 	return mysqlLimitSQL(limit, offset...)
 }
 
+func (p *postgres) DropIndexSQL(table, index string) (string, []interface{}) {
+	return `DROP INDEX IF EXISTS ?`, []interface{}{index}
+}
+
 func (p *postgres) TruncateTableSQL(m *orm.Model) []string {
 	w := sqlbuilder.New("TRUNCATE TABLE #").WriteString(m.Name)
 
