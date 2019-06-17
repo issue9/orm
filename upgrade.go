@@ -17,7 +17,8 @@ type Upgrader struct {
 	model *Model
 	err   error
 
-	dropCols []string
+	dropCols  []string
+	dropConts []string
 }
 
 // Upgrade 生成 Upgrader 对象
@@ -90,8 +91,9 @@ func (u *Upgrader) AddConstraint() {
 }
 
 // DropConstraint 删除约束
-func (u *Upgrader) DropConstraint() {
-	//
+func (u *Upgrader) DropConstraint(conts ...string) *Upgrader {
+	u.dropConts = append(u.dropConts, conts...)
+	return u
 }
 
 // Do 执行操作
@@ -134,6 +136,22 @@ func (u *Upgrader) Do() error {
 	// TODO
 
 	return commit()
+}
+
+func (u *Upgrader) dropConstraints(e Engine) error {
+	sql := sqlbuilder.DropConstraint(e)
+
+	for _, n := range u.dropCols {
+		sql.Reset()
+		_, err := sql.Table(u.model.Name).
+			Constraint(n).
+			Exec()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (u *Upgrader) dropColumns(e Engine) error {
