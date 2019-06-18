@@ -108,7 +108,7 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 }
 
 func (p *postgres) DropIndexSQL(table, index string) (string, []interface{}) {
-	return `DROP INDEX IF EXISTS ?`, []interface{}{index}
+	return `DROP INDEX IF EXISTS {` + index + `}`, nil
 }
 
 func (p *postgres) TruncateTableSQL(m *orm.Model) []string {

@@ -168,3 +168,13 @@ func (stmt *DropIndexStmt) Reset() {
 	stmt.table = ""
 	stmt.name = ""
 }
+
+// Exec 执行 SQL 语句
+func (stmt *DropIndexStmt) Exec() (sql.Result, error) {
+	return stmt.ExecContext(context.Background())
+}
+
+// ExecContext 执行 SQL 语句
+func (stmt *DropIndexStmt) ExecContext(ctx context.Context) (sql.Result, error) {
+	return execContext(ctx, stmt.engine, stmt)
+}

@@ -39,3 +39,22 @@ func TestCreateIndex(t *testing.T) {
 	query, args, err = sql.SQL()
 	a.Error(err).Nil(args).Empty(query)
 }
+
+func TestIndex(t *testing.T) {
+	a := assert.New(t)
+	db := initDB(a)
+	defer clearDB(a, db)
+
+	_, err := sqlbuilder.CreateIndex(db).
+		Table("#user").
+		Name("index_key").
+		Columns("id", "name").
+		Exec()
+	a.NotError(err)
+
+	_, err = sqlbuilder.DropIndex(db, db.Dialect()).
+		Table("#user").
+		Name("index_key").
+		Exec()
+	a.NotError(err)
+}

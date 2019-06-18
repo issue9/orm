@@ -143,7 +143,7 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 }
 
 func (m *mysql) DropIndexSQL(table, index string) (string, []interface{}) {
-	return `ALTER TABLE ? DROP INDEX ?`, []interface{}{table, index}
+	return `ALTER TABLE {` + table + `} DROP INDEX {` + index + `}`, nil
 }
 
 func (m *mysql) TruncateTableSQL(model *orm.Model) []string {
