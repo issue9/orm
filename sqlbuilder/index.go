@@ -9,6 +9,15 @@ import (
 	"database/sql"
 )
 
+// Index 索引的类型
+type Index int8
+
+// 索引的类型
+const (
+	IndexDefault Index = iota // 普通的索引
+	IndexUnique
+)
+
 // CreateIndexStmt 创建索引的语句
 type CreateIndexStmt struct {
 	engine Engine
@@ -24,6 +33,17 @@ type DropIndexStmt struct {
 	dialect Dialect
 	table   string
 	name    string
+}
+
+func (t Index) String() string {
+	switch t {
+	case IndexDefault:
+		return "INDEX"
+	case IndexUnique:
+		return "UNIQUE INDEX"
+	default:
+		return "<unknown>"
+	}
 }
 
 // CreateIndex 声明一条 CreateIndexStmt 语句

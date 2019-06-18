@@ -12,20 +12,11 @@ import (
 // Constraint 表示约束类型
 type Constraint int8
 
-// Index 索引的类型
-type Index int8
-
 // 约束类型
 const (
 	ConstraintUnique Constraint = iota // 唯一约束
 	ConstraintFk                       // 外键约束
 	ConstraintCheck                    // Check 约束
-)
-
-// 索引的类型
-const (
-	IndexDefault Index = iota // 普通的索引
-	IndexUnique
 )
 
 // SQLer 定义 SQL 语句的基本接口
@@ -123,17 +114,6 @@ func (t Constraint) String() string {
 		return "FOREIGN KEY"
 	case ConstraintCheck:
 		return "CHECK"
-	default:
-		return "<unknown>"
-	}
-}
-
-func (t Index) String() string {
-	switch t {
-	case IndexDefault:
-		return "INDEX"
-	case IndexUnique:
-		return "UNIQUE INDEX"
 	default:
 		return "<unknown>"
 	}

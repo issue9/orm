@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlbuilder
+package sqlbuilder_test
 
 import (
 	"testing"
@@ -10,13 +10,14 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-var _ SQLer = &CreateIndexStmt{}
+var _ sqlbuilder.SQLer = &sqlbuilder.CreateIndexStmt{}
 
 func TestCreateIndex(t *testing.T) {
 	a := assert.New(t)
-	sql := CreateIndex(nil)
+	sql := sqlbuilder.CreateIndex(nil)
 	a.NotNil(sql)
 
 	query, args, err := sql.Table("tbl1").Columns("c1", "c2").Name("c12").SQL()
@@ -27,10 +28,9 @@ func TestCreateIndex(t *testing.T) {
 	sql.Reset()
 	query, args, err = sql.SQL()
 	a.Error(err).Nil(args).Empty(query)
-	a.Equal(sql.typ, IndexDefault)
 
-	sql = CreateIndex(nil)
-	query, args, err = sql.Table("tbl1").Columns("c1", "c2").Type(IndexUnique).Name("c12").SQL()
+	sql = sqlbuilder.CreateIndex(nil)
+	query, args, err = sql.Table("tbl1").Columns("c1", "c2").Type(sqlbuilder.IndexUnique).Name("c12").SQL()
 	a.NotError(err).Nil(args)
 	sqltest.Equal(a, query, "create unique index c12 on tbl1(c1,c2)")
 
@@ -38,5 +38,4 @@ func TestCreateIndex(t *testing.T) {
 	sql.Reset()
 	query, args, err = sql.SQL()
 	a.Error(err).Nil(args).Empty(query)
-	a.Equal(sql.typ, IndexDefault)
 }
