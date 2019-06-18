@@ -165,7 +165,7 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 		return 0, errors.New("多行插入语句，无法获取 LastInsertIDContext")
 	}
 
-	sql, append := stmt.dialect.LastInsertID(stmt.table, col)
+	sql, append := stmt.dialect.LastInsertIDSQL(stmt.table, col)
 	if sql == "" {
 		rslt, err := stmt.ExecContext(ctx)
 		if err != nil {

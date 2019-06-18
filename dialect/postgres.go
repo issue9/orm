@@ -42,7 +42,7 @@ func (p *postgres) VersionSQL() string {
 	return `SHOW server_version;`
 }
 
-func (p *postgres) LastInsertID(table, col string) (sql string, append bool) {
+func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) {
 	return " RETURNING {" + col + "}", true
 
 	// 在同时插入多列时， RETURNING 会返回每一列的 ID。

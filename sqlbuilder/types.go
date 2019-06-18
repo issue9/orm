@@ -88,7 +88,7 @@ type Dialect interface {
 	// 返回参数 sql 表示额外的语句，如果为空，则执行的是标准的 SQL 插入语句；
 	// append 表示在 sql 不为空的情况下，sql 与现有的插入语句的结合方式，
 	// 如果为 true 表示直接添加在插入语句之后，否则为一条新的语句。
-	LastInsertID(table, col string) (sql string, append bool)
+	LastInsertIDSQL(table, col string) (sql string, append bool)
 }
 
 func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) {

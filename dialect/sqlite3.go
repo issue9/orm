@@ -46,7 +46,7 @@ func (s *sqlite3) SQL(sql string) (string, error) {
 	return sql, nil
 }
 
-func (s *sqlite3) LastInsertID(table, col string) (sql string, append bool) {
+func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {
 	return "", false
 }
 
