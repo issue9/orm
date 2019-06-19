@@ -32,16 +32,6 @@ type base interface {
 	sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error
 }
 
-func findColumn(stmt *sqlbuilder.CreateTableStmt, name string) *sqlbuilder.Column {
-	for _, col := range stmt.Columns {
-		if col.Name == name {
-			return col
-		}
-	}
-
-	return nil
-}
-
 // mysql 系列数据库分页语法的实现。支持以下数据库：
 // MySQL, H2, HSQLDB, Postgres, SQLite3
 func mysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
