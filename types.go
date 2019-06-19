@@ -102,11 +102,6 @@ type Dialect interface {
 	// 清空表内容，重置 AI。
 	TruncateTableSQL(m *Model) []string
 
-	// 生成创建表的 SQL 语句。
-	//
-	// 创建表可能生成多条语句，比如创建表，以及相关的创建索引语句。
-	CreateTableSQL(m *Model) ([]string, error)
-
 	// 查询服务器版本号的 SQL 语句。
 	VersionSQL() string
 }

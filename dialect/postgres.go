@@ -75,32 +75,32 @@ func (p *postgres) SQL(sql string) (string, error) {
 	return string(ret), nil
 }
 
-func (p *postgres) CreateTableSQL(model *orm.Model) ([]string, error) {
-	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
-		WriteString("{#").
-		WriteString(model.Name).
-		WriteString("}(")
+func (p *postgres) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
+	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
+	buf.WriteByte(' ')
 
-	// 自增和普通列输出是相同的，自增列仅是类型名不相同
-	for _, col := range model.Cols {
-		if err := createColSQL(p, w, col); err != nil {
-			return nil, err
-		}
-		w.WriteByte(',')
+	if isAI {
+
+		buf.WriteString(" SERIAL ")
+	} else {
+		buf.WriteString(col.Type).WriteByte(' ')
 	}
 
-	if len(model.PK) > 0 {
-		createPKSQL(w, model.PK, model.Name+pkName) // postgres 主键名需要全局唯一
-		w.WriteByte(',')
+	if !col.Nullable {
+		buf.WriteString(" NOT NULL")
 	}
-	createConstraints(w, model)
-	w.TruncateLast(1).WriteByte(')')
 
-	indexs, err := createIndexSQL(model)
-	if err != nil {
-		return nil, err
+	if col.HasDefault {
+		buf.WriteString(" DEFAULT '").
+			WriteString(col.Default).
+			WriteByte('\'')
 	}
-	return append([]string{w.String()}, indexs...), nil
+
+	return nil
+}
+
+func (p *postgres) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
+	return nil
 }
 
 func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {

@@ -15,8 +15,10 @@ type Constraint int8
 // 约束类型
 const (
 	ConstraintUnique Constraint = iota // 唯一约束
-	ConstraintFk                       // 外键约束
+	ConstraintFK                       // 外键约束
 	ConstraintCheck                    // Check 约束
+	ConstraintPK                       // 主键约束
+	ConstraintAI                       // 自增
 )
 
 // SQLer 定义 SQL 语句的基本接口
@@ -80,6 +82,15 @@ type Dialect interface {
 	// append 表示在 sql 不为空的情况下，sql 与现有的插入语句的结合方式，
 	// 如果为 true 表示直接添加在插入语句之后，否则为一条新的语句。
 	LastInsertIDSQL(table, col string) (sql string, append bool)
+
+	// 创建表时根据附加信息返回的部分 SQL 语句
+	CreateTableOptionsSQL(sql *SQLBuilder, meta map[string][]string) error
+
+	// 生成 AI 列的语句
+	CreateColumnSQL(sql *SQLBuilder, col *Column, isAI bool) error
+
+	// 创建 AI 约束
+	//CreateConstraintAI(name,col string)(string,error)
 }
 
 func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) {
@@ -110,10 +121,14 @@ func (t Constraint) String() string {
 	switch t {
 	case ConstraintUnique:
 		return "UNIQUE"
-	case ConstraintFk:
+	case ConstraintFK:
 		return "FOREIGN KEY"
+	case ConstraintPK:
+		return "PRIMARY KEY"
 	case ConstraintCheck:
 		return "CHECK"
+	case ConstraintAI:
+		return "AUTO INCREMENT"
 	default:
 		return "<unknown>"
 	}

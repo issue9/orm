@@ -54,54 +54,32 @@ func (s *sqlite3) VersionSQL() string {
 	return `select sqlite_version();`
 }
 
-func (s *sqlite3) CreateTableSQL(model *orm.Model) ([]string, error) {
-	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
-		WriteString("{#").
-		WriteString(model.Name).
-		WriteString("}(")
+func (s *sqlite3) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
+	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
+	buf.WriteByte(' ')
 
-	// 自增列
-	if model.AI != nil {
-		if err := createColSQL(s, w, model.AI); err != nil {
-			return nil, err
-		}
-		w.WriteString(" PRIMARY KEY AUTOINCREMENT,")
+	buf.WriteString(col.Type).WriteByte(' ')
+
+	if !col.Nullable {
+		buf.WriteString(" NOT NULL")
 	}
 
-	// 普通列
-	for _, col := range model.Cols {
-		if col.IsAI() { // 忽略 AI 列
-			continue
-		}
-
-		if err := createColSQL(s, w, col); err != nil {
-			return nil, err
-		}
-		w.WriteByte(',')
+	if isAI {
+		buf.WriteString(" AUTOINCREMENT ")
 	}
 
-	// 约束
-	if len(model.PK) > 0 && !model.PK[0].IsAI() { // PK，若有自增，则已经在上面指定
-		createPKSQL(w, model.PK, pkName)
-		w.WriteByte(',')
-	}
-	createConstraints(w, model)
-	w.TruncateLast(1).WriteByte(')')
-
-	if err := s.createTableOptions(w, model); err != nil {
-		return nil, err
+	if col.HasDefault {
+		buf.WriteString(" DEFAULT '").
+			WriteString(col.Default).
+			WriteByte('\'')
 	}
 
-	indexs, err := createIndexSQL(model)
-	if err != nil {
-		return nil, err
-	}
-	return append([]string{w.String()}, indexs...), nil
+	return nil
 }
 
-func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
-	if len(model.Meta[sqlite3RowID]) == 1 {
-		val, err := strconv.ParseBool(model.Meta[sqlite3RowID][0])
+func (s *sqlite3) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
+	if len(options[sqlite3RowID]) == 1 {
+		val, err := strconv.ParseBool(options[sqlite3RowID][0])
 		if err != nil {
 			return err
 		}
@@ -109,7 +87,7 @@ func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model)
 		if !val {
 			w.WriteString("WITHOUT ROWID")
 		}
-	} else if len(model.Meta[sqlite3RowID]) > 0 {
+	} else if len(options[sqlite3RowID]) > 0 {
 		return errors.New("rowid 只接受一个参数")
 	}
 

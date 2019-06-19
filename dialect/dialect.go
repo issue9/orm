@@ -32,139 +32,14 @@ type base interface {
 	sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error
 }
 
-// 用于产生在 createTable 中使用的普通列信息表达式，不包含 autoincrement 和 primary key 的关键字。
-func createColSQL(b base, buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
-	// col_name VARCHAR(100) NOT NULL DEFAULT 'abc'
-	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
-	buf.WriteByte(' ')
-
-	// 写入字段类型
-	if err := b.sqlType(buf, col); err != nil {
-		return err
-	}
-
-	if !col.Nullable {
-		buf.WriteString(" NOT NULL")
-	}
-
-	if col.HasDefault {
-		buf.WriteString(" DEFAULT '").
-			WriteString(col.Default).
-			WriteByte('\'')
+func findColumn(stmt *sqlbuilder.CreateTableStmt, name string) *sqlbuilder.Column {
+	for _, col := range stmt.Columns {
+		if col.Name == name {
+			return col
+		}
 	}
 
 	return nil
-}
-
-// create table 语句中 pk 约束的语句
-func createPKSQL(buf *sqlbuilder.SQLBuilder, cols []*orm.Column, pkName string) {
-	// CONSTRAINT pk_name PRIMARY KEY (id,lastName)
-	buf.WriteString(" CONSTRAINT ").
-		WriteString(pkName).
-		WriteString(" PRIMARY KEY(")
-
-	for _, col := range cols {
-		buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
-		buf.WriteByte(',')
-	}
-	buf.TruncateLast(1) // 去掉最后一个逗号
-	buf.WriteByte(')')
-}
-
-// create table 语句中的 unique 约束部分的语句。
-func createUniqueSQL(buf *sqlbuilder.SQLBuilder, cols []*orm.Column, indexName string) {
-	// CONSTRAINT unique_name UNIQUE (id,lastName)
-	buf.WriteString(" CONSTRAINT ").
-		WriteString(indexName).
-		WriteString(" UNIQUE(")
-	for _, col := range cols {
-		buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
-		buf.WriteByte(',')
-	}
-	buf.TruncateLast(1) // 去掉最后一个逗号
-
-	buf.WriteByte(')')
-}
-
-// create table 语句中 fk 的约束部分的语句
-func createFKSQL(buf *sqlbuilder.SQLBuilder, fk *orm.ForeignKey, fkName string) {
-	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
-	buf.WriteString(" CONSTRAINT ").WriteString(fkName)
-
-	buf.WriteString(" FOREIGN KEY(")
-	buf.WriteByte('{').WriteString(fk.Col.Name).WriteByte('}')
-
-	buf.WriteString(") REFERENCES ").
-		WriteByte('{').
-		WriteString(fk.RefTableName).
-		WriteByte('}')
-
-	buf.WriteByte('(')
-	buf.WriteByte('{').WriteString(fk.RefColName).WriteByte('}')
-	buf.WriteByte(')')
-
-	if len(fk.UpdateRule) > 0 {
-		buf.WriteString(" ON UPDATE ").WriteString(fk.UpdateRule)
-	}
-
-	if len(fk.DeleteRule) > 0 {
-		buf.WriteString(" ON DELETE ").WriteString(fk.DeleteRule)
-	}
-}
-
-// create table 语句中 check 约束部分的语句
-func createCheckSQL(buf *sqlbuilder.SQLBuilder, expr, chkName string) {
-	// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
-	buf.WriteString(" CONSTRAINT ").
-		WriteString(chkName).
-		WriteString(" CHECK(").
-		WriteString(expr).
-		WriteByte(')')
-}
-
-// 创建标准的几种约束(除 PK 约束，该约束有专门的函数 createPKSQL() 产生)：unique, foreign key, check
-func createConstraints(buf *sqlbuilder.SQLBuilder, model *orm.Model) {
-	// Unique Index
-	for name, index := range model.UniqueIndexes {
-		createUniqueSQL(buf, index, name)
-		buf.WriteByte(',')
-	}
-
-	// foreign  key
-	for name, fk := range model.FK {
-		createFKSQL(buf, fk, name)
-		buf.WriteByte(',')
-	}
-
-	// Check
-	for name, chk := range model.Check {
-		createCheckSQL(buf, chk, name)
-		buf.WriteByte(',')
-	}
-}
-
-func createIndexSQL(model *orm.Model) ([]string, error) {
-	if len(model.KeyIndexes) == 0 {
-		return nil, nil
-	}
-
-	sqls := make([]string, 0, len(model.KeyIndexes))
-	buf := sqlbuilder.CreateIndex(nil)
-	for name, cols := range model.KeyIndexes {
-		buf.Reset()
-		buf.Table("{#" + model.Name + "}").Name(name)
-		for _, col := range cols {
-			buf.Columns("{" + col.Name + "}")
-		}
-
-		sql, _, err := buf.SQL()
-		if err != nil {
-			return nil, err
-		}
-		sqls = append(sqls, sql)
-	}
-
-	return sqls, nil
 }
 
 // mysql 系列数据库分页语法的实现。支持以下数据库：

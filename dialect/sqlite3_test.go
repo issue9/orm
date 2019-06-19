@@ -12,50 +12,26 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 var _ base = &sqlite3{}
-
-func TestSqlite3_CreateTableSQL(t *testing.T) {
-	a := assert.New(t)
-	ms := model.NewModels()
-	m, err := ms.New(&user{})
-	a.NotError(err).NotNil(m)
-
-	sqls, err := Sqlite3().CreateTableSQL(m)
-	a.NotError(err)
-	a.Equal(2, len(sqls))
-	sqltest.Equal(a, sqls[0], `CREATE TABLE IF NOT EXISTS {#user} (
-		{id} INTEGER NOT NULL  PRIMARY KEY AUTOINCREMENT,
-		{name} TEXT NOT NULL
-	)`)
-
-	sqltest.Equal(a, sqls[1], `CREATE INDEX i_user_name ON {#user} (
-		{name}
-	)`)
-}
 
 func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")
 	a.NotNil(sql)
 	var s = &sqlite3{}
-	ms := model.NewModels()
-	a.NotNil(ms)
 
 	// 空的 meta
-	mod, err := ms.New(&model1{})
-	a.NotError(err).NotNil(mod)
-	s.createTableOptions(sql, mod)
+	a.NotError(s.CreateTableOptionsSQL(sql, nil))
 	a.Equal(sql.Len(), 0)
 
 	// engine
 	sql.Reset()
-	mod, err = ms.New(&model2{})
-	a.NotError(err).NotNil(mod)
-	s.createTableOptions(sql, mod)
+	a.NotError(s.CreateTableOptionsSQL(sql, map[string][]string{
+		"rowid": []string{"true"},
+	}))
 	a.True(sql.Len() > 0)
 	sqltest.Equal(a, sql.String(), "without rowid")
 }

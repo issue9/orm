@@ -57,85 +57,47 @@ func (m *mysql) VersionSQL() string {
 	return `select version();`
 }
 
-func (m *mysql) CreateTableSQL(model *orm.Model) ([]string, error) {
-	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
-		WriteString("{#").
-		WriteString(model.Name).
-		WriteString("}(")
+func (m *mysql) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
+	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
+	buf.WriteByte(' ')
 
-	// 自增列
-	if model.AI != nil {
-		if err := createColSQL(m, w, model.AI); err != nil {
-			return nil, err
-		}
-		w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
+	buf.WriteString(col.Type).WriteByte(' ')
+
+	if !col.Nullable {
+		buf.WriteString(" NOT NULL")
 	}
 
-	// 普通列
-	for _, col := range model.Cols {
-		if col.IsAI() { // 忽略 AI 列
-			continue
-		}
-
-		if err := createColSQL(m, w, col); err != nil {
-			return nil, err
-		}
-		w.WriteByte(',')
+	if isAI {
+		buf.WriteString(" AUTO_INCREMENT ")
 	}
 
-	// 约束
-	if len(model.PK) > 0 && !model.PK[0].IsAI() { // PK，若有自增，则已经在上面指定
-		createPKSQL(w, model.PK, pkName)
-		w.WriteByte(',')
-	}
-	createConstraints(w, model)
-
-	// index
-	m.createIndexSQL(w, model)
-
-	w.TruncateLast(1).WriteByte(')')
-
-	if err := m.createTableOptions(w, model); err != nil {
-		return nil, err
-	}
-
-	return []string{w.String()}, nil
-}
-
-func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
-	if len(model.Meta[mysqlEngine]) == 1 {
-		w.WriteString(" ENGINE=")
-		w.WriteString(model.Meta[mysqlEngine][0])
-		w.WriteByte(' ')
-	} else if len(model.Meta[mysqlEngine]) > 0 {
-		return errors.New("无效的属性值：" + mysqlCharset)
-	}
-
-	if len(model.Meta[mysqlCharset]) == 1 {
-		w.WriteString(" CHARACTER SET=")
-		w.WriteString(model.Meta[mysqlCharset][0])
-		w.WriteByte(' ')
-	} else if len(model.Meta[mysqlCharset]) > 0 {
-		return errors.New("无效的属性值：" + mysqlCharset)
+	if col.HasDefault {
+		buf.WriteString(" DEFAULT '").
+			WriteString(col.Default).
+			WriteByte('\'')
 	}
 
 	return nil
 }
 
-func (m *mysql) createIndexSQL(w *sqlbuilder.SQLBuilder, model *orm.Model) {
-	for indexName, cols := range model.KeyIndexes {
-		// INDEX index_name (id,lastName)
-		w.WriteString(" INDEX ").
-			WriteString(indexName).
-			WriteByte('(')
-		for _, col := range cols {
-			w.WriteByte('{').WriteString(col.Name).WriteByte('}')
-			w.WriteByte(',')
-		}
-		w.TruncateLast(1) // 去掉最后一个逗号
-
-		w.WriteString("),")
+func (m *mysql) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
+	if len(options[mysqlEngine]) == 1 {
+		w.WriteString(" ENGINE=")
+		w.WriteString(options[mysqlEngine][0])
+		w.WriteByte(' ')
+	} else if len(options[mysqlEngine]) > 0 {
+		return errors.New("无效的属性值：" + mysqlCharset)
 	}
+
+	if len(options[mysqlCharset]) == 1 {
+		w.WriteString(" CHARACTER SET=")
+		w.WriteString(options[mysqlCharset][0])
+		w.WriteByte(' ')
+	} else if len(options[mysqlCharset]) > 0 {
+		return errors.New("无效的属性值：" + mysqlCharset)
+	}
+
+	return nil
 }
 
 func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {

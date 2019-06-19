@@ -12,31 +12,10 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 var _ base = &postgres{}
-
-func TestPostgres_CreateTableSQL(t *testing.T) {
-	a := assert.New(t)
-	ms := model.NewModels()
-	m, err := ms.New(&user{})
-	a.NotError(err).NotNil(m)
-
-	sqls, err := Postgres().CreateTableSQL(m)
-	a.NotError(err)
-	a.Equal(2, len(sqls))
-	sqltest.Equal(a, sqls[0], `CREATE TABLE IF NOT EXISTS {#user} (
-		{id} BIGSERIAL NOT NULL,
-		{name} varchar(20) NOT NULL,
-		CONSTRAINT userpk PRIMARY KEY({id})
-	)`)
-
-	sqltest.Equal(a, sqls[1], `CREATE INDEX i_user_name ON {#user} (
-		{name}
-	)`)
-}
 
 func TestPostgres_sqlType(t *testing.T) {
 	p := &postgres{}

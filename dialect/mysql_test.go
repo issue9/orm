@@ -12,46 +12,27 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 var _ base = &mysql{}
-
-func TestMysql_CreateTableSQL(t *testing.T) {
-	a := assert.New(t)
-	ms := model.NewModels()
-	m, err := ms.New(&user{})
-	a.NotError(err).NotNil(m)
-
-	sqls, err := Mysql().CreateTableSQL(m)
-	a.NotError(err)
-	sqltest.Equal(a, sqls[0], `CREATE TABLE IF NOT EXISTS {#user} (
-		{id} BIGINT NOT NULL  PRIMARY KEY AUTO_INCREMENT,
-		{name} VARCHAR(20) NOT NULL,
-		INDEX i_user_name({name})
-	)`)
-}
 
 func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")
 	a.NotNil(sql)
 	var m = &mysql{}
-	ms := model.NewModels()
-	a.NotNil(ms)
 
 	// 空的 meta
-	mod, err := ms.New(&model1{})
-	a.NotError(err).NotNil(mod)
-	m.createTableOptions(sql, mod)
+	a.NotError(m.CreateTableOptionsSQL(sql, nil))
 	a.Equal(sql.Len(), 0)
 
 	// engine
 	sql.Reset()
-	mod, err = ms.New(&model2{})
-	a.NotError(err).NotNil(mod)
-	m.createTableOptions(sql, mod)
+	a.NotError(m.CreateTableOptionsSQL(sql, map[string][]string{
+		"mysql_engine":    []string{"innodb"},
+		"mysql_character": []string{"utf8"},
+	}))
 	a.True(sql.Len() > 0)
 	sqltest.Equal(a, sql.String(), "engine=innodb character set=utf8")
 }
