@@ -15,8 +15,6 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-var _ base = &sqlite3{}
-
 func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")
@@ -30,43 +28,54 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 	// engine
 	sql.Reset()
 	a.NotError(s.CreateTableOptionsSQL(sql, map[string][]string{
-		"rowid": []string{"true"},
+		"sqlite3_rowid": []string{"false"},
 	}))
 	a.True(sql.Len() > 0)
 	sqltest.Equal(a, sql.String(), "without rowid")
 }
 
-func TestSqlite3_sqlType(t *testing.T) {
+func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
 	var s = &sqlite3{}
 
 	buf := sqlbuilder.New("")
 	col := &orm.Column{}
-	a.Error(s.sqlType(buf, col))
+
+	// col == nil
+	typ, err := s.SQLType(nil)
+	a.ErrorType(err, errColIsNil).Empty(typ)
+
+	// col.GoType == nil
+	typ, err = s.SQLType(col)
+	a.ErrorType(err, errGoTypeIsNil).Empty(typ)
 
 	col.GoType = reflect.TypeOf(1)
-	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "INTEGER")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "INTEGER")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "INTEGER")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "INTEGER")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "TEXT")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "TEXT")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "REAL")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "REAL")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "INTEGER")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "INTEGER")
 }

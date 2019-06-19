@@ -83,6 +83,9 @@ type Dialect interface {
 	// 名称
 	Name() string
 
+	// 将列转换成数据支持的类型
+	SQLType(col *Column) (string, error)
+
 	// 返回符合当前数据库规范的引号对。
 	QuoteTuple() (openQuote, closeQuote byte)
 

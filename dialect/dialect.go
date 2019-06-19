@@ -7,14 +7,11 @@ package dialect
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"reflect"
 	"time"
-
-	"github.com/issue9/orm/v2"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
-
-const pkName = "pk" // 默认的主键约束名
 
 var (
 	nullString  = reflect.TypeOf(sql.NullString{})
@@ -25,11 +22,14 @@ var (
 	timeType    = reflect.TypeOf(time.Time{})
 )
 
-type base interface {
-	orm.Dialect
+var (
+	errColIsNil    = errors.New("参数 col 参数是个空值")
+	errGoTypeIsNil = errors.New("无效的 col.GoType 值")
+	errMissLength  = errors.New("缺少长度")
+)
 
-	// 将 col 转换成 sql 类型，并写入 buf 中。
-	sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error
+func errUncovert(dest string) error {
+	return fmt.Errorf("不支持的类型: %s", dest)
 }
 
 // mysql 系列数据库分页语法的实现。支持以下数据库：

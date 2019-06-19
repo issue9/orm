@@ -12,49 +12,52 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-var _ base = &postgres{}
-
-func TestPostgres_sqlType(t *testing.T) {
+func TestPostgres_SQLType(t *testing.T) {
 	p := &postgres{}
 
 	a := assert.New(t)
-	buf := sqlbuilder.New("")
 	col := &orm.Column{}
-	a.Error(p.sqlType(buf, col))
+
+	// col == nil
+	typ, err := p.SQLType(nil)
+	a.ErrorType(err, errColIsNil).Empty(typ)
+
+	// col.GoType == nil
+	typ, err = p.SQLType(col)
+	a.ErrorType(err, errGoTypeIsNil).Empty(typ)
 
 	col.GoType = reflect.TypeOf(1)
-	buf.Reset()
-	a.NotError(p.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "BIGINT")
+	typ, err = p.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "BIGINT")
 
 	col.Len1 = 5
 	col.Len2 = 6
-	buf.Reset()
-	a.NotError(p.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "BIGINT")
+	typ, err = p.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "BIGINT")
 
 	col.GoType = reflect.TypeOf("abc")
-	buf.Reset()
-	a.NotError(p.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "VARCHAR(5)")
+	typ, err = p.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "VARCHAR(5)")
 
 	col.GoType = reflect.TypeOf(1.2)
-	buf.Reset()
-	a.NotError(p.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "NUMERIC(5,6)")
+	typ, err = p.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "NUMERIC(5,6)")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
-	buf.Reset()
-	a.NotError(p.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "BIGINT")
+	typ, err = p.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "BIGINT")
 
 	col.GoType = reflect.TypeOf(sql.RawBytes("123"))
-	buf.Reset()
-	a.NotError(p.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "BYTEA")
+	typ, err = p.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "BYTEA")
 }
 
 func TestPostgres_SQL(t *testing.T) {

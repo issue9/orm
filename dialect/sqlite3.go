@@ -120,45 +120,45 @@ func (s *sqlite3) TransactionalDDL() bool {
 }
 
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
+func (s *sqlite3) SQLType(col *orm.Column) (string, error) {
 	if col == nil {
-		return errors.New("sqlType:col参数是个空值")
+		return "", errColIsNil
 	}
 
 	if col.GoType == nil {
-		return errors.New("sqlType:无效的col.GoType值")
+		return "", errGoTypeIsNil
 	}
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		buf.WriteString("INTEGER")
+		return "INTEGER", nil
 	case reflect.String:
-		buf.WriteString("TEXT")
+		return "TEXT", nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		buf.WriteString("INTEGER")
+		return "INTEGER", nil
 	case reflect.Float32, reflect.Float64:
-		buf.WriteString("REAL")
+		return "REAL", nil
 	case reflect.Array, reflect.Slice:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			buf.WriteString("BLOB")
+			return "BLOB", nil
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case rawBytes:
-			buf.WriteString("BLOB")
+			return "BLOB", nil
 		case nullBool:
-			buf.WriteString("INTEGER")
+			return "INTEGER", nil
 		case nullFloat64:
-			buf.WriteString("REAL")
+			return "REAL", nil
 		case nullInt64:
-			buf.WriteString("INTEGER")
+			return "INTEGER", nil
 		case nullString:
-			buf.WriteString("TEXT")
+			return "TEXT", nil
 		case timeType:
-			buf.WriteString("DATETIME")
+			return "DATETIME", nil
 		}
 	}
 
-	return nil
+	return "", errUncovert(col.GoType.Name())
 }

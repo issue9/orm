@@ -116,11 +116,16 @@ func create(e Engine, v interface{}) error {
 	if err != nil {
 		return err
 	}
+	d := e.Dialect()
 
 	sb := sqlbuilder.CreateTable(e, e.Dialect())
 	sb.Table(m.Name)
 	for _, col := range m.Cols {
-		sb.Column(col.Name, "TODO", col.Nullable, col.HasDefault, col.Default, col.Len1, col.Len2)
+		typ, err := d.SQLType(col)
+		if err != nil {
+			return err
+		}
+		sb.Column(col.Name, typ, col.Nullable, col.HasDefault, col.Default, col.Len1, col.Len2)
 	}
 
 	for name, index := range m.KeyIndexes {

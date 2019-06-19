@@ -125,82 +125,72 @@ func (p *postgres) TransactionalDDL() bool {
 	return true
 }
 
-// implement base.sqlType
-// 将col转换成sql类型，并写入buf中。
-func (p *postgres) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
+func (p *postgres) SQLType(col *orm.Column) (string, error) {
 	if col == nil {
-		return errors.New("sqlType:col 参数是个空值")
+		return "", errColIsNil
 	}
 
 	if col.GoType == nil {
-		return errors.New("sqlType:无效的 col.GoType 值")
+		return "", errGoTypeIsNil
 	}
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		buf.WriteString("BOOLEAN")
+		return "BOOLEAN", nil
 	case reflect.Int8, reflect.Int16, reflect.Uint8, reflect.Uint16:
 		if col.IsAI() {
-			buf.WriteString("SERIAL")
-		} else {
-			buf.WriteString("SMALLINT")
+			return "SERIAL", nil
 		}
+		return "SMALLINT", nil
 	case reflect.Int32, reflect.Uint32:
 		if col.IsAI() {
-			buf.WriteString("SERIAL")
-		} else {
-			buf.WriteString("INT")
+			return "SERIAL", nil
 		}
+		return "INT", nil
 	case reflect.Int64, reflect.Int, reflect.Uint64, reflect.Uint:
 		if col.IsAI() {
-			buf.WriteString("BIGSERIAL")
-		} else {
-			buf.WriteString("BIGINT")
+			return "BIGSERIAL", nil
 		}
+		return "BIGINT", nil
 	case reflect.Float32, reflect.Float64:
 		if col.Len1 == 0 || col.Len2 == 0 {
-			return errors.New("请指定长度")
+			return "", errMissLength
 		}
-		buf.WriteString(fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2))
+		return fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2), nil
 	case reflect.String:
 		if col.Len1 == -1 || col.Len1 > 65533 {
-			buf.WriteString("TEXT")
-		} else {
-			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
+			return ("TEXT"), nil
 		}
+		return (fmt.Sprintf("VARCHAR(%d)", col.Len1)), nil
 	case reflect.Slice, reflect.Array:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			buf.WriteString("BYTEA")
+			return "BYTEA", nil
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case rawBytes:
-			buf.WriteString("BYTEA")
+			return "BYTEA", nil
 		case nullBool:
-			buf.WriteString("BOOLEAN")
+			return "BOOLEAN", nil
 		case nullFloat64:
 			if col.Len1 == 0 || col.Len2 == 0 {
-				return errors.New("请指定长度")
+				return "", errMissLength
 			}
-			buf.WriteString(fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2))
+			return fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2), nil
 		case nullInt64:
 			if col.IsAI() {
-				buf.WriteString("BIGSERIAL")
-			} else {
-				buf.WriteString("BIGINT")
+				return "BIGSERIAL", nil
 			}
+			return "BIGINT", nil
 		case nullString:
 			if col.Len1 == -1 || col.Len1 > 65533 {
-				buf.WriteString("TEXT")
-			} else {
-				buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
+				return "TEXT", nil
 			}
+			return fmt.Sprintf("VARCHAR(%d)", col.Len1), nil
 		case timeType:
-			buf.WriteString(fmt.Sprintf("TIMESTAMP(%d)", col.Len1))
+			return fmt.Sprintf("TIMESTAMP(%d)", col.Len1), nil
 		}
-	default:
-		return fmt.Errorf("sqlType:不支持的类型:[%v]", col.GoType.Name())
 	}
 
-	return nil
+	return "", errUncovert(col.GoType.Name())
 }
