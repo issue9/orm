@@ -19,17 +19,15 @@ type CreateTableStmt struct {
 	columns []*Column
 	indexes []*indexColumn
 
+	// 约束
+	constraints []*constraintColumn
+	foreignKeys []*foreignKey // 外键约束
+	ai          *constraintColumn
+
 	// 一些附加的信息
 	//
 	// 比如可以指定创建表时的编码等，各个数据库各不相同。
 	options map[string][]string
-
-	// 约束
-	foreignKeys []*foreignKey       // 外键约束
-	uniques     map[string][]string // 唯一约束
-	checks      map[string]string   // check 约束
-	pks         map[string][]string // 主键
-	ai          *autoIncrement      // 自增
 }
 
 // Column 列结构
@@ -48,14 +46,15 @@ type foreignKey struct {
 	UpdateRule, DeleteRule   string
 }
 
-type autoIncrement struct {
-	Name   string // 约束名
-	Column string // 对应的列名
-}
-
 type indexColumn struct {
 	Name    string
 	Type    Index
+	Columns []string
+}
+
+type constraintColumn struct {
+	Name    string
+	Type    Constraint
 	Columns []string
 }
 
@@ -78,10 +77,6 @@ func (stmt *CreateTableStmt) Reset() {
 	stmt.indexes = stmt.indexes[:0]
 	stmt.options = map[string][]string{}
 	stmt.foreignKeys = stmt.foreignKeys[:0]
-	stmt.uniques = map[string][]string{}
-	stmt.checks = map[string]string{}
-	stmt.pks = map[string][]string{}
-	stmt.ai = nil
 }
 
 // Table 指定表名
@@ -119,13 +114,14 @@ func (stmt *CreateTableStmt) Column(name, typ string, nullable, hasDefault bool,
 }
 
 // AutoIncrement 指定自增列
-// col 自增对应的列；
 // name 自增约束的名称；
+// col 自增对应的列；
 // pk 是否同时设置为主键。
-func (stmt *CreateTableStmt) AutoIncrement(col, name string, pk bool) *CreateTableStmt {
-	stmt.ai = &autoIncrement{
-		Name:   name,
-		Column: col,
+func (stmt *CreateTableStmt) AutoIncrement(name, col string, pk bool) *CreateTableStmt {
+	stmt.ai = &constraintColumn{
+		Name:    name,
+		Type:    ConstraintAI,
+		Columns: []string{col},
 	}
 
 	if pk {
@@ -137,7 +133,11 @@ func (stmt *CreateTableStmt) AutoIncrement(col, name string, pk bool) *CreateTab
 
 // PK 指定主键约束
 func (stmt *CreateTableStmt) PK(name string, col ...string) *CreateTableStmt {
-	stmt.pks[name] = col
+	stmt.constraints = append(stmt.constraints, &constraintColumn{
+		Name:    name,
+		Type:    ConstraintPK,
+		Columns: col,
+	})
 	return stmt
 }
 
@@ -154,14 +154,22 @@ func (stmt *CreateTableStmt) Index(name string, typ Index, col ...string) *Creat
 
 // Unique 添加唯一约束
 func (stmt *CreateTableStmt) Unique(name string, col ...string) *CreateTableStmt {
-	stmt.uniques[name] = col
+	stmt.constraints = append(stmt.constraints, &constraintColumn{
+		Name:    name,
+		Type:    ConstraintUnique,
+		Columns: col,
+	})
 
 	return stmt
 }
 
 // Check check 约束
 func (stmt *CreateTableStmt) Check(name string, expr string) *CreateTableStmt {
-	stmt.checks[name] = expr
+	stmt.constraints = append(stmt.constraints, &constraintColumn{
+		Name:    name,
+		Type:    ConstraintCheck,
+		Columns: []string{expr},
+	})
 
 	return stmt
 }
@@ -188,14 +196,16 @@ func (stmt *CreateTableStmt) SQL() ([]string, error) {
 
 	// 普通列
 	for _, col := range stmt.columns {
-		err := stmt.dialect.CreateColumnSQL(w, col, col.Name == stmt.ai.Column)
+		err := stmt.dialect.CreateColumnSQL(w, col, col.Name == stmt.ai.Columns[0])
 		if err != nil {
 			return nil, err
 		}
 		w.WriteByte(',')
 	}
 
-	stmt.createConstraints(w)
+	if err := stmt.createConstraints(w); err != nil {
+		return nil, err
+	}
 
 	w.TruncateLast(1).WriteByte(')')
 
@@ -238,13 +248,18 @@ func (stmt *CreateTableStmt) ExecContext(ctx context.Context) (sql.Result, error
 }
 
 // 创建标准的几种约束
-func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) {
-	for name, cols := range stmt.pks {
-		createPKSQL(buf, name, cols...)
-	}
-	// unique
-	for name, index := range stmt.uniques {
-		createUniqueSQL(buf, index, name)
+func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
+	for _, c := range stmt.constraints {
+		switch c.Type {
+		case ConstraintCheck:
+			createCheckSQL(buf, c.Name, c.Columns[0])
+		case ConstraintPK:
+			createPKSQL(buf, c.Name, c.Columns...)
+		case ConstraintUnique:
+			createUniqueSQL(buf, c.Name, c.Columns...)
+		default:
+			return ErrUnknownConstraint
+		}
 		buf.WriteByte(',')
 	}
 
@@ -254,11 +269,7 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) {
 		buf.WriteByte(',')
 	}
 
-	// Check
-	for name, expr := range stmt.checks {
-		createCheckSQL(buf, expr, name)
-		buf.WriteByte(',')
-	}
+	return nil
 }
 
 func createIndexSQL(model *CreateTableStmt) ([]string, error) {
@@ -286,30 +297,6 @@ func createIndexSQL(model *CreateTableStmt) ([]string, error) {
 	return sqls, nil
 }
 
-// TODO 检测约束名是否唯一，检测约束中的列是否都存在
-
-// 用于产生在 createTable 中使用的普通列信息表达式，不包含 autoincrement 和 primary key 的关键字。
-func createColSQL(buf *SQLBuilder, col *Column) error {
-	// col_name VARCHAR(100) NOT NULL DEFAULT 'abc'
-	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
-	buf.WriteByte(' ')
-
-	// 写入字段类型
-	buf.WriteString(col.Type)
-
-	if !col.Nullable {
-		buf.WriteString(" NOT NULL")
-	}
-
-	if col.HasDefault {
-		buf.WriteString(" DEFAULT '").
-			WriteString(col.Default).
-			WriteByte('\'')
-	}
-
-	return nil
-}
-
 // create table 语句中 pk 约束的语句
 func createPKSQL(buf *SQLBuilder, pkName string, cols ...string) {
 	// CONSTRAINT pk_name PRIMARY KEY (id,lastName)
@@ -326,7 +313,7 @@ func createPKSQL(buf *SQLBuilder, pkName string, cols ...string) {
 }
 
 // create table 语句中的 unique 约束部分的语句。
-func createUniqueSQL(buf *SQLBuilder, cols []string, indexName string) {
+func createUniqueSQL(buf *SQLBuilder, indexName string, cols ...string) {
 	// CONSTRAINT unique_name UNIQUE (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(indexName).
@@ -369,10 +356,10 @@ func createFKSQL(buf *SQLBuilder, fk *foreignKey) {
 }
 
 // create table 语句中 check 约束部分的语句
-func createCheckSQL(buf *SQLBuilder, expr, chkName string) {
+func createCheckSQL(buf *SQLBuilder, name, expr string) {
 	// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 	buf.WriteString(" CONSTRAINT ").
-		WriteString(chkName).
+		WriteString(name).
 		WriteString(" CHECK(").
 		WriteString(expr).
 		WriteByte(')')
