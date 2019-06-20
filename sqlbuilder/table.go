@@ -22,7 +22,7 @@ type CreateTableStmt struct {
 	// 约束
 	constraints []*constraintColumn
 	foreignKeys []*foreignKey // 外键约束
-	ai          *constraintColumn
+	ai, pk      *constraintColumn
 
 	// 一些附加的信息
 	//
@@ -77,6 +77,9 @@ func (stmt *CreateTableStmt) Reset() {
 	stmt.indexes = stmt.indexes[:0]
 	stmt.options = map[string][]string{}
 	stmt.foreignKeys = stmt.foreignKeys[:0]
+	stmt.constraints = stmt.constraints[:0]
+	stmt.pk = nil
+	stmt.ai = nil
 }
 
 // Table 指定表名
@@ -132,12 +135,19 @@ func (stmt *CreateTableStmt) AutoIncrement(name, col string, pk bool) *CreateTab
 }
 
 // PK 指定主键约束
+//
+// 如果多次指定主键信息，则会 panic
 func (stmt *CreateTableStmt) PK(name string, col ...string) *CreateTableStmt {
-	stmt.constraints = append(stmt.constraints, &constraintColumn{
+	if stmt.pk != nil {
+		panic("主键信息已经存在")
+	}
+
+	stmt.pk = &constraintColumn{
 		Name:    name,
 		Type:    ConstraintPK,
 		Columns: col,
-	})
+	}
+
 	return stmt
 }
 
@@ -196,7 +206,8 @@ func (stmt *CreateTableStmt) SQL() ([]string, error) {
 
 	// 普通列
 	for _, col := range stmt.columns {
-		err := stmt.dialect.CreateColumnSQL(w, col, col.Name == stmt.ai.Columns[0])
+		isAI := stmt.ai != nil && stmt.ai.Columns[0] == col.Name
+		err := stmt.dialect.CreateColumnSQL(w, col, isAI)
 		if err != nil {
 			return nil, err
 		}
@@ -253,8 +264,6 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 		switch c.Type {
 		case ConstraintCheck:
 			createCheckSQL(buf, c.Name, c.Columns[0])
-		case ConstraintPK:
-			createPKSQL(buf, c.Name, c.Columns...)
 		case ConstraintUnique:
 			createUniqueSQL(buf, c.Name, c.Columns...)
 		default:
@@ -267,6 +276,11 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 	for _, fk := range stmt.foreignKeys {
 		createFKSQL(buf, fk)
 		buf.WriteByte(',')
+	}
+
+	// primary key
+	if stmt.pk != nil {
+		createPKSQL(buf, stmt.pk.Name, stmt.pk.Columns...)
 	}
 
 	return nil
@@ -298,10 +312,10 @@ func createIndexSQL(model *CreateTableStmt) ([]string, error) {
 }
 
 // create table 语句中 pk 约束的语句
-func createPKSQL(buf *SQLBuilder, pkName string, cols ...string) {
+func createPKSQL(buf *SQLBuilder, name string, cols ...string) {
 	// CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
-		WriteString(pkName).
+		WriteString(name).
 		WriteString(" PRIMARY KEY(")
 
 	for _, col := range cols {
