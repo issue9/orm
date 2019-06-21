@@ -216,6 +216,30 @@ func (stmt *SelectStmt) Or(cond string, args ...interface{}) *SelectStmt {
 	return stmt
 }
 
+// AndIsNull 指定 WHERE ... AND col IS NULL
+func (stmt *SelectStmt) AndIsNull(col string) *SelectStmt {
+	stmt.where.And(col + " IS NULL")
+	return stmt
+}
+
+// OrIsNull 指定 WHERE ... OR col IS NULL
+func (stmt *SelectStmt) OrIsNull(col string) *SelectStmt {
+	stmt.where.Or(col + " IS NULL")
+	return stmt
+}
+
+// AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
+func (stmt *SelectStmt) AndIsNotNull(col string) *SelectStmt {
+	stmt.where.And(col + " IS NOT NULL")
+	return stmt
+}
+
+// OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
+func (stmt *SelectStmt) OrIsNotNull(col string) *SelectStmt {
+	stmt.where.Or(col + " IS NOT NULL")
+	return stmt
+}
+
 // Join 添加一条 Join 语句
 func (stmt *SelectStmt) Join(typ, table, on string) *SelectStmt {
 	if stmt.joins == nil {
@@ -323,7 +347,7 @@ func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (int, error) 
 	return fetch.Object(strict, rows, objs)
 }
 
-// QueryFloat 查询指定列的第一行数据，并将其转换成 float64
+// QueryString 查询指定列的第一行数据，并将其转换成 string
 func (stmt *SelectStmt) QueryString(colName string) (string, error) {
 	rows, err := stmt.Query()
 	if err != nil {
