@@ -6,12 +6,13 @@ package sqlbuilder_test
 
 import (
 	"database/sql"
+	"github.com/issue9/orm/internal/sqltest"
+
 	"testing"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/dialect"
-	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -33,6 +34,10 @@ func TestSelect_Query(t *testing.T) {
 	id, err := sql.QueryInt("id")
 	a.NotError(err).
 		Equal(id, 4)
+
+	name, err := sql.QueryString("name")
+	a.NotError(err).
+		Equal(name, "4")
 
 	obj := &user{}
 	size, err := sql.QueryObject(true, obj)
