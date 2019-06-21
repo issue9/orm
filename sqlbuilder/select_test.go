@@ -6,7 +6,7 @@ package sqlbuilder_test
 
 import (
 	"database/sql"
-	"github.com/issue9/orm/internal/sqltest"
+	"github.com/issue9/orm/v2/internal/sqltest"
 
 	"testing"
 
