@@ -51,7 +51,7 @@ func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	}
 
 	if !getKV(m.PK) { // 没有主键，则尝试唯一约束
-		for _, cols := range m.UniqueIndexes {
+		for _, cols := range m.Uniques {
 			if getKV(cols) {
 				break
 			}
@@ -74,7 +74,7 @@ func countWhere(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	vals := make([]interface{}, 0, 3)
 	keys := make([]string, 0, 3)
 
-	for _, col := range m.Cols {
+	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 
 		if col.IsZero(field) {
@@ -99,12 +99,12 @@ func count(e Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	sql := e.SQL().Select().Count("COUNT(*) AS count").From("{#" + m.Name + "}")
-	if err = countWhere(sql, m, rval); err != nil {
+	stmt := e.SQL().Select().Count("COUNT(*) AS count").From("{#" + m.Name + "}")
+	if err = countWhere(stmt, m, rval); err != nil {
 		return 0, err
 	}
 
-	return sql.QueryInt("count")
+	return stmt.QueryInt("count")
 }
 
 // 创建表。
@@ -120,7 +120,7 @@ func create(e Engine, v interface{}) error {
 
 	sb := sqlbuilder.CreateTable(e, e.Dialect())
 	sb.Table(m.Name)
-	for _, col := range m.Cols {
+	for _, col := range m.Columns {
 		typ, err := d.SQLType(col)
 		if err != nil {
 			return err
@@ -128,7 +128,7 @@ func create(e Engine, v interface{}) error {
 		sb.Column(col.Name, typ, col.Nullable, col.HasDefault, col.Default, col.Len1, col.Len2)
 	}
 
-	for name, index := range m.KeyIndexes {
+	for name, index := range m.Indexes {
 		cols := make([]string, 0, len(index))
 		for _, col := range index {
 			cols = append(cols, col.Name)
@@ -136,9 +136,32 @@ func create(e Engine, v interface{}) error {
 		sb.Index(name, sqlbuilder.IndexDefault, cols...)
 	}
 
-	// TODO sb.Exec
+	for name, unique := range m.Uniques {
+		cols := make([]string, 0, len(unique))
+		for _, col := range unique {
+			cols = append(cols, col.Name)
+		}
+		sb.Unique(name, cols...)
+	}
 
-	return nil
+	for name, expr := range m.Checks {
+		sb.Check(name, expr)
+	}
+
+	for _, fk := range m.FK {
+		sb.ForeignKey(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+	}
+
+	cols := make([]string, 0, len(m.PK))
+	for _, col := range m.PK {
+		cols = append(cols, col.Name)
+	}
+	sb.PK(m.Name+"_pk", cols...)
+
+	sb.AutoIncrement("", m.AI.Name, false)
+
+	_, err = sb.Exec()
+	return err
 }
 
 // 删除一张表。
@@ -168,8 +191,8 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		}
 	}
 
-	sql := e.SQL().Insert().Table("{#" + m.Name + "}")
-	for _, col := range m.Cols {
+	stmt := e.SQL().Insert().Table("{#" + m.Name + "}")
+	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
 			return 0, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
@@ -180,10 +203,10 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 			continue
 		}
 
-		sql.KeyValue("{"+col.Name+"}", field.Interface())
+		stmt.KeyValue("{"+col.Name+"}", field.Interface())
 	}
 
-	return sql.LastInsertID(m.Name, m.AI.Name)
+	return stmt.LastInsertID(m.Name, m.AI.Name)
 }
 
 func insert(e Engine, v interface{}) (sql.Result, error) {
@@ -198,8 +221,8 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		}
 	}
 
-	sql := e.SQL().Insert().Table("{#" + m.Name + "}")
-	for _, col := range m.Cols {
+	stmt := e.SQL().Insert().Table("{#" + m.Name + "}")
+	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
 			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
@@ -210,10 +233,10 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 			continue
 		}
 
-		sql.KeyValue("{"+col.Name+"}", field.Interface())
+		stmt.KeyValue("{"+col.Name+"}", field.Interface())
 	}
 
-	return sql.Exec()
+	return stmt.Exec()
 }
 
 // 查找数据。
@@ -226,14 +249,14 @@ func find(e Engine, v interface{}) error {
 		return err
 	}
 
-	sql := e.SQL().Select().
+	stmt := e.SQL().Select().
 		Select("*").
 		From("{#" + m.Name + "}")
-	if err = where(sql, m, rval); err != nil {
+	if err = where(stmt, m, rval); err != nil {
 		return err
 	}
 
-	_, err = sql.QueryObject(true, v)
+	_, err = stmt.QueryObject(true, v)
 	return err
 }
 
@@ -250,15 +273,15 @@ func forUpdate(tx *Tx, v interface{}) error {
 		}
 	}
 
-	sql := tx.SQL().Select().
+	stmt := tx.SQL().Select().
 		Select("*").
 		From("{#" + m.Name + "}").
 		ForUpdate()
-	if err = where(sql, m, rval); err != nil {
+	if err = where(stmt, m, rval); err != nil {
 		return err
 	}
 
-	_, err = sql.QueryObject(true, v)
+	_, err = stmt.QueryObject(true, v)
 	return err
 }
 
@@ -279,9 +302,9 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 		}
 	}
 
-	sql := e.SQL().Update().Table("{#" + m.Name + "}")
+	stmt := e.SQL().Update().Table("{#" + m.Name + "}")
 	var occValue interface{}
-	for _, col := range m.Cols {
+	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
 			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
@@ -296,19 +319,19 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 			occValue = field.Interface()
 			continue
 		} else {
-			sql.Set("{"+col.Name+"}", field.Interface())
+			stmt.Set("{"+col.Name+"}", field.Interface())
 		}
 	}
 
 	if m.OCC != nil {
-		sql.OCC("{"+m.OCC.Name+"}", occValue)
+		stmt.OCC("{"+m.OCC.Name+"}", occValue)
 	}
 
-	if err := where(sql, m, rval); err != nil {
+	if err := where(stmt, m, rval); err != nil {
 		return nil, err
 	}
 
-	return sql.Exec()
+	return stmt.Exec()
 }
 
 func inStrSlice(key string, slice []string) bool {
@@ -327,12 +350,12 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	sql := e.SQL().Delete().Table("{#" + m.Name + "}")
-	if err = where(sql, m, rval); err != nil {
+	stmt := e.SQL().Delete().Table("{#" + m.Name + "}")
+	if err = where(stmt, m, rval); err != nil {
 		return nil, err
 	}
 
-	return sql.Exec()
+	return stmt.Exec()
 }
 
 // rval 为结构体指针组成的数据
@@ -360,7 +383,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 			firstType = irval.Type()
 			sql.Table("{#" + m.Name + "}")
 
-			for _, col := range m.Cols {
+			for _, col := range m.Columns {
 				field := irval.FieldByName(col.GoName)
 				if !field.IsValid() {
 					return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
