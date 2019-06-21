@@ -34,6 +34,10 @@ func TestSelect_Query(t *testing.T) {
 	a.NotError(err).
 		Equal(id, 4)
 
+	name, err := sql.QueryString("name")
+	a.NotError(err).
+		Equal(name, "4")
+
 	obj := &user{}
 	size, err := sql.QueryObject(true, obj)
 	a.NotError(err).Equal(1, size)
