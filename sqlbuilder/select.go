@@ -324,23 +324,33 @@ func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (int, error) 
 }
 
 // QueryFloat 查询指定列的第一行数据，并将其转换成 float64
-func (stmt *SelectStmt) QueryFloat(colName string) (float64, error) {
+func (stmt *SelectStmt) QueryString(colName string) (string, error) {
 	rows, err := stmt.Query()
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	defer rows.Close()
 
 	cols, err := fetch.ColumnString(true, colName, rows)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	if len(cols) == 0 {
-		return 0, fmt.Errorf("不存在列：%s", colName)
+		return "", fmt.Errorf("不存在列：%s", colName)
 	}
 
-	return strconv.ParseFloat(cols[0], 10)
+	return cols[0], nil
+}
+
+// QueryFloat 查询指定列的第一行数据，并将其转换成 float64
+func (stmt *SelectStmt) QueryFloat(colName string) (float64, error) {
+	v, err := stmt.QueryString(colName)
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.ParseFloat(v, 10)
 }
 
 // QueryInt 查询指定列的第一行数据，并将其转换成 int64
@@ -348,10 +358,10 @@ func (stmt *SelectStmt) QueryInt(colName string) (int64, error) {
 	// NOTE: 可能会出现浮点数的情况。比如：
 	// select avg(xx) as avg form xxx where xxx
 	// 查询 avg 的值可能是 5.000 等值。
-	v, err := stmt.QueryFloat(colName)
+	v, err := stmt.QueryString(colName)
 	if err != nil {
 		return 0, err
 	}
 
-	return int64(v), nil
+	return strconv.ParseInt(v, 10, 64)
 }
