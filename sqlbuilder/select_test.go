@@ -6,13 +6,12 @@ package sqlbuilder_test
 
 import (
 	"database/sql"
-	"github.com/issue9/orm/v2/internal/sqltest"
-
 	"testing"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/dialect"
+	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
