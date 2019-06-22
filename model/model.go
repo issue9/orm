@@ -73,7 +73,7 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 		Uniques: map[string][]*Column{},
 		Name:    rtype.Name(),
 		FK:      []*ForeignKey{},
-		Checks:   map[string]string{},
+		Checks:  map[string]string{},
 		Meta:    map[string][]string{},
 	}
 
@@ -348,6 +348,10 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 	default:
 		return propertyError(col.Name, "ai", "类型只能是数值")
+	}
+
+	if len(m.PK) > 0 {
+		return propertyError(col.Name, "ai", "已经存在主键信息")
 	}
 
 	m.AI = col

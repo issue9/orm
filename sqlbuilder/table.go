@@ -7,7 +7,6 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
-	"strconv"
 )
 
 // CreateTableStmt 创建表的语句
@@ -90,11 +89,13 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 
 // Column 添加列
 //
+// typ 应该包含长度信息
 // hasDefault 是否需要设置默认值；
 // def 如果 hasDefault 为 true，则 def 为其默认值，否则 def 不启作用；
-func (stmt *CreateTableStmt) Column(name, typ string, nullable, hasDefault bool, def string, length ...int) *CreateTableStmt {
+func (stmt *CreateTableStmt) Column(name, typ string, nullable, hasDefault bool, def string) *CreateTableStmt {
 	col := &Column{
 		Name:       name,
+		Type:       typ,
 		Nullable:   nullable,
 		HasDefault: hasDefault,
 	}
@@ -102,33 +103,20 @@ func (stmt *CreateTableStmt) Column(name, typ string, nullable, hasDefault bool,
 		col.Default = def
 	}
 
-	switch len(length) {
-	case 1:
-		col.Type = typ + "(" + strconv.Itoa(length[0]) + ")"
-	case 2:
-		col.Type = typ + "(" + strconv.Itoa(length[0]) + "," + strconv.Itoa(length[1]) + ")"
-	default:
-		col.Type = typ
-	}
-
 	stmt.columns = append(stmt.columns, col)
 
 	return stmt
 }
 
-// AutoIncrement 指定自增列
+// AutoIncrement 指定自增列，自增列必定是主键，如果已经存在主键，会替换主键内容
+//
 // name 自增约束的名称；
 // col 自增对应的列；
-// pk 是否同时设置为主键。
-func (stmt *CreateTableStmt) AutoIncrement(name, col string, pk bool) *CreateTableStmt {
+func (stmt *CreateTableStmt) AutoIncrement(name, col string) *CreateTableStmt {
 	stmt.ai = &constraintColumn{
 		Name:    name,
 		Type:    ConstraintAI,
 		Columns: []string{col},
-	}
-
-	if pk {
-		return stmt.PK(name, col)
 	}
 
 	return stmt
@@ -137,9 +125,10 @@ func (stmt *CreateTableStmt) AutoIncrement(name, col string, pk bool) *CreateTab
 // PK 指定主键约束
 //
 // 如果多次指定主键信息，则会 panic
+// 自境会自动转换为主键
 func (stmt *CreateTableStmt) PK(name string, col ...string) *CreateTableStmt {
-	if stmt.pk != nil {
-		panic("主键信息已经存在")
+	if stmt.pk != nil || stmt.ai != nil {
+		panic("主键或是自增列已经存在")
 	}
 
 	stmt.pk = &constraintColumn{
@@ -244,14 +233,14 @@ func (stmt *CreateTableStmt) Exec() (sql.Result, error) {
 
 // ExecContext 执行 SQL 语句
 func (stmt *CreateTableStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	sqls, err := stmt.SQL()
+	qs, err := stmt.SQL()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, sql := range sqls {
-		if _, err := stmt.engine.ExecContext(ctx, sql, nil); err != nil {
-			return nil, err
+	for _, query := range qs {
+		if r, err := stmt.engine.ExecContext(ctx, query); err != nil {
+			return r, err
 		}
 	}
 
@@ -312,8 +301,9 @@ func createIndexSQL(model *CreateTableStmt) ([]string, error) {
 }
 
 // create table 语句中 pk 约束的语句
+//
+// CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 func createPKSQL(buf *SQLBuilder, name string, cols ...string) {
-	// CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 	buf.WriteString(" CONSTRAINT ").
 		WriteString(name).
 		WriteString(" PRIMARY KEY(")

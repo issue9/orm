@@ -80,7 +80,6 @@ func (p *postgres) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.C
 	buf.WriteByte(' ')
 
 	if isAI {
-
 		buf.WriteString(" SERIAL ")
 	} else {
 		buf.WriteString(col.Type).WriteByte(' ')

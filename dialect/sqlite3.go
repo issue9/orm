@@ -58,14 +58,13 @@ func (s *sqlite3) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Co
 	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
 	buf.WriteByte(' ')
 
-	buf.WriteString(col.Type).WriteByte(' ')
+	buf.WriteString(col.Type)
+	if isAI {
+		buf.WriteString(" PRIMARY KEY AUTOINCREMENT ")
+	}
 
 	if !col.Nullable {
 		buf.WriteString(" NOT NULL")
-	}
-
-	if isAI {
-		buf.WriteString(" AUTOINCREMENT ")
 	}
 
 	if col.HasDefault {
