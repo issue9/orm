@@ -12,90 +12,70 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
-
-var _ base = &mysql{}
-
-func TestMysql_CreateTableSQL(t *testing.T) {
-	a := assert.New(t)
-	ms := model.NewModels()
-	m, err := ms.New(&user{})
-	a.NotError(err).NotNil(m)
-
-	sqls, err := Mysql().CreateTableSQL(m)
-	a.NotError(err)
-	sqltest.Equal(a, sqls[0], `CREATE TABLE IF NOT EXISTS {#user} (
-		{id} BIGINT NOT NULL  PRIMARY KEY AUTO_INCREMENT,
-		{name} VARCHAR(20) NOT NULL,
-		INDEX i_user_name({name})
-	)`)
-}
 
 func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")
 	a.NotNil(sql)
 	var m = &mysql{}
-	ms := model.NewModels()
-	a.NotNil(ms)
 
 	// 空的 meta
-	mod, err := ms.New(&model1{})
-	a.NotError(err).NotNil(mod)
-	m.createTableOptions(sql, mod)
+	a.NotError(m.CreateTableOptionsSQL(sql, nil))
 	a.Equal(sql.Len(), 0)
 
 	// engine
 	sql.Reset()
-	mod, err = ms.New(&model2{})
-	a.NotError(err).NotNil(mod)
-	m.createTableOptions(sql, mod)
+	a.NotError(m.CreateTableOptionsSQL(sql, map[string][]string{
+		"mysql_engine":  []string{"innodb"},
+		"mysql_charset": []string{"utf8"},
+	}))
 	a.True(sql.Len() > 0)
 	sqltest.Equal(a, sql.String(), "engine=innodb character set=utf8")
 }
 
-func TestMysql_sqlType(t *testing.T) {
+func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
-	buf := sqlbuilder.New("")
 	col := &orm.Column{}
 	var m = &mysql{}
 
 	// col == nil
-	a.Error(m.sqlType(buf, nil))
+	typ, err := m.SQLType(nil)
+	a.ErrorType(err, errColIsNil).Empty(typ)
 
 	// col.GoType == nil
-	a.Error(m.sqlType(buf, col))
+	typ, err = m.SQLType(col)
+	a.ErrorType(err, errGoTypeIsNil).Empty(typ)
 
 	// int
 	col.GoType = reflect.TypeOf(1)
-	buf.Reset()
-	a.NotError(m.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "BIGINT")
+	typ, err = m.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "BIGINT")
 
 	// int with len
 	col.Len1 = 5
 	col.Len2 = 6
-	buf.Reset()
-	a.NotError(m.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "BIGINT(5)")
+	typ, err = m.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "BIGINT(5)")
 
 	// string:abc
 	col.GoType = reflect.TypeOf("abc")
-	buf.Reset()
-	a.NotError(m.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "VARCHAR(5)")
+	typ, err = m.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "VARCHAR(5)")
 
 	// float
 	col.GoType = reflect.TypeOf(1.2)
-	buf.Reset()
-	a.NotError(m.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "DOUBLE(5,6)")
+	typ, err = m.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "DOUBLE(5,6)")
 
 	// NullInt64
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
-	buf.Reset()
-	a.NotError(m.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "BIGINT(5)")
+	typ, err = m.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "BIGINT(5)")
 }

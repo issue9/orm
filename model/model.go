@@ -18,19 +18,29 @@ import (
 
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
-	Name string              // 表的名称
-	Cols []*Column           // 所有的列
-	AI   *Column             // 自增列
-	OCC  *Column             // 乐观锁
-	Meta map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
+	Name    string              // 表的名称
+	Columns []*Column           // 所有的列
+	OCC     *Column             // 乐观锁
+	Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
 
-	// 约束相关内容
-	Constraints   map[string]ConType     // 约束名缓存
-	KeyIndexes    map[string][]*Column   // 索引列
-	UniqueIndexes map[string][]*Column   // 唯一索引列
-	FK            map[string]*ForeignKey // 外键
-	PK            []*Column              // 主键
-	Check         map[string]string      // Check 键名为约束名，键值为约束表达式
+	// 索引内容
+	//
+	// 目前不支持唯一索引
+	Indexes map[string][]*Column
+
+	// 唯一约束
+	//
+	// 键名为约束名，键值为该约束关联的列
+	Uniques map[string][]*Column
+
+	// Check 约束
+	//
+	// 键名为约束名，键值为约束表达式
+	Checks map[string]string
+
+	FK []*ForeignKey // 外键约束
+	AI *Column       // 自增约束
+	PK []*Column     // 主键约束
 }
 
 func propertyError(field, name, message string) error {
@@ -58,14 +68,13 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 	}
 
 	m := &Model{
-		Cols:          make([]*Column, 0, rtype.NumField()),
-		KeyIndexes:    map[string][]*Column{},
-		UniqueIndexes: map[string][]*Column{},
-		Name:          rtype.Name(),
-		FK:            map[string]*ForeignKey{},
-		Check:         map[string]string{},
-		Meta:          map[string][]string{},
-		Constraints:   map[string]ConType{},
+		Columns: make([]*Column, 0, rtype.NumField()),
+		Indexes: map[string][]*Column{},
+		Uniques: map[string][]*Column{},
+		Name:    rtype.Name(),
+		FK:      []*ForeignKey{},
+		Checks:  map[string]string{},
+		Meta:    map[string][]string{},
 	}
 
 	if err := m.parseColumns(rval); err != nil {
@@ -90,14 +99,6 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 // 必须要在 Model 初始化完成之后调用。
 func (m *Model) check() error {
 	if m.AI != nil {
-		if len(m.PK) > 1 { // 肯定不是 AI 列
-			return propertyError(m.AI.Name, "pk", "不能与自增列并存")
-		}
-
-		if len(m.PK) == 1 && m.PK[0] != m.AI {
-			return propertyError(m.AI.Name, "pk", "不能与自增列并存")
-		}
-
 		if m.AI.Nullable {
 			return propertyError(m.AI.Name, "nullable", "不能与自增列并存")
 		}
@@ -111,7 +112,7 @@ func (m *Model) check() error {
 		return propertyError(m.PK[0].Name, "default", "不能为单一主键")
 	}
 
-	for _, c := range m.Cols {
+	for _, c := range m.Columns {
 		if err := c.checkLen(); err != nil {
 			return err
 		}
@@ -153,7 +154,7 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 // 分析一个字段。
 func (m *Model) parseColumn(col *Column, tag string) (err error) {
 	if len(tag) == 0 { // 没有附加的 struct tag，直接取得几个关键信息返回。
-		m.Cols = append(m.Cols, col)
+		m.Columns = append(m.Columns, col)
 		return nil
 	}
 
@@ -193,7 +194,7 @@ func (m *Model) parseColumn(col *Column, tag string) (err error) {
 	}
 
 	// col.Name 可能在上面的 for 循环中被更改，所以要在最后再添加到 m.Cols 中
-	m.Cols = append(m.Cols, col)
+	m.Columns = append(m.Columns, col)
 
 	return nil
 }
@@ -218,17 +219,12 @@ func (m *Model) parseMeta(tag string) error {
 				return propertyError("Metaer", "check", "参数个数不正确")
 			}
 
-			if _, found := m.Check[v.Args[0]]; found {
+			if _, found := m.Checks[v.Args[0]]; found {
 				return propertyError("Metaer", "check", "已经存在相同名称的 check 约束")
 			}
 
-			if m.hasConstraint(v.Args[0], Check) {
-				return propertyError("Metaer", "check", "与其它约束名称相同")
-			}
-
 			name := strings.ToLower(v.Args[0])
-			m.Constraints[name] = Check
-			m.Check[name] = v.Args[1]
+			m.Checks[name] = v.Args[1]
 		default:
 			m.Meta[v.Name] = v.Args
 		}
@@ -290,13 +286,8 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 		return propertyError(col.Name, "index", "太多的值")
 	}
 
-	if m.hasConstraint(vals[0], Index) {
-		return propertyError(col.Name, "index", "已经存在相同的约束名")
-	}
-
 	name := strings.ToLower(vals[0])
-	m.Constraints[name] = Index
-	m.KeyIndexes[name] = append(m.KeyIndexes[name], col)
+	m.Indexes[name] = append(m.Indexes[name], col)
 	return nil
 }
 
@@ -316,13 +307,8 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
 
-	if m.hasConstraint(vals[0], Unique) {
-		return propertyError(col.Name, "unique", "已经存在相同的约束名")
-	}
-
 	name := strings.ToLower(vals[0])
-	m.Constraints[name] = Unique
-	m.UniqueIndexes[name] = append(m.UniqueIndexes[name], col)
+	m.Uniques[name] = append(m.Uniques[name], col)
 
 	return nil
 }
@@ -333,16 +319,9 @@ func (m *Model) setFK(col *Column, vals []string) error {
 		return propertyError(col.Name, "fk", "参数不够")
 	}
 
-	if m.hasConstraint(vals[0], Fk) {
-		return propertyError(col.Name, "fk", "已经存在相同的约束名")
-	}
-
-	if _, found := m.FK[vals[0]]; found {
-		return propertyError(col.Name, "fk", "重复的外键约束名")
-	}
-
 	fkInst := &ForeignKey{
-		Col:          col,
+		Name:         strings.ToLower(vals[0]),
+		Column:       col,
 		RefTableName: vals[1],
 		RefColName:   vals[2],
 	}
@@ -354,9 +333,7 @@ func (m *Model) setFK(col *Column, vals []string) error {
 		fkInst.DeleteRule = vals[4]
 	}
 
-	name := strings.ToLower(vals[0])
-	m.Constraints[name] = Fk
-	m.FK[name] = fkInst
+	m.FK = append(m.FK, fkInst)
 	return nil
 }
 
@@ -373,27 +350,19 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 		return propertyError(col.Name, "ai", "类型只能是数值")
 	}
 
+	if len(m.PK) > 0 {
+		return propertyError(col.Name, "ai", "已经存在主键信息")
+	}
+
 	m.AI = col
-
-	// 去掉其它主键，将自增列设置为主键
-	m.PK = append(m.PK[:0], col)
 	return nil
-}
-
-// 是否存在指定名称的约束名，name 不区分大小写。
-// 若已经存在返回表示该约束类型的常量，否则返回 none。
-//
-// NOTE:约束名不区分大小写
-func (m *Model) hasConstraint(name string, except ConType) bool {
-	typ, found := m.Constraints[strings.ToLower(name)]
-	return found && (typ != except)
 }
 
 // FindColumn 查找指定名称的列
 //
 // 不存在该列则返回 nil
 func (m *Model) FindColumn(name string) *Column {
-	for _, col := range m.Cols {
+	for _, col := range m.Columns {
 		if col.Name == name {
 			return col
 		}

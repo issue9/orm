@@ -17,7 +17,7 @@ import (
 )
 
 type FetchEmail struct {
-	Email string `orm:"name(email);unique(unique_index);nullable;pk;len(100)"`
+	Email string `orm:"name(email);unique(unique_index);nullable;len(100)"`
 
 	Regdate int64 `orm:"-"`
 }

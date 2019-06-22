@@ -59,29 +59,28 @@ func TestNewModel(t *testing.T) {
 	a.NotNil(groupCol)
 
 	// index
-	index, found := m.KeyIndexes["index_name"]
+	index, found := m.Indexes["index_name"]
 	a.True(found).Equal(usernameCol, index[0])
 
 	// ai
 	a.Equal(m.AI, idCol)
-
-	// 主键应该和自增列相同
-	a.NotNil(m.PK).Equal(m.PK[0], idCol)
+	a.Empty(m.PK) // 有自增，则主键为空
 
 	// unique_name
-	unique, found := m.UniqueIndexes["unique_username"]
+	unique, found := m.Uniques["unique_username"]
 	a.True(found).Equal(unique[0], usernameCol)
 
-	fk, found := m.FK["fk_name"]
+	fk := m.FK[0]
 	a.True(found).
-		Equal(fk.Col, groupCol).
+		Equal(fk.Name, "fk_name").
+		Equal(fk.Column, groupCol).
 		Equal(fk.RefTableName, "#groups").
 		Equal(fk.RefColName, "id").
 		Equal(fk.UpdateRule, "NO ACTION").
 		Equal(fk.DeleteRule, "")
 
 	// check
-	chk, found := m.Check["admin_chk_name"]
+	chk, found := m.Checks["admin_chk_name"]
 	a.True(found).Equal(chk, "{group}>0")
 
 	// meta
@@ -121,19 +120,11 @@ func TestModel_check(t *testing.T) {
 	}
 
 	m := &Model{
-		Cols: []*Column{ai, pk1, pk2, nullable, def},
-		AI:   ai,
+		Columns: []*Column{ai, pk1, pk2, nullable, def},
+		AI:      ai,
 	}
 
 	a.NotError(m.check())
-
-	// 单列主键，必须与 AI 相同
-	m.PK = []*Column{pk1}
-	a.Error(m.check())
-
-	// 多列主键，肯定不与 AI 相同
-	m.PK = append(m.PK, pk2)
-	a.Error(m.check())
 
 	// AI 不能是 nullable
 	m.PK = nil
@@ -168,7 +159,7 @@ func TestModel_check(t *testing.T) {
 func TestModel_parseColumn(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{
-		Cols: []*Column{},
+		Columns: []*Column{},
 	}
 
 	// 不存在 struct tag，则以 col.Name 作为键名
@@ -188,8 +179,7 @@ func TestModel_parseColumn(t *testing.T) {
 func TestModel_parseMeta(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{
-		Constraints: map[string]ConType{},
-		Check:       map[string]string{},
+		Checks: map[string]string{},
 	}
 
 	// 空值不算错误
@@ -205,11 +195,11 @@ func TestModel_parseMeta(t *testing.T) {
 	a.NotError(m.parseMeta("check(ck,id>0 AND id<10)"))
 
 	// check 与已有 check 名称相同
-	a.Error(m.parseMeta("check(ck,id>0)"))
+	//a.Error(m.parseMeta("check(ck,id>0)"))
 
 	// check 与其它约束名相同
-	m.Constraints = map[string]ConType{"fk": Fk}
-	a.Error(m.parseMeta("check(fk,id>0)"))
+	//m.Constraints = map[string]ConType{"fk": Fk}
+	//a.Error(m.parseMeta("check(fk,id>0)"))
 }
 
 func TestModel_setOCC(t *testing.T) {
@@ -307,15 +297,4 @@ func TestModel_setAI(t *testing.T) {
 
 	col.GoType = reflect.TypeOf(1)
 	a.NotError(m.setAI(col, nil))
-}
-
-func TestModel_hasConstraint(t *testing.T) {
-	a := assert.New(t)
-	m := &Model{}
-
-	a.False(m.hasConstraint("index", Index))
-
-	m.Constraints = map[string]ConType{"index": Index}
-	a.False(m.hasConstraint("index", Index)) // 排除 index，则为 false
-	a.True(m.hasConstraint("INDEX", Fk))     // 不排除 index，则为 true
 }

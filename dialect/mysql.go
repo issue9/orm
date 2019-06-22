@@ -57,85 +57,47 @@ func (m *mysql) VersionSQL() string {
 	return `select version();`
 }
 
-func (m *mysql) CreateTableSQL(model *orm.Model) ([]string, error) {
-	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
-		WriteString("{#").
-		WriteString(model.Name).
-		WriteString("}(")
+func (m *mysql) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
+	buf.WriteString(col.Name)
+	buf.WriteByte(' ')
 
-	// 自增列
-	if model.AI != nil {
-		if err := createColSQL(m, w, model.AI); err != nil {
-			return nil, err
-		}
-		w.WriteString(" PRIMARY KEY AUTO_INCREMENT,")
+	buf.WriteString(col.Type).WriteByte(' ')
+
+	if !col.Nullable {
+		buf.WriteString(" NOT NULL")
 	}
 
-	// 普通列
-	for _, col := range model.Cols {
-		if col.IsAI() { // 忽略 AI 列
-			continue
-		}
-
-		if err := createColSQL(m, w, col); err != nil {
-			return nil, err
-		}
-		w.WriteByte(',')
+	if isAI {
+		buf.WriteString(" PRIMARY KEY AUTO_INCREMENT ")
 	}
 
-	// 约束
-	if len(model.PK) > 0 && !model.PK[0].IsAI() { // PK，若有自增，则已经在上面指定
-		createPKSQL(w, model.PK, pkName)
-		w.WriteByte(',')
-	}
-	createConstraints(w, model)
-
-	// index
-	m.createIndexSQL(w, model)
-
-	w.TruncateLast(1).WriteByte(')')
-
-	if err := m.createTableOptions(w, model); err != nil {
-		return nil, err
-	}
-
-	return []string{w.String()}, nil
-}
-
-func (m *mysql) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
-	if len(model.Meta[mysqlEngine]) == 1 {
-		w.WriteString(" ENGINE=")
-		w.WriteString(model.Meta[mysqlEngine][0])
-		w.WriteByte(' ')
-	} else if len(model.Meta[mysqlEngine]) > 0 {
-		return errors.New("无效的属性值：" + mysqlCharset)
-	}
-
-	if len(model.Meta[mysqlCharset]) == 1 {
-		w.WriteString(" CHARACTER SET=")
-		w.WriteString(model.Meta[mysqlCharset][0])
-		w.WriteByte(' ')
-	} else if len(model.Meta[mysqlCharset]) > 0 {
-		return errors.New("无效的属性值：" + mysqlCharset)
+	if col.HasDefault {
+		buf.WriteString(" DEFAULT '").
+			WriteString(col.Default).
+			WriteByte('\'')
 	}
 
 	return nil
 }
 
-func (m *mysql) createIndexSQL(w *sqlbuilder.SQLBuilder, model *orm.Model) {
-	for indexName, cols := range model.KeyIndexes {
-		// INDEX index_name (id,lastName)
-		w.WriteString(" INDEX ").
-			WriteString(indexName).
-			WriteByte('(')
-		for _, col := range cols {
-			w.WriteByte('{').WriteString(col.Name).WriteByte('}')
-			w.WriteByte(',')
-		}
-		w.TruncateLast(1) // 去掉最后一个逗号
-
-		w.WriteString("),")
+func (m *mysql) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
+	if len(options[mysqlEngine]) == 1 {
+		w.WriteString(" ENGINE=")
+		w.WriteString(options[mysqlEngine][0])
+		w.WriteByte(' ')
+	} else if len(options[mysqlEngine]) > 0 {
+		return errors.New("无效的属性值：" + mysqlCharset)
 	}
+
+	if len(options[mysqlCharset]) == 1 {
+		w.WriteString(" CHARACTER SET=")
+		w.WriteString(options[mysqlCharset][0])
+		w.WriteByte(' ')
+	} else if len(options[mysqlCharset]) > 0 {
+		return errors.New("无效的属性值：" + mysqlCharset)
+	}
+
+	return nil
 }
 
 func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
@@ -154,95 +116,77 @@ func (m *mysql) TransactionalDDL() bool {
 	return false
 }
 
-func (m *mysql) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
+func (m *mysql) SQLType(col *orm.Column) (string, error) {
 	if col == nil {
-		return errors.New("sqlType:col 参数是个空值")
+		return "", errColIsNil
 	}
 
 	if col.GoType == nil {
-		return errors.New("sqlType:无效的 col.GoType 值")
+		return "", errGoTypeIsNil
 	}
 
-	addIntLen := func() {
+	intLen := func(typ string) string {
 		if col.Len1 > 0 {
-			buf.WriteByte('(').
-				WriteString(strconv.Itoa(col.Len1)).
-				WriteByte(')')
+			return typ + "(" + strconv.Itoa(col.Len1) + ")"
 		}
+		return typ
 	}
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		buf.WriteString("BOOLEAN")
+		return "BOOLEAN", nil
 	case reflect.Int8:
-		buf.WriteString("SMALLINT")
-		addIntLen()
+		return intLen("SMALLINT"), nil
 	case reflect.Int16:
-		buf.WriteString("MEDIUMINT")
-		addIntLen()
+		return intLen("MEDIUMINT"), nil
 	case reflect.Int32:
-		buf.WriteString("INT")
-		addIntLen()
+		return intLen("INT"), nil
 	case reflect.Int64, reflect.Int: // reflect.Int 大小未知，都当作是 BIGINT 处理
-		buf.WriteString("BIGINT")
-		addIntLen()
+		return intLen("BIGINT"), nil
 	case reflect.Uint8:
-		buf.WriteString("SMALLINT")
-		addIntLen()
-		buf.WriteString(" UNSIGNED")
+		return intLen("SMALLINT") + " UNSIGNED", nil
 	case reflect.Uint16:
-		buf.WriteString("MEDIUMINT")
-		addIntLen()
-		buf.WriteString(" UNSIGNED")
+		return intLen("MEDIUMINT") + " UNSIGNED", nil
 	case reflect.Uint32:
-		buf.WriteString("INT")
-		addIntLen()
-		buf.WriteString(" UNSIGNED")
+		return intLen("INT") + " UNSIGNED", nil
 	case reflect.Uint64, reflect.Uint, reflect.Uintptr:
-		buf.WriteString("BIGINT")
-		addIntLen()
-		buf.WriteString(" UNSIGNED")
+		return intLen("BIGINT") + " UNSIGNED", nil
 	case reflect.Float32, reflect.Float64:
 		if col.Len1 == 0 || col.Len2 == 0 {
-			return errors.New("请指定长度")
+			return "", errMissLength
 		}
-		buf.WriteString(fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2))
+		return fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2), nil
 	case reflect.String:
 		if col.Len1 == -1 || col.Len1 > 65533 {
-			buf.WriteString("LONGTEXT")
-		} else {
-			buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
+			return "LONGTEXT", nil
 		}
+		return fmt.Sprintf("VARCHAR(%d)", col.Len1), nil
 	case reflect.Slice, reflect.Array:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			buf.WriteString("BLOB")
+			return "BLOB", nil
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case rawBytes:
-			buf.WriteString("BLOB")
+			return "BLOB", nil
 		case nullBool:
-			buf.WriteString("BOOLEAN")
+			return "BOOLEAN", nil
 		case nullFloat64:
 			if col.Len1 == 0 || col.Len2 == 0 {
-				return errors.New("请指定长度")
+				return "", errMissLength
 			}
-			buf.WriteString(fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2))
+			return fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2), nil
 		case nullInt64:
-			buf.WriteString("BIGINT")
-			addIntLen()
+			return intLen("BIGINT"), nil
 		case nullString:
 			if col.Len1 == -1 || col.Len1 > 65533 {
-				buf.WriteString("LONGTEXT")
-			} else {
-				buf.WriteString(fmt.Sprintf("VARCHAR(%d)", col.Len1))
+				return "LONGTEXT", nil
 			}
+			return fmt.Sprintf("VARCHAR(%d)", col.Len1), nil
 		case timeType:
-			buf.WriteString("DATETIME")
+			return "DATETIME", nil
 		}
-	default:
-		return fmt.Errorf("sqlType:不支持的类型:[%v]", col.GoType.Name())
 	}
 
-	return nil
+	return "", errUncovert(col.GoType.Name())
 }

@@ -28,6 +28,9 @@ var (
 
 	// ErrArgsNotMatch 在生成的 SQL 语句中，传递的参数与语句的占位符数量不匹配。
 	ErrArgsNotMatch = errors.New("列与值的数量不匹配")
+
+	// ErrUnknownConstraint 该约束类型不支持，或是当前环境下无法使用
+	ErrUnknownConstraint = errors.New("不支持的约束类型")
 )
 
 // SQLBuilder 对 bytes.Buffer 的一个简单封装。

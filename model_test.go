@@ -6,7 +6,7 @@ package orm_test
 
 // Group 带有自增 ID 的普通表结构
 type Group struct {
-	ID      int64  `orm:"name(id);ai"`
+	ID      int64  `orm:"name(id);ai;unique(unique_groups_id)"`
 	Name    string `orm:"name(name);len(500)"`
 	Created int64  `orm:"name(created)"`
 }

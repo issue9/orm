@@ -54,54 +54,31 @@ func (s *sqlite3) VersionSQL() string {
 	return `select sqlite_version();`
 }
 
-func (s *sqlite3) CreateTableSQL(model *orm.Model) ([]string, error) {
-	w := sqlbuilder.New("CREATE TABLE IF NOT EXISTS ").
-		WriteString("{#").
-		WriteString(model.Name).
-		WriteString("}(")
+func (s *sqlite3) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
+	buf.WriteString(col.Name)
+	buf.WriteByte(' ')
 
-	// 自增列
-	if model.AI != nil {
-		if err := createColSQL(s, w, model.AI); err != nil {
-			return nil, err
-		}
-		w.WriteString(" PRIMARY KEY AUTOINCREMENT,")
+	buf.WriteString(col.Type)
+	if isAI {
+		buf.WriteString(" PRIMARY KEY AUTOINCREMENT ")
 	}
 
-	// 普通列
-	for _, col := range model.Cols {
-		if col.IsAI() { // 忽略 AI 列
-			continue
-		}
-
-		if err := createColSQL(s, w, col); err != nil {
-			return nil, err
-		}
-		w.WriteByte(',')
+	if !col.Nullable {
+		buf.WriteString(" NOT NULL")
 	}
 
-	// 约束
-	if len(model.PK) > 0 && !model.PK[0].IsAI() { // PK，若有自增，则已经在上面指定
-		createPKSQL(w, model.PK, pkName)
-		w.WriteByte(',')
-	}
-	createConstraints(w, model)
-	w.TruncateLast(1).WriteByte(')')
-
-	if err := s.createTableOptions(w, model); err != nil {
-		return nil, err
+	if col.HasDefault {
+		buf.WriteString(" DEFAULT '").
+			WriteString(col.Default).
+			WriteByte('\'')
 	}
 
-	indexs, err := createIndexSQL(model)
-	if err != nil {
-		return nil, err
-	}
-	return append([]string{w.String()}, indexs...), nil
+	return nil
 }
 
-func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model) error {
-	if len(model.Meta[sqlite3RowID]) == 1 {
-		val, err := strconv.ParseBool(model.Meta[sqlite3RowID][0])
+func (s *sqlite3) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
+	if len(options[sqlite3RowID]) == 1 {
+		val, err := strconv.ParseBool(options[sqlite3RowID][0])
 		if err != nil {
 			return err
 		}
@@ -109,7 +86,7 @@ func (s *sqlite3) createTableOptions(w *sqlbuilder.SQLBuilder, model *orm.Model)
 		if !val {
 			w.WriteString("WITHOUT ROWID")
 		}
-	} else if len(model.Meta[sqlite3RowID]) > 0 {
+	} else if len(options[sqlite3RowID]) > 0 {
 		return errors.New("rowid 只接受一个参数")
 	}
 
@@ -142,45 +119,45 @@ func (s *sqlite3) TransactionalDDL() bool {
 }
 
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) sqlType(buf *sqlbuilder.SQLBuilder, col *orm.Column) error {
+func (s *sqlite3) SQLType(col *orm.Column) (string, error) {
 	if col == nil {
-		return errors.New("sqlType:col参数是个空值")
+		return "", errColIsNil
 	}
 
 	if col.GoType == nil {
-		return errors.New("sqlType:无效的col.GoType值")
+		return "", errGoTypeIsNil
 	}
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		buf.WriteString("INTEGER")
+		return "INTEGER", nil
 	case reflect.String:
-		buf.WriteString("TEXT")
+		return "TEXT", nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		buf.WriteString("INTEGER")
+		return "INTEGER", nil
 	case reflect.Float32, reflect.Float64:
-		buf.WriteString("REAL")
+		return "REAL", nil
 	case reflect.Array, reflect.Slice:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			buf.WriteString("BLOB")
+			return "BLOB", nil
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case rawBytes:
-			buf.WriteString("BLOB")
+			return "BLOB", nil
 		case nullBool:
-			buf.WriteString("INTEGER")
+			return "INTEGER", nil
 		case nullFloat64:
-			buf.WriteString("REAL")
+			return "REAL", nil
 		case nullInt64:
-			buf.WriteString("INTEGER")
+			return "INTEGER", nil
 		case nullString:
-			buf.WriteString("TEXT")
+			return "TEXT", nil
 		case timeType:
-			buf.WriteString("DATETIME")
+			return "DATETIME", nil
 		}
 	}
 
-	return nil
+	return "", errUncovert(col.GoType.Name())
 }

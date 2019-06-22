@@ -12,33 +12,8 @@ type Metaer interface {
 
 // ForeignKey 外键
 type ForeignKey struct {
-	Col                      *Column
+	Name                     string  // 外键约束名
+	Column                   *Column // 关联的列
 	RefTableName, RefColName string
 	UpdateRule, DeleteRule   string
-}
-
-// 预定的约束类型，方便 Model 中使用。
-const (
-	Index ConType = iota
-	Unique
-	Fk
-	Check
-)
-
-// ConType 约束类型
-type ConType int8
-
-func (t ConType) String() string {
-	switch t {
-	case Index:
-		return "KEY INDEX"
-	case Unique:
-		return "UNIQUE INDEX"
-	case Fk:
-		return "FOREIGN KEY"
-	case Check:
-		return "CHECK"
-	default:
-		return "<unknown>"
-	}
 }

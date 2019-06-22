@@ -12,85 +12,70 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
-
-var _ base = &sqlite3{}
-
-func TestSqlite3_CreateTableSQL(t *testing.T) {
-	a := assert.New(t)
-	ms := model.NewModels()
-	m, err := ms.New(&user{})
-	a.NotError(err).NotNil(m)
-
-	sqls, err := Sqlite3().CreateTableSQL(m)
-	a.NotError(err)
-	a.Equal(2, len(sqls))
-	sqltest.Equal(a, sqls[0], `CREATE TABLE IF NOT EXISTS {#user} (
-		{id} INTEGER NOT NULL  PRIMARY KEY AUTOINCREMENT,
-		{name} TEXT NOT NULL
-	)`)
-
-	sqltest.Equal(a, sqls[1], `CREATE INDEX i_user_name ON {#user} (
-		{name}
-	)`)
-}
 
 func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")
 	a.NotNil(sql)
 	var s = &sqlite3{}
-	ms := model.NewModels()
-	a.NotNil(ms)
 
 	// 空的 meta
-	mod, err := ms.New(&model1{})
-	a.NotError(err).NotNil(mod)
-	s.createTableOptions(sql, mod)
+	a.NotError(s.CreateTableOptionsSQL(sql, nil))
 	a.Equal(sql.Len(), 0)
 
 	// engine
 	sql.Reset()
-	mod, err = ms.New(&model2{})
-	a.NotError(err).NotNil(mod)
-	s.createTableOptions(sql, mod)
+	a.NotError(s.CreateTableOptionsSQL(sql, map[string][]string{
+		"sqlite3_rowid": []string{"false"},
+	}))
 	a.True(sql.Len() > 0)
 	sqltest.Equal(a, sql.String(), "without rowid")
 }
 
-func TestSqlite3_sqlType(t *testing.T) {
+func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
 	var s = &sqlite3{}
 
 	buf := sqlbuilder.New("")
 	col := &orm.Column{}
-	a.Error(s.sqlType(buf, col))
+
+	// col == nil
+	typ, err := s.SQLType(nil)
+	a.ErrorType(err, errColIsNil).Empty(typ)
+
+	// col.GoType == nil
+	typ, err = s.SQLType(col)
+	a.ErrorType(err, errGoTypeIsNil).Empty(typ)
 
 	col.GoType = reflect.TypeOf(1)
-	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "INTEGER")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "INTEGER")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "INTEGER")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "INTEGER")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "TEXT")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "TEXT")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "REAL")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "REAL")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
-	a.NotError(s.sqlType(buf, col))
-	sqltest.Equal(a, buf.String(), "INTEGER")
+	typ, err = s.SQLType(col)
+	a.NotError(err)
+	sqltest.Equal(a, typ, "INTEGER")
 }
