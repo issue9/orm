@@ -76,7 +76,7 @@ func (p *postgres) SQL(sql string) (string, error) {
 }
 
 func (p *postgres) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
-	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
+	buf.WriteString(col.Name)
 	buf.WriteByte(' ')
 
 	if isAI {

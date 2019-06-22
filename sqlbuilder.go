@@ -34,7 +34,7 @@ func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	keys := make([]string, 0, 3)
 
 	// 获取构成 where 的键名和键值
-	getKV := func(cols []*Column) bool {
+	getKV := func(cols ...*Column) bool {
 		for _, col := range cols {
 			field := rval.FieldByName(col.GoName)
 
@@ -50,14 +50,23 @@ func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 		return len(keys) > 0 // 如果 keys 中有数据，表示已经采集成功，否则表示 cols 的长度为 0
 	}
 
-	if !getKV(m.PK) { // 没有主键，则尝试唯一约束
+	if m.AI != nil && getKV(m.AI) {
+		goto RET
+	}
+
+	if m.PK != nil && getKV(m.PK...) {
+		goto RET
+	}
+
+	if m.Uniques != nil {
 		for _, cols := range m.Uniques {
-			if getKV(cols) {
+			if getKV(cols...) {
 				break
 			}
 		}
 	}
 
+RET:
 	if len(keys) == 0 {
 		return fmt.Errorf("没有主键或唯一约束，无法为 %s 产生 where 部分语句", m.Name)
 	}
@@ -119,49 +128,49 @@ func create(e Engine, v interface{}) error {
 	d := e.Dialect()
 
 	sb := sqlbuilder.CreateTable(e, e.Dialect())
-	sb.Table("#" + m.Name)
+	sb.Table("{#" + m.Name + "}") // 表名可能也是关键字
 	for _, col := range m.Columns {
 		typ, err := d.SQLType(col)
 		if err != nil {
 			return err
 		}
-		sb.Column(col.Name, typ, col.Nullable, col.HasDefault, col.Default)
+		sb.Column("{"+col.Name+"}", typ, col.Nullable, col.HasDefault, col.Default)
 	}
 
 	for name, index := range m.Indexes {
 		cols := make([]string, 0, len(index))
 		for _, col := range index {
-			cols = append(cols, col.Name)
+			cols = append(cols, "{"+col.Name+"}")
 		}
-		sb.Index(name, sqlbuilder.IndexDefault, cols...)
+		sb.Index("{"+name+"}", sqlbuilder.IndexDefault, cols...)
 	}
 
 	for name, unique := range m.Uniques {
 		cols := make([]string, 0, len(unique))
 		for _, col := range unique {
-			cols = append(cols, col.Name)
+			cols = append(cols, "{"+col.Name+"}")
 		}
-		sb.Unique(name, cols...)
+		sb.Unique("{"+name+"}", cols...)
 	}
 
 	for name, expr := range m.Checks {
-		sb.Check(name, expr)
+		sb.Check("{"+name+"}", expr)
 	}
 
 	for _, fk := range m.FK {
-		sb.ForeignKey(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+		sb.ForeignKey("{"+fk.Name+"}", "{"+fk.Column.Name+"}", "{"+fk.RefTableName+"}", "{"+fk.RefColName+"}", fk.UpdateRule, fk.DeleteRule)
+	}
+
+	if m.AI != nil {
+		sb.AutoIncrement(m.Name+"_pk", "{"+m.AI.Name+"}")
 	}
 
 	if len(m.PK) > 0 {
 		cols := make([]string, 0, len(m.PK))
 		for _, col := range m.PK {
-			cols = append(cols, col.Name)
+			cols = append(cols, "{"+col.Name+"}")
 		}
 		sb.PK(m.Name+"_pk", cols...)
-	}
-
-	if m.AI != nil {
-		sb.AutoIncrement("", m.AI.Name)
 	}
 
 	_, err = sb.Exec()

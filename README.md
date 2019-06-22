@@ -122,6 +122,7 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 定义物理外键，最少需要指定 fk_name,refTabl,refColName 三个值。分别对应约束名，
 引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
+refTable 如果需要表名前缀，需要添加 # 符号。
 
 ##### check(chk_name, expr):
 

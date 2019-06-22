@@ -55,7 +55,7 @@ func (s *sqlite3) VersionSQL() string {
 }
 
 func (s *sqlite3) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
-	buf.WriteByte('{').WriteString(col.Name).WriteByte('}')
+	buf.WriteString(col.Name)
 	buf.WriteByte(' ')
 
 	buf.WriteString(col.Type)

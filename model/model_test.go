@@ -64,9 +64,7 @@ func TestNewModel(t *testing.T) {
 
 	// ai
 	a.Equal(m.AI, idCol)
-
-	// 主键应该和自增列相同
-	a.NotNil(m.PK).Equal(m.PK[0], idCol)
+	a.Empty(m.PK) // 有自增，则主键为空
 
 	// unique_name
 	unique, found := m.Uniques["unique_username"]
@@ -127,14 +125,6 @@ func TestModel_check(t *testing.T) {
 	}
 
 	a.NotError(m.check())
-
-	// 单列主键，必须与 AI 相同
-	m.PK = []*Column{pk1}
-	a.Error(m.check())
-
-	// 多列主键，肯定不与 AI 相同
-	m.PK = append(m.PK, pk2)
-	a.Error(m.check())
 
 	// AI 不能是 nullable
 	m.PK = nil

@@ -270,6 +270,7 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 	// primary key
 	if stmt.pk != nil {
 		createPKSQL(buf, stmt.pk.Name, stmt.pk.Columns...)
+		buf.WriteByte(',')
 	}
 
 	return nil
@@ -284,10 +285,10 @@ func createIndexSQL(model *CreateTableStmt) ([]string, error) {
 	buf := CreateIndex(nil)
 	for _, index := range model.indexes {
 		buf.Reset()
-		buf.Table("{#" + model.name + "}").
+		buf.Table(model.name).
 			Name(index.Name)
 		for _, col := range index.Columns {
-			buf.Columns("{" + col + "}")
+			buf.Columns(col)
 		}
 
 		sql, _, err := buf.SQL()
@@ -309,7 +310,7 @@ func createPKSQL(buf *SQLBuilder, name string, cols ...string) {
 		WriteString(" PRIMARY KEY(")
 
 	for _, col := range cols {
-		buf.WriteByte('{').WriteString(col).WriteByte('}')
+		buf.WriteString(col)
 		buf.WriteByte(',')
 	}
 	buf.TruncateLast(1) // 去掉最后一个逗号
@@ -317,15 +318,14 @@ func createPKSQL(buf *SQLBuilder, name string, cols ...string) {
 }
 
 // create table 语句中的 unique 约束部分的语句。
-func createUniqueSQL(buf *SQLBuilder, indexName string, cols ...string) {
-	// CONSTRAINT unique_name UNIQUE (id,lastName)
+//
+// CONSTRAINT unique_name UNIQUE (id,lastName)
+func createUniqueSQL(buf *SQLBuilder, name string, cols ...string) {
 	buf.WriteString(" CONSTRAINT ").
-		WriteString(indexName).
+		WriteString(name).
 		WriteString(" UNIQUE(")
 	for _, col := range cols {
-		buf.WriteByte('{').
-			WriteString(col).
-			WriteByte('}').
+		buf.WriteString(col).
 			WriteByte(',')
 	}
 	buf.TruncateLast(1) // 去掉最后一个逗号
@@ -339,15 +339,13 @@ func createFKSQL(buf *SQLBuilder, fk *foreignKey) {
 	buf.WriteString(" CONSTRAINT ").WriteString(fk.Name)
 
 	buf.WriteString(" FOREIGN KEY(")
-	buf.WriteByte('{').WriteString(fk.Column).WriteByte('}')
+	buf.WriteString(fk.Column)
 
 	buf.WriteString(") REFERENCES ").
-		WriteByte('{').
-		WriteString(fk.RefTableName).
-		WriteByte('}')
+		WriteString(fk.RefTableName)
 
 	buf.WriteByte('(')
-	buf.WriteByte('{').WriteString(fk.RefColName).WriteByte('}')
+	buf.WriteString(fk.RefColName)
 	buf.WriteByte(')')
 
 	if len(fk.UpdateRule) > 0 {

@@ -94,6 +94,7 @@
 //  定义物理外键，最少需要指定 fk_name,refTabl,refColName 三个值。
 //  分别对应约束名，引用的表和引用的字段，updateRule,deleteRule，
 //  在不指定的情况下，使用数据库的默认值。
+//  refTable 如果需要表名前缀，需要添加 # 符号。
 //
 //  check(chk_name, expr): check 约束。chk_name 为约束名，expr 为该约束的表达式。
 //  check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一样，
