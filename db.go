@@ -302,6 +302,8 @@ func (db *DB) MultDelete(objs ...interface{}) error {
 }
 
 // MultCreate 创建数据表。
+//
+// 如果数据库支持事务 DDL，则会在事务中完成此操作。
 func (db *DB) MultCreate(objs ...interface{}) error {
 	if !db.Dialect().TransactionalDDL() {
 		for _, v := range objs {
@@ -328,6 +330,8 @@ func (db *DB) MultCreate(objs ...interface{}) error {
 }
 
 // MultDrop 删除表结构及数据。
+//
+// 如果数据库支持事务 DDL，则会在事务中完成此操作。
 func (db *DB) MultDrop(objs ...interface{}) error {
 	if !db.Dialect().TransactionalDDL() {
 		for _, v := range objs {
