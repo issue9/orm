@@ -13,8 +13,7 @@ import (
 type AddColumnStmt struct {
 	engine Engine
 	table  string
-	column *Column
-	ai     bool
+	column *column
 }
 
 // DropColumnStmt 删除列
@@ -40,22 +39,12 @@ func (stmt *AddColumnStmt) Table(table string) *AddColumnStmt {
 
 // Column 添加列
 //
-// typ 应该包含长度信息
-// hasDefault 是否需要设置默认值；
-// def 如果 hasDefault 为 true，则 def 为其默认值，否则 def 不启作用；
-func (stmt *AddColumnStmt) Column(name, typ string, nullable, hasDefault bool, def string, ai bool) *AddColumnStmt {
-	col := &Column{
-		Name:       name,
-		Type:       typ,
-		Nullable:   nullable,
-		HasDefault: hasDefault,
+// 参数信息可参考 CreateTableStmt.Column
+func (stmt *AddColumnStmt) Column(name, typ string) *AddColumnStmt {
+	stmt.column = &column{
+		Name: name,
+		Type: typ,
 	}
-	if hasDefault {
-		col.Default = def
-	}
-
-	stmt.column = col
-	stmt.ai = ai
 
 	return stmt
 }
@@ -71,9 +60,6 @@ func (stmt *AddColumnStmt) SQL() (string, []interface{}, error) {
 	buf.WriteString(" ADD ")
 	buf.WriteString(stmt.column.Name)
 	buf.WriteString(stmt.column.Type)
-	if stmt.ai {
-		// TODO
-	}
 	return buf.String(), nil, nil
 }
 

@@ -174,7 +174,7 @@ func (u *Upgrader) addColumns(e Engine) error {
 		}
 
 		_, err = sql.Table(u.model.Name).
-			Column(col.Name, typ, col.Nullable, col.HasDefault, col.Default, col.IsAI()).
+			Column(col.Name, typ).
 			Exec()
 		if err != nil {
 			return err
