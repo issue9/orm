@@ -159,8 +159,8 @@ func (stmt *DropIndexStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
-	sql, args := stmt.dialect.DropIndexSQL(stmt.table, stmt.name)
-	return sql, args, nil
+	sql := stmt.dialect.DropIndexSQL(stmt.table, stmt.name)
+	return sql, nil, nil
 }
 
 // Reset 重置

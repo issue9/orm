@@ -161,16 +161,15 @@ func create(e Engine, v interface{}) error {
 		sb.ForeignKey("{"+fk.Name+"}", "{"+fk.Column.Name+"}", "{"+fk.RefTableName+"}", "{"+fk.RefColName+"}", fk.UpdateRule, fk.DeleteRule)
 	}
 
+	pkname :=m.Name +"_pk"
 	if m.AI != nil {
-		sb.AutoIncrement(m.Name+"_pk", "{"+m.AI.Name+"}")
-	}
-
-	if len(m.PK) > 0 {
+		sb.AutoIncrement(pkname, "{"+m.AI.Name+"}")
+	}else if len(m.PK) > 0 {
 		cols := make([]string, 0, len(m.PK))
 		for _, col := range m.PK {
 			cols = append(cols, "{"+col.Name+"}")
 		}
-		sb.PK(m.Name+"_pk", cols...)
+		sb.PK(pkname, cols...)
 	}
 
 	_, err = sb.Exec()

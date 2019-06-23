@@ -72,7 +72,7 @@ type Dialect interface {
 	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
 
 	// DropIndexSQL 删除索引
-	DropIndexSQL(table, index string) (string, []interface{})
+	DropIndexSQL(table, index string) string
 
 	// 自定义获取 LastInsertID 的获取方式。
 	//

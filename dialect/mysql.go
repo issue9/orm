@@ -104,8 +104,8 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (m *mysql) DropIndexSQL(table, index string) (string, []interface{}) {
-	return `ALTER TABLE ` + table + ` DROP INDEX ` + index, nil
+func (m *mysql) DropIndexSQL(table, index string) string {
+	return `ALTER TABLE ` + table + ` DROP INDEX ` + index
 }
 
 func (m *mysql) TruncateTableSQL(model *orm.Model) []string {
