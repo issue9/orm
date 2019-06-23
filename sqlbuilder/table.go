@@ -31,7 +31,11 @@ type CreateTableStmt struct {
 
 type column struct {
 	Name string // 数据库的字段名
-	Type string // 类型，包含长度，可能是 BIGIINT，或是 VARCHAR(1024) 等格式
+
+	// 类型，包含类型、长度、主键等信息。
+	//
+	// 可能是 BIGIINT NOT NULL，或是 VARCHAR(1024) DEFAULT 'xx' 等格式
+	Type string
 }
 
 type foreignKey struct {
