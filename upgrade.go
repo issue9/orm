@@ -128,8 +128,10 @@ func (u *Upgrader) Do() error {
 
 	if len(u.dropCols) > 0 {
 		if err := u.dropColumns(e); err != nil {
-			err1 := rollback()
-			return errors.New(err1.Error() + err.Error())
+			if err1 := rollback(); err1 != nil {
+				return errors.New(err1.Error() + err.Error())
+			}
+			return err
 		}
 	}
 
