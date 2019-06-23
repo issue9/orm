@@ -54,28 +54,6 @@ func (s *sqlite3) VersionSQL() string {
 	return `select sqlite_version();`
 }
 
-func (s *sqlite3) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
-	buf.WriteString(col.Name)
-	buf.WriteByte(' ')
-
-	buf.WriteString(col.Type)
-	if isAI {
-		buf.WriteString(" PRIMARY KEY AUTOINCREMENT ")
-	}
-
-	if !col.Nullable {
-		buf.WriteString(" NOT NULL")
-	}
-
-	if col.HasDefault {
-		buf.WriteString(" DEFAULT '").
-			WriteString(col.Default).
-			WriteByte('\'')
-	}
-
-	return nil
-}
-
 func (s *sqlite3) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
 	if len(options[sqlite3RowID]) == 1 {
 		val, err := strconv.ParseBool(options[sqlite3RowID][0])
@@ -130,34 +108,55 @@ func (s *sqlite3) SQLType(col *orm.Column) (string, error) {
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		return "INTEGER", nil
+		return buildSqlite3Type("INTEGER", col), nil
 	case reflect.String:
-		return "TEXT", nil
+		return buildSqlite3Type("TEXT", col), nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return "INTEGER", nil
+		return buildSqlite3Type("INTEGER", col), nil
 	case reflect.Float32, reflect.Float64:
-		return "REAL", nil
+		return buildSqlite3Type("REAL", col), nil
 	case reflect.Array, reflect.Slice:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return "BLOB", nil
+			return buildSqlite3Type("BLOB", col), nil
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case rawBytes:
-			return "BLOB", nil
+			return buildSqlite3Type("BLOB", col), nil
 		case nullBool:
-			return "INTEGER", nil
+			return buildSqlite3Type("INTEGER", col), nil
 		case nullFloat64:
-			return "REAL", nil
+			return buildSqlite3Type("REAL", col), nil
 		case nullInt64:
-			return "INTEGER", nil
+			return buildSqlite3Type("INTEGER", col), nil
 		case nullString:
-			return "TEXT", nil
+			return buildSqlite3Type("TEXT", col), nil
 		case timeType:
-			return "DATETIME", nil
+			return buildSqlite3Type("DATETIME", col), nil
 		}
 	}
 
 	return "", errUncovert(col.GoType.Name())
+}
+
+// l 表示需要取的长度数量
+func buildSqlite3Type(typ string, col *orm.Column) string {
+	w := sqlbuilder.New(typ)
+
+	if col.IsAI() {
+		w.WriteString(" PRIMARY KEY AUTOINCREMENT ")
+	}
+
+	if !col.Nullable {
+		w.WriteString(" NOT NULL")
+	}
+
+	if col.HasDefault {
+		w.WriteString(" DEFAULT '").
+			WriteString(col.Default).
+			WriteByte('\'')
+	}
+
+	return w.String()
 }

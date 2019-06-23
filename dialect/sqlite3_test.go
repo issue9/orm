@@ -52,30 +52,30 @@ func TestSqlite3_SQLType(t *testing.T) {
 	col.GoType = reflect.TypeOf(1)
 	typ, err = s.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "INTEGER")
+	sqltest.Equal(a, typ, "INTEGER NOT NULL")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	buf.Reset()
 	typ, err = s.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "INTEGER")
+	sqltest.Equal(a, typ, "INTEGER NOT NULL")
 
 	col.GoType = reflect.TypeOf("abc")
 	buf.Reset()
 	typ, err = s.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "TEXT")
+	sqltest.Equal(a, typ, "TEXT NOT NULL")
 
 	col.GoType = reflect.TypeOf(1.2)
 	buf.Reset()
 	typ, err = s.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "REAL")
+	sqltest.Equal(a, typ, "REAL NOT NULL")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	buf.Reset()
 	typ, err = s.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "INTEGER")
+	sqltest.Equal(a, typ, "INTEGER NOT NULL")
 }

@@ -6,7 +6,6 @@ package dialect
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -75,29 +74,6 @@ func (p *postgres) SQL(sql string) (string, error) {
 	return string(ret), nil
 }
 
-func (p *postgres) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
-	buf.WriteString(col.Name)
-	buf.WriteByte(' ')
-
-	if isAI {
-		buf.WriteString(" SERIAL ")
-	} else {
-		buf.WriteString(col.Type).WriteByte(' ')
-	}
-
-	if !col.Nullable {
-		buf.WriteString(" NOT NULL")
-	}
-
-	if col.HasDefault {
-		buf.WriteString(" DEFAULT '").
-			WriteString(col.Default).
-			WriteByte('\'')
-	}
-
-	return nil
-}
-
 func (p *postgres) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
 	return nil
 }
@@ -135,61 +111,91 @@ func (p *postgres) SQLType(col *orm.Column) (string, error) {
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		return "BOOLEAN", nil
+		return buildPostgresType("BOOLEAN", col, 0), nil
 	case reflect.Int8, reflect.Int16, reflect.Uint8, reflect.Uint16:
 		if col.IsAI() {
-			return "SERIAL", nil
+			return buildPostgresType("SERIAL", col, 0), nil
 		}
-		return "SMALLINT", nil
+		return buildPostgresType("SMALLINT", col, 0), nil
 	case reflect.Int32, reflect.Uint32:
 		if col.IsAI() {
-			return "SERIAL", nil
+			return buildPostgresType("SERIAL", col, 0), nil
 		}
-		return "INT", nil
+		return buildPostgresType("INT", col, 0), nil
 	case reflect.Int64, reflect.Int, reflect.Uint64, reflect.Uint:
 		if col.IsAI() {
-			return "BIGSERIAL", nil
+			return buildPostgresType("BIGSERIAL", col, 0), nil
 		}
-		return "BIGINT", nil
+		return buildPostgresType("BIGINT", col, 0), nil
 	case reflect.Float32, reflect.Float64:
 		if col.Len1 == 0 || col.Len2 == 0 {
 			return "", errMissLength
 		}
-		return fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2), nil
+		return buildPostgresType("NUMERIC", col, 2), nil
 	case reflect.String:
 		if col.Len1 == -1 || col.Len1 > 65533 {
-			return "TEXT", nil
+			return buildPostgresType("TEXT", col, 0), nil
 		}
-		return fmt.Sprintf("VARCHAR(%d)", col.Len1), nil
+		return buildPostgresType("VARCHAR", col, 1), nil
 	case reflect.Slice, reflect.Array:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return "BYTEA", nil
+			return buildPostgresType("BYTEA", col, 0), nil
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case rawBytes:
-			return "BYTEA", nil
+			return buildPostgresType("BYTEA", col, 0), nil
 		case nullBool:
-			return "BOOLEAN", nil
+			return buildPostgresType("BOOLEAN", col, 0), nil
 		case nullFloat64:
 			if col.Len1 == 0 || col.Len2 == 0 {
 				return "", errMissLength
 			}
-			return fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2), nil
+			return buildPostgresType("NUMERIC", col, 2), nil
 		case nullInt64:
 			if col.IsAI() {
-				return "BIGSERIAL", nil
+				return buildPostgresType("BIGSERIAL", col, 0), nil
 			}
-			return "BIGINT", nil
+			return buildPostgresType("BIGINT", col, 0), nil
 		case nullString:
 			if col.Len1 == -1 || col.Len1 > 65533 {
-				return "TEXT", nil
+				return buildPostgresType("TEXT", col, 0), nil
 			}
-			return fmt.Sprintf("VARCHAR(%d)", col.Len1), nil
+			return buildPostgresType("VARCHAR", col, 1), nil
 		case timeType:
-			return fmt.Sprintf("TIMESTAMP(%d)", col.Len1), nil
+			return buildPostgresType("TIMESTAMP", col, 1), nil
 		}
 	}
 
 	return "", errUncovert(col.GoType.Name())
+}
+
+// l 表示需要取的长度数量
+func buildPostgresType(typ string, col *orm.Column, l int) string {
+	w := sqlbuilder.New(typ)
+
+	switch {
+	case l == 1 && col.Len1 > 0:
+		w.WriteByte('(')
+		w.WriteString(strconv.Itoa(col.Len1))
+		w.WriteByte(')')
+	case l == 2:
+		w.WriteByte('(')
+		w.WriteString(strconv.Itoa(col.Len1))
+		w.WriteByte(',')
+		w.WriteString(strconv.Itoa(col.Len2))
+		w.WriteByte(')')
+	}
+
+	if !col.Nullable {
+		w.WriteString(" NOT NULL")
+	}
+
+	if col.HasDefault {
+		w.WriteString(" DEFAULT '")
+		w.WriteString(col.Default)
+		w.WriteByte('\'')
+	}
+
+	return w.String()
 }

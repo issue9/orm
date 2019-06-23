@@ -52,30 +52,30 @@ func TestMysql_SQLType(t *testing.T) {
 	col.GoType = reflect.TypeOf(1)
 	typ, err = m.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT")
+	sqltest.Equal(a, typ, "BIGINT NOT NULL")
 
 	// int with len
 	col.Len1 = 5
 	col.Len2 = 6
 	typ, err = m.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT(5)")
+	sqltest.Equal(a, typ, "BIGINT(5) NOT NULL")
 
 	// string:abc
 	col.GoType = reflect.TypeOf("abc")
 	typ, err = m.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "VARCHAR(5)")
+	sqltest.Equal(a, typ, "VARCHAR(5) NOT NULL")
 
 	// float
 	col.GoType = reflect.TypeOf(1.2)
 	typ, err = m.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "DOUBLE(5,6)")
+	sqltest.Equal(a, typ, "DOUBLE(5,6) NOT NULL")
 
 	// NullInt64
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	typ, err = m.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT(5)")
+	sqltest.Equal(a, typ, "BIGINT(5) NOT NULL")
 }

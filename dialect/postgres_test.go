@@ -31,33 +31,33 @@ func TestPostgres_SQLType(t *testing.T) {
 	col.GoType = reflect.TypeOf(1)
 	typ, err = p.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT")
+	sqltest.Equal(a, typ, "BIGINT NOT NULL")
 
 	col.Len1 = 5
 	col.Len2 = 6
 	typ, err = p.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT")
+	sqltest.Equal(a, typ, "BIGINT NOT NULL")
 
 	col.GoType = reflect.TypeOf("abc")
 	typ, err = p.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "VARCHAR(5)")
+	sqltest.Equal(a, typ, "VARCHAR(5) NOT NULL")
 
 	col.GoType = reflect.TypeOf(1.2)
 	typ, err = p.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "NUMERIC(5,6)")
+	sqltest.Equal(a, typ, "NUMERIC(5,6) NOT NULL")
 
 	col.GoType = reflect.TypeOf(sql.NullInt64{})
 	typ, err = p.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT")
+	sqltest.Equal(a, typ, "BIGINT NOT NULL")
 
 	col.GoType = reflect.TypeOf(sql.RawBytes("123"))
 	typ, err = p.SQLType(col)
 	a.NotError(err)
-	sqltest.Equal(a, typ, "BYTEA")
+	sqltest.Equal(a, typ, "BYTEA NOT NULL")
 }
 
 func TestPostgres_SQL(t *testing.T) {

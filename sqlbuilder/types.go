@@ -86,9 +86,6 @@ type Dialect interface {
 	// 创建表时根据附加信息返回的部分 SQL 语句
 	CreateTableOptionsSQL(sql *SQLBuilder, meta map[string][]string) error
 
-	// 生成 AI 列的语句
-	CreateColumnSQL(sql *SQLBuilder, col *Column, isAI bool) error
-
 	// 创建 AI 约束
 	//CreateConstraintAI(name,col string)(string,error)
 }

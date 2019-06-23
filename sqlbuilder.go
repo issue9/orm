@@ -134,7 +134,7 @@ func create(e Engine, v interface{}) error {
 		if err != nil {
 			return err
 		}
-		sb.Column("{"+col.Name+"}", typ, col.Nullable, col.HasDefault, col.Default)
+		sb.Column("{"+col.Name+"}", typ)
 	}
 
 	for name, index := range m.Indexes {
@@ -161,10 +161,10 @@ func create(e Engine, v interface{}) error {
 		sb.ForeignKey("{"+fk.Name+"}", "{"+fk.Column.Name+"}", "{"+fk.RefTableName+"}", "{"+fk.RefColName+"}", fk.UpdateRule, fk.DeleteRule)
 	}
 
-	pkname :=m.Name +"_pk"
+	pkname := m.Name + "_pk"
 	if m.AI != nil {
 		sb.AutoIncrement(pkname, "{"+m.AI.Name+"}")
-	}else if len(m.PK) > 0 {
+	} else if len(m.PK) > 0 {
 		cols := make([]string, 0, len(m.PK))
 		for _, col := range m.PK {
 			cols = append(cols, "{"+col.Name+"}")

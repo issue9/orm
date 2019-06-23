@@ -6,7 +6,6 @@ package dialect
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 
@@ -57,29 +56,6 @@ func (m *mysql) VersionSQL() string {
 	return `select version();`
 }
 
-func (m *mysql) CreateColumnSQL(buf *sqlbuilder.SQLBuilder, col *sqlbuilder.Column, isAI bool) error {
-	buf.WriteString(col.Name)
-	buf.WriteByte(' ')
-
-	buf.WriteString(col.Type).WriteByte(' ')
-
-	if !col.Nullable {
-		buf.WriteString(" NOT NULL")
-	}
-
-	if isAI {
-		buf.WriteString(" PRIMARY KEY AUTO_INCREMENT ")
-	}
-
-	if col.HasDefault {
-		buf.WriteString(" DEFAULT '").
-			WriteString(col.Default).
-			WriteByte('\'')
-	}
-
-	return nil
-}
-
 func (m *mysql) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
 	if len(options[mysqlEngine]) == 1 {
 		w.WriteString(" ENGINE=")
@@ -125,68 +101,99 @@ func (m *mysql) SQLType(col *orm.Column) (string, error) {
 		return "", errGoTypeIsNil
 	}
 
-	intLen := func(typ string) string {
-		if col.Len1 > 0 {
-			return typ + "(" + strconv.Itoa(col.Len1) + ")"
-		}
-		return typ
-	}
-
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		return "BOOLEAN", nil
+		return buildMysqlType("BOOLEAN", col, false, 0), nil
 	case reflect.Int8:
-		return intLen("SMALLINT"), nil
+		return buildMysqlType("SMALLINT", col, false, 1), nil
 	case reflect.Int16:
-		return intLen("MEDIUMINT"), nil
+		return buildMysqlType("MEDIUMINT", col, false, 1), nil
 	case reflect.Int32:
-		return intLen("INT"), nil
+		return buildMysqlType("INT", col, false, 1), nil
 	case reflect.Int64, reflect.Int: // reflect.Int 大小未知，都当作是 BIGINT 处理
-		return intLen("BIGINT"), nil
+		return buildMysqlType("BIGINT", col, false, 1), nil
 	case reflect.Uint8:
-		return intLen("SMALLINT") + " UNSIGNED", nil
+		return buildMysqlType("SMALLINT", col, true, 1), nil
 	case reflect.Uint16:
-		return intLen("MEDIUMINT") + " UNSIGNED", nil
+		return buildMysqlType("MEDIUMINT", col, true, 1), nil
 	case reflect.Uint32:
-		return intLen("INT") + " UNSIGNED", nil
+		return buildMysqlType("INT", col, true, 1), nil
 	case reflect.Uint64, reflect.Uint, reflect.Uintptr:
-		return intLen("BIGINT") + " UNSIGNED", nil
+		return buildMysqlType("BIGINT", col, true, 1), nil
 	case reflect.Float32, reflect.Float64:
 		if col.Len1 == 0 || col.Len2 == 0 {
 			return "", errMissLength
 		}
-		return fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2), nil
+		return buildMysqlType("DOUBLE", col, false, 2), nil
 	case reflect.String:
 		if col.Len1 == -1 || col.Len1 > 65533 {
-			return "LONGTEXT", nil
+			return buildMysqlType("LONGTEXT", col, false, 0), nil
 		}
-		return fmt.Sprintf("VARCHAR(%d)", col.Len1), nil
+		return buildMysqlType("VARCHAR", col, false, 1), nil
 	case reflect.Slice, reflect.Array:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return "BLOB", nil
+			return buildMysqlType("BLOB", col, false, 0), nil
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case rawBytes:
-			return "BLOB", nil
+			return buildMysqlType("BLOB", col, false, 0), nil
 		case nullBool:
-			return "BOOLEAN", nil
+			return buildMysqlType("BOOLEAN", col, false, 0), nil
 		case nullFloat64:
 			if col.Len1 == 0 || col.Len2 == 0 {
 				return "", errMissLength
 			}
-			return fmt.Sprintf("DOUBLE(%d,%d)", col.Len1, col.Len2), nil
+			return buildMysqlType("DOUBLE", col, false, 2), nil
 		case nullInt64:
-			return intLen("BIGINT"), nil
+			return buildMysqlType("BIGINT", col, false, 1), nil
 		case nullString:
 			if col.Len1 == -1 || col.Len1 > 65533 {
-				return "LONGTEXT", nil
+				return buildMysqlType("LONGTEXT", col, false, 0), nil
 			}
-			return fmt.Sprintf("VARCHAR(%d)", col.Len1), nil
+			return buildMysqlType("VARCHAR", col, false, 1), nil
 		case timeType:
-			return "DATETIME", nil
+			return buildMysqlType("DATETIME", col, false, 0), nil
 		}
 	}
 
 	return "", errUncovert(col.GoType.Name())
+}
+
+// l 表示需要取的长度数量
+func buildMysqlType(typ string, col *orm.Column, unsigned bool, l int) string {
+	w := sqlbuilder.New(typ)
+
+	switch {
+	case l == 1 && col.Len1 > 0:
+		w.WriteByte('(')
+		w.WriteString(strconv.Itoa(col.Len1))
+		w.WriteByte(')')
+	case l == 2:
+		w.WriteByte('(')
+		w.WriteString(strconv.Itoa(col.Len1))
+		w.WriteByte(',')
+		w.WriteString(strconv.Itoa(col.Len2))
+		w.WriteByte(')')
+	}
+
+	if unsigned {
+		w.WriteString(" UNSIGNED")
+	}
+
+	if col.IsAI() {
+		w.WriteString(" PRIMARY KEY AUTO_INCREMENT")
+	}
+
+	if !col.Nullable {
+		w.WriteString(" NOT NULL")
+	}
+
+	if col.HasDefault {
+		w.WriteString(" DEFAULT '")
+		w.WriteString(col.Default)
+		w.WriteByte('\'')
+	}
+
+	return w.String()
 }

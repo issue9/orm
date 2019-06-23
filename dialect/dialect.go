@@ -58,7 +58,7 @@ func mysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interfac
 	return query + " ", []interface{}{limit, offset[0]}
 }
 
-// oracle系列数据库分页语法的实现。支持以下数据库：
+// oracle 系列数据库分页语法的实现。支持以下数据库：
 // Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
 func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	query := "FETCH NEXT "

@@ -15,7 +15,7 @@ type CreateTableStmt struct {
 	dialect Dialect
 
 	name    string
-	columns []*Column
+	columns []*column
 	indexes []*indexColumn
 
 	// 约束
@@ -29,13 +29,9 @@ type CreateTableStmt struct {
 	options map[string][]string
 }
 
-// Column 列结构
-type Column struct {
-	Name       string // 数据库的字段名
-	Type       string // 类型，包含长度，可能是 BIGIINT，或是 VARCHAR(1024) 等格式
-	Nullable   bool   // 是否可以为 NULL
-	Default    string // 默认值
-	HasDefault bool
+type column struct {
+	Name string // 数据库的字段名
+	Type string // 类型，包含长度，可能是 BIGIINT，或是 VARCHAR(1024) 等格式
 }
 
 type foreignKey struct {
@@ -89,18 +85,12 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 
 // Column 添加列
 //
-// typ 应该包含长度信息
-// hasDefault 是否需要设置默认值；
-// def 如果 hasDefault 为 true，则 def 为其默认值，否则 def 不启作用；
-func (stmt *CreateTableStmt) Column(name, typ string, nullable, hasDefault bool, def string) *CreateTableStmt {
-	col := &Column{
-		Name:       name,
-		Type:       typ,
-		Nullable:   nullable,
-		HasDefault: hasDefault,
-	}
-	if hasDefault {
-		col.Default = def
+// name 列名
+// typ 包括了长度 PK 等所有信息，比如 INT NOT NULL PRIMARY KEY AUTO_INCREMENT
+func (stmt *CreateTableStmt) Column(name, typ string) *CreateTableStmt {
+	col := &column{
+		Name: name,
+		Type: typ,
 	}
 
 	stmt.columns = append(stmt.columns, col)
@@ -195,12 +185,10 @@ func (stmt *CreateTableStmt) SQL() ([]string, error) {
 
 	// 普通列
 	for _, col := range stmt.columns {
-		isAI := stmt.ai != nil && stmt.ai.Columns[0] == col.Name
-		err := stmt.dialect.CreateColumnSQL(w, col, isAI)
-		if err != nil {
-			return nil, err
-		}
-		w.WriteByte(',')
+		w.WriteString(col.Name).
+			WriteByte(' ').
+			WriteString(col.Type).
+			WriteByte(',')
 	}
 
 	if err := stmt.createConstraints(w); err != nil {
