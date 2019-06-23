@@ -17,8 +17,10 @@ type Upgrader struct {
 	model *Model
 	err   error
 
+	addCols   []*Column
 	dropCols  []string
 	dropConts []string
+	// TODO dropConts,dropIndex,addIndex
 }
 
 // Upgrade 生成 Upgrader 对象
@@ -29,8 +31,11 @@ func (db *DB) Upgrade(v interface{}) (*Upgrader, error) {
 	}
 
 	return &Upgrader{
-		db:    db,
-		model: m,
+		db:        db,
+		model:     m,
+		addCols:   []*Column{},
+		dropCols:  []string{},
+		dropConts: []string{},
 	}, nil
 }
 
@@ -63,7 +68,7 @@ func (u *Upgrader) addColumn(name string) {
 		panic(fmt.Sprintf("列名 %s 不存在", name))
 	}
 
-	// TODO
+	u.addCols = append(u.addCols, col)
 }
 
 // DropColumns 删除表中的列，列名可以不存在于表模型，
@@ -135,9 +140,48 @@ func (u *Upgrader) Do() error {
 		}
 	}
 
+	if len(u.dropConts) > 0 {
+		if err := u.dropConstraints(e); err != nil {
+			if err1 := rollback(); err1 != nil {
+				return errors.New(err1.Error() + err.Error())
+			}
+			return err
+		}
+	}
+
+	if len(u.addCols) > 0 {
+		if err := u.addColumns(e); err != nil {
+			if err1 := rollback(); err1 != nil {
+				return errors.New(err1.Error() + err.Error())
+			}
+			return err
+		}
+	}
+
 	// TODO
 
 	return commit()
+}
+
+func (u *Upgrader) addColumns(e Engine) error {
+	sql := sqlbuilder.AddColumn(e)
+
+	for _, col := range u.addCols {
+		sql.Reset()
+		typ, err := u.DB().Dialect().SQLType(col)
+		if err != nil {
+			return err
+		}
+
+		_, err = sql.Table(u.model.Name).
+			Column(col.Name, typ, col.Nullable, col.HasDefault, col.Default, col.IsAI()).
+			Exec()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (u *Upgrader) dropConstraints(e Engine) error {
