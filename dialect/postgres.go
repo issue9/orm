@@ -158,9 +158,9 @@ func (p *postgres) SQLType(col *orm.Column) (string, error) {
 		return fmt.Sprintf("NUMERIC(%d,%d)", col.Len1, col.Len2), nil
 	case reflect.String:
 		if col.Len1 == -1 || col.Len1 > 65533 {
-			return ("TEXT"), nil
+			return "TEXT", nil
 		}
-		return (fmt.Sprintf("VARCHAR(%d)", col.Len1)), nil
+		return fmt.Sprintf("VARCHAR(%d)", col.Len1), nil
 	case reflect.Slice, reflect.Array:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
 			return "BYTEA", nil

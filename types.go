@@ -32,8 +32,8 @@ type Engine interface {
 	Dialect() Dialect
 
 	// 理论上功能等同于以下两步操作：
-	//  rslt,err := engine.Insert(obj)
-	//  id,err := rslt.LastInsertId()
+	//  rslt, err := engine.Insert(obj)
+	//  id, err := rslt.LastInsertId()
 	// 但是实际上部分数据库不支持直接在 sql.Result 中获取 LastInsertId，
 	// 比如 postgresql，所以使用 LastInsertID() 会是比 sql.Result
 	// 更简单和安全的方法。
