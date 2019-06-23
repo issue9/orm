@@ -17,10 +17,16 @@ type Upgrader struct {
 	model *Model
 	err   error
 
-	addCols   []*Column
-	dropCols  []string
+	addCols  []*Column
+	dropCols []string
+
+	addConts  map[string][]string
 	dropConts []string
-	// TODO dropConts,dropIndex,addIndex
+
+	addIdxs  map[string][]string
+	dropIdxs []string
+
+	// TODO 修改列信息
 }
 
 // Upgrade 生成 Upgrader 对象
