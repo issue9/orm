@@ -284,7 +284,13 @@ func (tx *Tx) MultDelete(objs ...interface{}) error {
 
 // MultCreate 创建数据表。
 func (tx *Tx) MultCreate(objs ...interface{}) error {
-	return tx.db.MultCreate(objs...)
+	for _, v := range objs {
+		if err := tx.Create(v); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // MultDrop 删除表结构及数据。
@@ -305,5 +311,6 @@ func (tx *Tx) MultTruncate(objs ...interface{}) error {
 			return err
 		}
 	}
+
 	return nil
 }

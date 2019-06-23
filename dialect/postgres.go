@@ -107,17 +107,17 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 }
 
 func (p *postgres) DropIndexSQL(table, index string) (string, []interface{}) {
-	return `DROP INDEX IF EXISTS {` + index + `}`, nil
+	return `DROP INDEX IF EXISTS ` + index, nil
 }
 
 func (p *postgres) TruncateTableSQL(m *orm.Model) []string {
-	w := sqlbuilder.New("TRUNCATE TABLE #").WriteString(m.Name)
+	sql := "TRUNCATE TABLE #" + m.Name
 
 	if m.AI != nil {
-		w.WriteString(" RESTART IDENTITY")
+		sql += " RESTART IDENTITY"
 	}
 
-	return []string{w.String()}
+	return []string{sql}
 }
 
 func (p *postgres) TransactionalDDL() bool {
