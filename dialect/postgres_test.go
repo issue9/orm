@@ -10,15 +10,15 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 func TestPostgres_SQLType(t *testing.T) {
 	p := &postgres{}
 
 	a := assert.New(t)
-	col := &orm.Column{}
+	col := &sqlbuilder.Column{}
 
 	// col == nil
 	typ, err := p.SQLType(nil)
@@ -33,8 +33,7 @@ func TestPostgres_SQLType(t *testing.T) {
 	a.NotError(err)
 	sqltest.Equal(a, typ, "BIGINT NOT NULL")
 
-	col.Len1 = 5
-	col.Len2 = 6
+	col.Length = []int{5, 6}
 	typ, err = p.SQLType(col)
 	a.NotError(err)
 	sqltest.Equal(a, typ, "BIGINT NOT NULL")

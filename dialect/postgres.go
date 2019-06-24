@@ -6,6 +6,7 @@ package dialect
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -100,7 +101,7 @@ func (p *postgres) TransactionalDDL() bool {
 	return true
 }
 
-func (p *postgres) SQLType(col *orm.Column) (string, error) {
+func (p *postgres) SQLType(col *sqlbuilder.Column) (string, error) {
 	if col == nil {
 		return "", errColIsNil
 	}
@@ -113,27 +114,27 @@ func (p *postgres) SQLType(col *orm.Column) (string, error) {
 	case reflect.Bool:
 		return buildPostgresType("BOOLEAN", col, 0), nil
 	case reflect.Int8, reflect.Int16, reflect.Uint8, reflect.Uint16:
-		if col.IsAI() {
+		if col.AI {
 			return buildPostgresType("SERIAL", col, 0), nil
 		}
 		return buildPostgresType("SMALLINT", col, 0), nil
 	case reflect.Int32, reflect.Uint32:
-		if col.IsAI() {
+		if col.AI {
 			return buildPostgresType("SERIAL", col, 0), nil
 		}
 		return buildPostgresType("INT", col, 0), nil
 	case reflect.Int64, reflect.Int, reflect.Uint64, reflect.Uint:
-		if col.IsAI() {
+		if col.AI {
 			return buildPostgresType("BIGSERIAL", col, 0), nil
 		}
 		return buildPostgresType("BIGINT", col, 0), nil
 	case reflect.Float32, reflect.Float64:
-		if col.Len1 == 0 || col.Len2 == 0 {
+		if len(col.Length) != 2 {
 			return "", errMissLength
 		}
 		return buildPostgresType("NUMERIC", col, 2), nil
 	case reflect.String:
-		if col.Len1 == -1 || col.Len1 > 65533 {
+		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
 			return buildPostgresType("TEXT", col, 0), nil
 		}
 		return buildPostgresType("VARCHAR", col, 1), nil
@@ -148,17 +149,17 @@ func (p *postgres) SQLType(col *orm.Column) (string, error) {
 		case nullBool:
 			return buildPostgresType("BOOLEAN", col, 0), nil
 		case nullFloat64:
-			if col.Len1 == 0 || col.Len2 == 0 {
+			if len(col.Length) != 2 {
 				return "", errMissLength
 			}
 			return buildPostgresType("NUMERIC", col, 2), nil
 		case nullInt64:
-			if col.IsAI() {
+			if col.AI {
 				return buildPostgresType("BIGSERIAL", col, 0), nil
 			}
 			return buildPostgresType("BIGINT", col, 0), nil
 		case nullString:
-			if col.Len1 == -1 || col.Len1 > 65533 {
+			if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
 				return buildPostgresType("TEXT", col, 0), nil
 			}
 			return buildPostgresType("VARCHAR", col, 1), nil
@@ -171,19 +172,19 @@ func (p *postgres) SQLType(col *orm.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildPostgresType(typ string, col *orm.Column, l int) string {
+func buildPostgresType(typ string, col *sqlbuilder.Column, l int) string {
 	w := sqlbuilder.New(typ)
 
 	switch {
-	case l == 1 && col.Len1 > 0:
+	case l == 1 && len(col.Length) > 0:
 		w.WriteByte('(')
-		w.WriteString(strconv.Itoa(col.Len1))
+		w.WriteString(strconv.Itoa(col.Length[0]))
 		w.WriteByte(')')
-	case l == 2:
+	case l == 2 && len(col.Length) > 1:
 		w.WriteByte('(')
-		w.WriteString(strconv.Itoa(col.Len1))
+		w.WriteString(strconv.Itoa(col.Length[0]))
 		w.WriteByte(',')
-		w.WriteString(strconv.Itoa(col.Len2))
+		w.WriteString(strconv.Itoa(col.Length[1]))
 		w.WriteByte(')')
 	}
 
@@ -193,7 +194,7 @@ func buildPostgresType(typ string, col *orm.Column, l int) string {
 
 	if col.HasDefault {
 		w.WriteString(" DEFAULT '")
-		w.WriteString(col.Default)
+		w.WriteString(fmt.Sprint(col.Default))
 		w.WriteByte('\'')
 	}
 

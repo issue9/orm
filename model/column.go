@@ -7,29 +7,22 @@ package model
 import (
 	"reflect"
 	"strconv"
+
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // Column 列结构
 type Column struct {
-	model *Model
-
-	Name     string       // 数据库的字段名
-	Len1     int          // 长度1，仅对部分类型启作用
-	Len2     int          // 长度2，仅对部分类型启作用
-	Nullable bool         // 是否可以为 NULL
-	GoType   reflect.Type // Go 语言中的数据类型
-	zero     interface{}  // GoType 的零值
-	GoName   string       // 结构字段名
-
-	HasDefault bool
-	Default    string // 默认值
+	*sqlbuilder.Column
+	model  *Model
+	zero   interface{} // GoType 的零值
+	GoName string      // 结构字段名
 }
 
 func (m *Model) newColumn(field reflect.StructField) *Column {
 	return &Column{
-		GoType: field.Type,
+		Column: sqlbuilder.NewColumn(field.Name, field.Type, false, false, false, nil),
 		zero:   reflect.Zero(field.Type).Interface(),
-		Name:   field.Name,
 		model:  m,
 		GoName: field.Name,
 	}
@@ -52,28 +45,17 @@ func (c *Column) IsZero(v reflect.Value) bool {
 	return false
 }
 
-// IsAI 当前列是否为自增列
-func (c *Column) IsAI() bool {
-	return (c.model != nil) && (c.model.AI == c)
-}
-
 // 检测长试是否合法，必须要  Column 初始化已经完成。
 func (c *Column) checkLen() error {
 	if c.GoType.Kind() == reflect.String {
-		if c.Len1 == 0 {
-			return propertyError(c.Name, "len", "字符类型，必须指定 len 属性")
-		}
-
-		if c.Len1 < -1 {
-			return propertyError(c.Name, "len", "必须大于 0 或是 -1")
+		if len(c.Length) > 0 && (c.Length[0] < -1 || c.Length[0] == 0) {
+			return propertyError(c.Name, "len", "必须大于 0 或是等于 -1")
 		}
 	} else {
-		if c.Len1 < 0 { // 不能为负数
-			return propertyError(c.Name, "len", "不能小于 0")
-		}
-
-		if c.Len2 < 0 { // 不能为负数
-			return propertyError(c.Name, "len", "不能小于 0")
+		for _, v := range c.Length {
+			if v < 0 {
+				return propertyError(c.Name, "len", "不能小于 0")
+			}
 		}
 	}
 
@@ -83,27 +65,32 @@ func (c *Column) checkLen() error {
 // 从参数中获取 Column 的 len1 和 len2 变量。
 // len(len1,len2)
 func (c *Column) setLen(vals []string) (err error) {
-	switch len(vals) {
-	case 0:
+	l := len(vals)
+	switch l {
 	case 1:
-		c.Len1, err = strconv.Atoi(vals[0])
 	case 2:
-		if c.Len1, err = strconv.Atoi(vals[0]); err != nil {
-			return err
-		}
-
-		c.Len2, err = strconv.Atoi(vals[1])
+	case 0:
+		return nil
 	default:
 		return propertyError(c.Name, "len", "过多的参数")
 	}
 
-	return
+	c.Length = make([]int, 0, l)
+	for _, val := range vals {
+		v, err := strconv.Atoi(val)
+		if err != nil {
+			return err
+		}
+		c.Length = append(c.Length, v)
+	}
+
+	return nil
 }
 
 // 从 vals 中分析，得出 Column.Nullable 的值。
 // nullable; or nullable(true);
 func (c *Column) setNullable(vals []string) (err error) {
-	if c.IsAI() {
+	if c.AI {
 		return propertyError(c.Name, "nullable", "自增列不能设置此值")
 	}
 

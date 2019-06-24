@@ -235,7 +235,7 @@ func (m *Model) parseMeta(tag string) error {
 
 // occ(true) or occ
 func (m *Model) setOCC(c *Column, vals []string) error {
-	if c.IsAI() || c.Nullable {
+	if c.AI || c.Nullable {
 		return propertyError(c.Name, "occ", "自增列和允许为空的列不能作为乐观锁列")
 	}
 
@@ -355,6 +355,7 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 	}
 
 	m.AI = col
+	col.AI = true
 	return nil
 }
 

@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -37,7 +36,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 
 func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
-	col := &orm.Column{}
+	col := &sqlbuilder.Column{}
 	var m = &mysql{}
 
 	// col == nil
@@ -55,8 +54,7 @@ func TestMysql_SQLType(t *testing.T) {
 	sqltest.Equal(a, typ, "BIGINT NOT NULL")
 
 	// int with len
-	col.Len1 = 5
-	col.Len2 = 6
+	col.Length = []int{5, 6}
 	typ, err = m.SQLType(col)
 	a.NotError(err)
 	sqltest.Equal(a, typ, "BIGINT(5) NOT NULL")

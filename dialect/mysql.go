@@ -6,6 +6,7 @@ package dialect
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 
@@ -92,7 +93,7 @@ func (m *mysql) TransactionalDDL() bool {
 	return false
 }
 
-func (m *mysql) SQLType(col *orm.Column) (string, error) {
+func (m *mysql) SQLType(col *sqlbuilder.Column) (string, error) {
 	if col == nil {
 		return "", errColIsNil
 	}
@@ -121,12 +122,12 @@ func (m *mysql) SQLType(col *orm.Column) (string, error) {
 	case reflect.Uint64, reflect.Uint, reflect.Uintptr:
 		return buildMysqlType("BIGINT", col, true, 1), nil
 	case reflect.Float32, reflect.Float64:
-		if col.Len1 == 0 || col.Len2 == 0 {
+		if len(col.Length) != 2 {
 			return "", errMissLength
 		}
 		return buildMysqlType("DOUBLE", col, false, 2), nil
 	case reflect.String:
-		if col.Len1 == -1 || col.Len1 > 65533 {
+		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
 			return buildMysqlType("LONGTEXT", col, false, 0), nil
 		}
 		return buildMysqlType("VARCHAR", col, false, 1), nil
@@ -141,14 +142,14 @@ func (m *mysql) SQLType(col *orm.Column) (string, error) {
 		case nullBool:
 			return buildMysqlType("BOOLEAN", col, false, 0), nil
 		case nullFloat64:
-			if col.Len1 == 0 || col.Len2 == 0 {
+			if len(col.Length) != 2 {
 				return "", errMissLength
 			}
 			return buildMysqlType("DOUBLE", col, false, 2), nil
 		case nullInt64:
 			return buildMysqlType("BIGINT", col, false, 1), nil
 		case nullString:
-			if col.Len1 == -1 || col.Len1 > 65533 {
+			if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
 				return buildMysqlType("LONGTEXT", col, false, 0), nil
 			}
 			return buildMysqlType("VARCHAR", col, false, 1), nil
@@ -161,19 +162,19 @@ func (m *mysql) SQLType(col *orm.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildMysqlType(typ string, col *orm.Column, unsigned bool, l int) string {
+func buildMysqlType(typ string, col *sqlbuilder.Column, unsigned bool, l int) string {
 	w := sqlbuilder.New(typ)
 
 	switch {
-	case l == 1 && col.Len1 > 0:
+	case l == 1 && len(col.Length) > 0:
 		w.WriteByte('(')
-		w.WriteString(strconv.Itoa(col.Len1))
+		w.WriteString(strconv.Itoa(col.Length[0]))
 		w.WriteByte(')')
-	case l == 2:
+	case l == 2 && len(col.Length) > 1:
 		w.WriteByte('(')
-		w.WriteString(strconv.Itoa(col.Len1))
+		w.WriteString(strconv.Itoa(col.Length[0]))
 		w.WriteByte(',')
-		w.WriteString(strconv.Itoa(col.Len2))
+		w.WriteString(strconv.Itoa(col.Length[1]))
 		w.WriteByte(')')
 	}
 
@@ -181,7 +182,7 @@ func buildMysqlType(typ string, col *orm.Column, unsigned bool, l int) string {
 		w.WriteString(" UNSIGNED")
 	}
 
-	if col.IsAI() {
+	if col.AI {
 		w.WriteString(" PRIMARY KEY AUTO_INCREMENT")
 	}
 
@@ -191,7 +192,7 @@ func buildMysqlType(typ string, col *orm.Column, unsigned bool, l int) string {
 
 	if col.HasDefault {
 		w.WriteString(" DEFAULT '")
-		w.WriteString(col.Default)
+		w.WriteString(fmt.Sprint(col.Default)) // TODO: 是否需要和专门的转换？
 		w.WriteByte('\'')
 	}
 

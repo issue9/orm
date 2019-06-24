@@ -6,6 +6,7 @@ package dialect
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 
@@ -97,7 +98,7 @@ func (s *sqlite3) TransactionalDDL() bool {
 }
 
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) SQLType(col *orm.Column) (string, error) {
+func (s *sqlite3) SQLType(col *sqlbuilder.Column) (string, error) {
 	if col == nil {
 		return "", errColIsNil
 	}
@@ -141,10 +142,10 @@ func (s *sqlite3) SQLType(col *orm.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildSqlite3Type(typ string, col *orm.Column) string {
+func buildSqlite3Type(typ string, col *sqlbuilder.Column) string {
 	w := sqlbuilder.New(typ)
 
-	if col.IsAI() {
+	if col.AI {
 		w.WriteString(" PRIMARY KEY AUTOINCREMENT ")
 	}
 
@@ -154,7 +155,7 @@ func buildSqlite3Type(typ string, col *orm.Column) string {
 
 	if col.HasDefault {
 		w.WriteString(" DEFAULT '").
-			WriteString(col.Default).
+			WriteString(fmt.Sprint(col.Default)).
 			WriteByte('\'')
 	}
 

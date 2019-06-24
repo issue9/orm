@@ -10,14 +10,19 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 func TestColumn_SetLen(t *testing.T) {
 	a := assert.New(t)
-	col := &Column{}
+	col := &Column{
+		Column: &sqlbuilder.Column{},
+	}
 
-	a.NotError(col.setLen([]string{})).Equal(col.Len1, 0).Equal(col.Len2, 0)
-	a.NotError(col.setLen([]string{"1", "2"})).Equal(col.Len1, 1).Equal(col.Len2, 2)
+	a.NotError(col.setLen([]string{})).Empty(col.Length)
+	a.NotError(col.setLen([]string{"1", "2"})).
+		Equal(col.Length[0], 1).
+		Equal(col.Length[1], 2)
 	a.Error(col.setLen([]string{"1", "2", "3"}))
 	a.Error(col.setLen([]string{"1", "one"}))
 	a.Error(col.setLen([]string{"one", "one"}))
@@ -25,7 +30,9 @@ func TestColumn_SetLen(t *testing.T) {
 
 func TestColumn_IsZero(t *testing.T) {
 	a := assert.New(t)
-	col := &Column{}
+	col := &Column{
+		Column: &sqlbuilder.Column{},
+	}
 
 	col.GoType = reflect.TypeOf(int(5))
 	col.zero = reflect.Zero(col.GoType).Interface()
@@ -49,32 +56,36 @@ func TestColumn_checkLen(t *testing.T) {
 	a := assert.New(t)
 
 	col := &Column{
-		GoType: reflect.TypeOf("string"),
-		Len1:   -1,
+		Column: &sqlbuilder.Column{
+			GoType: reflect.TypeOf("string"),
+			Length: []int{-1},
+		},
 	}
 	a.NotError(col.checkLen())
 
-	col.Len1 = 0
+	col.Length[0] = 0
 	a.Error(col.checkLen())
 
-	col.Len1 = -2
+	col.Length[0] = -2
 	a.Error(col.checkLen())
 
 	col.GoType = reflect.TypeOf(1)
-	col.Len1 = -2
+	col.Length[0] = -2
 	a.Error(col.checkLen())
 
-	col.Len1 = -1
+	col.Length[0] = -1
 	a.Error(col.checkLen())
 
-	col.Len1 = 0
+	col.Length[0] = 0
 	a.NotError(col.checkLen())
 }
 
 func TestColumn_SetNullable(t *testing.T) {
 	a := assert.New(t)
 
-	col := &Column{}
+	col := &Column{
+		Column: &sqlbuilder.Column{},
+	}
 
 	a.False(col.Nullable)
 	a.NotError(col.setNullable([]string{})).True(col.Nullable)
@@ -91,7 +102,6 @@ func TestColumn_SetNullable(t *testing.T) {
 	// 将 AI 设置为 nullable
 	m, err := ms.New(&User{})
 	a.NotError(err).NotNil(m)
-	m.AI = col
-	col.model = m
+	col.AI = true
 	a.Error(col.setNullable([]string{"true"}))
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // User 带自增和一个唯一约束
@@ -97,26 +98,36 @@ func TestModel_check(t *testing.T) {
 	a := assert.New(t)
 
 	ai := &Column{
-		GoType: reflect.TypeOf(1),
+		Column: &sqlbuilder.Column{
+			GoType: reflect.TypeOf(1),
+		},
 	}
 
 	pk1 := &Column{
-		GoType: reflect.TypeOf(1),
+		Column: &sqlbuilder.Column{
+			GoType: reflect.TypeOf(1),
+		},
 	}
 
 	pk2 := &Column{
-		GoType: reflect.TypeOf(2),
+		Column: &sqlbuilder.Column{
+			GoType: reflect.TypeOf(2),
+		},
 	}
 
 	nullable := &Column{
-		GoType:   reflect.TypeOf(2),
-		Nullable: true,
+		Column: &sqlbuilder.Column{
+			GoType:   reflect.TypeOf(2),
+			Nullable: true,
+		},
 	}
 
 	def := &Column{
-		GoType:     reflect.TypeOf(2),
-		HasDefault: true,
-		Default:    "1",
+		Column: &sqlbuilder.Column{
+			GoType:     reflect.TypeOf(2),
+			HasDefault: true,
+			Default:    "1",
+		},
 	}
 
 	m := &Model{
@@ -163,16 +174,24 @@ func TestModel_parseColumn(t *testing.T) {
 	}
 
 	// 不存在 struct tag，则以 col.Name 作为键名
-	col := &Column{Name: "xx"}
+	col := &Column{
+		Column: &sqlbuilder.Column{
+			Name: "xx",
+		},
+	}
 	a.NotError(m.parseColumn(col, ""))
 	a.Equal(col.Name, "xx")
 
 	// name 值过多
-	col = &Column{}
+	col = &Column{
+		Column: &sqlbuilder.Column{},
+	}
 	a.Error(m.parseColumn(col, "name(m1,m2)"))
 
 	// 不存在的属性名称
-	col = &Column{}
+	col = &Column{
+		Column: &sqlbuilder.Column{},
+	}
 	a.Error(m.parseColumn(col, "not-exists-property(p1)"))
 }
 
@@ -206,8 +225,10 @@ func TestModel_setOCC(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
 	col := &Column{
-		model:  m,
-		GoType: reflect.TypeOf(123),
+		model: m,
+		Column: &sqlbuilder.Column{
+			GoType: reflect.TypeOf(123),
+		},
 	}
 
 	a.NotError(m.setOCC(col, nil))
@@ -230,12 +251,13 @@ func TestModel_setOCC(t *testing.T) {
 
 	// 已经是 AI
 	m.OCC = nil
-	m.AI = col
+	a.NotError(m.setAI(col, nil))
 	a.Error(m.setOCC(col, []string{"true"}))
 
 	// 列有 nullable 属性
 	m.OCC = nil
 	m.AI = nil
+	col.AI = false
 	col.Nullable = true
 	a.Error(m.setOCC(col, []string{"true"}))
 
@@ -251,7 +273,8 @@ func TestModel_setDefault(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
 	col := &Column{
-		model: m,
+		model:  m,
+		Column: &sqlbuilder.Column{},
 	}
 
 	// 未指定参数
@@ -273,7 +296,9 @@ func TestModel_setDefault(t *testing.T) {
 func TestModel_setPK(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
-	col := &Column{}
+	col := &Column{
+		Column: &sqlbuilder.Column{},
+	}
 
 	// 过多的参数
 	a.Error(m.setPK(col, []string{"123"}))
@@ -284,8 +309,10 @@ func TestModel_setAI(t *testing.T) {
 	m := &Model{}
 
 	col := &Column{
-		GoType:     reflect.TypeOf(1),
-		HasDefault: true,
+		Column: &sqlbuilder.Column{
+			GoType:     reflect.TypeOf(1),
+			HasDefault: true,
+		},
 	}
 
 	// 太多的参数

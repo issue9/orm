@@ -125,16 +125,11 @@ func create(e Engine, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	d := e.Dialect()
 
 	sb := sqlbuilder.CreateTable(e, e.Dialect())
 	sb.Table("{#" + m.Name + "}") // 表名可能也是关键字
 	for _, col := range m.Columns {
-		typ, err := d.SQLType(col)
-		if err != nil {
-			return err
-		}
-		sb.Column("{"+col.Name+"}", typ)
+		sb.Column("{"+col.Name+"}", col.GoType, col.AI, col.Nullable, col.HasDefault, col.Default, col.Length...)
 	}
 
 	for name, index := range m.Indexes {
@@ -211,7 +206,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		}
 
 		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if col.IsZero(field) && (col.IsAI() || col.HasDefault) {
+		if col.IsZero(field) && (col.AI || col.HasDefault) {
 			continue
 		}
 
@@ -241,7 +236,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		}
 
 		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if col.IsZero(field) && (col.IsAI() || col.HasDefault) {
+		if col.IsZero(field) && (col.AI || col.HasDefault) {
 			continue
 		}
 
@@ -402,7 +397,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 				}
 
 				// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-				if col.IsZero(field) && (col.IsAI() || col.HasDefault) {
+				if col.IsZero(field) && (col.AI || col.HasDefault) {
 					continue
 				}
 
@@ -427,7 +422,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 				}
 
 				// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-				if col.IsZero(field) && (col.IsAI() || col.HasDefault) {
+				if col.IsZero(field) && (col.AI || col.HasDefault) {
 					continue
 				}
 

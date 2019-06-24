@@ -63,6 +63,9 @@ type Engine interface {
 
 // Dialect 接口用于描述与数据库相关的一些语言特性。
 type Dialect interface {
+	// 将列转换成数据支持的类型
+	SQLType(col *Column) (string, error)
+
 	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句。
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。

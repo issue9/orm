@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -39,7 +38,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 	var s = &sqlite3{}
 
 	buf := sqlbuilder.New("")
-	col := &orm.Column{}
+	col := &sqlbuilder.Column{}
 
 	// col == nil
 	typ, err := s.SQLType(nil)
@@ -54,8 +53,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 	a.NotError(err)
 	sqltest.Equal(a, typ, "INTEGER NOT NULL")
 
-	col.Len1 = 5
-	col.Len2 = 6
+	col.Length = []int{5, 6}
 	buf.Reset()
 	typ, err = s.SQLType(col)
 	a.NotError(err)

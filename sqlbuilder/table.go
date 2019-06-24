@@ -7,6 +7,7 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+	"reflect"
 )
 
 // CreateTableStmt 创建表的语句
@@ -15,7 +16,7 @@ type CreateTableStmt struct {
 	dialect Dialect
 
 	name    string
-	columns []*column
+	columns []*Column
 	indexes []*indexColumn
 
 	// 约束
@@ -29,13 +30,15 @@ type CreateTableStmt struct {
 	options map[string][]string
 }
 
-type column struct {
-	Name string // 数据库的字段名
-
-	// 类型，包含类型、长度、主键等信息。
-	//
-	// 可能是 BIGIINT NOT NULL，或是 VARCHAR(1024) DEFAULT 'xx' 等格式
-	Type string
+// Column 列结构
+type Column struct {
+	Name       string       // 数据库的字段名
+	GoType     reflect.Type // Go 语言中的数据类型
+	AI         bool
+	Nullable   bool
+	HasDefault bool
+	Default    interface{}
+	Length     []int
 }
 
 type foreignKey struct {
@@ -87,17 +90,38 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	return stmt
 }
 
+// NewColumn 声明 Column 实例
+//
+// name 作为列的名称；
+// goType Go 的类型，该类型会被转换成相应的数据库类型
+// ai 表示该列是否为自增列；
+// nullable 表示该列是否可以为 NULL；
+// hasDefault 表示是否拥有默认值，如果为 true，则 v 同时会被当作默认值；
+// def 默认值；
+// length 表示长度信息。
+func NewColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *Column {
+	return &Column{
+		Name:       name,
+		GoType:     goType,
+		AI:         ai,
+		Nullable:   nullable,
+		HasDefault: hasDefault,
+		Default:    def,
+		Length:     length,
+	}
+}
+
 // Column 添加列
+func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
+	return stmt.Columns(NewColumn(name, goType, ai, nullable, hasDefault, def, length...))
+}
+
+// Columns 添加列
 //
 // name 列名
 // typ 包括了长度 PK 等所有信息，比如 INT NOT NULL PRIMARY KEY AUTO_INCREMENT
-func (stmt *CreateTableStmt) Column(name, typ string) *CreateTableStmt {
-	col := &column{
-		Name: name,
-		Type: typ,
-	}
-
-	stmt.columns = append(stmt.columns, col)
+func (stmt *CreateTableStmt) Columns(col ...*Column) *CreateTableStmt {
+	stmt.columns = append(stmt.columns, col...)
 
 	return stmt
 }
@@ -189,9 +213,13 @@ func (stmt *CreateTableStmt) SQL() ([]string, error) {
 
 	// 普通列
 	for _, col := range stmt.columns {
+		typ, err := stmt.dialect.SQLType(col)
+		if err != nil {
+			return nil, err
+		}
 		w.WriteString(col.Name).
 			WriteByte(' ').
-			WriteString(col.Type).
+			WriteString(typ).
 			WriteByte(',')
 	}
 
