@@ -57,24 +57,20 @@ func (u *Upgrader) Err() error {
 
 // AddColumn 添加表中的列，列名必须存在于表模型中
 func (u *Upgrader) AddColumn(name ...string) *Upgrader {
+	if u.err != nil {
+		return u
+	}
+
 	for _, n := range name {
-		u.AddColumn(n)
+		col := u.model.FindColumn(n)
+		if col == nil {
+			panic(fmt.Sprintf("列名 %s 不存在", n))
+		}
+
+		u.addCols = append(u.addCols, col)
 	}
 
 	return u
-}
-
-func (u *Upgrader) addColumn(name string) {
-	if u.err != nil {
-		return
-	}
-
-	col := u.model.FindColumn(name)
-	if col == nil {
-		panic(fmt.Sprintf("列名 %s 不存在", name))
-	}
-
-	u.addCols = append(u.addCols, col)
 }
 
 // DropColumns 删除表中的列，列名可以不存在于表模型，
