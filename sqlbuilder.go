@@ -141,7 +141,7 @@ func create(e Engine, v interface{}) error {
 		for _, col := range index {
 			cols = append(cols, "{"+col.Name+"}")
 		}
-		sb.Index("{"+name+"}", sqlbuilder.IndexDefault, cols...)
+		sb.Index(sqlbuilder.IndexDefault, "{"+name+"}", cols...)
 	}
 
 	for name, unique := range m.Uniques {

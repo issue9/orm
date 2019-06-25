@@ -161,7 +161,7 @@ func (stmt *CreateTableStmt) PK(name string, col ...string) *CreateTableStmt {
 }
 
 // Index 添加索引
-func (stmt *CreateTableStmt) Index(name string, typ Index, col ...string) *CreateTableStmt {
+func (stmt *CreateTableStmt) Index(typ Index, name string, col ...string) *CreateTableStmt {
 	stmt.indexes = append(stmt.indexes, &indexColumn{
 		Name:    name,
 		Type:    typ,
@@ -294,6 +294,8 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 		createPKSQL(buf, stmt.pk.Name, stmt.pk.Columns...)
 		buf.WriteByte(',')
 	}
+
+	// TODO 部分数据库，需要独立创建 AI 约束，比如 Oracle
 
 	return nil
 }
