@@ -22,7 +22,10 @@ type Column struct {
 
 func (m *Model) newColumn(field reflect.StructField) *Column {
 	return &Column{
-		Column: sqlbuilder.NewColumn(field.Name, field.Type, false, false, false, nil),
+		Column: &sqlbuilder.Column{
+			Name:   field.Name,
+			GoType: field.Type,
+		},
 		zero:   reflect.Zero(field.Type).Interface(),
 		model:  m,
 		GoName: field.Name,

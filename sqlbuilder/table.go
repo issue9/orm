@@ -92,8 +92,7 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	return stmt
 }
 
-// NewColumn 声明 Column 实例
-func NewColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *Column {
+func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *Column {
 	return &Column{
 		Name:       name,
 		GoType:     goType,
@@ -114,7 +113,7 @@ func NewColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, 
 // def 默认值；
 // length 表示长度信息。
 func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
-	return stmt.Columns(NewColumn(name, goType, false, nullable, hasDefault, def, length...))
+	return stmt.Columns(newColumn(name, goType, false, nullable, hasDefault, def, length...))
 }
 
 // Columns 添加列
@@ -140,7 +139,7 @@ func (stmt *CreateTableStmt) AutoIncrement(name, col string, goType reflect.Type
 		Columns: []string{col},
 	}
 
-	return stmt.Columns(NewColumn(col, goType, true, false, false, nil))
+	return stmt.Columns(newColumn(col, goType, true, false, false, nil))
 }
 
 // PK 指定主键约束
