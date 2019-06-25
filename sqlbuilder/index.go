@@ -92,23 +92,23 @@ func (stmt *CreateIndexStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
-	var sql *SQLBuilder
+	var builder *SQLBuilder
 
 	if stmt.typ == IndexDefault {
-		sql = New("CREATE INDEX ")
+		builder = New("CREATE INDEX ")
 	} else {
-		sql = New("CREATE UNIQUE INDEX ")
+		builder = New("CREATE UNIQUE INDEX ")
 	}
 
-	sql.WriteString(stmt.name).
+	builder.WriteString(stmt.name).
 		WriteString(" ON ").
 		WriteString(stmt.table).WriteByte('(')
 	for _, col := range stmt.cols {
-		sql.WriteString(col).WriteByte(',')
+		builder.WriteString(col).WriteByte(',')
 	}
-	sql.TruncateLast(1).WriteByte(')')
+	builder.TruncateLast(1).WriteByte(')')
 
-	return sql.String(), nil, nil
+	return builder.String(), nil, nil
 }
 
 // Reset 重置
@@ -159,8 +159,8 @@ func (stmt *DropIndexStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
-	sql := stmt.dialect.DropIndexSQL(stmt.table, stmt.name)
-	return sql, nil, nil
+	query := stmt.dialect.DropIndexSQL(stmt.table, stmt.name)
+	return query, nil, nil
 }
 
 // Reset 重置
