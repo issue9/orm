@@ -35,7 +35,7 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 		return nil, ErrTableIsEmpty
 	}
 
-	buf := New("DROP TABLE IF EXISTS {")
+	buf := New("DROP TABLE IF EXISTS ")
 	buf.WriteString(stmt.table)
 	return []string{buf.String()}, nil
 }
