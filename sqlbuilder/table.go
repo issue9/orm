@@ -21,7 +21,7 @@ type CreateTableStmt struct {
 
 	// 约束
 	constraints []*constraintColumn
-	foreignKeys []*foreignKey // 外键约束
+	foreignKeys []*foreignKey
 	ai, pk      *constraintColumn
 
 	// 一些附加的信息
@@ -112,8 +112,8 @@ func NewColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, 
 }
 
 // Column 添加列
-func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
-	return stmt.Columns(NewColumn(name, goType, ai, nullable, hasDefault, def, length...))
+func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
+	return stmt.Columns(NewColumn(name, goType, false, nullable, hasDefault, def, length...))
 }
 
 // Columns 添加列
@@ -126,18 +126,20 @@ func (stmt *CreateTableStmt) Columns(col ...*Column) *CreateTableStmt {
 	return stmt
 }
 
-// AutoIncrement 指定自增列，自增列必定是主键，如果已经存在主键，会替换主键内容
+// AutoIncrement 指定自增列，自增列必定是主键。
+// 如果指定了自增，则主键必定不启作用。
 //
 // name 自增约束的名称；
-// col 自增对应的列；
-func (stmt *CreateTableStmt) AutoIncrement(name, col string) *CreateTableStmt {
+// col 列名；
+// goType 对应的 Go 类型。
+func (stmt *CreateTableStmt) AutoIncrement(name, col string, goType reflect.Type) *CreateTableStmt {
 	stmt.ai = &constraintColumn{
 		Name:    name,
 		Type:    ConstraintAI,
 		Columns: []string{col},
 	}
 
-	return stmt
+	return stmt.Columns(NewColumn(col, goType, true, false, false, nil))
 }
 
 // PK 指定主键约束

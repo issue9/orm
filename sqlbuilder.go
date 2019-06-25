@@ -129,7 +129,11 @@ func create(e Engine, v interface{}) error {
 	sb := sqlbuilder.CreateTable(e, e.Dialect())
 	sb.Table("{#" + m.Name + "}") // 表名可能也是关键字
 	for _, col := range m.Columns {
-		sb.Column("{"+col.Name+"}", col.GoType, col.AI, col.Nullable, col.HasDefault, col.Default, col.Length...)
+		if col.AI {
+			sb.AutoIncrement(m.Name+"_ai", "{"+col.Name+"}", col.GoType)
+		} else {
+			sb.Column("{"+col.Name+"}", col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...)
+		}
 	}
 
 	for name, index := range m.Indexes {
@@ -157,9 +161,7 @@ func create(e Engine, v interface{}) error {
 	}
 
 	pkname := m.Name + "_pk"
-	if m.AI != nil {
-		sb.AutoIncrement(pkname, "{"+m.AI.Name+"}")
-	} else if len(m.PK) > 0 {
+	if m.AI == nil && len(m.PK) > 0 {
 		cols := make([]string, 0, len(m.PK))
 		for _, col := range m.PK {
 			cols = append(cols, "{"+col.Name+"}")
