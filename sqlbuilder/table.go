@@ -7,7 +7,9 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"reflect"
+	"sort"
 )
 
 // CreateTableStmt 创建表的语句
@@ -206,8 +208,46 @@ func (stmt *CreateTableStmt) ForeignKey(name, col, refTable, refCol, updateRule,
 	return stmt
 }
 
+func (stmt CreateTableStmt) checkNames() error {
+	names := make([]string, 0, 2+len(stmt.indexes)+len(stmt.constraints)+len(stmt.foreignKeys))
+
+	if stmt.ai != nil {
+		names = append(names, stmt.ai.Name)
+	}
+
+	if stmt.pk != nil {
+		names = append(names, stmt.pk.Name)
+	}
+
+	for _, index := range stmt.indexes {
+		names = append(names, index.Name)
+	}
+
+	for _, constraint := range stmt.constraints {
+		names = append(names, constraint.Name)
+	}
+
+	for _, fk := range stmt.foreignKeys {
+		names = append(names, fk.Name)
+	}
+
+	sort.Strings(names)
+
+	for i := 1; i < len(names); i++ {
+		if names[i] == names[i-1] {
+			return fmt.Errorf("存在相同的约束名 %s", names[i])
+		}
+	}
+
+	return nil
+}
+
 // SQL 获取 SQL 的语句及参数部分
 func (stmt *CreateTableStmt) SQL() ([]string, error) {
+	if err := stmt.checkNames(); err != nil {
+		return nil, err
+	}
+
 	w := New("CREATE TABLE IF NOT EXISTS ").
 		WriteString(stmt.name).
 		WriteByte('(')
@@ -314,11 +354,11 @@ func createIndexSQL(model *CreateTableStmt) ([]string, error) {
 			buf.Columns(col)
 		}
 
-		sql, _, err := buf.SQL()
+		query, _, err := buf.SQL()
 		if err != nil {
 			return nil, err
 		}
-		sqls = append(sqls, sql)
+		sqls = append(sqls, query)
 	}
 
 	return sqls, nil

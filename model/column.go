@@ -14,6 +14,7 @@ import (
 // Column 列结构
 type Column struct {
 	*sqlbuilder.Column
+
 	model  *Model
 	zero   interface{} // GoType 的零值
 	GoName string      // 结构字段名
