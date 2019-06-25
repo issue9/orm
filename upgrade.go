@@ -47,7 +47,7 @@ func (db *DB) Upgrade(v interface{}) (*Upgrader, error) {
 
 // DB 返回关联的 DB 实例
 func (u *Upgrader) DB() *DB {
-	return u.DB()
+	return u.db
 }
 
 // Err 返回执行过程中的错误信息
@@ -166,17 +166,13 @@ func (u *Upgrader) Do() error {
 }
 
 func (u *Upgrader) addColumns(e Engine) error {
-	sql := sqlbuilder.AddColumn(e)
+	sql := sqlbuilder.AddColumn(e, e.Dialect())
 
 	for _, col := range u.addCols {
 		sql.Reset()
-		typ, err := u.DB().Dialect().SQLType(col)
-		if err != nil {
-			return err
-		}
 
-		_, err = sql.Table(u.model.Name).
-			Column(col.Name, typ).
+		_, err := sql.Table(u.model.Name).
+			Column("{"+col.Name+"}", col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...).
 			Exec()
 		if err != nil {
 			return err

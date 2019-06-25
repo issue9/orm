@@ -250,7 +250,6 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 		WriteString(stmt.name).
 		WriteByte('(')
 
-	// 普通列
 	for _, col := range stmt.columns {
 		typ, err := stmt.dialect.SQLType(col)
 		if err != nil {

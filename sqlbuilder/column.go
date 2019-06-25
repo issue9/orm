@@ -7,13 +7,16 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+	"reflect"
 )
 
 // AddColumnStmt 添加列
 type AddColumnStmt struct {
-	engine Engine
+	engine  Engine
+	dialect Dialect
+
 	table  string
-	column *column
+	column *Column
 }
 
 // DropColumnStmt 删除列
@@ -24,9 +27,10 @@ type DropColumnStmt struct {
 }
 
 // AddColumn 声明一条添加列的语句
-func AddColumn(e Engine) *AddColumnStmt {
+func AddColumn(e Engine, d Dialect) *AddColumnStmt {
 	return &AddColumnStmt{
-		engine: e,
+		engine:  e,
+		dialect: d,
 	}
 }
 
@@ -40,11 +44,10 @@ func (stmt *AddColumnStmt) Table(table string) *AddColumnStmt {
 // Column 添加列
 //
 // 参数信息可参考 CreateTableStmt.Column
-func (stmt *AddColumnStmt) Column(name, typ string) *AddColumnStmt {
-	stmt.column = &column{
-		Name: name,
-		Type: typ,
-	}
+func (stmt *AddColumnStmt) Column(name string, goType reflect.Type, nullable, hasDefault bool, def interface{}, length ...int) *AddColumnStmt {
+	col := newColumn(name, goType, false, nullable, hasDefault, def, length...)
+
+	stmt.column = col
 
 	return stmt
 }
@@ -55,11 +58,18 @@ func (stmt *AddColumnStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	buf := New("ALTER TABLE ")
-	buf.WriteString(stmt.table)
-	buf.WriteString(" ADD ")
-	buf.WriteString(stmt.column.Name)
-	buf.WriteString(stmt.column.Type)
+	typ, err := stmt.dialect.SQLType(stmt.column)
+	if err != nil {
+		return "", nil, err
+	}
+
+	buf := New("ALTER TABLE ").
+		WriteString(stmt.table).
+		WriteString(" ADD ").
+		WriteString(stmt.column.Name).
+		WriteByte(' ').
+		WriteString(typ)
+
 	return buf.String(), nil, nil
 }
 
