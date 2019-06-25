@@ -91,14 +91,6 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 }
 
 // NewColumn 声明 Column 实例
-//
-// name 作为列的名称；
-// goType Go 的类型，该类型会被转换成相应的数据库类型
-// ai 表示该列是否为自增列；
-// nullable 表示该列是否可以为 NULL；
-// hasDefault 表示是否拥有默认值，如果为 true，则 v 同时会被当作默认值；
-// def 默认值；
-// length 表示长度信息。
 func NewColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *Column {
 	return &Column{
 		Name:       name,
@@ -112,6 +104,13 @@ func NewColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, 
 }
 
 // Column 添加列
+//
+// name 列的名称；
+// goType Go 中的类型，该类型会被转换成相应的数据库类型；
+// nullable 表示该列是否可以为 NULL；
+// hasDefault 表示是否拥有默认值，如果为 true，则 v 同时会被当作默认值；
+// def 默认值；
+// length 表示长度信息。
 func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
 	return stmt.Columns(NewColumn(name, goType, false, nullable, hasDefault, def, length...))
 }

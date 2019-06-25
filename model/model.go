@@ -129,7 +129,9 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 		field := rtype.Field(i)
 
 		if field.Anonymous {
-			m.parseColumns(rval.Field(i))
+			if err := m.parseColumns(rval.Field(i)); err != nil {
+				return err
+			}
 			continue
 		}
 
@@ -158,10 +160,10 @@ func (m *Model) parseColumn(col *Column, tag string) (err error) {
 		return nil
 	}
 
-	tags := tags.Parse(tag)
-	for _, tag := range tags {
+	ts := tags.Parse(tag)
+	for _, tag := range ts {
 		switch tag.Name {
-		case "name": // name(colname)
+		case "name": // name(col)
 			if len(tag.Args) != 1 {
 				return propertyError(col.Name, "name", "过多的参数值")
 			}
@@ -201,12 +203,12 @@ func (m *Model) parseColumn(col *Column, tag string) (err error) {
 
 // 分析 meta 接口数据。
 func (m *Model) parseMeta(tag string) error {
-	tags := tags.Parse(tag)
-	if len(tags) == 0 {
+	ts := tags.Parse(tag)
+	if len(ts) == 0 {
 		return nil
 	}
 
-	for _, v := range tags {
+	for _, v := range ts {
 		switch v.Name {
 		case "name":
 			if len(v.Args) != 1 {
