@@ -295,6 +295,10 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 
 // pk
 func (m *Model) setPK(col *Column, vals []string) error {
+	if len(m.PK) > 0 {
+		return propertyError(col.Name, "pk", "已经存在自增约束，不能再指定主键约束")
+	}
+
 	if len(vals) != 0 {
 		return propertyError(col.Name, "pk", "太多的值")
 	}
@@ -350,10 +354,6 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 	default:
 		return propertyError(col.Name, "ai", "类型只能是数值")
-	}
-
-	if len(m.PK) > 0 {
-		return propertyError(col.Name, "ai", "已经存在主键信息")
 	}
 
 	m.AI = col

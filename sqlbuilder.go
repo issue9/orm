@@ -160,13 +160,12 @@ func create(e Engine, v interface{}) error {
 		sb.ForeignKey("{"+fk.Name+"}", "{"+fk.Column.Name+"}", "{"+fk.RefTableName+"}", "{"+fk.RefColName+"}", fk.UpdateRule, fk.DeleteRule)
 	}
 
-	pkname := m.Name + "_pk"
 	if m.AI == nil && len(m.PK) > 0 {
 		cols := make([]string, 0, len(m.PK))
 		for _, col := range m.PK {
 			cols = append(cols, "{"+col.Name+"}")
 		}
-		sb.PK(pkname, cols...)
+		sb.PK(m.Name+"_pk", cols...)
 	}
 
 	_, err = sb.Exec()
@@ -369,8 +368,8 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 
 // rval 为结构体指针组成的数据
 func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, error) {
-	sql := e.SQL().Insert()
-	keys := []string{}         // 保存列的顺序，方便后续元素获取值
+	query := e.SQL().Insert()
+	var keys []string          // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 
 	for i := 0; i < rval.Len(); i++ {
@@ -390,7 +389,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
 			firstType = irval.Type()
-			sql.Table("{#" + m.Name + "}")
+			query.Table("{#" + m.Name + "}")
 
 			for _, col := range m.Columns {
 				field := irval.FieldByName(col.GoName)
@@ -403,7 +402,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 					continue
 				}
 
-				sql.KeyValue("{"+col.Name+"}", field.Interface())
+				query.KeyValue("{"+col.Name+"}", field.Interface())
 				keys = append(keys, col.Name)
 			}
 		} else { // 之后的元素，只需要获取其对应的值就行
@@ -430,9 +429,9 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 
 				vals = append(vals, field.Interface())
 			}
-			sql.Values(vals...)
+			query.Values(vals...)
 		}
 	} // end for array
 
-	return sql, nil
+	return query, nil
 }
