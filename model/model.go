@@ -16,6 +16,11 @@ import (
 	"github.com/issue9/orm/v2/internal/tags"
 )
 
+const (
+	defaultAINameSuffix = "_ai"
+	defaultPKNameSuffix = "_pk"
+)
+
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
 	Name    string              // 表的名称
@@ -25,7 +30,7 @@ type Model struct {
 
 	// 索引内容
 	//
-	// 目前不支持唯一索引
+	// 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
 	Indexes map[string][]*Column
 
 	// 唯一约束
@@ -38,9 +43,21 @@ type Model struct {
 	// 键名为约束名，键值为约束表达式
 	Checks map[string]string
 
-	FK []*ForeignKey // 外键约束
-	AI *Column       // 自增约束
-	PK []*Column     // 主键约束
+	FK []*ForeignKey
+
+	// 自增约束
+	//
+	// AI 为自增约束的列。
+	// AIName 为自增约束的名称，部分数据库需要，如果不指定，会采用 表名 + _ai 的格式
+	AI     *Column
+	AIName string
+
+	// 主键约束
+	//
+	// PK 为主键约束的列列表。
+	// PKName 为主键约束的名称，如果未指定，会采用 表名 + _ai 的格式
+	PK     []*Column
+	PKName string
 }
 
 func propertyError(field, name, message string) error {
@@ -77,6 +94,8 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 		Meta:    map[string][]string{},
 	}
 
+	// NOTE: 需要保证表名的获取在 parseColumns 之前
+	// 诸如 AIName、PKName 等依赖表名字段。
 	if err := m.parseColumns(rval); err != nil {
 		return nil, err
 	}
@@ -304,6 +323,7 @@ func (m *Model) setPK(col *Column, vals []string) error {
 	}
 
 	m.PK = append(m.PK, col)
+	m.PKName = m.Name + defaultPKNameSuffix
 	return nil
 }
 
@@ -357,7 +377,9 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 	}
 
 	m.AI = col
+	m.AIName = m.Name + defaultAINameSuffix
 	col.AI = true
+
 	return nil
 }
 
