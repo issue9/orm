@@ -36,3 +36,13 @@ func TestModels(t *testing.T) {
 	ms.Clear()
 	a.Equal(0, len(ms.items))
 }
+
+func TestModules_addNames(t *testing.T) {
+	a := assert.New(t)
+
+	ms := NewModels()
+	a.NotError(ms.addNames("n1"))
+	a.NotError(ms.addNames("n2"))
+	a.ErrorType(ms.addNames("n1"), ErrDuplicateConstraintName)
+	a.Equal(2, len(ms.names))
+}
