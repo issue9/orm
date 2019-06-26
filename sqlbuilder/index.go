@@ -61,8 +61,8 @@ func (stmt *CreateIndexStmt) Table(tbl string) *CreateIndexStmt {
 }
 
 // Name 指定索引名
-func (stmt *CreateIndexStmt) Name(col string) *CreateIndexStmt {
-	stmt.name = col
+func (stmt *CreateIndexStmt) Name(index string) *CreateIndexStmt {
+	stmt.name = index
 	return stmt
 }
 
@@ -75,10 +75,11 @@ func (stmt *CreateIndexStmt) Type(t Index) *CreateIndexStmt {
 // Columns 列名
 func (stmt *CreateIndexStmt) Columns(col ...string) *CreateIndexStmt {
 	if stmt.cols == nil {
-		stmt.cols = make([]string, 0, len(col))
+		stmt.cols = col
+		return stmt
 	}
-	stmt.cols = append(stmt.cols, col...)
 
+	stmt.cols = append(stmt.cols, col...)
 	return stmt
 }
 

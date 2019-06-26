@@ -344,14 +344,12 @@ func createIndexSQL(model *CreateTableStmt) ([]string, error) {
 	}
 
 	sqls := make([]string, 0, len(model.indexes))
-	buf := CreateIndex(nil)
+	buf := CreateIndex(model.engine)
 	for _, index := range model.indexes {
 		buf.Reset()
 		buf.Table(model.name).
-			Name(index.Name)
-		for _, col := range index.Columns {
-			buf.Columns(col)
-		}
+			Name(index.Name).
+			Columns(index.Columns...)
 
 		query, _, err := buf.SQL()
 		if err != nil {
