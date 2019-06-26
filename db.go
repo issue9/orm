@@ -216,7 +216,14 @@ func (db *DB) Truncate(v interface{}) error {
 		return err
 	}
 
-	// 多语句，则初如化事务，再执行
+	if !db.Dialect().TransactionalDDL() {
+		for _, query := range sqls {
+			if _, err = db.Exec(query); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -359,6 +366,15 @@ func (db *DB) MultDrop(objs ...interface{}) error {
 
 // MultTruncate 清除表内容，重置 ai，但保留表结构。
 func (db *DB) MultTruncate(objs ...interface{}) error {
+	if !db.Dialect().TransactionalDDL() {
+		for _, v := range objs {
+			if err := db.Truncate(v); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
