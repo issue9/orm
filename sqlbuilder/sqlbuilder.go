@@ -37,6 +37,9 @@ var (
 
 	// ErrNotImplemented 部分数据库如果没有实现的功能，可以返回该错误
 	ErrNotImplemented = errors.New("未实现该功能")
+
+	// ErrConstraintType 约束类型错误
+	ErrConstraintType = errors.New("约束类型错误，已经设置为其它约束")
 )
 
 // SQLBuilder 对 bytes.Buffer 的一个简单封装。

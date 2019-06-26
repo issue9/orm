@@ -20,10 +20,10 @@ type Upgrader struct {
 	addCols  []*Column
 	dropCols []string
 
-	addConts  map[string][]string
+	addConts  []string
 	dropConts []string
 
-	addIdxs  map[string][]string
+	addIdxs  []string
 	dropIdxs []string
 
 	// TODO 修改列信息
@@ -86,15 +86,23 @@ func (u *Upgrader) RenameColumn(old, new string) {
 }
 
 // ChangeColumn 改变列属性
-func (u *Upgrader) ChangeColumn(old, new string, conv func(interface{}) interface{}) {
-
+func (u *Upgrader) ChangeColumn(old, new string, conv func(interface{}) interface{}) *Upgrader {
+	// TODO
+	return u
 }
 
 // AddConstraint 添加约束
 //
 // 约束必须存在于 model.constraints 中
-func (u *Upgrader) AddConstraint() {
-	//
+func (u *Upgrader) AddConstraint(name ...string) *Upgrader {
+	if u.addConts == nil {
+		u.addConts = name
+		return u
+	}
+
+	u.addConts = append(u.addConts, name...)
+
+	return u
 }
 
 // DropConstraint 删除约束
@@ -182,6 +190,22 @@ func (u *Upgrader) addColumns(e Engine) error {
 	return nil
 }
 
+func (u *Upgrader) dropColumns(e Engine) error {
+	sql := sqlbuilder.DropColumn(e)
+
+	for _, n := range u.dropCols {
+		sql.Reset()
+		_, err := sql.Table(u.model.Name).
+			Column(n).
+			Exec()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (u *Upgrader) dropConstraints(e Engine) error {
 	sql := sqlbuilder.DropConstraint(e)
 
@@ -198,18 +222,7 @@ func (u *Upgrader) dropConstraints(e Engine) error {
 	return nil
 }
 
-func (u *Upgrader) dropColumns(e Engine) error {
-	sql := sqlbuilder.DropColumn(e)
-
-	for _, n := range u.dropCols {
-		sql.Reset()
-		_, err := sql.Table(u.model.Name).
-			Column(n).
-			Exec()
-		if err != nil {
-			return err
-		}
-	}
-
+func (u *Upgrader) addConstraints(e Engine) error {
+	// TODO
 	return nil
 }

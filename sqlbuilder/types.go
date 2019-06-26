@@ -9,18 +9,6 @@ import (
 	"database/sql"
 )
 
-// Constraint 表示约束类型
-type Constraint int8
-
-// 约束类型
-const (
-	ConstraintUnique Constraint = iota // 唯一约束
-	ConstraintFK                       // 外键约束
-	ConstraintCheck                    // Check 约束
-	ConstraintPK                       // 主键约束
-	ConstraintAI                       // 自增
-)
-
 // Rester 重置对象数据
 //
 // 实现该接口的对象，可以调用 Reset 方法重置对象的数据以达到重复利用数据的问题。
@@ -139,21 +127,4 @@ func queryContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Rows, error) 
 		return nil, err
 	}
 	return e.QueryContext(ctx, query, args...)
-}
-
-func (t Constraint) String() string {
-	switch t {
-	case ConstraintUnique:
-		return "UNIQUE"
-	case ConstraintFK:
-		return "FOREIGN KEY"
-	case ConstraintPK:
-		return "PRIMARY KEY"
-	case ConstraintCheck:
-		return "CHECK"
-	case ConstraintAI:
-		return "AUTO INCREMENT"
-	default:
-		return "<unknown>"
-	}
 }
