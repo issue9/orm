@@ -3,6 +3,7 @@ orm
 [![Go version](https://img.shields.io/badge/Go-1.10-brightgreen.svg?style=flat)](https://golang.org)
 [![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/mux)
 [![codecov](https://codecov.io/gh/issue9/orm/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/orm)
+[![GoDoc](https://godoc.org/github.com/issue9/orm?status.svg)](https://godoc.org/github.com/issue9/orm)
 ======
 
 目前内置了对以下数据库的支持：
@@ -266,10 +267,6 @@ Tx拥有一组与 DB 相同的接口，另外还提供了一组以 `Mult` 开头
 go get github.com/issue9/orm
 ```
 
-
-### 文档
-
-[![GoDoc](https://godoc.org/github.com/issue9/orm?status.svg)](https://godoc.org/github.com/issue9/orm)
 
 
 ### 版权
