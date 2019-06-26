@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2/internal/sqltest"
@@ -31,6 +32,11 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 	}))
 	a.True(sql.Len() > 0)
 	sqltest.Equal(a, sql.String(), "without rowid")
+
+	sql.Reset()
+	a.Error(s.CreateTableOptionsSQL(sql, map[string][]string{
+		"sqlite3_rowid": []string{"false", "false"},
+	}))
 }
 
 func TestSqlite3_SQLType(t *testing.T) {
@@ -81,6 +87,21 @@ func TestSqlite3_SQLType(t *testing.T) {
 		},
 		&test{
 			col: &sqlbuilder.Column{
+				GoType:  reflect.TypeOf(sql.NullString{}),
+				Default: "123",
+			},
+			SQLType: "TEXT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType:     reflect.TypeOf(sql.NullString{}),
+				Default:    "123",
+				HasDefault: true,
+			},
+			SQLType: "TEXT NOT NULL DEFAULT '123'",
+		},
+		&test{
+			col: &sqlbuilder.Column{
 				GoType: reflect.TypeOf(1),
 				Length: []int{5, 6},
 			},
@@ -104,6 +125,16 @@ func TestSqlite3_SQLType(t *testing.T) {
 		&test{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
 			SQLType: "INTEGER NOT NULL",
+		},
+
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(time.Time{})},
+			SQLType: "DATETIME NOT NULL",
+		},
+
+		&test{
+			col: &sqlbuilder.Column{GoType: reflect.TypeOf(struct{}{})},
+			err: true,
 		},
 	}
 

@@ -81,11 +81,16 @@ func (s *sqlite3) DropIndexSQL(table, index string) string {
 }
 
 func (s *sqlite3) TruncateTableSQL(m *orm.Model) []string {
+	builder := sqlbuilder.New("DELETE FROM #").
+		WriteString(m.Name)
+	if m.AI == nil {
+		return []string{builder.String()}
+	}
+
 	ret := make([]string, 2)
-	ret[0] = sqlbuilder.New("DELETE FROM #").
-		WriteString(m.Name).
-		String()
-	ret[1] = sqlbuilder.New("DELETE FROM SQLITE_SEQUENCE WHERE name='#").
+	ret[0] = builder.String()
+	builder.Reset()
+	ret[1] = builder.WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name='#").
 		WriteString(m.Name).
 		WriteByte('\'').
 		String()

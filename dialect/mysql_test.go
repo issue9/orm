@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2/internal/sqltest"
@@ -18,7 +19,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")
 	a.NotNil(sql)
-	var m = &mysql{}
+	var m = Mysql()
 
 	// 空的 meta
 	a.NotError(m.CreateTableOptionsSQL(sql, nil))
@@ -50,8 +51,27 @@ func TestMysql_SQLType(t *testing.T) {
 			SQLType: "BIGINT NOT NULL",
 		},
 		&test{
+			col: &sqlbuilder.Column{
+				GoType:  reflect.TypeOf(1),
+				Default: 5,
+			},
+			SQLType: "BIGINT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType:     reflect.TypeOf(1),
+				HasDefault: true,
+				Default:    5,
+			},
+			SQLType: "BIGINT NOT NULL DEFAULT '5'",
+		},
+		&test{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(true)},
 			SQLType: "BOOLEAN NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(time.Time{})},
+			SQLType: "DATETIME NOT NULL",
 		},
 		&test{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(uint16(16))},

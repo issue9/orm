@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2/sqlbuilder"
@@ -25,9 +26,68 @@ func TestPostgres_SQLType(t *testing.T) {
 			err: true,
 		},
 		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(false)},
+			SQLType: "BOOLEAN NOT NULL",
+		},
+		&test{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1)},
 			SQLType: "BIGINT NOT NULL",
 		},
+
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(int8(1)),
+				AI:     true,
+				Length: []int{5, 6},
+			},
+			SQLType: "SERIAL NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType:  reflect.TypeOf(int8(1)),
+				Length:  []int{5, 6},
+				Default: 1,
+			},
+			SQLType: "SMALLINT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType:     reflect.TypeOf(int8(1)),
+				Length:     []int{5, 6},
+				HasDefault: true,
+				Default:    1,
+			},
+			SQLType: "SMALLINT NOT NULL DEFAULT '1'",
+		},
+
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullInt64{}),
+				AI:     true,
+			},
+			SQLType: "BIGSERIAL NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
+			SQLType: "BIGINT NOT NULL",
+		},
+
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(uint32(1)),
+				AI:     true,
+				Length: []int{5, 6},
+			},
+			SQLType: "SERIAL NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(uint32(1)),
+				Length: []int{5, 6},
+			},
+			SQLType: "INT NOT NULL",
+		},
+
 		&test{
 			col: &sqlbuilder.Column{
 				GoType: reflect.TypeOf(1),
@@ -42,6 +102,41 @@ func TestPostgres_SQLType(t *testing.T) {
 			},
 			SQLType: "BIGSERIAL NOT NULL",
 		},
+
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1.2),
+				Length: []int{5, 9},
+			},
+			SQLType: "NUMERIC(5,9) NOT NULL",
+		},
+		&test{ // 长度必须为 2
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1.2),
+			},
+			err: true,
+		},
+		&test{ // 长度必须为 2
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1.2),
+				Length: []int{1},
+			},
+			err: true,
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullFloat64{}),
+				Length: []int{5, 9},
+			},
+			SQLType: "NUMERIC(5,9) NOT NULL",
+		},
+		&test{ // 长度必须为 2
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullFloat64{}),
+			},
+			err: true,
+		},
+
 		&test{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf("")},
 			SQLType: "TEXT NOT NULL",
@@ -50,10 +145,26 @@ func TestPostgres_SQLType(t *testing.T) {
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf([]byte{'a', 'b'})},
 			SQLType: "BYTEA NOT NULL",
 		},
+
 		&test{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullString{})},
 			SQLType: "TEXT NOT NULL",
 		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullString{}),
+				Length: []int{-1, 111},
+			},
+			SQLType: "TEXT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullString{}),
+				Length: []int{99, 111},
+			},
+			SQLType: "VARCHAR(99) NOT NULL",
+		},
+
 		&test{
 			col: &sqlbuilder.Column{
 				GoType: reflect.TypeOf(""),
@@ -68,16 +179,20 @@ func TestPostgres_SQLType(t *testing.T) {
 			},
 			SQLType: "TEXT NOT NULL",
 		},
-		&test{
-			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1.2),
-				Length: []int{5, 9},
-			},
-			SQLType: "NUMERIC(5,9) NOT NULL",
-		},
+
 		&test{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.RawBytes{})},
 			SQLType: "BYTEA NOT NULL",
+		},
+
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(time.Time{})},
+			SQLType: "TIMESTAMP NOT NULL",
+		},
+
+		&test{ // 无法转换的类型
+			col: &sqlbuilder.Column{GoType: reflect.TypeOf(struct{}{})},
+			err: true,
 		},
 	}
 

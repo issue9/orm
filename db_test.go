@@ -220,20 +220,23 @@ func TestDB_Truncate(t *testing.T) {
 	defer clearData(db, a)
 
 	hasCount(db, a, "administrators", 1)
-	hasCount(db, a, "user_info", 2)
 
-	// truncate之后，会重置AI
+	// truncate 之后，会重置 AI
 	a.NotError(db.Truncate(&Admin{}))
-	a.NotError(db.Truncate(&UserInfo{}))
 	hasCount(db, a, "administrators", 0)
-	hasCount(db, a, "user_info", 0)
 
-	_, err := db.Insert(&Admin{Group: 1, Email: "email1"})
+	_, err := db.Insert(&Admin{Group: 1, Email: "email1", User: User{Username: "u1"}})
+	a.NotError(err)
+	_, err = db.Insert(&Admin{Group: 1, Email: "email2", User: User{Username: "u2"}})
 	a.NotError(err)
 
 	a1 := &Admin{Email: "email1"}
 	a.NotError(db.Select(a1))
 	a.Equal(1, a1.ID)
+
+	a2 := &Admin{Email: "email2"}
+	a.NotError(db.Select(a2))
+	a.Equal(2, a2.ID)
 }
 
 func TestDB_Drop(t *testing.T) {
