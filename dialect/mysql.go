@@ -127,7 +127,7 @@ func (m *mysql) SQLType(col *sqlbuilder.Column) (string, error) {
 		}
 		return buildMysqlType("DOUBLE", col, false, 2), nil
 	case reflect.String:
-		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
+		if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
 			return buildMysqlType("LONGTEXT", col, false, 0), nil
 		}
 		return buildMysqlType("VARCHAR", col, false, 1), nil
@@ -149,7 +149,7 @@ func (m *mysql) SQLType(col *sqlbuilder.Column) (string, error) {
 		case nullInt64:
 			return buildMysqlType("BIGINT", col, false, 1), nil
 		case nullString:
-			if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
+			if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
 				return buildMysqlType("LONGTEXT", col, false, 0), nil
 			}
 			return buildMysqlType("VARCHAR", col, false, 1), nil
