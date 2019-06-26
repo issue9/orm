@@ -10,53 +10,78 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 func TestPostgres_SQLType(t *testing.T) {
-	p := &postgres{}
-
 	a := assert.New(t)
-	col := &sqlbuilder.Column{}
 
-	// col == nil
-	typ, err := p.SQLType(nil)
-	a.ErrorType(err, errColIsNil).Empty(typ)
+	var data = []*test{
+		&test{ // col == nil
+			err: true,
+		},
+		&test{ // col.GoType == nil
+			col: &sqlbuilder.Column{GoType: nil},
+			err: true,
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1)},
+			SQLType: "BIGINT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1),
+				Length: []int{5, 6},
+			},
+			SQLType: "BIGINT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1),
+				AI:     true,
+			},
+			SQLType: "BIGSERIAL NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf("")},
+			SQLType: "TEXT NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf([]byte{'a', 'b'})},
+			SQLType: "BYTEA NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullString{})},
+			SQLType: "TEXT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(""),
+				Length: []int{99},
+			},
+			SQLType: "VARCHAR(99) NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(""),
+				Length: []int{11111111},
+			},
+			SQLType: "TEXT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1.2),
+				Length: []int{5, 9},
+			},
+			SQLType: "NUMERIC(5,9) NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.RawBytes{})},
+			SQLType: "BYTEA NOT NULL",
+		},
+	}
 
-	// col.GoType == nil
-	typ, err = p.SQLType(col)
-	a.ErrorType(err, errGoTypeIsNil).Empty(typ)
-
-	col.GoType = reflect.TypeOf(1)
-	typ, err = p.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT NOT NULL")
-
-	col.Length = []int{5, 6}
-	typ, err = p.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT NOT NULL")
-
-	col.GoType = reflect.TypeOf("abc")
-	typ, err = p.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "VARCHAR(5) NOT NULL")
-
-	col.GoType = reflect.TypeOf(1.2)
-	typ, err = p.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "NUMERIC(5,6) NOT NULL")
-
-	col.GoType = reflect.TypeOf(sql.NullInt64{})
-	typ, err = p.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT NOT NULL")
-
-	col.GoType = reflect.TypeOf(sql.RawBytes("123"))
-	typ, err = p.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BYTEA NOT NULL")
+	testData(a, Postgres(), data)
 }
 
 func TestPostgres_SQL(t *testing.T) {

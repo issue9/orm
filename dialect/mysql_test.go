@@ -36,87 +36,129 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 
 func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
-	col := &sqlbuilder.Column{}
-	var m = &mysql{}
 
-	// col == nil
-	typ, err := m.SQLType(nil)
-	a.ErrorType(err, errColIsNil).Empty(typ)
+	var data = []*test{
+		&test{ // col == nil
+			err: true,
+		},
+		&test{ // col.GoType == nil
+			col: &sqlbuilder.Column{GoType: nil},
+			err: true,
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1)},
+			SQLType: "BIGINT NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(true)},
+			SQLType: "BOOLEAN NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(uint16(16))},
+			SQLType: "MEDIUMINT UNSIGNED NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(int8(1))},
+			SQLType: "SMALLINT NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf([]byte{'a', 'b', 'c'})},
+			SQLType: "BLOB NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(int(1)),
+				Length: []int{5, 6},
+			},
+			SQLType: "BIGINT(5) NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(""),
+				Length: []int{5, 6},
+			},
+			SQLType: "VARCHAR(5) NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(""),
+				Length: []int{-1},
+			},
+			SQLType: "LONGTEXT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1.2),
+				Length: []int{5, 6},
+			},
+			SQLType: "DOUBLE(5,6) NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1.2),
+				Length: []int{5},
+			},
+			err: true,
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullFloat64{}),
+				Length: []int{5},
+			},
+			err: true,
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullFloat64{}),
+				Length: []int{5, 7},
+			},
+			SQLType: "DOUBLE(5,7) NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullInt64{}),
+				Length: []int{5},
+			},
+			SQLType: "BIGINT(5) NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(sql.NullString{}),
+				Length: []int{5},
+			},
+			SQLType: "VARCHAR(5) NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullString{})},
+			SQLType: "LONGTEXT NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullBool{})},
+			SQLType: "BOOLEAN NOT NULL",
+		},
+		&test{ // sql.RawBytes 会被转换成 []byte
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.RawBytes{})},
+			SQLType: "BLOB NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(int64(1)),
+				AI:     true,
+			},
+			SQLType: "BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(uint64(1)),
+				AI:     true,
+			},
+			SQLType: "BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{GoType: reflect.TypeOf(struct{}{})},
+			err: true,
+		},
+	}
 
-	// col.GoType == nil
-	typ, err = m.SQLType(col)
-	a.ErrorType(err, errGoTypeIsNil).Empty(typ)
-
-	// int
-	col.GoType = reflect.TypeOf(1)
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT NOT NULL")
-
-	// bool
-	col.GoType = reflect.TypeOf(true)
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BOOLEAN NOT NULL")
-
-	// int8
-	col.GoType = reflect.TypeOf(int8(1))
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "SMALLINT NOT NULL")
-
-	// int with len
-	col.GoType = reflect.TypeOf(int(1))
-	col.Length = []int{5, 6}
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT(5) NOT NULL")
-
-	// string:abc
-	col.GoType = reflect.TypeOf("abc")
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "VARCHAR(5) NOT NULL")
-
-	// string len=-1
-	col.Length = []int{-1}
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "LONGTEXT NOT NULL")
-
-	// float
-	col.GoType = reflect.TypeOf(1.2)
-	col.Length = []int{5, 6}
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "DOUBLE(5,6) NOT NULL")
-
-	// float not length
-	col.Length = []int{5}
-	typ, err = m.SQLType(col)
-	a.ErrorType(err, errMissLength).Empty(typ)
-
-	// NullInt64
-	col.GoType = reflect.TypeOf(sql.NullInt64{})
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT(5) NOT NULL")
-
-	// int64 AI
-	col.GoType = reflect.TypeOf(int(64))
-	col.AI = true
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT(5) PRIMARY KEY AUTO_INCREMENT NOT NULL")
-
-	// uint64 pk
-	col.GoType = reflect.TypeOf(uint(64))
-	typ, err = m.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "BIGINT(5) UNSIGNED PRIMARY KEY AUTO_INCREMENT NOT NULL")
-
-	// Error
-	col.GoType = reflect.TypeOf(struct{}{})
-	typ, err = m.SQLType(col)
-	a.Error(err).Empty(typ)
+	testData(a, Mysql(), data)
 }

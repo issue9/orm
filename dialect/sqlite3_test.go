@@ -35,45 +35,77 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 
 func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
-	var s = &sqlite3{}
 
-	buf := sqlbuilder.New("")
-	col := &sqlbuilder.Column{}
+	var data = []*test{
+		&test{ // col == nil
+			err: true,
+		},
+		&test{ // col.GoType == nil
+			col: &sqlbuilder.Column{GoType: nil},
+			err: true,
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1)},
+			SQLType: "INTEGER NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullBool{})},
+			SQLType: "INTEGER NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(false)},
+			SQLType: "INTEGER NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf([]byte{'a', 'b'})},
+			SQLType: "BLOB NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
+			SQLType: "INTEGER NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullFloat64{})},
+			SQLType: "REAL NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullString{})},
+			SQLType: "TEXT NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType:   reflect.TypeOf(sql.NullString{}),
+				Nullable: true,
+			},
+			SQLType: "TEXT",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1),
+				Length: []int{5, 6},
+			},
+			SQLType: "INTEGER NOT NULL",
+		},
+		&test{
+			col: &sqlbuilder.Column{
+				GoType: reflect.TypeOf(1),
+				AI:     true,
+			},
+			SQLType: "INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf("")},
+			SQLType: "TEXT NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1.2)},
+			SQLType: "REAL NOT NULL",
+		},
+		&test{
+			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
+			SQLType: "INTEGER NOT NULL",
+		},
+	}
 
-	// col == nil
-	typ, err := s.SQLType(nil)
-	a.ErrorType(err, errColIsNil).Empty(typ)
-
-	// col.GoType == nil
-	typ, err = s.SQLType(col)
-	a.ErrorType(err, errGoTypeIsNil).Empty(typ)
-
-	col.GoType = reflect.TypeOf(1)
-	typ, err = s.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "INTEGER NOT NULL")
-
-	col.Length = []int{5, 6}
-	buf.Reset()
-	typ, err = s.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "INTEGER NOT NULL")
-
-	col.GoType = reflect.TypeOf("abc")
-	buf.Reset()
-	typ, err = s.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "TEXT NOT NULL")
-
-	col.GoType = reflect.TypeOf(1.2)
-	buf.Reset()
-	typ, err = s.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "REAL NOT NULL")
-
-	col.GoType = reflect.TypeOf(sql.NullInt64{})
-	buf.Reset()
-	typ, err = s.SQLType(col)
-	a.NotError(err)
-	sqltest.Equal(a, typ, "INTEGER NOT NULL")
+	testData(a, Sqlite3(), data)
 }

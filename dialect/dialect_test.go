@@ -10,7 +10,14 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
+
+type test struct {
+	col     *sqlbuilder.Column
+	err     bool
+	SQLType string
+}
 
 type user struct {
 	ID   int64  `orm:"name(id);ai"`
@@ -31,6 +38,18 @@ type model2 struct{}
 
 func (m *model2) Meta() string {
 	return "check(chk_name,id>0);mysql_engine(innodb);mysql_charset(utf8);name(model2);sqlite3_rowid(false)"
+}
+
+func testData(a *assert.Assertion, d sqlbuilder.Dialect, data []*test) {
+	for _, item := range data {
+		typ, err := d.SQLType(item.col)
+		if item.err {
+			a.Error(err)
+		} else {
+			a.NotError(err)
+		}
+		sqltest.Equal(a, typ, item.SQLType)
+	}
 }
 
 func TestMysqlLimitSQL(t *testing.T) {
