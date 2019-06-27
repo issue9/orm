@@ -93,6 +93,8 @@ func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
 }
 
 // FK 外键约束
+//
+// NOTE: 该功能不适合于 sqlite3
 func (stmt *AddConstraintStmt) FK(name, col, refTable, refColumn, updateRule, deleteRule string) *AddConstraintStmt {
 	if stmt.typ != constraintNone {
 		panic(ErrConstraintType)
@@ -113,19 +115,6 @@ func (stmt *AddConstraintStmt) FK(name, col, refTable, refColumn, updateRule, de
 	return stmt
 }
 
-// AI 自增约束
-func (stmt *AddConstraintStmt) AI(name, col string) *AddConstraintStmt {
-	if stmt.typ != constraintNone {
-		panic(ErrConstraintType)
-	}
-
-	stmt.typ = ConstraintAI
-	stmt.name = name
-	stmt.cols = []string{col}
-
-	return stmt
-}
-
 // SQL 生成 SQL 语句
 func (stmt *AddConstraintStmt) SQL() (string, []interface{}, error) {
 	if stmt.table == "" {
@@ -142,12 +131,27 @@ func (stmt *AddConstraintStmt) SQL() (string, []interface{}, error) {
 		WriteString(stmt.name)
 
 	switch stmt.typ {
-	case ConstraintAI:
-		// TODO
 	case ConstraintCheck:
 		builder.WriteString(" CHECK ").WriteString(stmt.cols[0])
 	case ConstraintFK:
-		// TODO
+		// NOTE: sqlite3 并未实现 sql-92 的外键约束功能
+		builder.WriteString(" ADD CONSTRAINT ").
+			WriteString(stmt.fk.Name).
+			WriteString("FOREIGN KEY (").
+			WriteString(stmt.fk.Column).
+			WriteString(") REFERENCES ").
+			WriteString(stmt.fk.RefTableName).
+			WriteByte('(').
+			WriteString(stmt.fk.RefColName).
+			WriteByte(')')
+
+		if len(stmt.fk.UpdateRule) > 0 {
+			builder.WriteString(" ON UPDATE ").WriteString(stmt.fk.UpdateRule)
+		}
+
+		if len(stmt.fk.DeleteRule) > 0 {
+			builder.WriteString(" ON DELETE ").WriteString(stmt.fk.DeleteRule)
+		}
 	case ConstraintPK:
 		builder.WriteString(" PRIMARY KEY ")
 		for _, col := range stmt.cols {

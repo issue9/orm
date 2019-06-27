@@ -385,7 +385,7 @@ func createFKSQL(buf *SQLBuilder, fk *foreignKey) {
 	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ").WriteString(fk.Name)
 
-	buf.WriteString(" FOREIGN KEY(")
+	buf.WriteString(" FOREIGN KEY (")
 	buf.WriteString(fk.Column)
 
 	buf.WriteString(") REFERENCES ").
