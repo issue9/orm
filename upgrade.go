@@ -76,6 +76,15 @@ func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 // DropColumns 删除表中的列，列名可以不存在于表模型，
 // 只在数据库中的表包含该列名，就会被删除。
 func (u *Upgrader) DropColumns(name ...string) *Upgrader {
+	if u.err != nil {
+		return u
+	}
+
+	if u.dropCols == nil {
+		u.dropCols = name
+		return u
+	}
+
 	u.dropCols = append(u.dropCols, name...)
 	return u
 }
@@ -95,6 +104,10 @@ func (u *Upgrader) ChangeColumn(old, new string, conv func(interface{}) interfac
 //
 // 约束必须存在于 model.constraints 中
 func (u *Upgrader) AddConstraint(name ...string) *Upgrader {
+	if u.err != nil {
+		return u
+	}
+
 	if u.addConts == nil {
 		u.addConts = name
 		return u
@@ -107,7 +120,46 @@ func (u *Upgrader) AddConstraint(name ...string) *Upgrader {
 
 // DropConstraint 删除约束
 func (u *Upgrader) DropConstraint(conts ...string) *Upgrader {
+	if u.err != nil {
+		return u
+	}
+
+	if u.dropConts == nil {
+		u.dropConts = conts
+		return u
+	}
+
 	u.dropConts = append(u.dropConts, conts...)
+	return u
+}
+
+// AddIndex 添加索引信息
+func (u *Upgrader) AddIndex(name ...string) *Upgrader {
+	if u.err != nil {
+		return u
+	}
+
+	if u.addIdxs == nil {
+		u.addIdxs = name
+		return u
+	}
+
+	u.addIdxs = append(u.addIdxs, name...)
+	return u
+}
+
+// DropIndex 删除索引
+func (u *Upgrader) DropIndex(name ...string) *Upgrader {
+	if u.Err() != nil {
+		return u
+	}
+
+	if u.dropIdxs == nil {
+		u.dropIdxs = name
+		return u
+	}
+
+	u.dropIdxs = append(u.dropIdxs, name...)
 	return u
 }
 
@@ -159,6 +211,15 @@ func (u *Upgrader) Do() error {
 		}
 	}
 
+	if len(u.dropIdxs) > 0 {
+		if err := u.dropIndex(e); err != nil {
+			if err1 := rollback(); err1 != nil {
+				return errors.New(err1.Error() + err.Error())
+			}
+			return err
+		}
+	}
+
 	if len(u.addCols) > 0 {
 		if err := u.addColumns(e); err != nil {
 			if err1 := rollback(); err1 != nil {
@@ -168,7 +229,23 @@ func (u *Upgrader) Do() error {
 		}
 	}
 
-	// TODO
+	if len(u.addCols) > 0 {
+		if err := u.addConstraints(e); err != nil {
+			if err1 := rollback(); err1 != nil {
+				return errors.New(err1.Error() + err.Error())
+			}
+			return err
+		}
+	}
+
+	if len(u.addCols) > 0 {
+		if err := u.addIndex(e); err != nil {
+			if err1 := rollback(); err1 != nil {
+				return errors.New(err1.Error() + err.Error())
+			}
+			return err
+		}
+	}
 
 	return commit()
 }
@@ -223,6 +300,113 @@ func (u *Upgrader) dropConstraints(e Engine) error {
 }
 
 func (u *Upgrader) addConstraints(e Engine) error {
-	// TODO
+	stmt := sqlbuilder.AddConstraint(e)
+
+	for _, c := range u.addConts {
+		stmt.Reset()
+		stmt.Table("{#" + u.model.Name + "}")
+
+		for _, fk := range u.model.FK {
+			if fk.Name != c {
+				continue
+			}
+
+			stmt.FK(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+			if _, err := stmt.Exec(); err != nil {
+				return err
+			}
+			break
+		}
+
+		for name, u := range u.model.Uniques {
+			if name != c {
+				continue
+			}
+
+			cols := make([]string, 0, len(u))
+			for _, col := range u {
+				cols = append(cols, "{"+col.Name+"}")
+			}
+			stmt.Unique(name, cols...)
+
+			if _, err := stmt.Exec(); err != nil {
+				return err
+			}
+
+			break
+		}
+
+		if u.model.PK != nil && u.model.AIName == c {
+			// NOTE: u.Model.AIName 为自动生成，而 AddConstraints 为手动指定约束名。
+			// 有可能会造成主键名称不一样，而无法正确生成
+
+			cols := make([]string, 0, len(u.model.PK))
+			for _, col := range u.model.PK {
+				cols = append(cols, "{"+col.Name+"}")
+			}
+			stmt.PK(u.model.AIName, cols...)
+
+			if _, err := stmt.Exec(); err != nil {
+				return err
+			}
+			break
+		}
+
+		for name, expr := range u.model.Checks {
+			if name != c {
+				continue
+			}
+
+			stmt.Check(name, expr)
+			if _, err := stmt.Exec(); err != nil {
+				return err
+			}
+			break
+		}
+	}
+
+	return nil
+}
+
+func (u *Upgrader) addIndex(e Engine) error {
+	stmt := sqlbuilder.CreateIndex(e)
+
+	for _, index := range u.addIdxs {
+		stmt.Reset()
+		stmt.Table("{#" + u.model.Name + "}")
+
+		for name, cols := range u.model.Indexes {
+			if name != index {
+				continue
+			}
+
+			cs := make([]string, 0, len(cols))
+			for _, c := range cols {
+				cs = append(cs, "{"+c.Name+"}")
+			}
+
+			stmt.Name(name)
+			stmt.Columns(cs...)
+		}
+		if _, err := stmt.Exec(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *Upgrader) dropIndex(e Engine) error {
+	stmt := sqlbuilder.DropIndex(e, e.Dialect())
+
+	for _, index := range u.dropIdxs {
+		stmt.Reset()
+		stmt.Table("{#" + u.model.Name + "}").
+			Name(index)
+		if _, err := stmt.Exec(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
