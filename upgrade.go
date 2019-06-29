@@ -193,15 +193,6 @@ func (u *Upgrader) Do() error {
 		e = tx
 	}
 
-	if len(u.dropCols) > 0 {
-		if err := u.dropColumns(e); err != nil {
-			if err1 := rollback(); err1 != nil {
-				return errors.New(err1.Error() + err.Error())
-			}
-			return err
-		}
-	}
-
 	if len(u.dropConts) > 0 {
 		if err := u.dropConstraints(e); err != nil {
 			if err1 := rollback(); err1 != nil {
@@ -220,6 +211,18 @@ func (u *Upgrader) Do() error {
 		}
 	}
 
+	// 外键约束可能正好依赖被删除的列。
+	// 所以要在删除约束之后，再删除列信息。
+	if len(u.dropCols) > 0 {
+		if err := u.dropColumns(e); err != nil {
+			if err1 := rollback(); err1 != nil {
+				return errors.New(err1.Error() + err.Error())
+			}
+			return err
+		}
+	}
+
+	// 先添加列，再添加约束和索引。后者可能依赖添加的列信息。
 	if len(u.addCols) > 0 {
 		if err := u.addColumns(e); err != nil {
 			if err1 := rollback(); err1 != nil {
@@ -229,7 +232,7 @@ func (u *Upgrader) Do() error {
 		}
 	}
 
-	if len(u.addCols) > 0 {
+	if len(u.addConts) > 0 {
 		if err := u.addConstraints(e); err != nil {
 			if err1 := rollback(); err1 != nil {
 				return errors.New(err1.Error() + err.Error())
@@ -238,7 +241,7 @@ func (u *Upgrader) Do() error {
 		}
 	}
 
-	if len(u.addCols) > 0 {
+	if len(u.addIdxs) > 0 {
 		if err := u.addIndex(e); err != nil {
 			if err1 := rollback(); err1 != nil {
 				return errors.New(err1.Error() + err.Error())
