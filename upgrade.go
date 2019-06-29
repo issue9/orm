@@ -25,8 +25,6 @@ type Upgrader struct {
 
 	addIdxs  []string
 	dropIdxs []string
-
-	// TODO 修改列信息
 }
 
 // Upgrade 生成 Upgrader 对象
@@ -86,17 +84,6 @@ func (u *Upgrader) DropColumns(name ...string) *Upgrader {
 	}
 
 	u.dropCols = append(u.dropCols, name...)
-	return u
-}
-
-// RenameColumn 修改列名
-func (u *Upgrader) RenameColumn(old, new string) {
-	// TODO
-}
-
-// ChangeColumn 改变列属性
-func (u *Upgrader) ChangeColumn(old, new string, conv func(interface{}) interface{}) *Upgrader {
-	// TODO
 	return u
 }
 
@@ -203,7 +190,7 @@ func (u *Upgrader) Do() error {
 	}
 
 	if len(u.dropIdxs) > 0 {
-		if err := u.dropIndex(e); err != nil {
+		if err := u.dropIndexs(e); err != nil {
 			if err1 := rollback(); err1 != nil {
 				return errors.New(err1.Error() + err.Error())
 			}
@@ -242,7 +229,7 @@ func (u *Upgrader) Do() error {
 	}
 
 	if len(u.addIdxs) > 0 {
-		if err := u.addIndex(e); err != nil {
+		if err := u.addIndexs(e); err != nil {
 			if err1 := rollback(); err1 != nil {
 				return errors.New(err1.Error() + err.Error())
 			}
@@ -371,7 +358,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 	return nil
 }
 
-func (u *Upgrader) addIndex(e Engine) error {
+func (u *Upgrader) addIndexs(e Engine) error {
 	stmt := sqlbuilder.CreateIndex(e)
 
 	for _, index := range u.addIdxs {
@@ -399,7 +386,7 @@ func (u *Upgrader) addIndex(e Engine) error {
 	return nil
 }
 
-func (u *Upgrader) dropIndex(e Engine) error {
+func (u *Upgrader) dropIndexs(e Engine) error {
 	stmt := sqlbuilder.DropIndex(e, e.Dialect())
 
 	for _, index := range u.dropIdxs {
