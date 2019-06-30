@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -53,7 +54,7 @@ func (m obj) Meta() string {
 	return `name(objs)`
 }
 
-func TestNewModel(t *testing.T) {
+func TestModels_New(t *testing.T) {
 	a := assert.New(t)
 	ms := NewModels()
 	a.NotNil(ms)
@@ -109,6 +110,7 @@ func TestNewModel(t *testing.T) {
 	// Meta返回的name属性
 	a.Equal(m.Name, "administrators")
 
+	// 多层指针下的 Receive
 	o := obj{}
 	m, err = ms.New(o)
 	a.NotError(err).NotNil(m)
@@ -120,6 +122,10 @@ func TestNewModel(t *testing.T) {
 	m, err = ms.New(&oo)
 	a.NotError(err).NotNil(m)
 	a.Equal(m.Name, "objs")
+
+	// 无效的 New
+	m, err = ms.New(123)
+	a.ErrorType(err, fetch.ErrInvalidKind).Nil(m)
 }
 
 func TestModel_check(t *testing.T) {

@@ -21,6 +21,20 @@ const (
 	defaultPKNameSuffix = "_pk"
 )
 
+// Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
+//  "name(tbl_name);engine(myISAM);charset(utf8)"
+type Metaer interface {
+	Meta() string
+}
+
+// ForeignKey 外键
+type ForeignKey struct {
+	Name                     string  // 外键约束名
+	Column                   *Column // 关联的列
+	RefTableName, RefColName string
+	UpdateRule, DeleteRule   string
+}
+
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
 	Name    string              // 表的名称

@@ -36,3 +36,16 @@ func TestModels(t *testing.T) {
 	ms.Clear()
 	a.Equal(0, len(ms.items))
 }
+
+func TestModels_addNames(t *testing.T) {
+	a := assert.New(t)
+	ms := NewModels()
+	a.NotNil(ms)
+
+	a.Equal(0, len(ms.names))
+	a.NotError(ms.addNames("n1", "n2"))
+	a.Equal(2, len(ms.names))
+
+	a.ErrorType(ms.addNames("n1", "n2"), ErrDuplicateName)
+	a.Equal(2, len(ms.names))
+}
