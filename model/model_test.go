@@ -81,8 +81,9 @@ func TestModels_New(t *testing.T) {
 	a.True(found).Equal(usernameCol, index[0])
 
 	// ai
-	a.Equal(m.AI, idCol)
-	a.Empty(m.PK) // 有自增，则主键为空
+	a.Equal(m.AI, idCol).
+		Equal(m.AIName, "administrators_ai").
+		Empty(m.PK) // 有自增，则主键为空
 
 	// unique_name
 	unique, found := m.Uniques["unique_admin_username"]
@@ -128,7 +129,7 @@ func TestModels_New(t *testing.T) {
 	a.ErrorType(err, fetch.ErrInvalidKind).Nil(m)
 }
 
-func TestModel_check(t *testing.T) {
+func TestModel_sanitize(t *testing.T) {
 	a := assert.New(t)
 
 	ai := &Column{
@@ -165,40 +166,44 @@ func TestModel_check(t *testing.T) {
 	}
 
 	m := &Model{
+		Name:    "m1",
 		Columns: []*Column{ai, pk1, pk2, nullable, def},
 		AI:      ai,
 	}
 
-	a.NotError(m.check())
+	a.NotError(m.sanitize())
 
 	// AI 不能是 nullable
 	m.PK = nil
 	m.AI = nullable
-	a.Error(m.check())
+	a.Error(m.sanitize()).
+		Equal(m.AIName, "m1"+defaultAINameSuffix)
 
 	// AI 不能是 HasDefault=true
 	m.AI = def
-	a.Error(m.check())
+	a.Error(m.sanitize())
 
 	// 多列主键约束
 	m.AI = nil
 	m.PK = []*Column{pk1, pk2}
-	a.NotError(m.check())
+	a.NotError(m.sanitize())
 
 	// 多列主键约束，可以有 nullable 和 default
 	m.AI = nil
 	m.PK = []*Column{pk1, pk2, nullable, def}
-	a.NotError(m.check())
+	a.NotError(m.sanitize())
 
 	// 单列主键，可以是 nullable
 	m.AI = nil
 	m.PK = []*Column{nullable}
-	a.NotError(m.check())
+	a.NotError(m.sanitize()).
+		Equal(m.PKName, "m1"+defaultPKNameSuffix)
 
 	// 单列主键，不能是 default
 	m.AI = nil
 	m.PK = []*Column{def}
-	a.Error(m.check())
+	a.Error(m.sanitize()).
+		Equal(m.PKName, "m1"+defaultPKNameSuffix)
 }
 
 func TestModel_parseColumn(t *testing.T) {
@@ -357,5 +362,6 @@ func TestModel_setAI(t *testing.T) {
 	a.Error(m.setAI(col, nil))
 
 	col.GoType = reflect.TypeOf(1)
-	a.NotError(m.setAI(col, nil))
+	a.NotError(m.setAI(col, nil)).
+		Empty(m.AIName) // 并不会设置 AIName 的值
 }

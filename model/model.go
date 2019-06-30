@@ -108,8 +108,6 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 		Meta:    map[string][]string{},
 	}
 
-	// NOTE: 需要保证表名的获取在 parseColumns 之前
-	// 诸如 AIName、PKName 等依赖表名字段。
 	if err := m.parseColumns(rval); err != nil {
 		return nil, err
 	}
@@ -120,7 +118,7 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 		}
 	}
 
-	if err := m.check(); err != nil {
+	if err := m.sanitize(); err != nil {
 		return nil, err
 	}
 
@@ -173,10 +171,13 @@ func (ms *Models) addModel(gotype reflect.Type, m *Model) error {
 	return nil
 }
 
-// 对整个对象做一次检测，查看是否合法
+// 对整个对象做一次修正和检测，查看是否合法
+//
 // 必须要在 Model 初始化完成之后调用。
-func (m *Model) check() error {
+func (m *Model) sanitize() error {
 	if m.AI != nil {
+		m.AIName = m.Name + defaultAINameSuffix
+
 		if m.AI.Nullable {
 			return propertyError(m.AI.Name, "nullable", "不能与自增列并存")
 		}
@@ -184,6 +185,10 @@ func (m *Model) check() error {
 		if m.AI.HasDefault {
 			return propertyError(m.AI.Name, "default", "不能与自增列并存")
 		}
+	}
+
+	if len(m.PK) > 0 {
+		m.PKName = m.Name + defaultPKNameSuffix
 	}
 
 	if len(m.PK) == 1 && m.PK[0].HasDefault {
@@ -382,7 +387,6 @@ func (m *Model) setPK(col *Column, vals []string) error {
 	}
 
 	m.PK = append(m.PK, col)
-	m.PKName = m.Name + defaultPKNameSuffix
 	return nil
 }
 
@@ -436,7 +440,6 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 	}
 
 	m.AI = col
-	m.AIName = m.Name + defaultAINameSuffix
 	col.AI = true
 
 	return nil
