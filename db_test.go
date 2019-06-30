@@ -48,9 +48,9 @@ func initData(a *assert.Assertion) *orm.DB {
 	})
 
 	insert(&Admin{
-		User:  User{Username: "username1", Password: "password1"},
-		Email: "email1",
-		Group: 1,
+		Admin1: Admin1{Username: "username1", Password: "password1"},
+		Email:  "email1",
+		Group:  1,
 	})
 
 	insert(&UserInfo{
@@ -225,9 +225,9 @@ func TestDB_Truncate(t *testing.T) {
 	a.NotError(db.Truncate(&Admin{}))
 	hasCount(db, a, "administrators", 0)
 
-	_, err := db.Insert(&Admin{Group: 1, Email: "email1", User: User{Username: "u1"}})
+	_, err := db.Insert(&Admin{Group: 1, Email: "email1", Admin1: Admin1{Username: "u1"}})
 	a.NotError(err)
-	_, err = db.Insert(&Admin{Group: 1, Email: "email2", User: User{Username: "u2"}})
+	_, err = db.Insert(&Admin{Group: 1, Email: "email2", Admin1: Admin1{Username: "u2"}})
 	a.NotError(err)
 
 	a1 := &Admin{Email: "email1"}

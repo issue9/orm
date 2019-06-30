@@ -110,8 +110,53 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 		return nil, err
 	}
 
-	ms.items[rtype] = m
+	if err := ms.addModel(rtype, m); err != nil {
+		return nil, err
+	}
+
 	return m, nil
+}
+
+func (ms *Models) addModel(gotype reflect.Type, m *Model) error {
+	ms.items[gotype] = m
+
+	for name := range m.Indexes {
+		if err := ms.addNames(name); err != nil {
+			return err
+		}
+	}
+
+	for name := range m.Uniques {
+		if err := ms.addNames(name); err != nil {
+			return err
+		}
+	}
+
+	for name := range m.Checks {
+		if err := ms.addNames(name); err != nil {
+			return err
+		}
+	}
+
+	for _, fk := range m.FK {
+		if err := ms.addNames(fk.Name); err != nil {
+			return err
+		}
+	}
+
+	if m.AIName != "" {
+		if err := ms.addNames(m.AIName); err != nil {
+			return err
+		}
+	}
+
+	if m.PKName != "" {
+		if err := ms.addNames(m.PKName); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // 对整个对象做一次检测，查看是否合法

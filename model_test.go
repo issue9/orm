@@ -19,7 +19,14 @@ func (g *Group) Meta() string {
 // User 带自增和一个唯一约束
 type User struct {
 	ID       int    `orm:"name(id);ai;"`
-	Username string `orm:"unique(unique_username);index(index_name);len(50)"`
+	Username string `orm:"unique(unique_user_username);index(index_user_name);len(50)"`
+	Password string `orm:"name(password);len(20)"`
+	Regdate  int    `orm:"-"`
+}
+
+type Admin1 struct {
+	ID       int    `orm:"name(id);ai;"`
+	Username string `orm:"unique(unique_admin_username);index(index_admin_name);len(50)"`
 	Password string `orm:"name(password);len(20)"`
 	Regdate  int    `orm:"-"`
 }
@@ -44,8 +51,7 @@ func (m *UserInfo) Meta() string {
 
 // Admin 带自增和两个唯一约束
 type Admin struct {
-	User
-
+	Admin1
 	Email string `orm:"name(email);len(20);unique(unique_email)"`
 	Group int64  `orm:"name(group);fk(fk_name,#groups,id,NO ACTION)"`
 }

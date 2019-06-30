@@ -15,7 +15,14 @@ import (
 // User 带自增和一个唯一约束
 type User struct {
 	ID       int    `orm:"name(id);ai;"`
-	Username string `orm:"unique(unique_username);index(index_name);len(50)"`
+	Username string `orm:"unique(unique_user_username);index(index_user_name);len(50)"`
+	Password string `orm:"name(password);len(20)"`
+	Regdate  int    `orm:"-"`
+}
+
+type Admin1 struct {
+	ID       int    `orm:"name(id);ai;"`
+	Username string `orm:"unique(unique_admin_username);index(index_admin_name);len(50)"`
 	Password string `orm:"name(password);len(20)"`
 	Regdate  int    `orm:"-"`
 }
@@ -27,9 +34,9 @@ func (m *User) Meta() string {
 
 // Admin 带自增和两个唯一约束
 type Admin struct {
-	User
-	Email string `orm:"name(email);len(20);unique(unique_email)"`
-	Group int64  `orm:"name(group);fk(fk_name,#groups,id,NO ACTION)"`
+	Admin1
+	Email string `orm:"name(email);len(20);unique(unique_admin_email)"`
+	Group int64  `orm:"name(group);fk(fk_admin_name,#groups,id,NO ACTION)"`
 }
 
 // Meta 指定表属性
@@ -69,7 +76,7 @@ func TestNewModel(t *testing.T) {
 	a.NotNil(groupCol)
 
 	// index
-	index, found := m.Indexes["index_name"]
+	index, found := m.Indexes["index_admin_name"]
 	a.True(found).Equal(usernameCol, index[0])
 
 	// ai
@@ -77,12 +84,12 @@ func TestNewModel(t *testing.T) {
 	a.Empty(m.PK) // 有自增，则主键为空
 
 	// unique_name
-	unique, found := m.Uniques["unique_username"]
+	unique, found := m.Uniques["unique_admin_username"]
 	a.True(found).Equal(unique[0], usernameCol)
 
 	fk := m.FK[0]
 	a.True(found).
-		Equal(fk.Name, "fk_name").
+		Equal(fk.Name, "fk_admin_name").
 		Equal(fk.Column, groupCol).
 		Equal(fk.RefTableName, "#groups").
 		Equal(fk.RefColName, "id").
