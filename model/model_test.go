@@ -37,6 +37,15 @@ func (m *Admin) Meta() string {
 	return "check(admin_chk_name,{group}>0);mysql_engine(innodb);mysql_charset(utf8);name(administrators)"
 }
 
+type obj struct {
+	ID int `orm:"name(id);ai"`
+}
+
+// fun
+func (m obj) Meta() string {
+	return `name(objs)`
+}
+
 func TestNewModel(t *testing.T) {
 	a := assert.New(t)
 	ms := NewModels()
@@ -92,6 +101,18 @@ func TestNewModel(t *testing.T) {
 
 	// Meta返回的name属性
 	a.Equal(m.Name, "administrators")
+
+	o := obj{}
+	m, err = ms.New(o)
+	a.NotError(err).NotNil(m)
+	a.Equal(m.Name, "objs")
+	m, err = ms.New(&o)
+	a.NotError(err).NotNil(m)
+	a.Equal(m.Name, "objs")
+	oo := &o
+	m, err = ms.New(&oo)
+	a.NotError(err).NotNil(m)
+	a.Equal(m.Name, "objs")
 }
 
 func TestModel_check(t *testing.T) {
