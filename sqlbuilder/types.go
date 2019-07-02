@@ -83,9 +83,6 @@ type Dialect interface {
 	// limit 和 offset 可以是 sql.NamedArg 类型。
 	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
 
-	// DropIndexSQL 删除索引
-	DropIndexSQL(table, index string) string
-
 	// 自定义获取 LastInsertID 的获取方式。
 	//
 	// 类似于 postgresql 等都需要额外定义。

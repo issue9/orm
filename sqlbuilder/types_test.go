@@ -14,7 +14,6 @@ var (
 	_ execPreparer = &UpdateStmt{}
 	_ execPreparer = &InsertStmt{}
 	_ execPreparer = &UpdateStmt{}
-	_ execer       = &CreateIndexStmt{}
 	_ queryer      = &SelectStmt{}
 )
 

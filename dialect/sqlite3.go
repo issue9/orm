@@ -76,10 +76,6 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (s *sqlite3) DropIndexSQL(table, index string) string {
-	return "DROP INDEX IF EXISTS " + index
-}
-
 func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
 	builder := sqlbuilder.New("DELETE FROM ").
 		WriteString(stmt.TableName)
