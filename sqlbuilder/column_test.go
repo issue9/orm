@@ -21,7 +21,7 @@ func TestColumn(t *testing.T) {
 
 	r, err := sqlbuilder.AddColumn(db, db.Dialect()).
 		Table("#user").
-		Column("col1", reflect.TypeOf(1), true, true, nil).
+		Column("col1", reflect.TypeOf(1), true, false, nil).
 		Exec()
 	a.NotError(err).NotNil(r)
 
