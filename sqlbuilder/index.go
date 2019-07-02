@@ -4,10 +4,7 @@
 
 package sqlbuilder
 
-import (
-	"context"
-	"database/sql"
-)
+import "context"
 
 // Index 索引的类型
 type Index int8
@@ -25,14 +22,6 @@ type CreateIndexStmt struct {
 	name   string   // 索引名称
 	cols   []string // 索引列
 	typ    Index
-}
-
-// DropIndexStmt 删除索引
-type DropIndexStmt struct {
-	engine  Engine
-	dialect Dialect
-	table   string
-	name    string
 }
 
 func (t Index) String() string {
@@ -83,14 +72,14 @@ func (stmt *CreateIndexStmt) Columns(col ...string) *CreateIndexStmt {
 	return stmt
 }
 
-// SQL 生成 SQL 语句
-func (stmt *CreateIndexStmt) SQL() (string, []interface{}, error) {
+// DDLSQL 生成 SQL 语句
+func (stmt *CreateIndexStmt) DDLSQL() ([]string, error) {
 	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+		return nil, ErrTableIsEmpty
 	}
 
 	if len(stmt.cols) == 0 {
-		return "", nil, ErrColumnsIsEmpty
+		return nil, ErrColumnsIsEmpty
 	}
 
 	var builder *SQLBuilder
@@ -109,7 +98,7 @@ func (stmt *CreateIndexStmt) SQL() (string, []interface{}, error) {
 	}
 	builder.TruncateLast(1).WriteByte(')')
 
-	return builder.String(), nil, nil
+	return []string{builder.String()}, nil
 }
 
 // Reset 重置
@@ -121,13 +110,26 @@ func (stmt *CreateIndexStmt) Reset() {
 }
 
 // Exec 执行 SQL 语句
-func (stmt *CreateIndexStmt) Exec() (sql.Result, error) {
+func (stmt *CreateIndexStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
-func (stmt *CreateIndexStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
+func (stmt *CreateIndexStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
+}
+
+// DropIndexStmtHooker DropIndexStmt.DDLSQL 的勾子函数
+type DropIndexStmtHooker interface {
+	DropIndexStmtHook(*DropIndexStmt) ([]string, error)
+}
+
+// DropIndexStmt 删除索引
+type DropIndexStmt struct {
+	engine    Engine
+	dialect   Dialect
+	TableName string
+	IndexName string
 }
 
 // DropIndex 声明一条 DropIndexStmt 语句
@@ -140,42 +142,45 @@ func DropIndex(e Engine, d Dialect) *DropIndexStmt {
 
 // Table 指定表名
 func (stmt *DropIndexStmt) Table(tbl string) *DropIndexStmt {
-	stmt.table = tbl
+	stmt.TableName = tbl
 	return stmt
 }
 
 // Name 指定索引名
 func (stmt *DropIndexStmt) Name(col string) *DropIndexStmt {
-	stmt.name = col
+	stmt.IndexName = col
 	return stmt
 }
 
-// SQL 生成 SQL 语句
-func (stmt *DropIndexStmt) SQL() (string, []interface{}, error) {
-	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+// DDLSQL 生成 SQL 语句
+func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
+	if stmt.TableName == "" {
+		return nil, ErrTableIsEmpty
 	}
 
-	if stmt.name == "" {
-		return "", nil, ErrColumnsIsEmpty
+	if stmt.IndexName == "" {
+		return nil, ErrColumnsIsEmpty
 	}
 
-	query := stmt.dialect.DropIndexSQL(stmt.table, stmt.name)
-	return query, nil, nil
+	if hook, ok := stmt.dialect.(DropIndexStmtHooker); ok {
+		return hook.DropIndexStmtHook(stmt)
+	}
+
+	return []string{"DROP INDEX IF EXISTS " + stmt.IndexName}, nil
 }
 
 // Reset 重置
 func (stmt *DropIndexStmt) Reset() {
-	stmt.table = ""
-	stmt.name = ""
+	stmt.TableName = ""
+	stmt.IndexName = ""
 }
 
 // Exec 执行 SQL 语句
-func (stmt *DropIndexStmt) Exec() (sql.Result, error) {
+func (stmt *DropIndexStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
-func (stmt *DropIndexStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
+func (stmt *DropIndexStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
 }

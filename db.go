@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/issue9/orm/v2/model"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // DB 数据库操作实例。
@@ -71,10 +72,11 @@ func (db *DB) Close() error {
 // Version 数据库服务端的版本号
 func (db *DB) Version() (string, error) {
 	if db.version == "" {
-		err := db.QueryRow(db.Dialect().VersionSQL()).Scan(&db.version)
+		ver, err := sqlbuilder.Version(db, db.Dialect())
 		if err != nil {
 			return "", err
 		}
+		db.version = ver
 	}
 
 	return db.version, nil

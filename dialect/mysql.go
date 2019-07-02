@@ -81,8 +81,8 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (m *mysql) DropIndexSQL(table, index string) string {
-	return `ALTER TABLE ` + table + ` DROP INDEX ` + index
+func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
+	return []string{"ALTER TABLE " + stmt.TableName + " DROP INDEX " + stmt.IndexName}, nil
 }
 
 func (m *mysql) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {

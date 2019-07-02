@@ -338,11 +338,11 @@ func createIndexSQL(model *CreateTableStmt) ([]string, error) {
 			Name(index.Name).
 			Columns(index.Columns...)
 
-		query, _, err := buf.SQL()
+		query, err := buf.DDLSQL()
 		if err != nil {
 			return nil, err
 		}
-		sqls = append(sqls, query)
+		sqls = append(sqls, query...)
 	}
 
 	return sqls, nil
@@ -414,7 +414,7 @@ func createCheckSQL(buf *SQLBuilder, name, expr string) {
 		WriteByte(')')
 }
 
-// TruncateTableStmtHooker TruncateTableStmt.DDLSQL 的勾子函数
+// TruncateTableStmtHooker TruncateTableStmt.DDLSQL 的钩子函数
 type TruncateTableStmtHooker interface {
 	TruncateTableStmtHook(*TruncateTableStmt) ([]string, error)
 }

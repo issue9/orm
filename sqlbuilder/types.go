@@ -63,6 +63,9 @@ type Dialect interface {
 	// 将列转换成数据支持的类型
 	SQLType(col *Column) (string, error)
 
+	// 查询服务器版本号的 SQL 语句。
+	VersionSQL() string
+
 	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句。
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
@@ -70,9 +73,6 @@ type Dialect interface {
 	//
 	// limit 和 offset 可以是 sql.NamedArg 类型。
 	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
-
-	// DropIndexSQL 删除索引
-	DropIndexSQL(table, index string) string
 
 	// 自定义获取 LastInsertID 的获取方式。
 	//
