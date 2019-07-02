@@ -6,7 +6,6 @@ package sqlbuilder
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"reflect"
 	"sort"
@@ -241,8 +240,8 @@ func (stmt CreateTableStmt) checkNames() error {
 	return nil
 }
 
-// SQL 获取 SQL 的语句及参数部分
-func (stmt *CreateTableStmt) SQL() ([]string, error) {
+// DDLSQL 获取 SQL 的语句及参数部分
+func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	if err := stmt.checkNames(); err != nil {
 		return nil, err
 	}
@@ -287,24 +286,13 @@ func (stmt *CreateTableStmt) SQL() ([]string, error) {
 }
 
 // Exec 执行 SQL 语句
-func (stmt *CreateTableStmt) Exec() (sql.Result, error) {
+func (stmt *CreateTableStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
-func (stmt *CreateTableStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	qs, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, query := range qs {
-		if r, err := stmt.engine.ExecContext(ctx, query); err != nil {
-			return r, err
-		}
-	}
-
-	return nil, nil
+func (stmt *CreateTableStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
 }
 
 // 创建标准的几种约束

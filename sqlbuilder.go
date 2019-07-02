@@ -168,8 +168,7 @@ func create(e Engine, v interface{}) error {
 		sb.PK(m.PKName, cols...)
 	}
 
-	_, err = sb.Exec()
-	return err
+	return sb.Exec()
 }
 
 // 删除一张表。

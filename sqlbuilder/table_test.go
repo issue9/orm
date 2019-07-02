@@ -14,6 +14,8 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+var _ sqlbuilder.DDLSQLer = &sqlbuilder.CreateTableStmt{}
+
 func TestCreateTableStmt(t *testing.T) {
 	a := assert.New(t)
 	table := "create_table_test"
@@ -30,15 +32,15 @@ func TestCreateTableStmt(t *testing.T) {
 		Index(sqlbuilder.IndexDefault, "index_index", "name", "address").
 		Unique("u_age", "name", "address").
 		Check("age_gt_0", "age>0")
-	rslt, err := stmt.Exec()
-	a.NotError(err).Nil(rslt)
+	err := stmt.Exec()
+	a.NotError(err)
 
 	insert := sqlbuilder.Insert(db, db.Dialect()).
 		Table(table).
 		KeyValue("age", 1).
 		KeyValue("name", "name1").
 		KeyValue("address", "address1")
-	rslt, err = insert.Exec()
+	rslt, err := insert.Exec()
 	a.NotError(err).NotNil(rslt)
 
 	prepare, err := insert.Prepare()

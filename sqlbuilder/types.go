@@ -21,13 +21,29 @@ const (
 	ConstraintAI                       // 自增
 )
 
+// Rester 重置对象数据
+//
+// 实现该接口的对象，可以调用 Reset 方法重置对象的数据以达到重复利用数据的问题。
+type Rester interface {
+	Reset()
+}
+
 // SQLer 定义 SQL 语句的基本接口
 type SQLer interface {
+	Rester
+
 	// 获取 SQL 语句以及其关联的参数
 	SQL() (query string, args []interface{}, err error)
+}
 
-	// 重置整个 SQL 语句。
-	Reset()
+// DDLSQLer SQL 中 DDL 语句的基本接口
+//
+// 大部分数据的 DDL 操作是有多条语句组成，比如 CREATE TABLE
+// 可能包含了额外的定义信息。
+type DDLSQLer interface {
+	Rester
+
+	DDLSQL() ([]string, error)
 }
 
 // WhereStmter 带 Where 语句的 SQL
@@ -37,13 +53,6 @@ type WhereStmter interface {
 
 // Engine 数据库执行的基本接口。
 type Engine interface {
-	// 执行一条查询语句，并返回相应的 sql.Rows 实例。
-	// 功能等同于标准库 database/sql 的 DB.Query()
-	//
-	// query 会被作相应的转换。以 mysql 为例，假设当前的 prefix 为 p_
-	//  select * from #user where {group}=1
-	//  // 转换后
-	//  select * from prefix_user where `group`=1
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
@@ -91,6 +100,21 @@ type Dialect interface {
 
 	// 创建 AI 约束
 	//CreateConstraintAI(name,col string)(string,error)
+}
+
+func ddlExecContext(ctx context.Context, e Engine, stmt DDLSQLer) error {
+	qs, err := stmt.DDLSQL()
+	if err != nil {
+		return err
+	}
+
+	for _, query := range qs {
+		if _, err = e.ExecContext(ctx, query); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) {
