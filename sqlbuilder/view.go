@@ -69,10 +69,45 @@ func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
 
 // DDLSQL 返回创建视图的 SQL 语句
 func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
-	builder := New("")
-	// TODO
+	if stmt.name == "" {
+		return nil, ErrTableIsEmpty
+	}
 
-	return builder.String(), nil
+	if stmt.selectStmt == nil {
+		return nil, ErrValueIsEmpty
+	}
+
+	builder := New("CREATE ")
+
+	if stmt.replace {
+		builder.WriteString(" OR REPLACE ")
+	}
+
+	if stmt.temporary {
+		builder.WriteString(" TEMPORARY ")
+	}
+
+	builder.WriteString(" VIEW ").WriteString(stmt.name)
+
+	if len(stmt.columns) > 0 {
+		builder.WriteByte('(')
+		for _, col := range stmt.columns {
+			builder.WriteString(col).WriteByte(',')
+		}
+		builder.TruncateLast(1)
+		builder.WriteByte(')')
+	}
+
+	q, args, err := stmt.selectStmt.SQL()
+	if err != nil {
+		return nil, err
+	}
+	if len(args) > 0 {
+		return nil, ErrViewSelectNotAllowArgs
+	}
+	builder.WriteString(q)
+
+	return []string{builder.String()}, nil
 }
 
 // Exec 执行 SQL 语句
