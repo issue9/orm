@@ -80,22 +80,28 @@ func (s *sqlite3) DropIndexSQL(table, index string) string {
 	return "DROP INDEX IF EXISTS " + index
 }
 
-func (s *sqlite3) TruncateTableSQL(m *orm.Model) []string {
-	builder := sqlbuilder.New("DELETE FROM #").
-		WriteString(m.Name)
-	if m.AI == nil {
-		return []string{builder.String()}
+func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
+	builder := sqlbuilder.New("DELETE FROM ").
+		WriteString(stmt.TableName)
+	if stmt.AIColumnName == "" {
+		return []string{builder.String()}, nil
+	}
+
+	// 获取表名，以下表名仅用为字符串使用，需要去掉 {} 两个符号
+	tablename := stmt.TableName
+	if tablename[0] == '{' {
+		tablename = tablename[1 : len(tablename)-1]
 	}
 
 	ret := make([]string, 2)
 	ret[0] = builder.String()
 	builder.Reset()
-	ret[1] = builder.WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name='#").
-		WriteString(m.Name).
+	ret[1] = builder.WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name='").
+		WriteString(tablename).
 		WriteByte('\'').
 		String()
 
-	return ret
+	return ret, nil
 }
 
 func (s *sqlite3) TransactionalDDL() bool {

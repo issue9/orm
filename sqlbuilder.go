@@ -171,6 +171,22 @@ func create(e Engine, v interface{}) error {
 	return sb.Exec()
 }
 
+func truncate(e Engine, v interface{}) error {
+	m, err := e.NewModel(v)
+	if err != nil {
+		return err
+	}
+
+	stmt := e.SQL().TruncateTable()
+	if m.AI != nil {
+		stmt.Table("{#"+m.Name+"}", "{"+m.AI.Name+"}", "{"+m.AIName+"}")
+	} else {
+		stmt.Table("{#"+m.Name+"}", "", "")
+	}
+
+	return stmt.Exec()
+}
+
 // 删除一张表。
 func drop(e Engine, v interface{}) error {
 	m, err := e.NewModel(v)

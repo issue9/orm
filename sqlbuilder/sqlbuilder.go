@@ -3,6 +3,9 @@
 // license that can be found in the LICENSE file.
 
 // Package sqlbuilder 提供一套通过字符串拼接来构成 SQL 语句的工具。
+//
+// TODO: hook
+// TODO: dialect
 package sqlbuilder
 
 import (
@@ -31,6 +34,9 @@ var (
 
 	// ErrUnknownConstraint 该约束类型不支持，或是当前环境下无法使用
 	ErrUnknownConstraint = errors.New("不支持的约束类型")
+
+	// ErrNotImplemented 部分数据库如果没有实现的功能，可以返回该错误
+	ErrNotImplemented = errors.New("未实现该功能")
 )
 
 // SQLBuilder 对 bytes.Buffer 的一个简单封装。

@@ -222,19 +222,7 @@ func (tx *Tx) Drop(v interface{}) error {
 
 // Truncate 清除表内容，重置 ai，但保留表结构。
 func (tx *Tx) Truncate(v interface{}) error {
-	m, err := tx.db.NewModel(v)
-	if err != nil {
-		return err
-	}
-
-	sqls := tx.Dialect().TruncateTableSQL(m)
-	for _, sql := range sqls {
-		if _, err := tx.Exec(sql); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return truncate(tx, v)
 }
 
 // SQL 返回 SQL 实例

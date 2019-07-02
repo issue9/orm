@@ -14,6 +14,10 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+var (
+	_ sqlbuilder.TruncateTableStmtHooker = &postgres{}
+)
+
 func TestPostgres_SQLType(t *testing.T) {
 	a := assert.New(t)
 

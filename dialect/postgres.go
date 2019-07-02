@@ -87,14 +87,14 @@ func (p *postgres) DropIndexSQL(table, index string) string {
 	return `DROP INDEX IF EXISTS ` + index
 }
 
-func (p *postgres) TruncateTableSQL(m *orm.Model) []string {
-	sql := "TRUNCATE TABLE #" + m.Name
+func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
+	query := "TRUNCATE TABLE " + stmt.TableName
 
-	if m.AI != nil {
-		sql += " RESTART IDENTITY"
+	if stmt.AIColumnName != "" {
+		query += " RESTART IDENTITY"
 	}
 
-	return []string{sql}
+	return []string{query}, nil
 }
 
 func (p *postgres) TransactionalDDL() bool {

@@ -99,9 +99,6 @@ type Dialect interface {
 	// 比如占位符 postgresql 可以使用 $1 等形式。
 	SQL(sql string) (string, error)
 
-	// 清空表内容，重置 AI。
-	TruncateTableSQL(m *Model) []string
-
 	// 查询服务器版本号的 SQL 语句。
 	VersionSQL() string
 }
@@ -139,4 +136,9 @@ func (sql *SQL) CreateIndex() *sqlbuilder.CreateIndexStmt {
 // DropTable 生成删除表的语句
 func (sql *SQL) DropTable() *sqlbuilder.DropTableStmt {
 	return sqlbuilder.DropTable(sql.engine)
+}
+
+// TruncateTable 生成清空表的语句，同时重置 AI 计算
+func (sql *SQL) TruncateTable() *sqlbuilder.TruncateTableStmt {
+	return sqlbuilder.TruncateTable(sql.engine, sql.engine.Dialect())
 }

@@ -85,8 +85,8 @@ func (m *mysql) DropIndexSQL(table, index string) string {
 	return `ALTER TABLE ` + table + ` DROP INDEX ` + index
 }
 
-func (m *mysql) TruncateTableSQL(model *orm.Model) []string {
-	return []string{"TRUNCATE TABLE #" + model.Name}
+func (m *mysql) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
+	return []string{"TRUNCATE TABLE " + stmt.TableName}, nil
 }
 
 func (m *mysql) TransactionalDDL() bool {

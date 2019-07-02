@@ -7,6 +7,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"strings"
 
 	"github.com/issue9/orm/v2/model"
@@ -203,26 +204,8 @@ func (db *DB) Drop(v interface{}) error {
 
 // Truncate 清空一张表。
 func (db *DB) Truncate(v interface{}) error {
-	m, err := db.NewModel(v)
-	if err != nil {
-		return err
-	}
-
-	sqls := db.Dialect().TruncateTableSQL(m)
-
-	// 单语句，直接执行
-	if len(sqls) == 1 {
-		_, err = db.Exec(sqls[0])
-		return err
-	}
-
 	if !db.Dialect().TransactionalDDL() {
-		for _, query := range sqls {
-			if _, err = db.Exec(query); err != nil {
-				return err
-			}
-		}
-		return nil
+		return truncate(db, v)
 	}
 
 	tx, err := db.Begin()
@@ -230,11 +213,11 @@ func (db *DB) Truncate(v interface{}) error {
 		return err
 	}
 
-	for _, sql := range sqls {
-		if _, err := tx.Exec(sql); err != nil {
-			tx.Rollback()
-			return err
+	if err = truncate(tx, v); err != nil {
+		if err1 := tx.Rollback(); err1 != nil {
+			return errors.New(err1.Error() + err.Error())
 		}
+		return err
 	}
 
 	return tx.Commit()
@@ -368,7 +351,7 @@ func (db *DB) MultDrop(objs ...interface{}) error {
 func (db *DB) MultTruncate(objs ...interface{}) error {
 	if !db.Dialect().TransactionalDDL() {
 		for _, v := range objs {
-			if err := db.Truncate(v); err != nil {
+			if err := truncate(db, v); err != nil {
 				return err
 			}
 		}
@@ -381,8 +364,8 @@ func (db *DB) MultTruncate(objs ...interface{}) error {
 	}
 
 	if err := tx.MultTruncate(objs...); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return err
+		if err1 := tx.Rollback(); err1 != nil {
+			return errors.New(err1.Error() + err.Error())
 		}
 		return err
 	}

@@ -15,6 +15,10 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+var (
+	_ sqlbuilder.TruncateTableStmtHooker = &sqlite3{}
+)
+
 func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	sql := sqlbuilder.New("")

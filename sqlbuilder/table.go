@@ -414,3 +414,61 @@ func createCheckSQL(buf *SQLBuilder, name, expr string) {
 		WriteString(expr).
 		WriteByte(')')
 }
+
+// TruncateTableStmtHooker TruncateTableStmt.DDLSQL 的勾子函数
+type TruncateTableStmtHooker interface {
+	TruncateTableStmtHook(*TruncateTableStmt) ([]string, error)
+}
+
+// TruncateTableStmt 清空表，并重置 AI
+type TruncateTableStmt struct {
+	engine       Engine
+	dialect      Dialect
+	TableName    string
+	AIColumnName string
+	AIName       string // 约束名
+}
+
+// TruncateTable 生成清空表语句
+func TruncateTable(e Engine, d Dialect) *TruncateTableStmt {
+	return &TruncateTableStmt{
+		engine:  e,
+		dialect: d,
+	}
+}
+
+// Reset 重置内容
+func (stmt *TruncateTableStmt) Reset() {
+	stmt.TableName = ""
+	stmt.AIColumnName = ""
+}
+
+// Table 指定表名
+//
+// aiName 表示自增约束的约束名，大部分数据库可以为空；
+// aiColumn 表示自增列；
+func (stmt *TruncateTableStmt) Table(t, aiColumn, aiName string) *TruncateTableStmt {
+	stmt.TableName = t
+	stmt.AIColumnName = aiColumn
+	stmt.AIName = aiName
+	return stmt
+}
+
+// DDLSQL 获取 SQL 的语句及参数部分
+func (stmt *TruncateTableStmt) DDLSQL() ([]string, error) {
+	if hook, ok := stmt.dialect.(TruncateTableStmtHooker); ok {
+		return hook.TruncateTableStmtHook(stmt)
+	}
+
+	return nil, ErrNotImplemented
+}
+
+// Exec 执行 SQL 语句
+func (stmt *TruncateTableStmt) Exec() error {
+	return stmt.ExecContext(context.Background())
+}
+
+// ExecContext 执行 SQL 语句
+func (stmt *TruncateTableStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
+}
