@@ -13,21 +13,26 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+var (
+	_ sqlbuilder.DDLSQLer = &sqlbuilder.AddColumnStmt{}
+	_ sqlbuilder.DDLSQLer = &sqlbuilder.DropColumnStmt{}
+)
+
 func TestColumn(t *testing.T) {
 	a := assert.New(t)
 
 	db := initDB(a)
 	defer clearDB(a, db)
 
-	r, err := sqlbuilder.AddColumn(db, db.Dialect()).
+	err := sqlbuilder.AddColumn(db, db.Dialect()).
 		Table("#user").
 		Column("col1", reflect.TypeOf(1), true, false, nil).
 		Exec()
-	a.NotError(err).NotNil(r)
+	a.NotError(err)
 
-	r, err = sqlbuilder.DropColumn(db).
+	err = sqlbuilder.DropColumn(db, db.Dialect()).
 		Table("#user").
 		Column("col1").
 		Exec()
-	a.NotError(err).NotNil(r)
+	a.NotError(err)
 }

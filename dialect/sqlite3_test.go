@@ -16,7 +16,10 @@ import (
 )
 
 var (
-	_ sqlbuilder.TruncateTableStmtHooker = &sqlite3{}
+	_ sqlbuilder.TruncateTableStmtHooker  = &sqlite3{}
+	_ sqlbuilder.DropColumnStmtHooker     = &sqlite3{}
+	_ sqlbuilder.DropConstraintStmtHooker = &sqlite3{}
+	_ sqlbuilder.AddConstraintStmtHooker  = &sqlite3{}
 )
 
 func TestSqlite3_CreateTableOptions(t *testing.T) {

@@ -4,10 +4,7 @@
 
 package sqlbuilder
 
-import (
-	"context"
-	"database/sql"
-)
+import "context"
 
 // DropTableStmt 删除表语句
 type DropTableStmt struct {
@@ -66,59 +63,71 @@ func (stmt *DropTableStmt) ExecContext(ctx context.Context) error {
 	return ddlExecContext(ctx, stmt.engine, stmt)
 }
 
+// DropConstraintStmtHooker DropConstraintStmt.DDLSQL 的钩子函数
+type DropConstraintStmtHooker interface {
+	DropConstraintStmtHook(*DropConstraintStmt) ([]string, error)
+}
+
 // DropConstraintStmt 删除约束
 type DropConstraintStmt struct {
-	engine     Engine
-	table      string
-	constraint string
+	engine  Engine
+	dialect Dialect
+
+	TableName string
+	Name      string
 }
 
 // DropConstraint 声明一条删除表约束的语句
-func DropConstraint(e Engine) *DropConstraintStmt {
+func DropConstraint(e Engine, d Dialect) *DropConstraintStmt {
 	return &DropConstraintStmt{
-		engine: e,
+		engine:  e,
+		dialect: d,
 	}
 }
 
 // Table 指定表名。
 // 重复指定，会覆盖之前的。
 func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
-	stmt.table = table
+	stmt.TableName = table
 	return stmt
 }
 
 // Constraint 指定需要删除的列
 func (stmt *DropConstraintStmt) Constraint(cont string) *DropConstraintStmt {
-	stmt.constraint = cont
+	stmt.Name = cont
 	return stmt
 }
 
-// SQL 获取 SQL 语句以及对应的参数
-func (stmt *DropConstraintStmt) SQL() (string, []interface{}, error) {
-	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+// DDLSQL 获取 SQL 语句以及对应的参数
+func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
+	if stmt.TableName == "" {
+		return nil, ErrTableIsEmpty
+	}
+
+	if hook, ok := stmt.dialect.(DropConstraintStmtHooker); ok {
+		return hook.DropConstraintStmtHook(stmt)
 	}
 
 	buf := New("ALTER TABLE {")
-	buf.WriteString(stmt.table)
+	buf.WriteString(stmt.TableName)
 	buf.WriteString("} DROP CONSTRAINT {")
-	buf.WriteString(stmt.constraint)
+	buf.WriteString(stmt.Name)
 	buf.WriteString("};")
-	return buf.String(), nil, nil
+	return []string{buf.String()}, nil
 }
 
 // Reset 重置
 func (stmt *DropConstraintStmt) Reset() {
-	stmt.table = ""
-	stmt.constraint = ""
+	stmt.TableName = ""
+	stmt.Name = ""
 }
 
 // Exec 执行 SQL 语句
-func (stmt *DropConstraintStmt) Exec() (sql.Result, error) {
+func (stmt *DropConstraintStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
-func (stmt *DropConstraintStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
+func (stmt *DropConstraintStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
 }

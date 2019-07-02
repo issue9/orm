@@ -6,7 +6,6 @@ package sqlbuilder
 
 import (
 	"context"
-	"database/sql"
 	"reflect"
 )
 
@@ -17,13 +16,6 @@ type AddColumnStmt struct {
 
 	table  string
 	column *Column
-}
-
-// DropColumnStmt 删除列
-type DropColumnStmt struct {
-	engine Engine
-	table  string
-	column string
 }
 
 // AddColumn 声明一条添加列的语句
@@ -52,15 +44,15 @@ func (stmt *AddColumnStmt) Column(name string, goType reflect.Type, nullable, ha
 	return stmt
 }
 
-// SQL 获取 SQL 语句以及对应的参数
-func (stmt *AddColumnStmt) SQL() (string, []interface{}, error) {
+// DDLSQL 获取 SQL 语句以及对应的参数
+func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+		return nil, ErrTableIsEmpty
 	}
 
 	typ, err := stmt.dialect.SQLType(stmt.column)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	buf := New("ALTER TABLE ").
@@ -70,7 +62,7 @@ func (stmt *AddColumnStmt) SQL() (string, []interface{}, error) {
 		WriteByte(' ').
 		WriteString(typ)
 
-	return buf.String(), nil, nil
+	return []string{buf.String()}, nil
 }
 
 // Reset 重置
@@ -80,60 +72,79 @@ func (stmt *AddColumnStmt) Reset() {
 }
 
 // Exec 执行 SQL 语句
-func (stmt *AddColumnStmt) Exec() (sql.Result, error) {
+func (stmt *AddColumnStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
-func (stmt *AddColumnStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
+func (stmt *AddColumnStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
+}
+
+// DropColumnStmtHooker DropColumnStmt.DDLSQL 的钩子函数
+type DropColumnStmtHooker interface {
+	DropColumnStmtHook(*DropColumnStmt) ([]string, error)
+}
+
+// DropColumnStmt 删除列
+type DropColumnStmt struct {
+	engine  Engine
+	dialect Dialect
+
+	TableName  string
+	ColumnName string
 }
 
 // DropColumn 声明一条删除列的语句
-func DropColumn(e Engine) *DropColumnStmt {
+func DropColumn(e Engine, d Dialect) *DropColumnStmt {
 	return &DropColumnStmt{
-		engine: e,
+		engine:  e,
+		dialect: d,
 	}
 }
 
 // Table 指定表名。
 // 重复指定，会覆盖之前的。
 func (stmt *DropColumnStmt) Table(table string) *DropColumnStmt {
-	stmt.table = table
+	stmt.TableName = table
 	return stmt
 }
 
 // Column 指定需要删除的列
 func (stmt *DropColumnStmt) Column(col string) *DropColumnStmt {
-	stmt.column = col
+	stmt.ColumnName = col
 	return stmt
 }
 
-// SQL 获取 SQL 语句以及对应的参数
-func (stmt *DropColumnStmt) SQL() (string, []interface{}, error) {
-	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+// DDLSQL 获取 SQL 语句以及对应的参数
+func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
+	if stmt.TableName == "" {
+		return nil, ErrTableIsEmpty
+	}
+
+	if hook, ok := stmt.dialect.(DropColumnStmtHooker); ok {
+		return hook.DropColumnStmtHook(stmt)
 	}
 
 	buf := New("ALTER TABLE ")
-	buf.WriteString(stmt.table)
+	buf.WriteString(stmt.TableName)
 	buf.WriteString(" DROP COLUMN ")
-	buf.WriteString(stmt.column)
-	return buf.String(), nil, nil
+	buf.WriteString(stmt.ColumnName)
+	return []string{buf.String()}, nil
 }
 
 // Reset 重置
 func (stmt *DropColumnStmt) Reset() {
-	stmt.table = ""
-	stmt.column = ""
+	stmt.TableName = ""
+	stmt.ColumnName = ""
 }
 
 // Exec 执行 SQL 语句
-func (stmt *DropColumnStmt) Exec() (sql.Result, error) {
+func (stmt *DropColumnStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
-func (stmt *DropColumnStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
+func (stmt *DropColumnStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
 }

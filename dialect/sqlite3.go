@@ -76,6 +76,21 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 	return mysqlLimitSQL(limit, offset...)
 }
 
+func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]string, error) {
+	// TODO
+	return nil, sqlbuilder.ErrNotImplemented
+}
+
+func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
+	// TODO
+	return nil, sqlbuilder.ErrNotImplemented
+}
+
+func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string, error) {
+	// TODO https://www.sqlite.org/lang_altertable.html
+	return nil, sqlbuilder.ErrNotImplemented
+}
+
 func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
 	builder := sqlbuilder.New("DELETE FROM ").
 		WriteString(stmt.TableName)

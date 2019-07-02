@@ -4,10 +4,7 @@
 
 package sqlbuilder
 
-import (
-	"context"
-	"database/sql"
-)
+import "context"
 
 // Constraint 表示约束类型
 type Constraint int8
@@ -22,161 +19,167 @@ const (
 	constraintNone
 )
 
+// AddConstraintStmtHooker AddConstraintStmt.DDLSQL 的钩子函数
+type AddConstraintStmtHooker interface {
+	AddConstraintStmtHook(*AddConstraintStmt) ([]string, error)
+}
+
 // AddConstraintStmt 添加约束
 type AddConstraintStmt struct {
-	engine Engine
-	table  string
-	name   string
-	typ    Constraint
-	cols   []string
-	fk     *foreignKey
+	engine  Engine
+	dialect Dialect
+
+	TableName string
+	Name      string
+	Type      Constraint
+
+	// 约束的值，根据 Type 的不同，略有不同：
+	// check 下表示的 check 表达式，仅有一个元素；
+	// fk 下最多可以有 5 个值，第 1 个元素为关联的列，2、3 元素引用的表和列，
+	//  4，5 元素为 UPDATE 和 DELETE 的规则定义；
+	// 其它模式下为该约束关联的列名称。
+	Data []string
 }
 
 // AddConstraint 声明添加约束的语句
-func AddConstraint(e Engine) *AddConstraintStmt {
+func AddConstraint(e Engine, d Dialect) *AddConstraintStmt {
 	return &AddConstraintStmt{
-		engine: e,
+		engine:  e,
+		dialect: d,
 	}
 }
 
 // Reset 重置内容
 func (stmt *AddConstraintStmt) Reset() {
-	stmt.table = ""
-	stmt.name = ""
-	stmt.typ = constraintNone
-	stmt.cols = stmt.cols[:0]
+	stmt.TableName = ""
+	stmt.Name = ""
+	stmt.Type = constraintNone
+	stmt.Data = stmt.Data[:0]
 }
 
 // Table 指定表名
 func (stmt *AddConstraintStmt) Table(t string) *AddConstraintStmt {
-	stmt.table = t
+	stmt.TableName = t
 	return stmt
 }
 
 // Unique 指定唯一约束
 func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraintStmt {
-	if stmt.typ != constraintNone {
+	if stmt.Type != constraintNone {
 		panic(ErrConstraintType)
 	}
 
-	stmt.typ = ConstraintUnique
-	stmt.name = name
-	stmt.cols = col
+	stmt.Type = ConstraintUnique
+	stmt.Name = name
+	stmt.Data = col
 
 	return stmt
 }
 
 // PK 指定主键约束
 func (stmt *AddConstraintStmt) PK(name string, col ...string) *AddConstraintStmt {
-	if stmt.typ != constraintNone {
+	if stmt.Type != constraintNone {
 		panic(ErrConstraintType)
 	}
 
-	stmt.typ = ConstraintPK
-	stmt.name = name
-	stmt.cols = col
+	stmt.Type = ConstraintPK
+	stmt.Name = name
+	stmt.Data = col
 
 	return stmt
 }
 
 // Check Check 约束
 func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
-	if stmt.typ != constraintNone {
+	if stmt.Type != constraintNone {
 		panic(ErrConstraintType)
 	}
 
-	stmt.typ = ConstraintCheck
-	stmt.name = name
-	stmt.cols = []string{expr}
+	stmt.Type = ConstraintCheck
+	stmt.Name = name
+	stmt.Data = []string{expr}
 
 	return stmt
 }
 
 // FK 外键约束
-//
-// NOTE: 该功能不适合于 sqlite3
 func (stmt *AddConstraintStmt) FK(name, col, refTable, refColumn, updateRule, deleteRule string) *AddConstraintStmt {
-	if stmt.typ != constraintNone {
+	if stmt.Type != constraintNone {
 		panic(ErrConstraintType)
 	}
 
-	stmt.typ = ConstraintFK
-	stmt.name = name
-	stmt.cols = []string{col}
-	stmt.fk = &foreignKey{
-		Name:         name,
-		Column:       col,
-		RefTableName: refTable,
-		RefColName:   refColumn,
-		UpdateRule:   updateRule,
-		DeleteRule:   deleteRule,
-	}
+	stmt.Type = ConstraintFK
+	stmt.Name = name
+	stmt.Data = []string{col, refTable, refColumn, updateRule, deleteRule}
 
 	return stmt
 }
 
-// SQL 生成 SQL 语句
-func (stmt *AddConstraintStmt) SQL() (string, []interface{}, error) {
-	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+// DDLSQL 生成 SQL 语句
+func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
+	if stmt.TableName == "" {
+		return nil, ErrTableIsEmpty
 	}
 
-	if len(stmt.cols) == 0 {
-		return "", nil, ErrColumnsIsEmpty
+	if len(stmt.Data) == 0 {
+		return nil, ErrColumnsIsEmpty
+	}
+
+	if hook, ok := stmt.dialect.(AddConstraintStmtHooker); ok {
+		return hook.AddConstraintStmtHook(stmt)
 	}
 
 	builder := New("ALTER TABLE ").
-		WriteString(stmt.table).
+		WriteString(stmt.TableName).
 		WriteString(" ADD CONSTRAINT ").
-		WriteString(stmt.name)
+		WriteString(stmt.Name)
 
-	switch stmt.typ {
+	switch stmt.Type {
 	case ConstraintCheck:
-		builder.WriteString(" CHECK ").WriteString(stmt.cols[0])
+		builder.WriteString(" CHECK ").WriteString(stmt.Data[0])
 	case ConstraintFK:
-		// NOTE: sqlite3 并未实现 sql-92 的外键约束功能
 		builder.WriteString(" ADD CONSTRAINT ").
-			WriteString(stmt.fk.Name).
+			WriteString(stmt.Name).
 			WriteString("FOREIGN KEY (").
-			WriteString(stmt.fk.Column).
+			WriteString(stmt.Data[0]).
 			WriteString(") REFERENCES ").
-			WriteString(stmt.fk.RefTableName).
+			WriteString(stmt.Data[1]).
 			WriteByte('(').
-			WriteString(stmt.fk.RefColName).
+			WriteString(stmt.Data[2]).
 			WriteByte(')')
 
-		if len(stmt.fk.UpdateRule) > 0 {
-			builder.WriteString(" ON UPDATE ").WriteString(stmt.fk.UpdateRule)
+		if stmt.Data[3] != "" {
+			builder.WriteString(" ON UPDATE ").WriteString(stmt.Data[3])
 		}
 
-		if len(stmt.fk.DeleteRule) > 0 {
-			builder.WriteString(" ON DELETE ").WriteString(stmt.fk.DeleteRule)
+		if stmt.Data[4] != "" {
+			builder.WriteString(" ON DELETE ").WriteString(stmt.Data[4])
 		}
 	case ConstraintPK:
 		builder.WriteString(" PRIMARY KEY ")
-		for _, col := range stmt.cols {
+		for _, col := range stmt.Data {
 			builder.WriteString(col)
 		}
 	case ConstraintUnique:
 		builder.WriteString(" UNIQUE ")
-		for _, col := range stmt.cols {
+		for _, col := range stmt.Data {
 			builder.WriteString(col)
 		}
 	default:
-		return "", nil, ErrUnknownConstraint
+		return nil, ErrUnknownConstraint
 	}
 
-	return builder.String(), nil, nil
+	return []string{builder.String()}, nil
 }
 
 // Exec 执行 SQL 语句
-func (stmt *AddConstraintStmt) Exec() (sql.Result, error) {
+func (stmt *AddConstraintStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
-func (stmt *AddConstraintStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
+func (stmt *AddConstraintStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
 }
 
 func (t Constraint) String() string {

@@ -246,7 +246,7 @@ func (u *Upgrader) addColumns(e Engine) error {
 	for _, col := range u.addCols {
 		sql.Reset()
 
-		_, err := sql.Table(u.model.Name).
+		err := sql.Table(u.model.Name).
 			Column("{"+col.Name+"}", col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...).
 			Exec()
 		if err != nil {
@@ -258,11 +258,11 @@ func (u *Upgrader) addColumns(e Engine) error {
 }
 
 func (u *Upgrader) dropColumns(e Engine) error {
-	sql := sqlbuilder.DropColumn(e)
+	sql := sqlbuilder.DropColumn(e, e.Dialect())
 
 	for _, n := range u.dropCols {
 		sql.Reset()
-		_, err := sql.Table(u.model.Name).
+		err := sql.Table(u.model.Name).
 			Column(n).
 			Exec()
 		if err != nil {
@@ -274,11 +274,11 @@ func (u *Upgrader) dropColumns(e Engine) error {
 }
 
 func (u *Upgrader) dropConstraints(e Engine) error {
-	sql := sqlbuilder.DropConstraint(e)
+	sql := sqlbuilder.DropConstraint(e, e.Dialect())
 
 	for _, n := range u.dropCols {
 		sql.Reset()
-		_, err := sql.Table(u.model.Name).
+		err := sql.Table(u.model.Name).
 			Constraint(n).
 			Exec()
 		if err != nil {
@@ -290,7 +290,7 @@ func (u *Upgrader) dropConstraints(e Engine) error {
 }
 
 func (u *Upgrader) addConstraints(e Engine) error {
-	stmt := sqlbuilder.AddConstraint(e)
+	stmt := sqlbuilder.AddConstraint(e, e.Dialect())
 
 	for _, c := range u.addConts {
 		stmt.Reset()
@@ -302,7 +302,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 			}
 
 			stmt.FK(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
-			if _, err := stmt.Exec(); err != nil {
+			if err := stmt.Exec(); err != nil {
 				return err
 			}
 			break
@@ -319,7 +319,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 			}
 			stmt.Unique(name, cols...)
 
-			if _, err := stmt.Exec(); err != nil {
+			if err := stmt.Exec(); err != nil {
 				return err
 			}
 
@@ -336,7 +336,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 			}
 			stmt.PK(u.model.AIName, cols...)
 
-			if _, err := stmt.Exec(); err != nil {
+			if err := stmt.Exec(); err != nil {
 				return err
 			}
 			break
@@ -348,7 +348,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 			}
 
 			stmt.Check(name, expr)
-			if _, err := stmt.Exec(); err != nil {
+			if err := stmt.Exec(); err != nil {
 				return err
 			}
 			break
@@ -378,7 +378,7 @@ func (u *Upgrader) addIndexs(e Engine) error {
 			stmt.Name(name)
 			stmt.Columns(cs...)
 		}
-		if _, err := stmt.Exec(); err != nil {
+		if err := stmt.Exec(); err != nil {
 			return err
 		}
 	}
@@ -393,7 +393,7 @@ func (u *Upgrader) dropIndexs(e Engine) error {
 		stmt.Reset()
 		stmt.Table("{#" + u.model.Name + "}").
 			Name(index)
-		if _, err := stmt.Exec(); err != nil {
+		if err := stmt.Exec(); err != nil {
 			return err
 		}
 	}
