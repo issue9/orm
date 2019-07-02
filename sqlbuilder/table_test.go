@@ -56,8 +56,8 @@ func TestCreateTableStmt(t *testing.T) {
 		QueryInt("cnt")
 	a.NotError(err).Equal(cnt, 3)
 
-	rslt, err = sqlbuilder.DropTable(db).
+	err = sqlbuilder.DropTable(db).
 		Table(table).
 		Exec()
-	a.NotError(err).NotNil(rslt)
+	a.NotError(err)
 }

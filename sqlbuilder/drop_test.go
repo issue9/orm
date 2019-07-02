@@ -12,7 +12,7 @@ import (
 	"github.com/issue9/orm/v2/internal/sqltest"
 )
 
-var _ SQLer = &UpdateStmt{}
+var _ DDLSQLer = &DropTableStmt{}
 
 func TestDropTable(t *testing.T) {
 	a := assert.New(t)
@@ -20,11 +20,11 @@ func TestDropTable(t *testing.T) {
 	drop := DropTable(nil).
 		Table("table").
 		Table("tbl2")
-	sql, args, err := drop.SQL()
-	a.NotError(err).Nil(args)
-	sqltest.Equal(a, sql, "drop table if exists tbl2")
+	sql, err := drop.DDLSQL()
+	a.NotError(err)
+	sqltest.Equal(a, sql[0], "drop table if exists tbl2")
 
 	drop.Reset()
-	sql, args, err = drop.SQL()
-	a.Equal(err, ErrTableIsEmpty).Nil(args).Empty(sql)
+	sql, err = drop.DDLSQL()
+	a.Equal(err, ErrTableIsEmpty).Empty(sql)
 }

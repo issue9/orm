@@ -194,8 +194,7 @@ func drop(e Engine, v interface{}) error {
 		return err
 	}
 
-	_, err = e.SQL().DropTable().Table("{#" + m.Name + "}").Exec()
-	return err
+	return e.SQL().DropTable().Table("{#" + m.Name + "}").Exec()
 }
 
 func lastInsertID(e Engine, v interface{}) (int64, error) {

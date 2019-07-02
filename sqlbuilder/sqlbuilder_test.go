@@ -64,7 +64,7 @@ func initDB(a *assert.Assertion) *orm.DB {
 }
 
 func clearDB(a *assert.Assertion, db *orm.DB) {
-	_, err := sqlbuilder.DropTable(db).Table("#user").Exec()
+	err := sqlbuilder.DropTable(db).Table("#user").Exec()
 	a.NotError(err)
 	testconfig.CloseDB(db, a)
 }

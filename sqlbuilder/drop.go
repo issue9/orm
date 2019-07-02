@@ -4,10 +4,7 @@
 
 package sqlbuilder
 
-import (
-	"context"
-	"database/sql"
-)
+import "context"
 
 // DropTableStmt 删除表语句
 type DropTableStmt struct {
@@ -29,15 +26,15 @@ func (stmt *DropTableStmt) Table(table string) *DropTableStmt {
 	return stmt
 }
 
-// SQL 获取 SQL 语句以及对应的参数
-func (stmt *DropTableStmt) SQL() (string, []interface{}, error) {
+// DDLSQL 获取 SQL 语句以及对应的参数
+func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+		return nil, ErrTableIsEmpty
 	}
 
 	buf := New("DROP TABLE IF EXISTS ")
 	buf.WriteString(stmt.table)
-	return buf.String(), nil, nil
+	return []string{buf.String()}, nil
 }
 
 // Reset 重置
@@ -46,11 +43,11 @@ func (stmt *DropTableStmt) Reset() {
 }
 
 // Exec 执行 SQL 语句
-func (stmt *DropTableStmt) Exec() (sql.Result, error) {
+func (stmt *DropTableStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
 }
 
 // ExecContext 执行 SQL 语句
-func (stmt *DropTableStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
+func (stmt *DropTableStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
 }
