@@ -9,7 +9,7 @@ import "context"
 // DropTableStmt 删除表语句
 type DropTableStmt struct {
 	engine Engine
-	table  string
+	tables []string
 }
 
 // DropTable 声明一条删除表的语句
@@ -20,26 +20,37 @@ func DropTable(e Engine) *DropTableStmt {
 }
 
 // Table 指定表名。
-// 重复指定，会覆盖之前的。
-func (stmt *DropTableStmt) Table(table string) *DropTableStmt {
-	stmt.table = table
+//
+// 多次指定，则会删除多个表
+func (stmt *DropTableStmt) Table(table ...string) *DropTableStmt {
+	if stmt.tables == nil {
+		stmt.tables = table
+		return stmt
+	}
+
+	stmt.tables = append(stmt.tables, table...)
 	return stmt
 }
 
 // DDLSQL 获取 SQL 语句以及对应的参数
 func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
-	if stmt.table == "" {
+	if len(stmt.tables) == 0 {
 		return nil, ErrTableIsEmpty
 	}
 
-	buf := New("DROP TABLE IF EXISTS ")
-	buf.WriteString(stmt.table)
-	return []string{buf.String()}, nil
+	qs := make([]string, 0, len(stmt.tables))
+
+	for _, table := range stmt.tables {
+		buf := New("DROP TABLE IF EXISTS ")
+		buf.WriteString(table)
+		qs = append(qs, buf.String())
+	}
+	return qs, nil
 }
 
 // Reset 重置
 func (stmt *DropTableStmt) Reset() {
-	stmt.table = ""
+	stmt.tables = stmt.tables[:0]
 }
 
 // Exec 执行 SQL 语句

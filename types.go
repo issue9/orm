@@ -80,7 +80,7 @@ type Engine interface {
 type Dialect interface {
 	sqlbuilder.Dialect
 
-	// 名称
+	// 数据库的名称
 	Name() string
 
 	// 返回符合当前数据库规范的引号对。
@@ -98,9 +98,6 @@ type Dialect interface {
 	//
 	// 比如占位符 postgresql 可以使用 $1 等形式。
 	SQL(sql string) (string, error)
-
-	// 查询服务器版本号的 SQL 语句。
-	VersionSQL() string
 }
 
 // SQL 用于生成 SQL 语句

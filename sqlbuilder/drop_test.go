@@ -21,8 +21,10 @@ func TestDropTable(t *testing.T) {
 		Table("table").
 		Table("tbl2")
 	sql, err := drop.DDLSQL()
-	a.NotError(err)
-	sqltest.Equal(a, sql[0], "drop table if exists tbl2")
+	a.NotError(err).
+		Equal(2, len(sql))
+	sqltest.Equal(a, sql[0], "drop table if exists table")
+	sqltest.Equal(a, sql[1], "drop table if exists tbl2")
 
 	drop.Reset()
 	sql, err = drop.DDLSQL()

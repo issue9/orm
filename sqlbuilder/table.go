@@ -415,7 +415,7 @@ func createCheckSQL(buf *SQLBuilder, name, expr string) {
 		WriteByte(')')
 }
 
-// TruncateTableStmtHooker TruncateTableStmt.DDLSQL 的勾子函数
+// TruncateTableStmtHooker TruncateTableStmt.DDLSQL 的钩子函数
 type TruncateTableStmtHooker interface {
 	TruncateTableStmtHook(*TruncateTableStmt) ([]string, error)
 }

@@ -75,6 +75,9 @@ type Dialect interface {
 	// 将列转换成数据支持的类型
 	SQLType(col *Column) (string, error)
 
+	// 查询服务器版本号的 SQL 语句。
+	VersionSQL() string
+
 	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句。
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
