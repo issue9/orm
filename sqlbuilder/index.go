@@ -4,8 +4,6 @@
 
 package sqlbuilder
 
-import "context"
-
 // Index 索引的类型
 type Index int8
 
@@ -17,11 +15,11 @@ const (
 
 // CreateIndexStmt 创建索引的语句
 type CreateIndexStmt struct {
-	engine Engine
-	table  string
-	name   string   // 索引名称
-	cols   []string // 索引列
-	typ    Index
+	*ddlStmt
+	table string
+	name  string   // 索引名称
+	cols  []string // 索引列
+	typ   Index
 }
 
 func (t Index) String() string {
@@ -36,11 +34,11 @@ func (t Index) String() string {
 }
 
 // CreateIndex 声明一条 CreateIndexStmt 语句
-func CreateIndex(e Engine) *CreateIndexStmt {
-	return &CreateIndexStmt{
-		engine: e,
-		typ:    IndexDefault,
-	}
+func CreateIndex(e Engine, d Dialect) *CreateIndexStmt {
+	stmt := &CreateIndexStmt{typ: IndexDefault}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+
+	return stmt
 }
 
 // Table 指定表名
@@ -109,16 +107,6 @@ func (stmt *CreateIndexStmt) Reset() {
 	stmt.typ = IndexDefault
 }
 
-// Exec 执行 SQL 语句
-func (stmt *CreateIndexStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *CreateIndexStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
-}
-
 // DropIndexStmtHooker DropIndexStmt.DDLSQL 的勾子函数
 type DropIndexStmtHooker interface {
 	DropIndexStmtHook(*DropIndexStmt) ([]string, error)
@@ -126,18 +114,16 @@ type DropIndexStmtHooker interface {
 
 // DropIndexStmt 删除索引
 type DropIndexStmt struct {
-	engine    Engine
-	dialect   Dialect
+	*ddlStmt
 	TableName string
 	IndexName string
 }
 
 // DropIndex 声明一条 DropIndexStmt 语句
 func DropIndex(e Engine, d Dialect) *DropIndexStmt {
-	return &DropIndexStmt{
-		engine:  e,
-		dialect: d,
-	}
+	stmt := &DropIndexStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	return stmt
 }
 
 // Table 指定表名
@@ -173,14 +159,4 @@ func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
 func (stmt *DropIndexStmt) Reset() {
 	stmt.TableName = ""
 	stmt.IndexName = ""
-}
-
-// Exec 执行 SQL 语句
-func (stmt *DropIndexStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *DropIndexStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
 }

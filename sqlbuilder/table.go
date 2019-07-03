@@ -5,7 +5,6 @@
 package sqlbuilder
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -13,8 +12,7 @@ import (
 
 // CreateTableStmt 创建表的语句
 type CreateTableStmt struct {
-	engine  Engine
-	dialect Dialect
+	*ddlStmt
 
 	name    string
 	columns []*Column
@@ -67,10 +65,9 @@ type constraintColumn struct {
 // 如果 e 是一个事务类型，且 d 是支持事务 DDL 的，
 // 那么在执行时，会当作一个事务处理，否则为多个语句依次执行。
 func CreateTable(e Engine, d Dialect) *CreateTableStmt {
-	return &CreateTableStmt{
-		engine:  e,
-		dialect: d,
-	}
+	stmt := &CreateTableStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	return stmt
 }
 
 // Reset 重置内容
@@ -284,16 +281,6 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	return sqls, nil
 }
 
-// Exec 执行 SQL 语句
-func (stmt *CreateTableStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *CreateTableStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
-}
-
 // 创建标准的几种约束
 func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 	for _, c := range stmt.constraints {
@@ -325,16 +312,16 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 	return nil
 }
 
-func createIndexSQL(model *CreateTableStmt) ([]string, error) {
-	if len(model.indexes) == 0 {
+func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
+	if len(stmt.indexes) == 0 {
 		return nil, nil
 	}
 
-	sqls := make([]string, 0, len(model.indexes))
-	buf := CreateIndex(model.engine)
-	for _, index := range model.indexes {
+	sqls := make([]string, 0, len(stmt.indexes))
+	buf := CreateIndex(stmt.Engine(), stmt.Dialect())
+	for _, index := range stmt.indexes {
 		buf.Reset()
-		buf.Table(model.name).
+		buf.Table(stmt.name).
 			Name(index.Name).
 			Columns(index.Columns...)
 
@@ -421,8 +408,7 @@ type TruncateTableStmtHooker interface {
 
 // TruncateTableStmt 清空表，并重置 AI
 type TruncateTableStmt struct {
-	engine       Engine
-	dialect      Dialect
+	*ddlStmt
 	TableName    string
 	AIColumnName string
 	AIName       string // 约束名
@@ -430,10 +416,9 @@ type TruncateTableStmt struct {
 
 // TruncateTable 生成清空表语句
 func TruncateTable(e Engine, d Dialect) *TruncateTableStmt {
-	return &TruncateTableStmt{
-		engine:  e,
-		dialect: d,
-	}
+	stmt := &TruncateTableStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	return stmt
 }
 
 // Reset 重置内容
@@ -462,27 +447,17 @@ func (stmt *TruncateTableStmt) DDLSQL() ([]string, error) {
 	return nil, ErrNotImplemented
 }
 
-// Exec 执行 SQL 语句
-func (stmt *TruncateTableStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *TruncateTableStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
-}
-
 // DropTableStmt 删除表语句
 type DropTableStmt struct {
-	engine Engine
+	*ddlStmt
 	tables []string
 }
 
 // DropTable 声明一条删除表的语句
-func DropTable(e Engine) *DropTableStmt {
-	return &DropTableStmt{
-		engine: e,
-	}
+func DropTable(e Engine, d Dialect) *DropTableStmt {
+	stmt := &DropTableStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	return stmt
 }
 
 // Table 指定表名。
@@ -517,14 +492,4 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 // Reset 重置
 func (stmt *DropTableStmt) Reset() {
 	stmt.tables = stmt.tables[:0]
-}
-
-// Exec 执行 SQL 语句
-func (stmt *DropTableStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *DropTableStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
 }

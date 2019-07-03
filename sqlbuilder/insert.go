@@ -12,21 +12,22 @@ import (
 
 // InsertStmt 表示插入操作的 SQL 语句
 type InsertStmt struct {
-	engine  Engine
-	dialect Dialect
-	table   string
-	cols    []string
-	args    [][]interface{}
+	*execStmt
+
+	table string
+	cols  []string
+	args  [][]interface{}
 }
 
 // Insert 声明一条插入语句
 func Insert(e Engine, d Dialect) *InsertStmt {
-	return &InsertStmt{
-		engine:  e,
-		dialect: d,
-		cols:    make([]string, 0, 10),
-		args:    make([][]interface{}, 0, 10),
+	stmt := &InsertStmt{
+		cols: make([]string, 0, 10),
+		args: make([][]interface{}, 0, 10),
 	}
+	stmt.execStmt = newExecStmt(e, d, stmt)
+
+	return stmt
 }
 
 // Table 指定表名
@@ -125,26 +126,6 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	buffer.TruncateLast(1)
 
 	return buffer.String(), args, nil
-}
-
-// Exec 执行 SQL 语句
-func (stmt *InsertStmt) Exec() (sql.Result, error) {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *InsertStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
-}
-
-// Prepare 预编译
-func (stmt *InsertStmt) Prepare() (*sql.Stmt, error) {
-	return stmt.PrepareContext(context.Background())
-}
-
-// PrepareContext 预编译
-func (stmt *InsertStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	return prepareContext(ctx, stmt.engine, stmt)
 }
 
 // LastInsertID 执行 SQL 语句

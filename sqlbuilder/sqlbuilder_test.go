@@ -52,7 +52,7 @@ func initDB(a *assert.Assertion) *orm.DB {
 	id, err := sql.LastInsertID("user", "id")
 	a.NotError(err).Equal(id, 7)
 
-	// 多行插入，不能拿到 lastinsertid
+	// 多行插入，不能拿到 lastInsertID
 	sql.Table("#user").
 		Columns("name").
 		Values("8").
@@ -64,7 +64,7 @@ func initDB(a *assert.Assertion) *orm.DB {
 }
 
 func clearDB(a *assert.Assertion, db *orm.DB) {
-	err := sqlbuilder.DropTable(db).Table("#user").Exec()
+	err := sqlbuilder.DropTable(db, db.Dialect()).Table("#user").Exec()
 	a.NotError(err)
 	testconfig.CloseDB(db, a)
 }

@@ -18,8 +18,6 @@ type Rester interface {
 
 // SQLer 定义 SQL 语句的基本接口
 type SQLer interface {
-	Rester
-
 	// 获取 SQL 语句以及其关联的参数
 	SQL() (query string, args []interface{}, err error)
 }
@@ -29,8 +27,6 @@ type SQLer interface {
 // 大部分数据的 DDL 操作是有多条语句组成，比如 CREATE TABLE
 // 可能包含了额外的定义信息。
 type DDLSQLer interface {
-	Rester
-
 	DDLSQL() ([]string, error)
 }
 
@@ -40,6 +36,8 @@ type WhereStmter interface {
 }
 
 // Engine 数据库执行的基本接口。
+//
+// NOTE: 需要符合 sql.DB 和 sql.Tx 的定义。
 type Engine interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 
@@ -62,6 +60,11 @@ type Engine interface {
 type Dialect interface {
 	// 将列转换成数据支持的类型
 	SQLType(col *Column) (string, error)
+
+	// 根据当前的数据库，对 SQL 作调整。
+	//
+	// 比如占位符 postgresql 可以使用 $1 等形式。
+	SQL(sql string) (string, error)
 
 	// 查询服务器版本号的 SQL 语句。
 	VersionSQL() string
@@ -88,43 +91,4 @@ type Dialect interface {
 
 	// 创建 AI 约束
 	//CreateConstraintAI(name,col string)(string,error)
-}
-
-func ddlExecContext(ctx context.Context, e Engine, stmt DDLSQLer) error {
-	qs, err := stmt.DDLSQL()
-	if err != nil {
-		return err
-	}
-
-	for _, query := range qs {
-		if _, err = e.ExecContext(ctx, query); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func execContext(ctx context.Context, e Engine, stmt SQLer) (sql.Result, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.ExecContext(ctx, query, args...)
-}
-
-func prepareContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.PrepareContext(ctx, query)
-}
-
-func queryContext(ctx context.Context, e Engine, stmt SQLer) (*sql.Rows, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	return e.QueryContext(ctx, query, args...)
 }

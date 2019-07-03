@@ -24,7 +24,7 @@ func BenchmarkDB_Insert(b *testing.B) {
 
 	db := testconfig.NewDB(a)
 	defer func() {
-		db.Drop(&Group{})
+		a.NotError(db.Drop(&Group{}))
 		testconfig.CloseDB(db, a)
 	}()
 
@@ -46,7 +46,7 @@ func BenchmarkDB_Update(b *testing.B) {
 
 	db := testconfig.NewDB(a)
 	defer func() {
-		db.Drop(&Group{})
+		a.NotError(db.Drop(&Group{}))
 		testconfig.CloseDB(db, a)
 	}()
 
@@ -71,7 +71,7 @@ func BenchmarkDB_Select(b *testing.B) {
 
 	db := testconfig.NewDB(a)
 	defer func() {
-		db.Drop(&Group{})
+		a.NotError(db.Drop(&Group{}))
 		testconfig.CloseDB(db, a)
 	}()
 
@@ -95,7 +95,7 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 
 	db := testconfig.NewDB(a)
 	defer func() {
-		db.Drop(&Group{})
+		a.NotError(db.Drop(&Group{}))
 		testconfig.CloseDB(db, a)
 	}()
 
@@ -105,7 +105,7 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		_, err := sqlbuilder.
-			Update(db).Table("{#groups}").
+			Update(db, db.Dialect()).Table("{#groups}").
 			Set("name", "n1").
 			Increase("created", 1).
 			Where("{id}=?", i+1).
@@ -125,7 +125,7 @@ func BenchmarkDB_Count(b *testing.B) {
 
 	db := testconfig.NewDB(a)
 	defer func() {
-		db.Drop(&Group{})
+		a.NotError(db.Drop(&Group{}))
 		testconfig.CloseDB(db, a)
 	}()
 

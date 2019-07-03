@@ -4,8 +4,6 @@
 
 package sqlbuilder
 
-import "context"
-
 // Constraint 表示约束类型
 type Constraint int8
 
@@ -26,8 +24,7 @@ type AddConstraintStmtHooker interface {
 
 // AddConstraintStmt 添加约束
 type AddConstraintStmt struct {
-	engine  Engine
-	dialect Dialect
+	*ddlStmt
 
 	TableName string
 	Name      string
@@ -43,10 +40,9 @@ type AddConstraintStmt struct {
 
 // AddConstraint 声明添加约束的语句
 func AddConstraint(e Engine, d Dialect) *AddConstraintStmt {
-	return &AddConstraintStmt{
-		engine:  e,
-		dialect: d,
-	}
+	stmt := &AddConstraintStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	return stmt
 }
 
 // Reset 重置内容
@@ -172,16 +168,6 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 	return []string{builder.String()}, nil
 }
 
-// Exec 执行 SQL 语句
-func (stmt *AddConstraintStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *AddConstraintStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
-}
-
 func (t Constraint) String() string {
 	switch t {
 	case ConstraintUnique:
@@ -206,8 +192,7 @@ type DropConstraintStmtHooker interface {
 
 // DropConstraintStmt 删除约束
 type DropConstraintStmt struct {
-	engine  Engine
-	dialect Dialect
+	*ddlStmt
 
 	TableName string
 	Name      string
@@ -215,10 +200,9 @@ type DropConstraintStmt struct {
 
 // DropConstraint 声明一条删除表约束的语句
 func DropConstraint(e Engine, d Dialect) *DropConstraintStmt {
-	return &DropConstraintStmt{
-		engine:  e,
-		dialect: d,
-	}
+	stmt := &DropConstraintStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	return stmt
 }
 
 // Table 指定表名。
@@ -256,14 +240,4 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 func (stmt *DropConstraintStmt) Reset() {
 	stmt.TableName = ""
 	stmt.Name = ""
-}
-
-// Exec 执行 SQL 语句
-func (stmt *DropConstraintStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *DropConstraintStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
 }

@@ -362,7 +362,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 }
 
 func (u *Upgrader) addIndexs(e Engine) error {
-	stmt := sqlbuilder.CreateIndex(e)
+	stmt := sqlbuilder.CreateIndex(e, e.Dialect())
 
 	for _, index := range u.addIdxs {
 		stmt.Reset()

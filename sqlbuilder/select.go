@@ -5,8 +5,6 @@
 package sqlbuilder
 
 import (
-	"context"
-	"database/sql"
 	"fmt"
 	"strconv"
 
@@ -15,13 +13,13 @@ import (
 
 // SelectStmt 查询语句
 type SelectStmt struct {
-	engine    Engine
-	dialect   Dialect
+	*queryStmt
+
 	table     string
 	where     *WhereStmt
 	cols      []string
 	distinct  bool
-	forupdate bool
+	forUpdate bool
 
 	// COUNT 查询的列内容
 	countExpr string
@@ -45,11 +43,10 @@ type join struct {
 
 // Select 声明一条 Select 语句
 func Select(e Engine, d Dialect) *SelectStmt {
-	return &SelectStmt{
-		engine:  e,
-		dialect: d,
-		where:   Where(),
-	}
+	stmt := &SelectStmt{where: Where()}
+	stmt.queryStmt = newQueryStmt(e, d, stmt)
+
+	return stmt
 }
 
 // Distinct 声明一条 Select 语句的 Distinct
@@ -66,7 +63,7 @@ func (stmt *SelectStmt) Reset() {
 	stmt.where.Reset()
 	stmt.cols = stmt.cols[:0]
 	stmt.distinct = false
-	stmt.forupdate = false
+	stmt.forUpdate = false
 
 	stmt.countExpr = ""
 
@@ -162,7 +159,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	}
 
 	// for update
-	if stmt.forupdate {
+	if stmt.forUpdate {
 		buf.WriteString(" FOR UPDATE")
 	}
 
@@ -288,7 +285,7 @@ func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 
 // ForUpdate 添加 FOR UPDATE 语句部分
 func (stmt *SelectStmt) ForUpdate() *SelectStmt {
-	stmt.forupdate = true
+	stmt.forUpdate = true
 	return stmt
 }
 
@@ -312,26 +309,6 @@ func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectS
 func (stmt *SelectStmt) Count(expr string) *SelectStmt {
 	stmt.countExpr = expr
 	return stmt
-}
-
-// Prepare 预编译
-func (stmt *SelectStmt) Prepare() (*sql.Stmt, error) {
-	return stmt.PrepareContext(context.Background())
-}
-
-// PrepareContext 预编译
-func (stmt *SelectStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	return prepareContext(ctx, stmt.engine, stmt)
-}
-
-// Query 查询
-func (stmt *SelectStmt) Query() (*sql.Rows, error) {
-	return stmt.QueryContext(context.Background())
-}
-
-// QueryContext 查询
-func (stmt *SelectStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
-	return queryContext(ctx, stmt.engine, stmt)
 }
 
 // QueryObject 将符合当前条件的所有记录依次写入 objs 中。

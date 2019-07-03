@@ -20,19 +20,19 @@ var (
 
 func TestUpdate_columnsHasDup(t *testing.T) {
 	a := assert.New(t)
-	u := Update(nil).Table("table")
+	u := Update(nil, nil).Table("table")
 
 	u.values = []*updateSet{
-		&updateSet{
+		{
 			column: "c1",
 			value:  1,
 		},
-		&updateSet{
+		{
 			column: "c2",
 			value:  1,
 		},
 
-		&updateSet{
+		{
 			column: "c2",
 			value:  1,
 		},
@@ -40,16 +40,16 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 	a.True(u.columnsHasDup())
 
 	u.values = []*updateSet{
-		&updateSet{
+		{
 			column: "c1",
 			value:  1,
 		},
-		&updateSet{
+		{
 			column: "c1",
 			value:  1,
 		},
 
-		&updateSet{
+		{
 			column: "c2",
 			value:  1,
 		},
@@ -57,16 +57,16 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 	a.True(u.columnsHasDup())
 
 	u.values = []*updateSet{
-		&updateSet{
+		{
 			column: "c1",
 			value:  1,
 		},
-		&updateSet{
+		{
 			column: "c2",
 			value:  1,
 		},
 
-		&updateSet{
+		{
 			column: "c1",
 			value:  1,
 		},
@@ -74,16 +74,16 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 	a.True(u.columnsHasDup())
 
 	u.values = []*updateSet{
-		&updateSet{
+		{
 			column: "c1",
 			value:  1,
 		},
-		&updateSet{
+		{
 			column: "c2",
 			value:  1,
 		},
 
-		&updateSet{
+		{
 			column: "c3",
 			value:  1,
 		},
@@ -93,7 +93,7 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	a := assert.New(t)
-	u := Update(nil).Table("table")
+	u := Update(nil, nil).Table("table")
 	a.NotNil(u)
 
 	// 不带 where 部分
@@ -103,7 +103,7 @@ func TestUpdate(t *testing.T) {
 	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
 	sqltest.Equal(a, query, "update table SET c1=?,c2=@c2")
 
-	// bug(caix): UpdateStmt 采用 map 保存修改的值，
+	// bug(caixw): UpdateStmt 采用 map 保存修改的值，
 	// 而 map 的顺序是不一定的，所以测试的比较内容，可能会出现值顺序不一样，
 	// 从页导致测试失败
 	u.Increase("c3", 3).
@@ -131,7 +131,7 @@ func TestUpdate(t *testing.T) {
 
 func TestUpdate_occ(t *testing.T) {
 	a := assert.New(t)
-	u := Update(nil)
+	u := Update(nil, nil)
 	a.NotNil(u)
 
 	// 仅有乐观锁作为条件

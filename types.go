@@ -93,11 +93,6 @@ type Dialect interface {
 	// 而像 mysql 等不支持事务内 DDL 的数据库，则会采用普通的方式，
 	// 依次提交语句。
 	TransactionalDDL() bool
-
-	// 根据当前的数据库，对 SQL 作调整。
-	//
-	// 比如占位符 postgresql 可以使用 $1 等形式。
-	SQL(sql string) (string, error)
 }
 
 // SQL 用于生成 SQL 语句
@@ -107,12 +102,12 @@ type SQL struct {
 
 // Delete 生成删除语句
 func (sql *SQL) Delete() *sqlbuilder.DeleteStmt {
-	return sqlbuilder.Delete(sql.engine)
+	return sqlbuilder.Delete(sql.engine, sql.engine.Dialect())
 }
 
 // Update 生成更新语句
 func (sql *SQL) Update() *sqlbuilder.UpdateStmt {
-	return sqlbuilder.Update(sql.engine)
+	return sqlbuilder.Update(sql.engine, sql.engine.Dialect())
 }
 
 // Insert 生成插入语句
@@ -127,12 +122,12 @@ func (sql *SQL) Select() *sqlbuilder.SelectStmt {
 
 // CreateIndex 生成创建索引的语句
 func (sql *SQL) CreateIndex() *sqlbuilder.CreateIndexStmt {
-	return sqlbuilder.CreateIndex(sql.engine)
+	return sqlbuilder.CreateIndex(sql.engine, sql.engine.Dialect())
 }
 
 // DropTable 生成删除表的语句
 func (sql *SQL) DropTable() *sqlbuilder.DropTableStmt {
-	return sqlbuilder.DropTable(sql.engine)
+	return sqlbuilder.DropTable(sql.engine, sql.engine.Dialect())
 }
 
 // TruncateTable 生成清空表的语句，同时重置 AI 计算

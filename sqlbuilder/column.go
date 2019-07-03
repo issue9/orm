@@ -5,14 +5,12 @@
 package sqlbuilder
 
 import (
-	"context"
 	"reflect"
 )
 
 // AddColumnStmt 添加列
 type AddColumnStmt struct {
-	engine  Engine
-	dialect Dialect
+	*ddlStmt
 
 	table  string
 	column *Column
@@ -20,10 +18,9 @@ type AddColumnStmt struct {
 
 // AddColumn 声明一条添加列的语句
 func AddColumn(e Engine, d Dialect) *AddColumnStmt {
-	return &AddColumnStmt{
-		engine:  e,
-		dialect: d,
-	}
+	stmt := &AddColumnStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	return stmt
 }
 
 // Table 指定表名。
@@ -71,16 +68,6 @@ func (stmt *AddColumnStmt) Reset() {
 	stmt.column = nil
 }
 
-// Exec 执行 SQL 语句
-func (stmt *AddColumnStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *AddColumnStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
-}
-
 // DropColumnStmtHooker DropColumnStmt.DDLSQL 的钩子函数
 type DropColumnStmtHooker interface {
 	DropColumnStmtHook(*DropColumnStmt) ([]string, error)
@@ -88,8 +75,7 @@ type DropColumnStmtHooker interface {
 
 // DropColumnStmt 删除列
 type DropColumnStmt struct {
-	engine  Engine
-	dialect Dialect
+	*ddlStmt
 
 	TableName  string
 	ColumnName string
@@ -97,10 +83,9 @@ type DropColumnStmt struct {
 
 // DropColumn 声明一条删除列的语句
 func DropColumn(e Engine, d Dialect) *DropColumnStmt {
-	return &DropColumnStmt{
-		engine:  e,
-		dialect: d,
-	}
+	stmt := &DropColumnStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	return stmt
 }
 
 // Table 指定表名。
@@ -137,14 +122,4 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 func (stmt *DropColumnStmt) Reset() {
 	stmt.TableName = ""
 	stmt.ColumnName = ""
-}
-
-// Exec 执行 SQL 语句
-func (stmt *DropColumnStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *DropColumnStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
 }

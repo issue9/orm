@@ -4,24 +4,19 @@
 
 package sqlbuilder
 
-import (
-	"context"
-	"database/sql"
-)
-
 // DeleteStmt 表示删除操作的 SQL 语句
 type DeleteStmt struct {
-	engine Engine
-	table  string
-	where  *WhereStmt
+	*execStmt
+	table string
+	where *WhereStmt
 }
 
 // Delete 声明一条删除语句
-func Delete(e Engine) *DeleteStmt {
-	return &DeleteStmt{
-		engine: e,
-		where:  Where(),
-	}
+func Delete(e Engine, d Dialect) *DeleteStmt {
+	stmt := &DeleteStmt{where: Where()}
+	stmt.execStmt = newExecStmt(e, d, stmt)
+
+	return stmt
 }
 
 // Table 指定表名
@@ -70,24 +65,4 @@ func (stmt *DeleteStmt) And(cond string, args ...interface{}) *DeleteStmt {
 func (stmt *DeleteStmt) Or(cond string, args ...interface{}) *DeleteStmt {
 	stmt.where.Or(cond, args...)
 	return stmt
-}
-
-// Exec 执行 SQL 语句
-func (stmt *DeleteStmt) Exec() (sql.Result, error) {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *DeleteStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
-}
-
-// Prepare 预编译
-func (stmt *DeleteStmt) Prepare() (*sql.Stmt, error) {
-	return stmt.PrepareContext(context.Background())
-}
-
-// PrepareContext 预编译
-func (stmt *DeleteStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	return prepareContext(ctx, stmt.engine, stmt)
 }

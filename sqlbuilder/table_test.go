@@ -60,7 +60,7 @@ func TestCreateTableStmt(t *testing.T) {
 		QueryInt("cnt")
 	a.NotError(err).Equal(cnt, 3)
 
-	err = sqlbuilder.DropTable(db).
+	err = sqlbuilder.DropTable(db, db.Dialect()).
 		Table(table).
 		Exec()
 	a.NotError(err)
@@ -69,7 +69,7 @@ func TestCreateTableStmt(t *testing.T) {
 func TestDropTable(t *testing.T) {
 	a := assert.New(t)
 
-	drop := sqlbuilder.DropTable(nil).
+	drop := sqlbuilder.DropTable(nil, nil).
 		Table("table").
 		Table("tbl2")
 	sql, err := drop.DDLSQL()

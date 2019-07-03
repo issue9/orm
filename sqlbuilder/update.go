@@ -5,14 +5,14 @@
 package sqlbuilder
 
 import (
-	"context"
 	"database/sql"
 	"sort"
 )
 
 // UpdateStmt 更新语句
 type UpdateStmt struct {
-	engine Engine
+	*execStmt
+
 	table  string
 	where  *WhereStmt
 	values []*updateSet
@@ -29,12 +29,14 @@ type updateSet struct {
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
-func Update(e Engine) *UpdateStmt {
-	return &UpdateStmt{
-		engine: e,
+func Update(e Engine, d Dialect) *UpdateStmt {
+	stmt := &UpdateStmt{
 		where:  Where(),
 		values: []*updateSet{},
 	}
+	stmt.execStmt = newExecStmt(e, d, stmt)
+
+	return stmt
 }
 
 // Table 指定表名
@@ -214,24 +216,4 @@ func (stmt *UpdateStmt) columnsHasDup() bool {
 	}
 
 	return false
-}
-
-// Exec 执行 SQL 语句
-func (stmt *UpdateStmt) Exec() (sql.Result, error) {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *UpdateStmt) ExecContext(ctx context.Context) (sql.Result, error) {
-	return execContext(ctx, stmt.engine, stmt)
-}
-
-// Prepare 预编译
-func (stmt *UpdateStmt) Prepare() (*sql.Stmt, error) {
-	return stmt.PrepareContext(context.Background())
-}
-
-// PrepareContext 预编译
-func (stmt *UpdateStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	return prepareContext(ctx, stmt.engine, stmt)
 }

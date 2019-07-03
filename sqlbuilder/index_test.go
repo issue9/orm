@@ -20,7 +20,7 @@ var (
 
 func TestCreateIndex(t *testing.T) {
 	a := assert.New(t)
-	sql := sqlbuilder.CreateIndex(nil)
+	sql := sqlbuilder.CreateIndex(nil, nil)
 	a.NotNil(sql)
 
 	query, err := sql.Table("tbl1").Columns("c1", "c2").Name("c12").DDLSQL()
@@ -32,7 +32,7 @@ func TestCreateIndex(t *testing.T) {
 	query, err = sql.DDLSQL()
 	a.Error(err).Empty(query)
 
-	sql = sqlbuilder.CreateIndex(nil)
+	sql = sqlbuilder.CreateIndex(nil, nil)
 	query, err = sql.Table("tbl1").Columns("c1", "c2").Type(sqlbuilder.IndexUnique).Name("c12").DDLSQL()
 	a.NotError(err)
 	sqltest.Equal(a, query[0], "create unique index c12 on tbl1(c1,c2)")
@@ -48,7 +48,7 @@ func TestIndex(t *testing.T) {
 	db := initDB(a)
 	defer clearDB(a, db)
 
-	err := sqlbuilder.CreateIndex(db).
+	err := sqlbuilder.CreateIndex(db, db.Dialect()).
 		Table("#user").
 		Name("index_key").
 		Columns("id", "name").

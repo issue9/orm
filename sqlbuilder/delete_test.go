@@ -20,7 +20,7 @@ var (
 func TestDelete(t *testing.T) {
 	a := assert.New(t)
 
-	d := sqlbuilder.Delete(nil).
+	d := sqlbuilder.Delete(nil, nil).
 		Table("#table").
 		Where("id=?", 1).
 		Or("id=?", 2).
@@ -41,7 +41,7 @@ func TestDelete_Exec(t *testing.T) {
 	db := initDB(a)
 	defer clearDB(a, db)
 
-	sql := sqlbuilder.Delete(db).Table("#user").Where("id=?", 1)
+	sql := sqlbuilder.Delete(db, db.Dialect()).Table("#user").Where("id=?", 1)
 	_, err := sql.Exec()
 	a.NotError(err)
 }

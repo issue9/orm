@@ -44,14 +44,9 @@ func (p *postgres) VersionSQL() string {
 
 func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) {
 	return " RETURNING {" + col + "}", true
-
-	// 在同时插入多列时， RETURNING 会返回每一列的 ID。
-	// 最终 sql.Result.LastInsertId() 返回的是最小的那个值，
-	// 这在大部分时间不符合要求。
-	// return " RETURNING {" + col + "}", true, true
 }
 
-// 在有 ? 占位符的情况下，语句中不能包含$字符串
+// 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
 func (p *postgres) SQL(sql string) (string, error) {
 	if strings.IndexByte(sql, '?') < 0 {
 		return sql, nil
