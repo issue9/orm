@@ -30,9 +30,11 @@ func TestColumn(t *testing.T) {
 		Exec()
 	a.NotError(err)
 
-	err = sqlbuilder.DropColumn(db, db.Dialect()).
-		Table("#user").
-		Column("col1").
-		Exec()
-	a.NotError(err)
+	if db.Dialect().Name() != "sqlite3" {
+		err = sqlbuilder.DropColumn(db, db.Dialect()).
+			Table("#user").
+			Column("col1").
+			Exec()
+		a.NotError(err)
+	}
 }

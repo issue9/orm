@@ -108,11 +108,11 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 		return hook.DropConstraintStmtHook(stmt)
 	}
 
-	buf := New("ALTER TABLE {")
-	buf.WriteString(stmt.TableName)
-	buf.WriteString("} DROP CONSTRAINT {")
-	buf.WriteString(stmt.Name)
-	buf.WriteString("};")
+	buf := New("ALTER TABLE {").
+		WriteString(stmt.TableName).
+		WriteString("} DROP CONSTRAINT {").
+		WriteString(stmt.Name).
+		WriteByte('}')
 	return []string{buf.String()}, nil
 }
 

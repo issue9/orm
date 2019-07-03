@@ -11,12 +11,12 @@ type Constraint int8
 
 // 约束类型
 const (
-	ConstraintUnique Constraint = iota // 唯一约束
-	ConstraintFK                       // 外键约束
-	ConstraintCheck                    // Check 约束
-	ConstraintPK                       // 主键约束
-	ConstraintAI                       // 自增
-	constraintNone
+	constraintNone   Constraint = iota
+	ConstraintUnique            // 唯一约束
+	ConstraintFK                // 外键约束
+	ConstraintCheck             // Check 约束
+	ConstraintPK                // 主键约束
+	ConstraintAI                // 自增
 )
 
 // AddConstraintStmtHooker AddConstraintStmt.DDLSQL 的钩子函数
@@ -136,11 +136,9 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 
 	switch stmt.Type {
 	case ConstraintCheck:
-		builder.WriteString(" CHECK ").WriteString(stmt.Data[0])
+		builder.WriteString(" CHECK ").WriteByte('(').WriteString(stmt.Data[0]).WriteByte(')')
 	case ConstraintFK:
-		builder.WriteString(" ADD CONSTRAINT ").
-			WriteString(stmt.Name).
-			WriteString("FOREIGN KEY (").
+		builder.WriteString(" FOREIGN KEY (").
 			WriteString(stmt.Data[0]).
 			WriteString(") REFERENCES ").
 			WriteString(stmt.Data[1]).
@@ -156,15 +154,17 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 			builder.WriteString(" ON DELETE ").WriteString(stmt.Data[4])
 		}
 	case ConstraintPK:
-		builder.WriteString(" PRIMARY KEY ")
+		builder.WriteString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
-			builder.WriteString(col)
+			builder.WriteString(col).WriteByte(',')
 		}
+		builder.TruncateLast(1).WriteByte(')')
 	case ConstraintUnique:
-		builder.WriteString(" UNIQUE ")
+		builder.WriteString(" UNIQUE (")
 		for _, col := range stmt.Data {
-			builder.WriteString(col)
+			builder.WriteString(col).WriteByte(',')
 		}
+		builder.TruncateLast(1).WriteByte(')')
 	default:
 		return nil, ErrUnknownConstraint
 	}
