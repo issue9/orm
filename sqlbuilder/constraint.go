@@ -198,3 +198,72 @@ func (t Constraint) String() string {
 		return "<unknown>"
 	}
 }
+
+// DropConstraintStmtHooker DropConstraintStmt.DDLSQL 的钩子函数
+type DropConstraintStmtHooker interface {
+	DropConstraintStmtHook(*DropConstraintStmt) ([]string, error)
+}
+
+// DropConstraintStmt 删除约束
+type DropConstraintStmt struct {
+	engine  Engine
+	dialect Dialect
+
+	TableName string
+	Name      string
+}
+
+// DropConstraint 声明一条删除表约束的语句
+func DropConstraint(e Engine, d Dialect) *DropConstraintStmt {
+	return &DropConstraintStmt{
+		engine:  e,
+		dialect: d,
+	}
+}
+
+// Table 指定表名。
+// 重复指定，会覆盖之前的。
+func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
+	stmt.TableName = table
+	return stmt
+}
+
+// Constraint 指定需要删除的列
+func (stmt *DropConstraintStmt) Constraint(cont string) *DropConstraintStmt {
+	stmt.Name = cont
+	return stmt
+}
+
+// DDLSQL 获取 SQL 语句以及对应的参数
+func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
+	if stmt.TableName == "" {
+		return nil, ErrTableIsEmpty
+	}
+
+	if hook, ok := stmt.dialect.(DropConstraintStmtHooker); ok {
+		return hook.DropConstraintStmtHook(stmt)
+	}
+
+	buf := New("ALTER TABLE {").
+		WriteString(stmt.TableName).
+		WriteString("} DROP CONSTRAINT {").
+		WriteString(stmt.Name).
+		WriteByte('}')
+	return []string{buf.String()}, nil
+}
+
+// Reset 重置
+func (stmt *DropConstraintStmt) Reset() {
+	stmt.TableName = ""
+	stmt.Name = ""
+}
+
+// Exec 执行 SQL 语句
+func (stmt *DropConstraintStmt) Exec() error {
+	return stmt.ExecContext(context.Background())
+}
+
+// ExecContext 执行 SQL 语句
+func (stmt *DropConstraintStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
+}

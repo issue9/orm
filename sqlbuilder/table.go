@@ -471,3 +471,60 @@ func (stmt *TruncateTableStmt) Exec() error {
 func (stmt *TruncateTableStmt) ExecContext(ctx context.Context) error {
 	return ddlExecContext(ctx, stmt.engine, stmt)
 }
+
+// DropTableStmt 删除表语句
+type DropTableStmt struct {
+	engine Engine
+	tables []string
+}
+
+// DropTable 声明一条删除表的语句
+func DropTable(e Engine) *DropTableStmt {
+	return &DropTableStmt{
+		engine: e,
+	}
+}
+
+// Table 指定表名。
+//
+// 多次指定，则会删除多个表
+func (stmt *DropTableStmt) Table(table ...string) *DropTableStmt {
+	if stmt.tables == nil {
+		stmt.tables = table
+		return stmt
+	}
+
+	stmt.tables = append(stmt.tables, table...)
+	return stmt
+}
+
+// DDLSQL 获取 SQL 语句以及对应的参数
+func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
+	if len(stmt.tables) == 0 {
+		return nil, ErrTableIsEmpty
+	}
+
+	qs := make([]string, 0, len(stmt.tables))
+
+	for _, table := range stmt.tables {
+		buf := New("DROP TABLE IF EXISTS ")
+		buf.WriteString(table)
+		qs = append(qs, buf.String())
+	}
+	return qs, nil
+}
+
+// Reset 重置
+func (stmt *DropTableStmt) Reset() {
+	stmt.tables = stmt.tables[:0]
+}
+
+// Exec 执行 SQL 语句
+func (stmt *DropTableStmt) Exec() error {
+	return stmt.ExecContext(context.Background())
+}
+
+// ExecContext 执行 SQL 语句
+func (stmt *DropTableStmt) ExecContext(ctx context.Context) error {
+	return ddlExecContext(ctx, stmt.engine, stmt)
+}
