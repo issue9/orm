@@ -10,7 +10,7 @@ type Index int8
 // 索引的类型
 const (
 	IndexDefault Index = iota // 普通的索引
-	IndexUnique
+	IndexUnique               // 唯一索纱
 )
 
 // CreateIndexStmt 创建索引的语句

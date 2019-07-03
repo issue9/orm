@@ -34,6 +34,10 @@ func TestDelete(t *testing.T) {
 	query, args, err = d.Table("tb1").Where("id=?").Or("id=?", 1).SQL()
 	a.Equal(err, sqlbuilder.ErrArgsNotMatch) // 由 where 抛出
 	a.Empty(query).Nil(args)
+
+	d.Reset()
+	query, args, err = d.SQL()
+	a.ErrorType(err, sqlbuilder.ErrTableIsEmpty).Empty(query).Nil(args)
 }
 
 func TestDelete_Exec(t *testing.T) {
