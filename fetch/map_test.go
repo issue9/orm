@@ -26,12 +26,12 @@ func TestMap(t *testing.T) {
 	a.NotError(err).NotNil(mapped)
 
 	ok := assert.IsEqual([]map[string]interface{}{
-		map[string]interface{}{"id": 1, "email": "email-1"},
-		map[string]interface{}{"id": 2, "email": "email-2"},
+		{"id": 1, "email": "email-1"},
+		{"id": 2, "email": "email-2"},
 	}, mapped) ||
 		assert.IsEqual([]map[string]interface{}{
-			map[string]interface{}{"id": []byte{'1'}, "email": []byte("email-1")},
-			map[string]interface{}{"id": []byte{'2'}, "email": []byte("email-2")},
+			{"id": []byte{'1'}, "email": []byte("email-1")},
+			{"id": []byte{'2'}, "email": []byte("email-2")},
 		}, mapped)
 	a.True(ok)
 	a.NotError(rows.Close())
@@ -44,10 +44,10 @@ func TestMap(t *testing.T) {
 	a.NotError(err).NotNil(mapped)
 
 	ok = assert.IsEqual([]map[string]interface{}{
-		map[string]interface{}{"id": 1, "email": "email-1"},
+		{"id": 1, "email": "email-1"},
 	}, mapped) ||
 		assert.IsEqual([]map[string]interface{}{
-			map[string]interface{}{"id": []byte{'1'}, "email": []byte("email-1")},
+			{"id": []byte{'1'}, "email": []byte("email-1")},
 		}, mapped)
 	a.True(ok)
 	a.NotError(rows.Close())
@@ -88,8 +88,8 @@ func TestMapString(t *testing.T) {
 	a.NotError(err).NotNil(mapped)
 
 	a.Equal(mapped, []map[string]string{
-		map[string]string{"id": "1", "email": "email-1"},
-		map[string]string{"id": "2", "email": "email-2"},
+		{"id": "1", "email": "email-1"},
+		{"id": "2", "email": "email-2"},
 	})
 	a.NotError(rows.Close())
 
@@ -101,7 +101,7 @@ func TestMapString(t *testing.T) {
 	a.NotError(err).NotNil(mapped)
 
 	a.Equal(mapped, []map[string]string{
-		map[string]string{"id": "1", "email": "email-1"},
+		{"id": "1", "email": "email-1"},
 	})
 	a.NotError(rows.Close())
 

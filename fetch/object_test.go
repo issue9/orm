@@ -50,7 +50,7 @@ func (u *FetchEmail) AfterFetch() error {
 	return nil
 }
 
-// 初始化一个 sql.DB(sqlite3)，方便后面的测试用例使用。
+// 初始化一个 sql.DB，方便后面的测试用例使用。
 func initDB(a *assert.Assertion) *orm.DB {
 	db := testconfig.NewDB(a)
 	now := time.Now().Unix()
@@ -98,14 +98,14 @@ func TestObject_strict(t *testing.T) {
 	a.NotError(err).NotNil(rows)
 
 	objs := []*FetchUser{
-		&FetchUser{},
-		&FetchUser{},
+		{},
+		{},
 	}
 	cnt, err := fetch.Object(true, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
-		&FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}},
+		{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
+		{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -113,13 +113,13 @@ func TestObject_strict(t *testing.T) {
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 	objs = []*FetchUser{
-		&FetchUser{},
+		{},
 	}
 	cnt, err = fetch.Object(true, rows, &objs)
 	a.NotError(err).Equal(len(objs), cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
-		&FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}},
+		{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
+		{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -127,35 +127,35 @@ func TestObject_strict(t *testing.T) {
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 	objs = []*FetchUser{
-		&FetchUser{},
+		{},
 	}
 	cnt, err = fetch.Object(true, rows, objs) // 非指针传递
 	a.NotError(err).Equal(len(objs), cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
+		{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
 	}, objs)
 	a.NotError(rows.Close())
 
 	// test4:objs 的长度大于导出数据的长度。
 	rows, err = db.Query(sql)
 	objs = []*FetchUser{
-		&FetchUser{},
-		&FetchUser{},
-		&FetchUser{},
+		{},
+		{},
+		{},
 	}
 	cnt, err = fetch.Object(true, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
-		&FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}},
-		&FetchUser{},
+		{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
+		{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}},
+		{},
 	}, objs)
 	a.NotError(rows.Close())
 
 	// test5:非数组指针传递。
 	rows, err = db.Query(sql)
 	array := [1]*FetchUser{
-		&FetchUser{},
+		{},
 	}
 	cnt, err = fetch.Object(true, rows, array)
 	a.Error(err).Equal(cnt, 0) // 非指针传递，出错
@@ -164,12 +164,12 @@ func TestObject_strict(t *testing.T) {
 	// test6:数组指针传递，不会增长数组长度。
 	rows, err = db.Query(sql)
 	array = [1]*FetchUser{
-		&FetchUser{},
+		{},
 	}
 	cnt, err = fetch.Object(true, rows, &array)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([1]*FetchUser{
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
+		{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}},
 	}, array)
 	a.NotError(rows.Close())
 
@@ -195,14 +195,14 @@ func TestObject_strict(t *testing.T) {
 	a.NotError(err).NotNil(rows)
 
 	objs = []*FetchUser{
-		&FetchUser{},
-		&FetchUser{},
+		{},
+		{},
 	}
 	cnt, err = fetch.Object(true, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*FetchUser{
-		&FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}, Username: "username-1", Group: 1},
-		&FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}, Username: "username-2", Group: 1},
+		{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}, Username: "username-1", Group: 1},
+		{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}, Username: "username-2", Group: 1},
 	}, objs)
 	a.NotError(rows.Close())
 }
@@ -226,14 +226,14 @@ func TestObject_no_strict(t *testing.T) {
 	a.NotError(err).NotNil(rows)
 
 	objs := []*userlog{
-		&userlog{},
-		&userlog{},
+		{},
+		{},
 	}
 	cnt, err := fetch.Object(false, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*userlog{
-		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
-		&userlog{FetchUser: &FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}}, LID: 2},
+		{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
+		{FetchUser: &FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}}, LID: 2},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -245,13 +245,13 @@ func TestObject_no_strict(t *testing.T) {
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 	objs = []*userlog{
-		&userlog{},
+		{},
 	}
 	cnt, err = fetch.Object(false, rows, &objs)
 	a.NotError(err).Equal(len(objs), cnt)
 	a.Equal([]*userlog{
-		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
-		&userlog{FetchUser: &FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}}, LID: 2},
+		{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
+		{FetchUser: &FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}}, LID: 2},
 	}, objs)
 	a.NotError(rows.Close())
 
@@ -259,35 +259,35 @@ func TestObject_no_strict(t *testing.T) {
 	rows, err = db.Query(sql)
 	a.NotError(err).NotNil(rows)
 	objs = []*userlog{
-		&userlog{},
+		{},
 	}
 	cnt, err = fetch.Object(false, rows, objs) // 非指针传递
 	a.NotError(err).Equal(len(objs), cnt)
 	a.Equal([]*userlog{
-		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
+		{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
 	}, objs)
 	a.NotError(rows.Close())
 
 	// test4:objs 的长度大于导出数据的长度。
 	rows, err = db.Query(sql)
 	objs = []*userlog{
-		&userlog{},
-		&userlog{},
-		&userlog{},
+		{},
+		{},
+		{},
 	}
 	cnt, err = fetch.Object(false, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*userlog{
-		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
-		&userlog{FetchUser: &FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}}, LID: 2},
-		&userlog{},
+		{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
+		{FetchUser: &FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}}, LID: 2},
+		{},
 	}, objs)
 	a.NotError(rows.Close())
 
 	// test5:非数组指针传递。
 	rows, err = db.Query(sql)
 	array := [1]*userlog{
-		&userlog{},
+		{},
 	}
 	cnt, err = fetch.Object(false, rows, array)
 	a.Error(err).Equal(cnt, 0) // 非指针传递，出错
@@ -296,12 +296,12 @@ func TestObject_no_strict(t *testing.T) {
 	// test6:数组指针传递，不会增长数组长度。
 	rows, err = db.Query(sql)
 	array = [1]*userlog{
-		&userlog{},
+		{},
 	}
 	cnt, err = fetch.Object(false, rows, &array)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([1]*userlog{
-		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
+		{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}}, LID: 1},
 	}, array)
 	a.NotError(rows.Close())
 
@@ -327,14 +327,14 @@ func TestObject_no_strict(t *testing.T) {
 	a.NotError(err).NotNil(rows)
 
 	objs = []*userlog{
-		&userlog{},
-		&userlog{},
+		{},
+		{},
 	}
 	cnt, err = fetch.Object(false, rows, &objs)
 	a.NotError(err).NotEmpty(cnt)
 	a.Equal([]*userlog{
-		&userlog{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}, Username: "username-1", Group: 1}, LID: 1},
-		&userlog{FetchUser: &FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}, Username: "username-2", Group: 1}, LID: 2},
+		{FetchUser: &FetchUser{ID: 1, FetchEmail: FetchEmail{Email: "email-1", Regdate: now}, Username: "username-1", Group: 1}, LID: 1},
+		{FetchUser: &FetchUser{ID: 2, FetchEmail: FetchEmail{Email: "email-2", Regdate: now}, Username: "username-2", Group: 1}, LID: 2},
 	}, objs)
 	a.NotError(rows.Close())
 }
@@ -353,7 +353,7 @@ func TestObjectNest(t *testing.T) {
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
 	objs := []*log{
-		&log{},
+		{},
 	}
 	cnt, err := fetch.Object(true, rows, &objs)
 	a.NotError(err).Equal(cnt, len(objs))
@@ -372,21 +372,21 @@ func TestObjectNotFound(t *testing.T) {
 	rows, err := db.Query(sql)
 	a.NotError(err).NotNil(rows)
 	objs := []*FetchUser{
-		&FetchUser{},
-		&FetchUser{},
+		{},
+		{},
 	}
 	cnt, err := fetch.Object(true, rows, &objs)
 	a.NotError(err).Equal(cnt, 0)
 	a.Equal([]*FetchUser{
-		&FetchUser{},
-		&FetchUser{},
+		{},
+		{},
 	}, objs)
 	a.NotError(rows.Close())
 
 	// test2:非数组指针传递。
 	rows, err = db.Query(sql)
 	array := [1]*FetchUser{
-		&FetchUser{},
+		{},
 	}
 	cnt, err = fetch.Object(true, rows, array)
 	a.Error(err).Equal(0, cnt) // 非指针传递，出错

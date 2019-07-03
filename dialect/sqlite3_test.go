@@ -35,14 +35,14 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 	// engine
 	sql.Reset()
 	a.NotError(s.CreateTableOptionsSQL(sql, map[string][]string{
-		"sqlite3_rowid": []string{"false"},
+		"sqlite3_rowid": {"false"},
 	}))
 	a.True(sql.Len() > 0)
 	sqltest.Equal(a, sql.String(), "without rowid")
 
 	sql.Reset()
 	a.Error(s.CreateTableOptionsSQL(sql, map[string][]string{
-		"sqlite3_rowid": []string{"false", "false"},
+		"sqlite3_rowid": {"false", "false"},
 	}))
 }
 
@@ -50,56 +50,56 @@ func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
 
 	var data = []*test{
-		&test{ // col == nil
+		{ // col == nil
 			err: true,
 		},
-		&test{ // col.GoType == nil
+		{ // col.GoType == nil
 			col: &sqlbuilder.Column{GoType: nil},
 			err: true,
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1)},
 			SQLType: "INTEGER NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullBool{})},
 			SQLType: "INTEGER NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(false)},
 			SQLType: "INTEGER NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf([]byte{'a', 'b'})},
 			SQLType: "BLOB NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
 			SQLType: "INTEGER NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullFloat64{})},
 			SQLType: "REAL NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullString{})},
 			SQLType: "TEXT NOT NULL",
 		},
-		&test{
+		{
 			col: &sqlbuilder.Column{
 				GoType:   reflect.TypeOf(sql.NullString{}),
 				Nullable: true,
 			},
 			SQLType: "TEXT",
 		},
-		&test{
+		{
 			col: &sqlbuilder.Column{
 				GoType:  reflect.TypeOf(sql.NullString{}),
 				Default: "123",
 			},
 			SQLType: "TEXT NOT NULL",
 		},
-		&test{
+		{
 			col: &sqlbuilder.Column{
 				GoType:     reflect.TypeOf(sql.NullString{}),
 				Default:    "123",
@@ -107,39 +107,39 @@ func TestSqlite3_SQLType(t *testing.T) {
 			},
 			SQLType: "TEXT NOT NULL DEFAULT '123'",
 		},
-		&test{
+		{
 			col: &sqlbuilder.Column{
 				GoType: reflect.TypeOf(1),
 				Length: []int{5, 6},
 			},
 			SQLType: "INTEGER NOT NULL",
 		},
-		&test{
+		{
 			col: &sqlbuilder.Column{
 				GoType: reflect.TypeOf(1),
 				AI:     true,
 			},
 			SQLType: "INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf("")},
 			SQLType: "TEXT NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1.2)},
 			SQLType: "REAL NOT NULL",
 		},
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
 			SQLType: "INTEGER NOT NULL",
 		},
 
-		&test{
+		{
 			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(time.Time{})},
 			SQLType: "DATETIME NOT NULL",
 		},
 
-		&test{
+		{
 			col: &sqlbuilder.Column{GoType: reflect.TypeOf(struct{}{})},
 			err: true,
 		},

@@ -19,27 +19,6 @@ type test struct {
 	SQLType string
 }
 
-type user struct {
-	ID   int64  `orm:"name(id);ai"`
-	Name string `orm:"name(name);index(i_user_name);len(20)"`
-}
-
-func (u *user) Meta() string {
-	return "name(user)"
-}
-
-type model1 struct{}
-
-func (m *model1) Meta() string {
-	return "name(model1)"
-}
-
-type model2 struct{}
-
-func (m *model2) Meta() string {
-	return "check(chk_name,id>0);mysql_engine(innodb);mysql_charset(utf8);name(model2);sqlite3_rowid(false)"
-}
-
 func testData(a *assert.Assertion, d sqlbuilder.Dialect, data []*test) {
 	for _, item := range data {
 		typ, err := d.SQLType(item.col)

@@ -231,7 +231,7 @@ r, err := e.Exec(sql, []interface{}{"name1", 5})
 ##### 多表查询
 
 ```go
-type order {
+type order struct {
     ID int `orm:"name(id);ai"`
     UID int `orm:"name(uid)"`
     User *User `orm:"name(u)"` // sql 语句的 u. 开头的列导入到此对象中

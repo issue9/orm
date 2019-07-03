@@ -19,8 +19,8 @@ func BenchmarkObject(b *testing.B) {
 
 	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
 	objs := []*FetchUser{
-		&FetchUser{},
-		&FetchUser{},
+		{},
+		{},
 	}
 
 	for i := 0; i < b.N; i++ {
@@ -29,7 +29,7 @@ func BenchmarkObject(b *testing.B) {
 
 		cnt, err := fetch.Object(true, rows, &objs)
 		a.NotError(err).NotEmpty(cnt)
-		rows.Close()
+		a.NotError(rows.Close())
 	}
 }
 
@@ -47,6 +47,6 @@ func BenchmarkMap(b *testing.B) {
 
 		mapped, err := fetch.Map(false, rows)
 		a.NotError(err).NotNil(mapped)
-		rows.Close()
+		a.NotError(rows.Close())
 	}
 }
