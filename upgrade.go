@@ -39,7 +39,10 @@ func (db *DB) Upgrade(v interface{}) (*Upgrader, error) {
 		model:     m,
 		addCols:   []*Column{},
 		dropCols:  []string{},
+		addConts:  []string{},
 		dropConts: []string{},
+		addIdxs:   []string{},
+		dropIdxs:  []string{},
 	}, nil
 }
 
