@@ -24,6 +24,7 @@ func TestCreateTableStmt(t *testing.T) {
 	a := assert.New(t)
 	table := "create_table_test"
 	suite := test.NewSuite(a)
+	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
 		db := t.DB.DB

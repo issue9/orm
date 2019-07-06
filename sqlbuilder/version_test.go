@@ -17,6 +17,8 @@ func TestVersion(t *testing.T) {
 	a := assert.New(t)
 
 	s := test.NewSuite(a)
+	defer s.Close()
+
 	s.ForEach(func(t *test.Test) {
 		ver, err := sqlbuilder.Version(t.DB.DB, t.DB.Dialect())
 		t.NotError(err).

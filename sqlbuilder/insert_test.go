@@ -19,8 +19,9 @@ var _ sqlbuilder.SQLer = &sqlbuilder.InsertStmt{}
 
 func TestInsert(t *testing.T) {
 	a := assert.New(t)
-
 	s := test.NewSuite(a)
+	defer s.Close()
+
 	s.ForEach(func(t *test.Test) {
 		db := t.DB.DB
 		dialect := t.DB.Dialect()
