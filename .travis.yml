@@ -1,3 +1,7 @@
+services:
+  - mysql
+  - postgresql
+
 language: go
 
 os:
@@ -10,8 +14,8 @@ env:
 
 go:
   - tip
-  - 1.12
-  - 1.11
+  - 1.12.x
+  - 1.11.x
 
 script: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 

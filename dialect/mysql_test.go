@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
+
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -43,7 +44,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
 
-	var data = []*test{
+	var data = []*sqltypeTester{
 		{ // col == nil
 			err: true,
 		},
@@ -185,5 +186,5 @@ func TestMysql_SQLType(t *testing.T) {
 		},
 	}
 
-	testData(a, Mysql(), data)
+	testSQLType(a, Mysql(), data)
 }

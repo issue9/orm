@@ -34,7 +34,7 @@ var cases = []struct {
 	},
 	{
 		prefix:     "prefix_",
-		dsn:        "user=caixw dbname=orm_test sslmode=disable",
+		dsn:        "user=postgres dbname=orm_test sslmode=disable",
 		dialect:    dialect.Postgres(),
 		driverName: "postgres",
 	},

@@ -9,17 +9,18 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-type test struct {
+type sqltypeTester struct {
 	col     *sqlbuilder.Column
 	err     bool
 	SQLType string
 }
 
-func testData(a *assert.Assertion, d sqlbuilder.Dialect, data []*test) {
+func testSQLType(a *assert.Assertion, d sqlbuilder.Dialect, data []*sqltypeTester) {
 	for _, item := range data {
 		typ, err := d.SQLType(item.col)
 		if item.err {

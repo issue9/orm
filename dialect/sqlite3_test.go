@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
+
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -49,7 +50,7 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 func TestSqlite3_SQLType(t *testing.T) {
 	a := assert.New(t)
 
-	var data = []*test{
+	var data = []*sqltypeTester{
 		{ // col == nil
 			err: true,
 		},
@@ -145,5 +146,5 @@ func TestSqlite3_SQLType(t *testing.T) {
 		},
 	}
 
-	testData(a, Sqlite3(), data)
+	testSQLType(a, Sqlite3(), data)
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
+
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -21,7 +22,7 @@ var (
 func TestPostgres_SQLType(t *testing.T) {
 	a := assert.New(t)
 
-	var data = []*test{
+	var data = []*sqltypeTester{
 		{ // col == nil
 			err: true,
 		},
@@ -200,7 +201,7 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 	}
 
-	testData(a, Postgres(), data)
+	testSQLType(a, Postgres(), data)
 }
 
 func TestPostgres_SQL(t *testing.T) {
