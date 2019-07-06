@@ -10,43 +10,54 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v2/fetch"
+	"github.com/issue9/orm/v2/internal/test"
 )
 
 func BenchmarkObject(b *testing.B) {
 	a := assert.New(b)
-	db := initDB(a)
-	defer clearDB(a, db)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
-	objs := []*FetchUser{
-		{},
-		{},
-	}
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
 
-	for i := 0; i < b.N; i++ {
-		rows, err := db.Query(sql)
-		a.NotError(err)
+		sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+		objs := []*FetchUser{
+			{},
+			{},
+		}
 
-		cnt, err := fetch.Object(true, rows, &objs)
-		a.NotError(err).NotEmpty(cnt)
-		a.NotError(rows.Close())
-	}
+		for i := 0; i < b.N; i++ {
+			rows, err := t.DB.Query(sql)
+			t.NotError(err)
+
+			cnt, err := fetch.Object(true, rows, &objs)
+			t.NotError(err).NotEmpty(cnt)
+			t.NotError(rows.Close())
+		}
+	})
 }
 
 func BenchmarkMap(b *testing.B) {
 	a := assert.New(b)
-	db := initDB(a)
-	defer clearDB(a, db)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	// 正常匹配数据，读取多行
-	sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
 
-	for i := 0; i < b.N; i++ {
-		rows, err := db.Query(sql)
-		a.NotError(err)
+		// 正常匹配数据，读取多行
+		sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
 
-		mapped, err := fetch.Map(false, rows)
-		a.NotError(err).NotNil(mapped)
-		a.NotError(rows.Close())
-	}
+		for i := 0; i < b.N; i++ {
+			rows, err := t.DB.Query(sql)
+			t.NotError(err)
+
+			mapped, err := fetch.Map(false, rows)
+			t.NotError(err).NotNil(mapped)
+			t.NotError(rows.Close())
+		}
+	})
 }
