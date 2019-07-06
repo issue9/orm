@@ -17,6 +17,10 @@ go:
   - 1.12.x
   - 1.11.x
 
+before_install:
+  - mysql -e 'CREATE DATABASE orm_test;'
+  - psql -c 'create database orm_test;' -U postgres
+
 script: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
 after_success: bash <(curl -s https://codecov.io/bash)
