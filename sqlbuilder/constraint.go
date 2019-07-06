@@ -206,15 +206,16 @@ func DropConstraint(e Engine, d Dialect) *DropConstraintStmt {
 }
 
 // Table 指定表名。
+//
 // 重复指定，会覆盖之前的。
 func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
 	stmt.TableName = table
 	return stmt
 }
 
-// Constraint 指定需要删除的列
-func (stmt *DropConstraintStmt) Constraint(cont string) *DropConstraintStmt {
-	stmt.Name = cont
+// Constraint 指定需要删除的约束名
+func (stmt *DropConstraintStmt) Constraint(name string) *DropConstraintStmt {
+	stmt.Name = name
 	return stmt
 }
 
@@ -231,8 +232,7 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 	buf := New("ALTER TABLE ").
 		WriteString(stmt.TableName).
 		WriteString(" DROP CONSTRAINT ").
-		WriteString(stmt.Name).
-		WriteByte(' ')
+		WriteString(stmt.Name)
 	return []string{buf.String()}, nil
 }
 

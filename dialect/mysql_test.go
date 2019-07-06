@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	_ sqlbuilder.TruncateTableStmtHooker = &mysql{}
-	_ sqlbuilder.DropIndexStmtHooker     = &mysql{}
+	_ sqlbuilder.TruncateTableStmtHooker  = &mysql{}
+	_ sqlbuilder.DropIndexStmtHooker      = &mysql{}
+	_ sqlbuilder.DropConstraintStmtHooker = &mysql{}
 )
 
 func TestMysql_CreateTableOptions(t *testing.T) {

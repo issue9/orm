@@ -81,6 +81,11 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 	return mysqlLimitSQL(limit, offset...)
 }
 
+func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
+	// TODO
+	return nil, sqlbuilder.ErrNotImplemented
+}
+
 func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
 	return []string{"ALTER TABLE " + stmt.TableName + " DROP INDEX " + stmt.IndexName}, nil
 }
