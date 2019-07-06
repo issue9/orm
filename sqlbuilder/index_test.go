@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/orm/v2/internal/test"
 
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
@@ -66,19 +67,26 @@ func TestCreateIndex(t *testing.T) {
 
 func TestIndex(t *testing.T) {
 	a := assert.New(t)
-	db := initDB(a)
-	defer clearDB(a, db)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	err := sqlbuilder.CreateIndex(db, db.Dialect()).
-		Table("#user").
-		Name("index_key").
-		Columns("id", "name").
-		Exec()
-	a.NotError(err)
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
+		db := t.DB.DB
+		dialect := t.DB.Dialect()
 
-	err = sqlbuilder.DropIndex(db, db.Dialect()).
-		Table("#user").
-		Name("index_key").
-		Exec()
-	a.NotError(err)
+		err := sqlbuilder.CreateIndex(db, dialect).
+			Table("users").
+			Name("index_key").
+			Columns("id", "name").
+			Exec()
+		t.NotError(err)
+
+		err = sqlbuilder.DropIndex(db, dialect).
+			Table("users").
+			Name("index_key").
+			Exec()
+		t.NotError(err)
+	})
 }

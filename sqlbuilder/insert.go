@@ -162,15 +162,22 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 		if err != nil {
 			return 0, err
 		}
-	} else {
-		query, as, err := stmt.SQL()
-		if err != nil {
-			return 0, err
-		}
-		sql = query + sql
-		args = as
+
+		err = stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id)
+		return id, err
 	}
 
+	// 当 append 为 true 时，将 sql 添加到 query 之后，合并为一条语句
+	query, as, err := stmt.SQL()
+	if err != nil {
+		return 0, err
+	}
+	sql = query + sql
+	args = as
+
+	if sql, err = stmt.Dialect().SQL(sql); err != nil {
+		return 0, err
+	}
 	err = stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id)
 	return
 }

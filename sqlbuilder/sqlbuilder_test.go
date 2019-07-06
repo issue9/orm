@@ -5,68 +5,74 @@
 package sqlbuilder_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2"
-	"github.com/issue9/orm/v2/internal/testconfig"
+	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+// user 需要与 initDB 中的 users 表中的字段相同
 type user struct {
 	ID   int64  `orm:"name(id);ai"`
 	Name string `orm:"name(name);len(20)"`
 }
 
 func (u *user) Meta() string {
-	return "name(user)"
+	return "name(users)"
 }
 
-func initDB(a *assert.Assertion) *orm.DB {
-	db := testconfig.NewDB(a)
+func initDB(t *test.Test) {
+	db := t.DB.DB
+	dialect := t.DB.Dialect()
 
-	a.NotError(db.Create(&user{}))
+	err := sqlbuilder.CreateTable(db, dialect).
+		Table("users").
+		Column("name", reflect.TypeOf(""), false, false, nil, 20).
+		AutoIncrement("user_ai", "id", reflect.TypeOf(1)).
+		Exec()
+	t.NotError(err, "%s@%s", err, t.DriverName)
 
-	sql := sqlbuilder.Insert(db, db.Dialect()).
+	sql := sqlbuilder.Insert(db, dialect).
 		Columns("name").
-		Table("#user").
+		Table("users").
 		Values("1").
 		Values("2")
-	_, err := sql.Exec()
-	a.NotError(err)
+	_, err = sql.Exec()
+	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	stmt, err := sql.Prepare()
-	a.NotError(err).NotNil(stmt)
+	t.NotError(err, "%s@%s", err, t.DriverName).
+		NotNil(stmt, "not nil @s", t.DriverName)
 
 	_, err = stmt.Exec("3", "4")
-	a.NotError(err)
+	t.NotError(err, "%s@%s", err, t.DriverName)
 	_, err = stmt.Exec("5", "6")
-	a.NotError(err)
+	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	sql.Reset()
-
-	sql.Table("#user").
+	sql.Table("users").
 		Columns("name").
 		Values("7")
-	id, err := sql.LastInsertID("user", "id")
-	a.NotError(err).Equal(id, 7)
+	id, err := sql.LastInsertID("users", "id")
+	t.NotError(err, "%s@%s", err, t.DriverName).
+		Equal(id, 7, "%d != %d @ %s", id, 7, t.DriverName)
 
 	// 多行插入，不能拿到 lastInsertID
-	sql.Table("#user").
+	sql.Table("users").
 		Columns("name").
 		Values("8").
 		Values("9")
-	id, err = sql.LastInsertID("user", "id")
-	a.Error(err).Empty(id)
-
-	return db
+	id, err = sql.LastInsertID("users", "id")
+	t.Error(err, "%s@%s", err, t.DriverName).
+		Empty(id, "not empty @%s", t.DriverName)
 }
 
-func clearDB(a *assert.Assertion, db *orm.DB) {
-	err := sqlbuilder.DropTable(db, db.Dialect()).Table("#user").Exec()
-	a.NotError(err)
-	testconfig.CloseDB(db, a)
+func clearDB(t *test.Test) {
+	err := sqlbuilder.DropTable(t.DB.DB, t.DB.Dialect()).Table("users").Exec()
+	t.NotError(err)
 }
 
 func TestSQLBuilder(t *testing.T) {

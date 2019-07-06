@@ -9,9 +9,11 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/dialect"
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -22,30 +24,37 @@ var (
 
 func TestSelect_Query(t *testing.T) {
 	a := assert.New(t)
-	db := initDB(a)
-	defer clearDB(a, db)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	sql := sqlbuilder.Select(db, db.Dialect()).Select("*").
-		From("#user").
-		Where("id<?", 5).
-		Desc("id")
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
+		db := t.DB.DB
+		d := t.DB.Dialect()
 
-	id, err := sql.QueryInt("id")
-	a.NotError(err).
-		Equal(id, 4)
+		stmt := sqlbuilder.Select(db, d).Select("*").
+			From("users").
+			Where("id<?", 5).
+			Desc("id")
 
-	name, err := sql.QueryString("name")
-	a.NotError(err).
-		Equal(name, "4")
+		id, err := stmt.QueryInt("id")
+		a.NotError(err).
+			Equal(id, 4)
 
-	obj := &user{}
-	size, err := sql.QueryObject(true, obj)
-	a.NotError(err).Equal(1, size)
-	a.Equal(obj.ID, 4)
+		name, err := stmt.QueryString("name")
+		a.NotError(err).
+			Equal(name, "4")
 
-	cnt, err := sql.Count("count(*) AS cnt").QueryInt("cnt")
-	a.NotError(err).
-		Equal(cnt, 4)
+		obj := &user{}
+		size, err := stmt.QueryObject(true, obj)
+		a.NotError(err).Equal(1, size)
+		a.Equal(obj.ID, 4)
+
+		cnt, err := stmt.Count("count(*) AS cnt").QueryInt("cnt")
+		a.NotError(err).
+			Equal(cnt, 4)
+	})
 }
 
 func TestSelect_sqlite3(t *testing.T) {

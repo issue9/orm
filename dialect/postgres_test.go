@@ -240,6 +240,6 @@ func BenchmarkPostgres_SQL(b *testing.B) {
 	s1 := "SELECT * FROM tbl WHERE uid>? AND group=? AND username LIKE ?"
 
 	for i := 0; i < b.N; i++ {
-		p.SQL(s1)
+		a.NotError(p.SQL(s1))
 	}
 }

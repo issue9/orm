@@ -9,324 +9,346 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/dialect"
-	"github.com/issue9/orm/v2/internal/testconfig"
+	"github.com/issue9/orm/v2/internal/test"
 )
 
 func TestTx_InsertMany(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := testconfig.NewDB(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		tx, err := t.DB.Begin()
+		a.NotError(err)
+		a.NotError(tx.Create(&UserInfo{}))
 
-	tx, err := db.Begin()
-	a.NotError(err)
-	a.NotError(tx.Create(&UserInfo{}))
-
-	a.NotError(tx.InsertMany([]*UserInfo{
-		&UserInfo{
-			UID:       1,
-			FirstName: "f1",
-			LastName:  "l1",
-		},
-	}, 10))
-
-	// 分批插入
-	a.NotError(tx.InsertMany([]*UserInfo{
-		&UserInfo{
-			UID:       2,
-			FirstName: "f2",
-			LastName:  "l2",
-		},
-		&UserInfo{
-			UID:       3,
-			FirstName: "f3",
-			LastName:  "l3",
-		},
-		&UserInfo{
-			UID:       4,
-			FirstName: "f4",
-			LastName:  "l4",
-		},
-		&UserInfo{
-			UID:       5,
-			FirstName: "f5",
-			LastName:  "l5",
-		},
-		&UserInfo{
-			UID:       6,
-			FirstName: "f6",
-			LastName:  "l6",
-		},
-	}, 2))
-
-	// 单个元素插入
-	a.NotError(tx.InsertMany(
-		&UserInfo{
-			UID:       7,
-			FirstName: "f7",
-			LastName:  "l7",
+		a.NotError(tx.InsertMany([]*UserInfo{
+			{
+				UID:       1,
+				FirstName: "f1",
+				LastName:  "l1",
+			},
 		}, 10))
 
-	a.NotError(tx.Commit())
+		// 分批插入
+		a.NotError(tx.InsertMany([]*UserInfo{
+			{
+				UID:       2,
+				FirstName: "f2",
+				LastName:  "l2",
+			},
+			{
+				UID:       3,
+				FirstName: "f3",
+				LastName:  "l3",
+			},
+			{
+				UID:       4,
+				FirstName: "f4",
+				LastName:  "l4",
+			},
+			{
+				UID:       5,
+				FirstName: "f5",
+				LastName:  "l5",
+			},
+			{
+				UID:       6,
+				FirstName: "f6",
+				LastName:  "l6",
+			},
+		}, 2))
 
-	u1 := &UserInfo{UID: 1}
-	a.NotError(db.Select(u1))
-	a.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "male"})
+		// 单个元素插入
+		t.NotError(tx.InsertMany(
+			&UserInfo{
+				UID:       7,
+				FirstName: "f7",
+				LastName:  "l7",
+			}, 10))
 
-	u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
-	a.NotError(db.Select(u2))
-	a.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
+		t.NotError(tx.Commit())
 
-	u3 := &UserInfo{UID: 3}
-	a.NotError(db.Select(u3))
-	a.Equal(u3, &UserInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
+		u1 := &UserInfo{UID: 1}
+		t.NotError(t.DB.Select(u1))
+		t.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "male"})
 
-	u4 := &UserInfo{UID: 4}
-	a.NotError(db.Select(u4))
-	a.Equal(u4, &UserInfo{UID: 4, FirstName: "f4", LastName: "l4", Sex: "male"})
+		u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
+		t.NotError(t.DB.Select(u2))
+		t.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
 
-	u5 := &UserInfo{UID: 5}
-	a.NotError(db.Select(u5))
-	a.Equal(u5, &UserInfo{UID: 5, FirstName: "f5", LastName: "l5", Sex: "male"})
+		u3 := &UserInfo{UID: 3}
+		t.NotError(t.DB.Select(u3))
+		t.Equal(u3, &UserInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
 
-	u6 := &UserInfo{UID: 6}
-	a.NotError(db.Select(u6))
-	a.Equal(u6, &UserInfo{UID: 6, FirstName: "f6", LastName: "l6", Sex: "male"})
+		u4 := &UserInfo{UID: 4}
+		t.NotError(t.DB.Select(u4))
+		t.Equal(u4, &UserInfo{UID: 4, FirstName: "f4", LastName: "l4", Sex: "male"})
 
-	u7 := &UserInfo{UID: 7}
-	a.NotError(db.Select(u7))
-	a.Equal(u7, &UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
+		u5 := &UserInfo{UID: 5}
+		t.NotError(t.DB.Select(u5))
+		t.Equal(u5, &UserInfo{UID: 5, FirstName: "f5", LastName: "l5", Sex: "male"})
 
-	// 类型错误
-	tx, err = db.Begin()
-	a.NotError(err)
-	a.NotError(tx.Create(&UserInfo{}))
-	a.Error(tx.InsertMany(5, 10))
-	a.NotError(tx.Rollback())
+		u6 := &UserInfo{UID: 6}
+		t.NotError(t.DB.Select(u6))
+		t.Equal(u6, &UserInfo{UID: 6, FirstName: "f6", LastName: "l6", Sex: "male"})
 
-	// 类型错误
-	tx, err = db.Begin()
-	a.NotError(err)
-	a.NotError(tx.Create(&UserInfo{}))
-	a.Error(tx.InsertMany([]int{1, 2, 3}, 10))
-	a.NotError(tx.Rollback())
+		u7 := &UserInfo{UID: 7}
+		t.NotError(t.DB.Select(u7))
+		t.Equal(u7, &UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
+
+		t.NotError(t.DB.Drop(&UserInfo{}))
+
+		// 类型错误
+		tx, err = t.DB.Begin()
+		t.NotError(err)
+		t.NotError(tx.Create(&UserInfo{}))
+		t.Error(tx.InsertMany(5, 10))
+		t.NotError(tx.Rollback())
+		t.NotError(t.DB.Drop(&UserInfo{}))
+
+		// 类型错误
+		tx, err = t.DB.Begin()
+		t.NotError(err)
+		t.NotError(tx.Create(&UserInfo{}))
+		t.Error(tx.InsertMany([]int{1, 2, 3}, 10))
+		t.NotError(tx.Rollback())
+		t.NotError(t.DB.Drop(&UserInfo{}))
+	})
 }
 
 func TestTx_LastInsertID(t *testing.T) {
 	a := assert.New(t)
-	db := testconfig.NewDB(a)
-	defer clearData(db, a)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	a.NotError(db.Drop(&User{}))
-	a.NotError(db.Create(&User{}))
+	suite.ForEach(func(t *test.Test) {
+		a.NotError(t.DB.Create(&User{}))
+		defer func() {
+			a.NotError(t.DB.Drop(&User{}))
+		}()
 
-	tx, err := db.Begin()
-	a.NotError(err)
+		tx, err := t.DB.Begin()
+		t.NotError(err)
 
-	id, err := tx.LastInsertID(&User{Username: "1"})
-	a.NotError(err).Equal(id, 1)
+		id, err := tx.LastInsertID(&User{Username: "1"})
+		t.NotError(err).Equal(id, 1)
 
-	id, err = tx.LastInsertID(&User{Username: "2"})
-	a.NotError(err).Equal(id, 2)
+		id, err = tx.LastInsertID(&User{Username: "2"})
+		t.NotError(err).Equal(id, 2)
 
-	a.NotError(tx.Commit())
+		t.NotError(tx.Commit())
+	})
 }
 
 func TestTx_Insert(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := testconfig.NewDB(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		t.NotError(t.DB.Create(&User{}))
+		defer func() {
+			t.NotError(t.DB.Drop(&User{}))
+		}()
 
-	tx, err := db.Begin()
-	a.NotError(err)
-	a.NotError(tx.Create(&User{}))
+		tx, err := t.DB.Begin()
+		t.NotError(err)
 
-	r, err := tx.Insert(&User{
-		ID:       1,
-		Username: "u1",
+		_, err = tx.Insert(&User{
+			ID:       1,
+			Username: "u1",
+		})
+		t.NotError(err)
+
+		_, err = tx.Insert(&User{
+			ID:       2,
+			Username: "u2",
+		})
+		a.NotError(err)
+
+		_, err = tx.Insert(&User{
+			ID:       3,
+			Username: "u3",
+		})
+		t.NotError(err)
+
+		t.NotError(tx.Commit())
+
+		u1 := &User{ID: 1}
+		t.NotError(t.DB.Select(u1))
+		t.Equal(u1, &User{ID: 1, Username: "u1"})
+
+		u3 := &User{ID: 3}
+		t.NotError(t.DB.Select(u3))
+		t.Equal(u3, &User{ID: 3, Username: "u3"})
 	})
-	a.NotError(err)
-	if db.Dialect().Name() != "postgres" { // postgresql 默认情况下不支持 lastID
-		id, err := r.LastInsertId()
-		a.NotError(err).Equal(id, 1)
-	}
-
-	r, err = tx.Insert(&User{
-		ID:       2,
-		Username: "u2",
-	})
-	a.NotError(err)
-	if db.Dialect() != dialect.Postgres() {
-		id, err := r.LastInsertId()
-		a.NotError(err).Equal(id, 2)
-	}
-
-	r, err = tx.Insert(&User{
-		ID:       3,
-		Username: "u3",
-	})
-	a.NotError(err)
-	if db.Dialect().Name() != "postgres" {
-		id, err := r.LastInsertId()
-		a.NotError(err).Equal(id, 3)
-	}
-
-	a.NotError(tx.Commit())
-
-	u1 := &User{ID: 1}
-	a.NotError(db.Select(u1))
-	a.Equal(u1, &User{ID: 1, Username: "u1"})
-
-	u3 := &User{ID: 3}
-	a.NotError(db.Select(u3))
-	a.Equal(u3, &User{ID: 3, Username: "u3"})
 }
 
 func TestTx_Update(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	tx, err := db.Begin()
-	a.NotError(err).NotNil(tx)
+		tx, err := t.DB.Begin()
+		t.NotError(err).NotNil(tx)
 
-	// update
-	a.NotError(tx.MultUpdate(&UserInfo{
-		UID:       1,
-		FirstName: "firstName1",
-		LastName:  "lastName1",
-		Sex:       "sex1",
-	}, &UserInfo{
-		UID:       2,
-		FirstName: "firstName2",
-		LastName:  "lastName2",
-		Sex:       "sex2",
-	}))
-	a.NotError(tx.Commit())
+		// update
+		t.NotError(tx.MultUpdate(&UserInfo{
+			UID:       1,
+			FirstName: "firstName1",
+			LastName:  "lastName1",
+			Sex:       "sex1",
+		}, &UserInfo{
+			UID:       2,
+			FirstName: "firstName2",
+			LastName:  "lastName2",
+			Sex:       "sex2",
+		}))
+		t.NotError(tx.Commit())
 
-	u1 := &UserInfo{UID: 1}
-	a.NotError(db.Select(u1))
-	a.Equal(u1, &UserInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "sex1"})
+		u1 := &UserInfo{UID: 1}
+		t.NotError(t.DB.Select(u1))
+		t.Equal(u1, &UserInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "sex1"})
 
-	u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
-	a.NotError(db.Select(u2))
-	a.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
+		u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
+		t.NotError(t.DB.Select(u2))
+		t.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
+	})
 }
 
-func TestTx_Delete(t *testing.T) {
+func TestTx_MultDelete(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	tx, err := db.Begin()
-	a.NotError(err)
+		tx, err := t.DB.Begin()
+		t.NotError(err)
 
-	// delete
-	a.NotError(tx.MultDelete(
-		&UserInfo{
-			UID: 1,
-		},
-		&UserInfo{
-			LastName:  "l2",
-			FirstName: "f2",
-		},
-		&Admin{Email: "email1"},
-	))
+		// delete
+		t.NotError(tx.MultDelete(
+			&UserInfo{
+				UID: 1,
+			},
+			&UserInfo{
+				LastName:  "l2",
+				FirstName: "f2",
+			},
+			&Admin{Email: "email1"},
+		))
 
-	hasCount(tx, a, "user_info", 0)
-	hasCount(tx, a, "administrators", 0)
+		hasCount(tx, t.Assertion, "user_info", 0)
+		hasCount(tx, t.Assertion, "administrators", 0)
 
-	// delete并不会重置ai计数
-	a.NotError(tx.Insert(&Admin{Group: 1, Email: "email1"}))
+		// delete 并不会重置 ai 计数
+		t.NotError(tx.Insert(&Admin{Group: 1, Email: "email1"}))
 
-	a.NotError(tx.Commit())
+		t.NotError(tx.Commit())
 
-	a1 := &Admin{Email: "email1"}
-	a.NotError(db.Select(a1))
-	a.Equal(a1.ID, 2) // a1.ID为一个自增列,不会在delete中被重置
+		a1 := &Admin{Email: "email1"}
+		t.NotError(t.DB.Select(a1))
+		t.Equal(a1.ID, 2) // a1.ID 为一个自增列,不会在 delete 中被重置
+	})
 }
 
 func TestTx_Count(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	tx, err := db.Begin()
-	a.NotError(err)
+		tx, err := t.DB.Begin()
+		t.NotError(err)
 
-	// 单条件
-	count, err := tx.Count(
-		&UserInfo{
-			UID: 1,
-		},
-	)
-	a.NotError(tx.Commit())
-	a.NotError(err).Equal(1, count)
+		// 单条件
+		count, err := tx.Count(
+			&UserInfo{
+				UID: 1,
+			},
+		)
+		t.NotError(tx.Commit())
+		t.NotError(err).Equal(1, count)
 
-	tx, err = db.Begin()
-	a.NotError(err)
-	count, err = tx.Count(
-		&Admin{Email: "email1-1000"}, // 该条件不存在
-	)
-	a.NotError(tx.Commit())
-	a.NotError(err).Equal(0, count)
+		tx, err = t.DB.Begin()
+		t.NotError(err)
+		count, err = tx.Count(
+			&Admin{Email: "email1-1000"}, // 该条件不存在
+		)
+		t.NotError(tx.Commit())
+		t.NotError(err).Equal(0, count)
+	})
 }
 
 func TestTx_Truncate(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	hasCount(db, a, "administrators", 1)
-	hasCount(db, a, "user_info", 2)
+		hasCount(t.DB, a, "administrators", 1)
+		hasCount(t.DB, a, "user_info", 2)
 
-	// truncate之后，会重置AI
-	tx, err := db.Begin()
-	a.NotError(err)
-	a.NotError(tx.MultTruncate(&Admin{}, &UserInfo{}))
-	a.NotError(tx.Commit())
-	hasCount(db, a, "administrators", 0)
-	hasCount(db, a, "user_info", 0)
+		// truncate 之后，会重置 AI
+		tx, err := t.DB.Begin()
+		t.NotError(err)
+		t.NotError(tx.MultTruncate(&Admin{}, &UserInfo{}))
+		t.NotError(tx.Commit())
+		hasCount(t.DB, a, "administrators", 0)
+		hasCount(t.DB, a, "user_info", 0)
 
-	tx, err = db.Begin()
-	a.NotError(err)
-	a.NotError(tx.Insert(&Admin{Group: 1, Email: "email1"}))
-	a.NotError(tx.Commit())
-	a1 := &Admin{Email: "email1"}
-	a.NotError(db.Select(a1))
-	a.Equal(1, a1.ID)
+		tx, err = t.DB.Begin()
+		t.NotError(err)
+		t.NotError(tx.Insert(&Admin{Group: 1, Email: "email1"}))
+		t.NotError(tx.Commit())
+		a1 := &Admin{Email: "email1"}
+		t.NotError(t.DB.Select(a1))
+		t.Equal(1, a1.ID)
+	})
 }
 
 func TestTX(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := testconfig.NewDB(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		t.NotError(t.DB.Create(&User{}))
+		t.NotError(t.DB.Create(&UserInfo{}))
+		defer func() {
+			t.NotError(t.DB.Drop(&User{}))
+			t.NotError(t.DB.Drop(&UserInfo{}))
+		}()
 
-	a.NotError(db.Create(&User{}))
-	a.NotError(db.Create(&UserInfo{}))
+		// 回滚事务
+		tx, err := t.DB.Begin()
+		t.NotError(err).NotNil(tx)
+		t.NotError(tx.Insert(&User{Username: "u1"}))
+		t.NotError(tx.Insert(&User{Username: "u2"}))
+		t.NotError(tx.Insert(&User{Username: "u3"}))
+		t.NotError(tx.Rollback())
+		hasCount(t.DB, a, "users", 0) // tx 已经结束
 
-	// 回滚事务
-	tx, err := db.Begin()
-	a.NotError(err).NotNil(tx)
-	a.NotError(tx.Insert(&User{Username: "u1"}))
-	a.NotError(tx.Insert(&User{Username: "u2"}))
-	a.NotError(tx.Insert(&User{Username: "u3"}))
-	a.NotError(tx.Rollback())
-	hasCount(db, a, "users", 0)
-
-	// 正常提交
-	tx, err = db.Begin()
-	a.NotError(err).NotNil(tx)
-	a.NotError(tx.Insert(&User{Username: "u1"}))
-	a.NotError(tx.Insert(&User{Username: "u2"}))
-	a.NotError(tx.Insert(&User{Username: "u3"}))
-	a.NotError(tx.Commit())
-	hasCount(db, a, "users", 3)
+		// 正常提交
+		tx, err = t.DB.Begin()
+		t.NotError(err).NotNil(tx)
+		t.NotError(tx.Insert(&User{Username: "u1"}))
+		t.NotError(tx.Insert(&User{Username: "u2"}))
+		t.NotError(tx.Insert(&User{Username: "u3"}))
+		t.NotError(tx.Commit())
+		hasCount(t.DB, a, "users", 3)
+	})
 }

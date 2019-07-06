@@ -24,24 +24,24 @@ var (
 
 func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
-	sql := sqlbuilder.New("")
-	a.NotNil(sql)
+	builder := sqlbuilder.New("")
+	a.NotNil(builder)
 	var s = &sqlite3{}
 
 	// 空的 meta
-	a.NotError(s.CreateTableOptionsSQL(sql, nil))
-	a.Equal(sql.Len(), 0)
+	a.NotError(s.CreateTableOptionsSQL(builder, nil))
+	a.Equal(builder.Len(), 0)
 
 	// engine
-	sql.Reset()
-	a.NotError(s.CreateTableOptionsSQL(sql, map[string][]string{
+	builder.Reset()
+	a.NotError(s.CreateTableOptionsSQL(builder, map[string][]string{
 		"sqlite3_rowid": {"false"},
 	}))
-	a.True(sql.Len() > 0)
-	sqltest.Equal(a, sql.String(), "without rowid")
+	a.True(builder.Len() > 0)
+	sqltest.Equal(a, builder.String(), "without rowid")
 
-	sql.Reset()
-	a.Error(s.CreateTableOptionsSQL(sql, map[string][]string{
+	builder.Reset()
+	a.Error(s.CreateTableOptionsSQL(builder, map[string][]string{
 		"sqlite3_rowid": {"false", "false"},
 	}))
 }

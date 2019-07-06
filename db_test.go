@@ -9,37 +9,40 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/conv"
-	"github.com/issue9/orm/v2"
+
 	"github.com/issue9/orm/v2/fetch"
-	"github.com/issue9/orm/v2/internal/testconfig"
+	"github.com/issue9/orm/v2/internal/test"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // table 表中是否存在 size 条记录，若不是，则触发 error
-func hasCount(db orm.Engine, a *assert.Assertion, table string, size int) {
-	rows, err := db.Query("SELECT COUNT(*) as cnt FROM #" + table)
-	a.NotError(err).NotNil(rows)
+func hasCount(e sqlbuilder.Engine, a *assert.Assertion, table string, size int) {
+	rows, err := e.Query("SELECT COUNT(*) as cnt FROM #" + table)
+	a.NotError(err).
+		NotNil(rows)
 	defer func() {
 		a.NotError(rows.Close())
 	}()
 
 	data, err := fetch.Map(true, rows)
-	a.NotError(err).NotNil(data)
+	a.NotError(err).
+		NotNil(data)
 	a.Equal(conv.MustInt(data[0]["cnt"], -1), size)
 }
 
 // 初始化测试数据，同时可当作 DB.Insert 的测试
 // 清空其它数据，初始化成原始的测试数据
-func initData(a *assert.Assertion) *orm.DB {
-	db := testconfig.NewDB(a)
+func initData(t *test.Test) {
+	db := t.DB
 
-	a.NotError(db.Create(&Group{}))
-	a.NotError(db.MultCreate(&Admin{}, &UserInfo{}))
+	t.NotError(db.Create(&Group{}))
+	t.NotError(db.MultCreate(&Admin{}, &UserInfo{}))
 
 	insert := func(obj interface{}) {
 		r, err := db.Insert(obj)
-		a.NotError(err)
+		t.NotError(err)
 		cnt, err := r.RowsAffected()
-		a.NotError(err).Equal(cnt, 1)
+		t.NotError(err).Equal(cnt, 1)
 	}
 
 	insert(&Group{
@@ -70,192 +73,230 @@ func initData(a *assert.Assertion) *orm.DB {
 	u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
 	a1 := &Admin{Email: "email1"}
 
-	a.NotError(db.Select(u1))
-	a.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "female"})
+	t.NotError(db.Select(u1))
+	t.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "female"})
 
-	a.NotError(db.Select(u2))
-	a.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
+	t.NotError(db.Select(u2))
+	t.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
 
-	a.NotError(db.Select(a1))
-	a.Equal(a1.Username, "username1")
-
-	return db
+	t.NotError(db.Select(a1))
+	t.Equal(a1.Username, "username1")
 }
 
-func clearData(db *orm.DB, a *assert.Assertion) {
-	a.NotError(db.MultDrop(&Admin{}, &User{}))
-	a.NotError(db.Drop(&Group{})) // admin 外键依赖 group
-	a.NotError(db.Drop(&UserInfo{}))
-	testconfig.CloseDB(db, a)
+func clearData(t *test.Test) {
+	t.NotError(t.DB.MultDrop(&Admin{}, &User{}))
+	t.NotError(t.DB.Drop(&Group{})) // admin 外键依赖 group
+	t.NotError(t.DB.Drop(&UserInfo{}))
 }
 
 func TestDB_Update_error(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	// 非结构体传入
-	r, err := db.Update(123)
-	a.Error(err).Nil(r)
+		// 非结构体传入
+		r, err := t.DB.Update(123)
+		t.Error(err).Nil(r)
+	})
 }
 
 func TestDB_LastInsertID(t *testing.T) {
 	a := assert.New(t)
-	db := testconfig.NewDB(a)
-	defer clearData(db, a)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	a.NotError(db.Drop(&User{}))
-	a.NotError(db.Create(&User{}))
+	suite.ForEach(func(t *test.Test) {
+		t.NotError(t.DB.Create(&User{}))
+		defer func() {
+			t.NotError(t.DB.Drop(&User{}))
+		}()
 
-	id, err := db.LastInsertID(&User{Username: "1"})
-	a.NotError(err).Equal(id, 1)
+		id, err := t.DB.LastInsertID(&User{Username: "1"})
+		t.NotError(err).
+			Equal(id, 1)
 
-	id, err = db.LastInsertID(&User{Username: "2"})
-	a.NotError(err).Equal(id, 2)
+		id, err = t.DB.LastInsertID(&User{Username: "2"})
+		t.NotError(err).
+			Equal(id, 2)
+	})
 }
 
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	// update
-	r, err := db.Update(&UserInfo{
-		UID:       1,
-		FirstName: "firstName1",
-		LastName:  "lastName1",
-		Sex:       "sex1",
+		// update
+		r, err := t.DB.Update(&UserInfo{
+			UID:       1,
+			FirstName: "firstName1",
+			LastName:  "lastName1",
+			Sex:       "sex1",
+		})
+		a.NotError(err)
+		cnt, err := r.RowsAffected()
+		t.NotError(err).
+			Equal(1, cnt)
+
+		r, err = t.DB.Update(&UserInfo{
+			UID:       2,
+			FirstName: "firstName2",
+			LastName:  "lastName2",
+			Sex:       "sex2",
+		})
+		t.NotError(err)
+		cnt, err = r.RowsAffected()
+		a.NotError(err).
+			Equal(1, cnt)
+
+		u1 := &UserInfo{UID: 1}
+		t.NotError(t.DB.Select(u1))
+		t.Equal(u1, &UserInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "sex1"})
+
+		u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
+		t.NotError(t.DB.Select(u2))
+		t.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
 	})
-	a.NotError(err)
-	cnt, err := r.RowsAffected()
-	a.NotError(err).Equal(1, cnt)
-
-	r, err = db.Update(&UserInfo{
-		UID:       2,
-		FirstName: "firstName2",
-		LastName:  "lastName2",
-		Sex:       "sex2",
-	})
-	a.NotError(err)
-	cnt, err = r.RowsAffected()
-	a.NotError(err).Equal(1, cnt)
-
-	u1 := &UserInfo{UID: 1}
-	a.NotError(db.Select(u1))
-	a.Equal(u1, &UserInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "sex1"})
-
-	u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
-	a.NotError(db.Select(u2))
-	a.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
 }
 
 func TestDB_Delete(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	// delete
-	r, err := db.Delete(&UserInfo{UID: 1})
-	a.NotError(err)
-	cnt, err := r.RowsAffected()
-	a.NotError(err).Equal(cnt, 1)
+		// delete
+		r, err := t.DB.Delete(&UserInfo{UID: 1})
+		t.NotError(err)
+		cnt, err := r.RowsAffected()
+		t.NotError(err).
+			Equal(cnt, 1)
 
-	r, err = db.Delete(
-		&UserInfo{
-			LastName:  "l2",
-			FirstName: "f2",
-		})
-	a.NotError(err)
-	cnt, err = r.RowsAffected()
-	a.NotError(err).Equal(cnt, 1)
+		r, err = t.DB.Delete(
+			&UserInfo{
+				LastName:  "l2",
+				FirstName: "f2",
+			})
+		t.NotError(err)
+		cnt, err = r.RowsAffected()
+		t.NotError(err).
+			Equal(cnt, 1)
 
-	r, err = db.Delete(&Admin{Email: "email1"})
-	a.NotError(err)
-	cnt, err = r.RowsAffected()
-	a.NotError(err).Equal(cnt, 1)
+		r, err = t.DB.Delete(&Admin{Email: "email1"})
+		t.NotError(err)
+		cnt, err = r.RowsAffected()
+		t.NotError(err).
+			Equal(cnt, 1)
 
-	hasCount(db, a, "user_info", 0)
-	hasCount(db, a, "administrators", 0)
+		hasCount(t.DB, t.Assertion, "user_info", 0)
+		hasCount(t.DB, t.Assertion, "administrators", 0)
 
-	// delete并不会重置ai计数
-	_, err = db.Insert(&Admin{Group: 1, Email: "email1"})
-	a.NotError(err)
-	a1 := &Admin{Email: "email1"}
-	a.NotError(db.Select(a1))
-	a.Equal(a1.ID, 2) // a1.ID为一个自增列,不会在delete中被重置
+		// delete 并不会重置 ai 计数
+		_, err = t.DB.Insert(&Admin{Group: 1, Email: "email1"})
+		t.NotError(err)
+		a1 := &Admin{Email: "email1"}
+		t.NotError(t.DB.Select(a1))
+		t.Equal(a1.ID, 2) // a1.ID为一个自增列,不会在delete中被重置
+	})
 }
 
 func TestDB_Count(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	// 单条件
-	count, err := db.Count(
-		&UserInfo{
-			UID: 1,
-		},
-	)
-	a.NotError(err).Equal(1, count)
+		// 单条件
+		count, err := t.DB.Count(
+			&UserInfo{
+				UID: 1,
+			},
+		)
+		t.NotError(err).
+			Equal(1, count)
 
-	// 无条件
-	count, err = db.Count(&UserInfo{})
-	a.NotError(err).Equal(2, count)
+		// 无条件
+		count, err = t.DB.Count(&UserInfo{})
+		t.NotError(err).
+			Equal(2, count)
 
-	// 条件不存在
-	count, err = db.Count(
-		&Admin{Email: "email1-1000"}, // 该条件不存在
-	)
-	a.NotError(err).Equal(0, count)
+		// 条件不存在
+		count, err = t.DB.Count(
+			&Admin{Email: "email1-1000"}, // 该条件不存在
+		)
+		t.NotError(err).
+			Equal(0, count)
+	})
 }
 
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	hasCount(db, a, "administrators", 1)
+		hasCount(t.DB, t.Assertion, "administrators", 1)
 
-	// truncate 之后，会重置 AI
-	a.NotError(db.Truncate(&Admin{}))
-	hasCount(db, a, "administrators", 0)
+		// truncate 之后，会重置 AI
+		t.NotError(t.DB.Truncate(&Admin{}))
+		hasCount(t.DB, t.Assertion, "administrators", 0)
 
-	_, err := db.Insert(&Admin{Group: 1, Email: "email1", Admin1: Admin1{Username: "u1"}})
-	a.NotError(err)
-	_, err = db.Insert(&Admin{Group: 1, Email: "email2", Admin1: Admin1{Username: "u2"}})
-	a.NotError(err)
+		_, err := t.DB.Insert(&Admin{Group: 1, Email: "email1", Admin1: Admin1{Username: "u1"}})
+		t.NotError(err)
+		_, err = t.DB.Insert(&Admin{Group: 1, Email: "email2", Admin1: Admin1{Username: "u2"}})
+		t.NotError(err)
 
-	a1 := &Admin{Email: "email1"}
-	a.NotError(db.Select(a1))
-	a.Equal(1, a1.ID)
+		a1 := &Admin{Email: "email1"}
+		t.NotError(t.DB.Select(a1))
+		t.Equal(1, a1.ID)
 
-	a2 := &Admin{Email: "email2"}
-	a.NotError(db.Select(a2))
-	a.Equal(2, a2.ID)
+		a2 := &Admin{Email: "email2"}
+		t.NotError(t.DB.Select(a2))
+		t.Equal(2, a2.ID)
+	})
 }
 
 func TestDB_Drop(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initData(a)
-	defer clearData(db, a)
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
 
-	a.NotError(db.Drop(&UserInfo{}))
-	a.NotError(db.Drop(&Admin{}))
-	r, err := db.Insert(&Admin{})
-	a.Error(err).Nil(r)
+		t.NotError(t.DB.Drop(&UserInfo{}))
+		t.NotError(t.DB.Drop(&Admin{}))
+		r, err := t.DB.Insert(&Admin{})
+		t.Error(err).Nil(r)
+	})
 }
 
 func TestDB_Version(t *testing.T) {
 	a := assert.New(t)
-	db := testconfig.NewDB(a)
-	defer testconfig.CloseDB(db, a)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	v, err := db.Version()
-	a.NotError(err).NotEmpty(v)
+	suite.ForEach(func(t *test.Test) {
+		v, err := t.DB.Version()
+		t.NotError(err).
+			NotEmpty(v)
+	})
 }

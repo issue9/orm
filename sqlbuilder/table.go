@@ -243,6 +243,14 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 		return nil, err
 	}
 
+	if stmt.name == "" {
+		return nil, ErrTableIsEmpty
+	}
+
+	if len(stmt.columns) == 0 {
+		return nil, ErrColumnsIsEmpty
+	}
+
 	w := New("CREATE TABLE IF NOT EXISTS ").
 		WriteString(stmt.name).
 		WriteByte('(')

@@ -10,6 +10,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -20,21 +21,27 @@ var (
 
 func TestColumn(t *testing.T) {
 	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	db := initDB(a)
-	defer clearDB(a, db)
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
 
-	err := sqlbuilder.AddColumn(db, db.Dialect()).
-		Table("#user").
-		Column("col1", reflect.TypeOf(1), true, false, nil).
-		Exec()
-	a.NotError(err)
-
-	if db.Dialect().Name() != "sqlite3" {
-		err = sqlbuilder.DropColumn(db, db.Dialect()).
-			Table("#user").
-			Column("col1").
+		db := t.DB.DB
+		dialect := t.DB.Dialect()
+		err := sqlbuilder.AddColumn(db, dialect).
+			Table("users").
+			Column("col1", reflect.TypeOf(1), true, false, nil).
 			Exec()
 		a.NotError(err)
-	}
+
+		if dialect.Name() != "sqlite3" {
+			err = sqlbuilder.DropColumn(db, dialect).
+				Table("users").
+				Column("col1").
+				Exec()
+			t.NotError(err)
+		}
+	}) // end suite.ForEach
 }

@@ -9,15 +9,17 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/internal/testconfig"
+	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 func TestVersion(t *testing.T) {
 	a := assert.New(t)
-	db := testconfig.NewDB(a)
-	defer testconfig.CloseDB(db, a)
 
-	ver, err := sqlbuilder.Version(db, db.Dialect())
-	a.NotError(err).NotEmpty(ver)
+	s := test.NewSuite(a)
+	s.ForEach(func(t *test.Test) {
+		ver, err := sqlbuilder.Version(t.DB.DB, t.DB.Dialect())
+		t.NotError(err).
+			NotEmpty(ver)
+	})
 }

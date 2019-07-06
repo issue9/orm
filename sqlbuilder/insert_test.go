@@ -11,7 +11,7 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/internal/testconfig"
+	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -19,28 +19,32 @@ var _ sqlbuilder.SQLer = &sqlbuilder.InsertStmt{}
 
 func TestInsert(t *testing.T) {
 	a := assert.New(t)
-	e := testconfig.NewDB(a)
-	defer clearDB(a, e)
 
-	i := sqlbuilder.Insert(e, e.Dialect()).Table("table")
-	a.NotNil(i)
+	s := test.NewSuite(a)
+	s.ForEach(func(t *test.Test) {
+		db := t.DB.DB
+		dialect := t.DB.Dialect()
+		i := sqlbuilder.Insert(db, dialect).Table("table")
+		a.NotNil(i)
 
-	i.Columns("c1", "c2", "c3").Values(1, 2, 3).Values(4, 5, 6)
-	query, args, err := i.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, 2, 3, 4, 5, 6})
-	sqltest.Equal(a, query, "insert into table (c1,c2,c3) values (?,?,?),(?,?,?)")
+		i.Columns("c1", "c2", "c3").Values(1, 2, 3).Values(4, 5, 6)
+		query, args, err := i.SQL()
+		a.NotError(err)
+		a.Equal(args, []interface{}{1, 2, 3, 4, 5, 6})
+		sqltest.Equal(a, query, "insert into table (c1,c2,c3) values (?,?,?),(?,?,?)")
 
-	i.Reset()
-	i.Table("tb1").
-		Table("tb2").
-		Columns("c1", "c2").
-		Values(1, 2).
-		Values(3, sql.Named("c2", 4))
-	query, args, err = i.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, 2, 3, sql.Named("c2", 4)})
-	sqltest.Equal(a, query, "insert into tb2 (c1,c2) values (?,?),(?,@c2)")
+		i.Reset()
+		i.Table("tb1").
+			Table("tb2").
+			Columns("c1", "c2").
+			Values(1, 2).
+			Values(3, sql.Named("c2", 4))
+		query, args, err = i.SQL()
+		a.NotError(err)
+		a.Equal(args, []interface{}{1, 2, 3, sql.Named("c2", 4)})
+		sqltest.Equal(a, query, "insert into tb2 (c1,c2) values (?,?),(?,@c2)")
+	})
+
 }
 
 func TestInsert_KeyValue(t *testing.T) {

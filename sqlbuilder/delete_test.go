@@ -8,7 +8,9 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -42,10 +44,20 @@ func TestDelete(t *testing.T) {
 
 func TestDelete_Exec(t *testing.T) {
 	a := assert.New(t)
-	db := initDB(a)
-	defer clearDB(a, db)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	sql := sqlbuilder.Delete(db, db.Dialect()).Table("#user").Where("id=?", 1)
-	_, err := sql.Exec()
-	a.NotError(err)
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
+
+		db := t.DB.DB
+		dialect := t.DB.Dialect()
+
+		sql := sqlbuilder.Delete(db, dialect).
+			Table("users").
+			Where("id=?", 1)
+		_, err := sql.Exec()
+		a.NotError(err)
+	})
 }
