@@ -36,6 +36,7 @@ func ParseCreateTable(driverName, table string, engine sqlbuilder.Engine) (*Tabl
 }
 
 func getMysqlTableInfo(table string, engine sqlbuilder.Engine) (*Table, error) {
+	// show index 语句无法获取 check 约束的相关信息
 	rows, err := engine.Query("SHOW CREATE TABLE `" + table + "`")
 	if err != nil {
 		return nil, err
@@ -72,7 +73,8 @@ func getSqlite3TableInfo(tableName string, engine sqlbuilder.Engine) (*Table, er
 	return table, nil
 }
 
-// https://dev.mysql.com/doc/refman/8.0/en/create-table.html
+// show create table 产生的格式比较统一，不像 create table 那样多样化。
+// https://dev.mysql.com/doc/refman/8.0/en/show-create-table.html
 func parseMysqlCreateTable(lines []string) (*Table, error) {
 	table := &Table{
 		Columns:     make(map[string]string, len(lines)),
@@ -90,32 +92,30 @@ func parseMysqlCreateTable(lines []string) (*Table, error) {
 		line = line[index+1:]
 
 		switch strings.ToUpper(first) {
-		case "FULLTEXT", "SPATIAL": // FULLTEXT|SPATIAL INDEX
-			index = strings.IndexByte(line, ' ')
-			if index <= 0 {
-				continue
-			}
-			first = line[:index]
-			line = line[index+1:]
-			fallthrough
 		case "INDEX", "KEY": // 索引
 			index = strings.IndexByte(line, ' ')
 			if index <= 0 {
 				continue
 			}
 			table.Indexes[line[:index]] = sqlbuilder.IndexDefault
-		case "CONSTRAINT":
-			index = strings.IndexByte(line, ' ')
-			if index <= 0 {
-				continue
+		case "PRIMARY":
+			words := strings.Fields(line)
+			table.Constraints[words[1]] = sqlbuilder.ConstraintPK
+		case "UNIQUE":
+			words := strings.Fields(line)
+			table.Constraints[words[1]] = sqlbuilder.ConstraintUnique
+		case "CONSTRAINT": // check 或是 fk 约束
+			words := strings.Fields(line)
+			switch strings.ToUpper(words[1]) {
+			case "FOREIGN":
+				table.Constraints[words[0]] = sqlbuilder.ConstraintFK
+			case "CHECK":
+				table.Constraints[words[0]] = sqlbuilder.ConstraintCheck
+			default:
+				return nil, fmt.Errorf("未知的约束类型:%s", words[1])
 			}
-			first = line[:index]
-			line = line[index+1:]
-			fallthrough
-		case "UNIQUE", "PRIMARY", "FOREIGN": // 约束
-		// TODO
 		default: // 普通列定义，第一个字符串即为列名
-			table.Columns[line[:index]] = line[index+1:]
+			table.Columns[line[:index]] = line
 		}
 	}
 
@@ -149,10 +149,10 @@ LOOP:
 			continue
 		}
 		first := line[:index]
+		line = line[index+1:]
 
 		switch strings.ToUpper(first) {
 		case "CONSTRAINT": // 约束
-			line = strings.TrimSpace(line[index+1:])
 			index = strings.IndexByte(line, ' ')
 			if index <= 0 {
 				continue LOOP
@@ -177,7 +177,7 @@ LOOP:
 				return fmt.Errorf("未知的约束名：%s", line[:index])
 			}
 		default: // 普通列定义，第一个字符串即为列名
-			table.Columns[line[:index]] = line[index+1:]
+			table.Columns[line[:index]] = line
 		}
 	}
 
