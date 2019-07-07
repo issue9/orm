@@ -47,12 +47,16 @@ func getMysqlTableInfo(table string, engine sqlbuilder.Engine) (*Table, error) {
 		}
 	}()
 
+	if !rows.Next() {
+		return nil, errors.New("未找到 CREATE TABLE 数据")
+	}
+
 	var tableName, sql string
 	if err = rows.Scan(&tableName, &sql); err != nil {
 		return nil, err
 	}
 
-	return parseMysqlCreateTable(filterCreateTableSQL(sql))
+	return parseMysqlCreateTable(table, filterCreateTableSQL(sql))
 }
 
 func getSqlite3TableInfo(tableName string, engine sqlbuilder.Engine) (*Table, error) {
@@ -75,7 +79,7 @@ func getSqlite3TableInfo(tableName string, engine sqlbuilder.Engine) (*Table, er
 
 // show create table 产生的格式比较统一，不像 create table 那样多样化。
 // https://dev.mysql.com/doc/refman/8.0/en/show-create-table.html
-func parseMysqlCreateTable(lines []string) (*Table, error) {
+func parseMysqlCreateTable(tableName string, lines []string) (*Table, error) {
 	table := &Table{
 		Columns:     make(map[string]string, len(lines)),
 		Constraints: make(map[string]sqlbuilder.Constraint, len(lines)),
@@ -83,10 +87,9 @@ func parseMysqlCreateTable(lines []string) (*Table, error) {
 	}
 
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
 		index := strings.IndexByte(line, ' ')
 		if index <= 0 {
-			continue
+			return nil, fmt.Errorf("语法错误：%s", line)
 		}
 		first := line[:index]
 		line = line[index+1:]
@@ -95,12 +98,11 @@ func parseMysqlCreateTable(lines []string) (*Table, error) {
 		case "INDEX", "KEY": // 索引
 			index = strings.IndexByte(line, ' ')
 			if index <= 0 {
-				continue
+				return nil, fmt.Errorf("语法错误:%s", line)
 			}
 			table.Indexes[line[:index]] = sqlbuilder.IndexDefault
-		case "PRIMARY":
-			words := strings.Fields(line)
-			table.Constraints[words[1]] = sqlbuilder.ConstraintPK
+		case "PRIMARY": // 主键约束，没有约束名
+			table.Constraints[tableName+"_pk"] = sqlbuilder.ConstraintPK
 		case "UNIQUE":
 			words := strings.Fields(line)
 			table.Constraints[words[1]] = sqlbuilder.ConstraintUnique
@@ -115,7 +117,7 @@ func parseMysqlCreateTable(lines []string) (*Table, error) {
 				return nil, fmt.Errorf("未知的约束类型:%s", words[1])
 			}
 		default: // 普通列定义，第一个字符串即为列名
-			table.Columns[line[:index]] = line
+			table.Columns[first] = line
 		}
 	}
 
@@ -124,7 +126,7 @@ func parseMysqlCreateTable(lines []string) (*Table, error) {
 
 // https://www.sqlite.org/draft/lang_createtable.html
 func parseSqlite3CreateTable(table *Table, tableName string, engine sqlbuilder.Engine) error {
-	rows, err := engine.Query("SELECT sql FROM sqlite_master WHERE type='table' and name='" + tableName + "'")
+	rows, err := engine.Query("SELECT sql FROM sqlite_master WHERE `type`='table' and name='" + tableName + "'")
 	if err != nil {
 		return err
 	}
@@ -134,6 +136,10 @@ func parseSqlite3CreateTable(table *Table, tableName string, engine sqlbuilder.E
 		}
 	}()
 
+	if !rows.Next() {
+		return errors.New("未找到任务 CREATE TABLE 数据")
+	}
+
 	var sql string
 	if err = rows.Scan(&sql); err != nil {
 		return err
@@ -141,50 +147,42 @@ func parseSqlite3CreateTable(table *Table, tableName string, engine sqlbuilder.E
 
 	lines := filterCreateTableSQL(sql)
 
-LOOP:
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
 		index := strings.IndexByte(line, ' ')
 		if index <= 0 {
-			continue
+			return fmt.Errorf("语法错误:%s", line)
 		}
 		first := line[:index]
 		line = line[index+1:]
 
 		switch strings.ToUpper(first) {
 		case "CONSTRAINT": // 约束
-			index = strings.IndexByte(line, ' ')
-			if index <= 0 {
-				continue LOOP
+			words := strings.Fields(line)
+			if len(words) < 2 {
+				return fmt.Errorf("语法错误:%s", line)
 			}
-			name := line[:index]
-
-			line = strings.TrimSpace(line[index+1:])
-			index = strings.IndexByte(line, ' ')
-			if index <= 0 {
-				continue LOOP
-			}
-			switch line[:index] {
+			switch words[1] {
 			case "PRIMARY":
-				table.Constraints[name] = sqlbuilder.ConstraintPK
+				table.Constraints[words[0]] = sqlbuilder.ConstraintPK
 			case "UNIQUE":
-				table.Constraints[name] = sqlbuilder.ConstraintUnique
+				table.Constraints[words[0]] = sqlbuilder.ConstraintUnique
 			case "CHECK":
-				table.Constraints[name] = sqlbuilder.ConstraintCheck
+				table.Constraints[words[0]] = sqlbuilder.ConstraintCheck
 			case "FOREIGN":
-				table.Constraints[name] = sqlbuilder.ConstraintFK
+				table.Constraints[words[0]] = sqlbuilder.ConstraintFK
 			default:
-				return fmt.Errorf("未知的约束名：%s", line[:index])
+				return fmt.Errorf("未知的约束名：%s", words[1])
 			}
 		default: // 普通列定义，第一个字符串即为列名
-			table.Columns[line[:index]] = line
+			table.Columns[first] = line
 		}
 	}
 
 	return nil
 }
 func parseSqlite3Indexes(table *Table, tableName string, engine sqlbuilder.Engine) error {
-	rows, err := engine.Query("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='" + tableName + "'")
+	// 通过 sql IS NOT NULL 过滤掉自动生成的索引值
+	rows, err := engine.Query("SELECT name FROM sqlite_master WHERE `type`='index' AND sql IS NOT NULL AND tbl_name='" + tableName + "'")
 	if err != nil {
 		return err
 	}
@@ -214,17 +212,20 @@ func filterCreateTableSQL(sql string) []string {
 		switch c {
 		case ',':
 			if deep == 1 && index > start {
-				lines = append(lines, sql[start:index])
-				start = index
+				lines = append(lines, strings.TrimSpace(sql[start:index]))
+				start = index + 1 // 不包含 ( 本身
 			}
 		case '(':
 			deep++
 			if deep == 1 {
-				start = index
+				start = index + 1 // 不包含 ( 本身
 			}
 		case ')':
 			deep--
 			if deep == 0 { // 不需要 create table xx() 之后的内容
+				if start != index {
+					lines = append(lines, strings.TrimSpace(sql[start:index]))
+				}
 				break
 			}
 		} // end switch
