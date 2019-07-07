@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/issue9/orm/v2"
+	"github.com/issue9/orm/v2/internal/parser"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -82,8 +83,33 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 }
 
 func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
-	// TODO
-	return nil, sqlbuilder.ErrNotImplemented
+	info, err := parser.ParseCreateTable("mysql", stmt.TableName, stmt.Engine())
+	if err != nil {
+		return nil, err
+	}
+
+	constraintType, found := info.Constraints[stmt.Name]
+	if !found { // 不存在，也返回错误，统一与其它数据的行为
+		return nil, fmt.Errorf("不存在的约束:%s", stmt.Name)
+	}
+
+	builder := sqlbuilder.New("ALTER TABLE ").
+		WriteString(stmt.TableName).
+		WriteString(" DROP ")
+	switch constraintType {
+	case sqlbuilder.ConstraintCheck:
+		builder.WriteString(" CHECK ").WriteString(stmt.Name)
+	case sqlbuilder.ConstraintFK:
+		builder.WriteString(" FOREIGN KEY ").WriteString(stmt.Name)
+	case sqlbuilder.ConstraintPK:
+		builder.WriteString(" PRIMARY ")
+	case sqlbuilder.ConstraintUnique:
+		builder.WriteString(" INDEX ").WriteString(stmt.Name)
+	default:
+		panic(fmt.Sprintf("不存在的约束类型:%s", constraintType))
+	}
+
+	return []string{builder.String()}, nil
 }
 
 func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
