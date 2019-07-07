@@ -25,14 +25,14 @@ type Table struct {
 }
 
 // ParseCreateTable 分析 create table 的语法
-func ParseCreateTable(driverName, table string, engine sqlbuilder.Engine) (*Table, error) {
-	switch driverName {
+func ParseCreateTable(dialectName, table string, engine sqlbuilder.Engine) (*Table, error) {
+	switch dialectName {
 	case "mysql":
 		return getMysqlTableInfo(table, engine)
 	case "sqlite3":
 		return getSqlite3TableInfo(table, engine)
 	}
-	panic("未实现的数据库：" + driverName)
+	panic("未实现的数据库：" + dialectName)
 }
 
 func getMysqlTableInfo(table string, engine sqlbuilder.Engine) (*Table, error) {

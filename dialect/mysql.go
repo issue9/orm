@@ -83,7 +83,7 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 }
 
 func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
-	info, err := parser.ParseCreateTable("mysql", stmt.TableName, stmt.Engine())
+	info, err := parser.ParseCreateTable(m.Name(), stmt.TableName, stmt.Engine())
 	if err != nil {
 		return nil, err
 	}
