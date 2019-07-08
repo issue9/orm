@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/issue9/orm/v2"
+	s3 "github.com/issue9/orm/v2/internal/sqlite3"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -76,19 +78,122 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 	return mysqlLimitSQL(limit, offset...)
 }
 
+// https://www.sqlite.org/lang_altertable.html
 func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]string, error) {
-	// TODO
-	return nil, sqlbuilder.ErrNotImplemented
+	builder := sqlbuilder.New("CONSTRAINT ").
+		WriteString(stmt.Name)
+	switch stmt.Type {
+	case sqlbuilder.ConstraintUnique:
+		builder.WriteString(" UNIQUE(")
+		for _, col := range stmt.Data {
+			builder.WriteString(col).WriteByte(',')
+		}
+		builder.TruncateLast(1).
+			WriteByte(')')
+	case sqlbuilder.ConstraintPK:
+		builder.WriteString(" PRIMARY KEY(")
+		for _, col := range stmt.Data {
+			builder.WriteString(col).WriteByte(',')
+		}
+		builder.TruncateLast(1).
+			WriteByte(')')
+	case sqlbuilder.ConstraintCheck:
+		builder.WriteString(" CHECK(").
+			WriteString(stmt.Data[0]).
+			WriteByte(')')
+	case sqlbuilder.ConstraintFK:
+		builder.WriteString(" FOREIGN KEY(").
+			WriteString(stmt.Data[0]).
+			WriteString(") REFERENCES ").
+			WriteString(stmt.Data[1]).
+			WriteByte('(').
+			WriteString(stmt.Data[2]).
+			WriteByte(')')
+		if len(stmt.Data) >= 3 && stmt.Data[3] != "" {
+			builder.WriteString(" ON UPDATE ").WriteString(stmt.Data[3])
+		}
+		if len(stmt.Data) >= 4 && stmt.Data[4] != "" {
+			builder.WriteString(" ON DELETE ").WriteString(stmt.Data[4])
+		}
+	default:
+		return nil, fmt.Errorf("未知的约束类型：%s", stmt.Type)
+	}
+
+	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())
+	if err != nil {
+		return nil, err
+	}
+
+	if _, found := info.Constraints[stmt.Name]; found {
+		return nil, fmt.Errorf("已经存在相同的约束名：%s", stmt.Name)
+	}
+
+	info.Constraints[stmt.Name] = &s3.Constraint{
+		Type: stmt.Type,
+		SQL:  builder.String(),
+	}
+
+	return buildSQLS(info, stmt.TableName)
 }
 
+// https://www.sqlite.org/lang_altertable.html
 func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
-	// TODO
-	return nil, sqlbuilder.ErrNotImplemented
+	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())
+	if err != nil {
+		return nil, err
+	}
+
+	if _, found := info.Constraints[stmt.Name]; !found {
+		return nil, fmt.Errorf("约束 %s 不存在", stmt.Name)
+	}
+
+	delete(info.Constraints, stmt.Name)
+
+	return buildSQLS(info, stmt.TableName)
 }
 
+// https://www.sqlite.org/lang_altertable.html
 func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string, error) {
-	// TODO https://www.sqlite.org/lang_altertable.html
-	return nil, sqlbuilder.ErrNotImplemented
+	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())
+	if err != nil {
+		return nil, err
+	}
+
+	if _, found := info.Columns[stmt.ColumnName]; !found {
+		return nil, fmt.Errorf("列 %s 不存在", stmt.ColumnName)
+	}
+
+	delete(info.Columns, stmt.ColumnName)
+
+	return buildSQLS(info, stmt.TableName)
+}
+
+func buildSQLS(table *s3.Table, tableName string) ([]string, error) {
+	ret := make([]string, 0, len(table.Indexes)+1)
+
+	tmpName := "temp_" + tableName + "_temp"
+	ret = append(ret, table.CreateTableSQL(tmpName))
+
+	cols := make([]string, 0, len(table.Columns))
+	for col := range table.Columns {
+		cols = append(cols, col)
+	}
+
+	// 将数据插入到新表
+	ret = append(ret, fmt.Sprintf("INSERT INTO %s SELECT %s FROM %s", tmpName, strings.Join(cols, ","), tableName))
+
+	// 删除旧表
+	ret = append(ret, "DROP TABLE "+tableName)
+
+	// 重命名新表名称
+	ret = append(ret, fmt.Sprintf("ALTER TABLE %s RENAME TO %s", tmpName, tableName))
+
+	// 在新表生成之后，重新创建索引
+	for _, index := range table.Indexes {
+		ret = append(ret, index.SQL)
+	}
+
+	return ret, nil
 }
 
 func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
@@ -99,16 +204,16 @@ func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]s
 	}
 
 	// 获取表名，以下表名仅用为字符串使用，需要去掉 {} 两个符号
-	tablename := stmt.TableName
-	if tablename[0] == '{' {
-		tablename = tablename[1 : len(tablename)-1]
+	tableName := stmt.TableName
+	if tableName[0] == '{' {
+		tableName = tableName[1 : len(tableName)-1]
 	}
 
 	ret := make([]string, 2)
 	ret[0] = builder.String()
 	builder.Reset()
 	ret[1] = builder.WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name='").
-		WriteString(tablename).
+		WriteString(tableName).
 		WriteByte('\'').
 		String()
 

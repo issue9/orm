@@ -6,6 +6,7 @@ package dialect
 
 import (
 	"database/sql"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -14,6 +15,8 @@ import (
 
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/sqlbuilder"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -22,6 +25,99 @@ var (
 	_ sqlbuilder.DropConstraintStmtHooker = &sqlite3{}
 	_ sqlbuilder.AddConstraintStmtHooker  = &sqlite3{}
 )
+
+var sqlite3CreateTable = []string{`CREATE TABLE fk_table(
+	id integer NOT NULL,
+	name text not null,
+	address text not null,
+	constraint fk_table_pk PRIMARY KEY(id)
+	)`,
+	`CREATE TABLE usr (
+	id integer NOT NULL,
+	created integer NOT NULL,
+	nickname text NOT NULL,
+	state integer NOT NULL,
+	username text NOT NULL,
+	mobile text NOT NULL,
+	email text NOT NULL,
+	pwd text NOT NULL,
+	CONSTRAINT users_pk PRIMARY KEY (id),
+	CONSTRAINT u_user_xx1 UNIQUE (mobile,username),
+	CONSTRAINT u_user_email1 UNIQUE (email,username),
+	CONSTRAINT unique_id UNIQUE (id),
+	CONSTRAINT xxx_fk FOREIGN KEY (id) REFERENCES fk_table (id),
+	CONSTRAINT xxx CHECK (created > 0)
+	)`,
+	`create index index_user_mobile on usr(mobile)`,
+	`create unique index index_user_unique_email_id on usr(email,id)`,
+}
+
+func TestSqlite3_AddDropConstraintStmtHook(t *testing.T) {
+	a := assert.New(t)
+	dbFile := "./orm_test.db"
+
+	db, err := sql.Open("sqlite3", dbFile)
+	a.NotError(err).NotNil(db)
+	defer func() {
+		a.NotError(db.Close())
+		a.NotError(os.Remove(dbFile))
+	}()
+
+	for _, query := range sqlite3CreateTable {
+		_, err = db.Exec(query)
+		a.NotError(err)
+	}
+
+	s := &sqlite3{}
+
+	// 不存在的约束，出错
+	err = sqlbuilder.DropConstraint(db, s).
+		Table("fk_table").
+		Constraint("id_great_zero").
+		Exec()
+	a.Error(err)
+
+	err = sqlbuilder.AddConstraint(db, s).
+		Table("fk_table").
+		Check("id_great_zero", "id>0").
+		Exec()
+	a.NotError(err)
+
+	// 约束已经添加，可以正常删除
+	err = sqlbuilder.DropConstraint(db, s).
+		Table("fk_table").
+		Constraint("id_great_zero").
+		Exec()
+	a.NotError(err)
+}
+
+func TestSqlite3_DropColumnStmtHook(t *testing.T) {
+	a := assert.New(t)
+	dbFile := "./orm_test.db"
+
+	db, err := sql.Open("sqlite3", dbFile)
+	a.NotError(err).NotNil(db)
+	defer func() {
+		a.NotError(db.Close())
+		a.NotError(os.Remove(dbFile))
+	}()
+
+	for _, query := range sqlite3CreateTable {
+		_, err = db.Exec(query)
+		a.NotError(err)
+	}
+
+	s := &sqlite3{}
+	err = sqlbuilder.DropColumn(db, s).
+		Table("usr").
+		Column("state").
+		Exec()
+	a.NotError(err)
+
+	// 查询删除的列会出错
+	_, err = db.Query("select state from usr")
+	a.Error(err)
+}
 
 func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)

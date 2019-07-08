@@ -26,29 +26,24 @@ func TestConstraint(t *testing.T) {
 		db := t.DB.DB
 		dialect := t.DB.Dialect()
 
-		if dialect.Name() == "sqlite3" {
-			// TODO 暂无法适用于 sqlite3
-			return
-		}
-
 		err := sqlbuilder.AddConstraint(db, dialect).
 			Table("users").
 			Unique("u_user_name", "name").
 			Exec()
-		t.NotError(err)
+		t.NotError(err, "%s@%s", err, t.DriverName)
 
 		// 删除约束
 		err = sqlbuilder.DropConstraint(db, dialect).
 			Table("users").
 			Constraint("u_user_name").
 			Exec()
-		a.NotError(err)
+		a.NotError(err, "%s@%s", err, t.DriverName)
 
 		// 不存在的约束名
 		err = sqlbuilder.DropConstraint(db, dialect).
 			Table("users").
 			Constraint("u_user_name_not_exists___").
 			Exec()
-		a.Error(err)
+		a.Error(err, "并未出错 @%s", t.DriverName)
 	})
 }

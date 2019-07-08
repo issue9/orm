@@ -2,17 +2,16 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package parser
+package mysql
 
 import (
 	"database/sql"
-	"os"
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v2/sqlbuilder"
 
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/sqlbuilder"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
@@ -41,30 +40,6 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 	)`,
 }
 
-var sqlite3CreateTable = []string{`CREATE TABLE fk_table(
-	id integer NOT NULL,
-	PRIMARY KEY(id)
-	)`,
-	`CREATE TABLE usr (
-	id integer NOT NULL,
-	created integer NOT NULL,
-	nickname text NOT NULL,
-	state integer NOT NULL,
-	username text NOT NULL,
-	mobile text NOT NULL,
-	email text NOT NULL,
-	pwd text NOT NULL,
-	CONSTRAINT users_pk PRIMARY KEY (id),
-	CONSTRAINT u_user_xx1 UNIQUE (mobile,username),
-	CONSTRAINT u_user_email1 UNIQUE (email,username),
-	CONSTRAINT unique_id UNIQUE (id),
-	CONSTRAINT xxx_fk FOREIGN KEY (id) REFERENCES fk_table (id),
-	CONSTRAINT xxx CHECK ((created > 0))
-	)`,
-	`create index index_user_mobile on usr(mobile)`,
-	`create unique index index_user_unique_email_id on usr(email,id)`,
-}
-
 func TestParseMysqlCreateTable(t *testing.T) {
 	a := assert.New(t)
 
@@ -80,7 +55,7 @@ func TestParseMysqlCreateTable(t *testing.T) {
 		a.NotError(err)
 	}
 
-	table, err := ParseCreateTable("mysql", "users", db)
+	table, err := ParseCreateTable("users", db)
 	a.NotError(err).NotNil(table)
 
 	a.Equal(len(table.Columns), 8)
@@ -101,45 +76,6 @@ func TestParseMysqlCreateTable(t *testing.T) {
 		Equal(table.Constraints["users_pk"], sqlbuilder.ConstraintPK) // 主键约束名为固定值
 	a.Equal(len(table.Indexes), 1).
 		Equal(table.Indexes["index_user_mobile"], sqlbuilder.IndexDefault)
-}
-
-func TestParseSqlite3CreateTable(t *testing.T) {
-	a := assert.New(t)
-	dbFile := "./orm_test.db"
-
-	db, err := sql.Open("sqlite3", dbFile)
-	a.NotError(err).NotNil(db)
-	defer func() {
-		a.NotError(db.Close())
-		a.NotError(os.Remove(dbFile))
-	}()
-	for _, query := range sqlite3CreateTable {
-		_, err = db.Exec(query)
-		a.NotError(err)
-	}
-
-	table, err := ParseCreateTable("sqlite3", "usr", db)
-	a.NotError(err).NotNil(table)
-
-	a.Equal(len(table.Columns), 8)
-	sqltest.Equal(a, table.Columns["id"], "integer NOT NULL")
-	sqltest.Equal(a, table.Columns["created"], "integer NOT NULL")
-	sqltest.Equal(a, table.Columns["nickname"], "text NOT NULL")
-	sqltest.Equal(a, table.Columns["state"], "integer NOT NULL")
-	sqltest.Equal(a, table.Columns["username"], "text NOT NULL")
-	sqltest.Equal(a, table.Columns["mobile"], "text NOT NULL")
-	sqltest.Equal(a, table.Columns["email"], "text NOT NULL")
-	sqltest.Equal(a, table.Columns["pwd"], "text NOT NULL")
-	a.Equal(len(table.Constraints), 6).
-		Equal(table.Constraints["u_user_xx1"], sqlbuilder.ConstraintUnique).
-		Equal(table.Constraints["u_user_email1"], sqlbuilder.ConstraintUnique).
-		Equal(table.Constraints["unique_id"], sqlbuilder.ConstraintUnique).
-		Equal(table.Constraints["xxx_fk"], sqlbuilder.ConstraintFK).
-		Equal(table.Constraints["xxx"], sqlbuilder.ConstraintCheck).
-		Equal(table.Constraints["users_pk"], sqlbuilder.ConstraintPK) // 主键约束名为固定值
-	a.Equal(len(table.Indexes), 2).
-		Equal(table.Indexes["index_user_mobile"], sqlbuilder.IndexDefault).
-		Equal(table.Indexes["index_user_unique_email_id"], sqlbuilder.IndexDefault) // sqlite 没有 unique
 }
 
 func TestFilterCreateTableSQL(t *testing.T) {

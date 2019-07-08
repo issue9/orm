@@ -11,7 +11,7 @@ import (
 	"strconv"
 
 	"github.com/issue9/orm/v2"
-	"github.com/issue9/orm/v2/internal/parser"
+	my "github.com/issue9/orm/v2/internal/mysql"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -83,7 +83,7 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 }
 
 func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
-	info, err := parser.ParseCreateTable(m.Name(), stmt.TableName, stmt.Engine())
+	info, err := my.ParseCreateTable(stmt.TableName, stmt.Engine())
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func buildMysqlType(typ string, col *sqlbuilder.Column, unsigned bool, l int) st
 
 	if col.HasDefault {
 		w.WriteString(" DEFAULT '")
-		w.WriteString(fmt.Sprint(col.Default)) // TODO: 是否需要和专门的转换？
+		w.WriteString(fmt.Sprint(col.Default))
 		w.WriteByte('\'')
 	}
 

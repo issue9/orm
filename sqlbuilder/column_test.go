@@ -34,14 +34,12 @@ func TestColumn(t *testing.T) {
 			Table("users").
 			Column("col1", reflect.TypeOf(1), true, false, nil).
 			Exec()
-		a.NotError(err)
+		a.NotError(err, "%s@%s", err, t.DriverName)
 
-		if dialect.Name() != "sqlite3" {
-			err = sqlbuilder.DropColumn(db, dialect).
-				Table("users").
-				Column("col1").
-				Exec()
-			t.NotError(err)
-		}
+		err = sqlbuilder.DropColumn(db, dialect).
+			Table("users").
+			Column("col1").
+			Exec()
+		t.NotError(err, "%s@%s", err, t.DriverName)
 	}) // end suite.ForEach
 }
