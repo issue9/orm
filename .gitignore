@@ -17,3 +17,4 @@ test.db
 .DS_Store
 
 .idea
+.vscode
