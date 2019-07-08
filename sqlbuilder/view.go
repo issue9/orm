@@ -16,6 +16,11 @@ type CreateViewStmt struct {
 	replace     bool
 }
 
+// CreateViewStmtHooker CreateViewStmt.DDLSQL 的钩子函数
+type CreateViewStmtHooker interface {
+	CreateViewStmtHook(*CreateViewStmt) ([]string, error)
+}
+
 // CreateView 创建视图
 func CreateView(e Engine, d Dialect) *CreateViewStmt {
 	stmt := &CreateViewStmt{}
@@ -76,6 +81,10 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 
 	if stmt.selectStmt == nil {
 		return nil, ErrValueIsEmpty
+	}
+
+	if hook, ok := stmt.Dialect().(CreateViewStmtHooker); ok {
+		return hook.CreateViewStmtHook(stmt)
 	}
 
 	builder := New("CREATE ")
