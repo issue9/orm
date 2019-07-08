@@ -26,24 +26,31 @@ var (
 	queryIndex       = "SELECT name,sql FROM sqlite_master WHERE `type`='index' AND sql IS NOT NULL AND tbl_name='%s'"
 )
 
-// Table 表信息
+// Table 包含从 sqlite_master 中获取的与当前表相关的信息
+//
+// 方便 dialect 从表信息中重新构建表内容。
 type Table struct {
 	Columns     map[string]string // 列信息，名称 => 类型
 	Constraints map[string]*Constraint
 	Indexes     map[string]*Index
 }
 
+// Index 表的索引信息
+//
+// 在 sqlite 中，索引是在创建表之后，别外提交的。
+// 在修改表结构时，需要保存索引，方便之后重建。
 type Index struct {
 	Type sqlbuilder.Index
 	SQL  string // 创建索引的语句
 }
 
+// Constraint 从 create table 语句解析出来的约束信息
 type Constraint struct {
 	Type sqlbuilder.Constraint
 	SQL  string // 在 Create Table 中的语句
 }
 
-// 生成 create table 语句
+// CreateTableSQL 生成 create table 语句
 func (t Table) CreateTableSQL(name string) string {
 	builder := sqlbuilder.New("CREATE TABLE ").
 		WriteString(name).

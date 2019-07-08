@@ -14,7 +14,6 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var mysqlCreateTable = []string{`CREATE TABLE fk_table(
@@ -36,7 +35,7 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 	UNIQUE KEY unique_id (id),
 	KEY index_user_mobile (mobile),
 	CONSTRAINT xxx_fk FOREIGN KEY (id) REFERENCES fk_table (id),
-	CONSTRAINT xxx CHECK ((created > 0))
+	CONSTRAINT xxx CHECK(created > 0)
 	)`,
 }
 

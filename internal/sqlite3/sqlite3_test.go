@@ -46,8 +46,7 @@ func TestTable_CreateTableSQL(t *testing.T) {
 
 	tbl := &Table{
 		Columns: map[string]string{
-			"id":   "id integer not null",
-			"name": "name text not null",
+			"id": "id integer not null",
 		},
 		Constraints: map[string]*Constraint{
 			"users_pk": &Constraint{
@@ -58,7 +57,7 @@ func TestTable_CreateTableSQL(t *testing.T) {
 	}
 
 	query := tbl.CreateTableSQL("test")
-	sqltest.Equal(a, query, `create table test( id integer not null,name text not null,constraint users_pk primary key(id))`)
+	sqltest.Equal(a, query, `create table test( id integer not null,constraint users_pk primary key(id))`)
 }
 
 func TestParseSqlite3CreateTable(t *testing.T) {
