@@ -4,11 +4,10 @@
 
 package sqlbuilder
 
-import "context"
-
 // CreateViewStmt 创建视图的语句
 type CreateViewStmt struct {
-	engine      Engine
+	*ddlStmt
+
 	name        string
 	selectStmt  *SelectStmt
 	columns     []string
@@ -18,15 +17,17 @@ type CreateViewStmt struct {
 }
 
 // CreateView 创建视图
-func CreateView(e Engine) *CreateViewStmt {
-	return &CreateViewStmt{
-		engine: e,
-	}
+func CreateView(e Engine, d Dialect) *CreateViewStmt {
+	stmt := &CreateViewStmt{}
+	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+
+	return stmt
 }
 
 // View 将当前查询语句转换为视图
 func (stmt *SelectStmt) View(name string) *CreateViewStmt {
-	return CreateView(stmt.engine).From(stmt)
+	return CreateView(stmt.Engine(), stmt.Dialect()).
+		From(stmt)
 }
 
 // Reset 重置对象
@@ -108,14 +109,4 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 	builder.WriteString(q)
 
 	return []string{builder.String()}, nil
-}
-
-// Exec 执行 SQL 语句
-func (stmt *CreateViewStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
-
-// ExecContext 执行 SQL 语句
-func (stmt *CreateViewStmt) ExecContext(ctx context.Context) error {
-	return ddlExecContext(ctx, stmt.engine, stmt)
 }
