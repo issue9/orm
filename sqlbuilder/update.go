@@ -130,21 +130,21 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	args := make([]interface{}, 0, len(stmt.values))
 
 	for _, val := range stmt.values {
-		buf.WriteString(val.column)
-		buf.WriteByte('=')
+		buf.WriteBytes(stmt.l).WriteString(val.column).WriteBytes(stmt.r)
+		buf.WriteBytes('=')
 
 		if val.typ != 0 {
-			buf.WriteString(val.column)
-			buf.WriteByte(val.typ)
+			buf.WriteBytes(stmt.l).WriteString(val.column).WriteBytes(stmt.r)
+			buf.WriteBytes(val.typ)
 		}
 
 		if named, ok := val.value.(sql.NamedArg); ok && named.Name != "" {
-			buf.WriteByte('@')
+			buf.WriteBytes('@')
 			buf.WriteString(named.Name)
 		} else {
-			buf.WriteByte('?')
+			buf.WriteBytes('?')
 		}
-		buf.WriteByte(',')
+		buf.WriteBytes(',')
 		args = append(args, val.value)
 	}
 	buf.TruncateLast(1)

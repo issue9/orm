@@ -5,12 +5,10 @@
 package sqlbuilder_test
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -23,67 +21,40 @@ func TestInsert(t *testing.T) {
 	defer s.Close()
 
 	s.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
+
 		db := t.DB.DB
 		dialect := t.DB.Dialect()
-		i := sqlbuilder.Insert(db, dialect).Table("table")
+
+		i := sqlbuilder.Insert(db, dialect).Table("users")
 		a.NotNil(i)
 
-		i.Columns("c1", "c2", "c3").Values(1, 2, 3).Values(4, 5, 6)
-		query, args, err := i.SQL()
+		i.Columns("id", "name").Values(10, "name10").Values(11, "name11")
+		_, err := i.Exec()
 		a.NotError(err)
-		a.Equal(args, []interface{}{1, 2, 3, 4, 5, 6})
-		sqltest.Equal(a, query, "insert into table (c1,c2,c3) values (?,?,?),(?,?,?)")
 
 		i.Reset()
 		i.Table("tb1").
-			Table("tb2").
-			Columns("c1", "c2").
-			Values(1, 2).
-			Values(3, sql.Named("c2", 4))
-		query, args, err = i.SQL()
+			Table("users").
+			KeyValue("id", 20).
+			KeyValue("name", "name20")
+		_, err = i.Exec()
 		a.NotError(err)
-		a.Equal(args, []interface{}{1, 2, 3, sql.Named("c2", 4)})
-		sqltest.Equal(a, query, "insert into tb2 (c1,c2) values (?,?),(?,@c2)")
+
+		i.Reset()
+		i.Columns("id", "name")
+		_, err = i.Exec()
+		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
+
+		i.Reset()
+		i.Table("users").Columns("id", "name")
+		_, err = i.Exec()
+		a.ErrorType(err, sqlbuilder.ErrValueIsEmpty)
+
+		i.Reset()
+		i.Table("users").Columns("id", "name").Values("100")
+		_, err = i.Exec()
+		a.ErrorType(err, sqlbuilder.ErrArgsNotMatch)
 	})
-
-}
-
-func TestInsert_KeyValue(t *testing.T) {
-	a := assert.New(t)
-	i := sqlbuilder.Insert(nil, nil).Table("table")
-	i.KeyValue("c1", 1).KeyValue("c2", sql.Named("c2", 2))
-	query, args, err := i.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
-	sqltest.Equal(a, query, "insert into table (c1,c2) values(?,@c2)")
-
-	i.Reset()
-	i.Table("table")
-	i.Columns("c1", "c2")
-	i.Values(1, 2)
-	i.KeyValue("c3", 3)
-	query, args, err = i.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, 2, 3})
-	sqltest.Equal(a, query, "insert into table (c1,c2,c3) values(?,?,?)")
-
-	// 添加第二行数据，就不能再次使用 KeyValue 了
-	i.Values(1, 2, 3)
-	a.Panic(func() {
-		i.KeyValue("c4", 4)
-	})
-}
-
-func TestInsertError(t *testing.T) {
-	a := assert.New(t)
-	i := sqlbuilder.Insert(nil, nil).Table("#table")
-	a.NotNil(i)
-
-	query, args, err := i.Columns("c1", "c2").SQL()
-	a.Error(err).Nil(args).Empty(query)
-
-	i.Reset()
-	i.Table("tb1")
-	query, args, err = i.Columns("c1", "c2").Values(1).SQL()
-	a.Error(err).Nil(args).Empty(query)
 }

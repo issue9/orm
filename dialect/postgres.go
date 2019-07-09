@@ -168,15 +168,15 @@ func buildPostgresType(typ string, col *sqlbuilder.Column, l int) string {
 
 	switch {
 	case l == 1 && len(col.Length) > 0:
-		w.WriteByte('(')
+		w.WriteBytes('(')
 		w.WriteString(strconv.Itoa(col.Length[0]))
-		w.WriteByte(')')
+		w.WriteBytes(')')
 	case l == 2 && len(col.Length) > 1:
-		w.WriteByte('(')
+		w.WriteBytes('(')
 		w.WriteString(strconv.Itoa(col.Length[0]))
-		w.WriteByte(',')
+		w.WriteBytes(',')
 		w.WriteString(strconv.Itoa(col.Length[1]))
-		w.WriteByte(')')
+		w.WriteBytes(')')
 	}
 
 	if !col.Nullable {
@@ -186,7 +186,7 @@ func buildPostgresType(typ string, col *sqlbuilder.Column, l int) string {
 	if col.HasDefault {
 		w.WriteString(" DEFAULT '")
 		w.WriteString(fmt.Sprint(col.Default))
-		w.WriteByte('\'')
+		w.WriteBytes('\'')
 	}
 
 	return w.String()

@@ -62,7 +62,7 @@ func (m *mysql) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[stri
 	if len(options[mysqlEngine]) == 1 {
 		w.WriteString(" ENGINE=")
 		w.WriteString(options[mysqlEngine][0])
-		w.WriteByte(' ')
+		w.WriteBytes(' ')
 	} else if len(options[mysqlEngine]) > 0 {
 		return errors.New("无效的属性值：" + mysqlCharset)
 	}
@@ -70,7 +70,7 @@ func (m *mysql) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[stri
 	if len(options[mysqlCharset]) == 1 {
 		w.WriteString(" CHARACTER SET=")
 		w.WriteString(options[mysqlCharset][0])
-		w.WriteByte(' ')
+		w.WriteBytes(' ')
 	} else if len(options[mysqlCharset]) > 0 {
 		return errors.New("无效的属性值：" + mysqlCharset)
 	}
@@ -113,11 +113,25 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 }
 
 func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
-	return []string{"ALTER TABLE " + stmt.TableName + " DROP INDEX " + stmt.IndexName}, nil
+	l, r := m.QuoteTuple()
+	builder := sqlbuilder.New("ALTER TABLE ").
+		WriteBytes(l).
+		WriteString(stmt.TableName).
+		WriteBytes(r).
+		WriteString(" DROP INDEX ").
+		WriteBytes(l).
+		WriteString(stmt.IndexName).
+		WriteBytes(r)
+	return []string{builder.String()}, nil
 }
 
 func (m *mysql) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	return []string{"TRUNCATE TABLE " + stmt.TableName}, nil
+	l, r := m.QuoteTuple()
+	builder := sqlbuilder.New("TRUNCATE TABLE ").
+		WriteBytes(l).
+		WriteString(stmt.TableName).
+		WriteBytes(r)
+	return []string{builder.String()}, nil
 }
 
 func (m *mysql) TransactionalDDL() bool {
@@ -198,15 +212,15 @@ func buildMysqlType(typ string, col *sqlbuilder.Column, unsigned bool, l int) st
 
 	switch {
 	case l == 1 && len(col.Length) > 0:
-		w.WriteByte('(')
+		w.WriteBytes('(')
 		w.WriteString(strconv.Itoa(col.Length[0]))
-		w.WriteByte(')')
+		w.WriteBytes(')')
 	case l == 2 && len(col.Length) > 1:
-		w.WriteByte('(')
+		w.WriteBytes('(')
 		w.WriteString(strconv.Itoa(col.Length[0]))
-		w.WriteByte(',')
+		w.WriteBytes(',')
 		w.WriteString(strconv.Itoa(col.Length[1]))
-		w.WriteByte(')')
+		w.WriteBytes(')')
 	}
 
 	if unsigned {
@@ -224,7 +238,7 @@ func buildMysqlType(typ string, col *sqlbuilder.Column, unsigned bool, l int) st
 	if col.HasDefault {
 		w.WriteString(" DEFAULT '")
 		w.WriteString(fmt.Sprint(col.Default))
-		w.WriteByte('\'')
+		w.WriteBytes('\'')
 	}
 
 	return w.String()

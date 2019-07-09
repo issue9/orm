@@ -104,7 +104,7 @@ func TestDB_Update_error(t *testing.T) {
 
 		// 非结构体传入
 		r, err := t.DB.Update(123)
-		t.Error(err).Nil(r)
+		t.Error(err, "%s@%s", err, t.DriverName).Nil(r)
 	})
 }
 

@@ -4,9 +4,7 @@
 
 package sqlbuilder
 
-import (
-	"reflect"
-)
+import "reflect"
 
 // AddColumnStmt 添加列
 type AddColumnStmt struct {
@@ -53,10 +51,13 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 	}
 
 	buf := New("ALTER TABLE ").
+		WriteBytes(stmt.l).
 		WriteString(stmt.table).
+		WriteBytes(stmt.r).
 		WriteString(" ADD ").
+		WriteBytes(stmt.l).
 		WriteString(stmt.column.Name).
-		WriteByte(' ').
+		WriteBytes(stmt.r, ' ').
 		WriteString(typ)
 
 	return []string{buf.String()}, nil
@@ -111,10 +112,14 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 		return hook.DropColumnStmtHook(stmt)
 	}
 
-	buf := New("ALTER TABLE ")
-	buf.WriteString(stmt.TableName)
-	buf.WriteString(" DROP COLUMN ")
-	buf.WriteString(stmt.ColumnName)
+	buf := New("ALTER TABLE ").
+		WriteBytes(stmt.l).
+		WriteString(stmt.TableName).
+		WriteBytes(stmt.r).
+		WriteString(" DROP COLUMN ").
+		WriteBytes(stmt.l).
+		WriteString(stmt.ColumnName).
+		WriteBytes(stmt.r)
 	return []string{buf.String()}, nil
 }
 

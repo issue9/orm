@@ -10,7 +10,6 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -67,21 +66,4 @@ func TestCreateTableStmt(t *testing.T) {
 			Exec()
 		a.NotError(err)
 	})
-}
-
-func TestDropTable(t *testing.T) {
-	a := assert.New(t)
-
-	drop := sqlbuilder.DropTable(nil, nil).
-		Table("table").
-		Table("tbl2")
-	sql, err := drop.DDLSQL()
-	a.NotError(err).
-		Equal(2, len(sql))
-	sqltest.Equal(a, sql[0], "drop table if exists table")
-	sqltest.Equal(a, sql[1], "drop table if exists tbl2")
-
-	drop.Reset()
-	sql, err = drop.DDLSQL()
-	a.Equal(err, sqlbuilder.ErrTableIsEmpty).Empty(sql)
 }

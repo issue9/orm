@@ -95,29 +95,29 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		}
 	}
 
-	buffer := New("INSERT INTO ")
-	buffer.WriteString(stmt.table)
+	buffer := New("INSERT INTO ").WriteString(stmt.table)
 
-	buffer.WriteByte('(')
+	buffer.WriteBytes('(')
 	for _, col := range stmt.cols {
-		buffer.WriteString(col)
-		buffer.WriteByte(',')
+		buffer.WriteBytes(stmt.l).
+			WriteString(col).
+			WriteBytes(stmt.r, ',')
 	}
 	buffer.TruncateLast(1)
-	buffer.WriteByte(')')
+	buffer.WriteBytes(')')
 
 	args := make([]interface{}, 0, len(stmt.cols)*len(stmt.args))
 	buffer.WriteString(" VALUES ")
 	for _, vals := range stmt.args {
-		buffer.WriteByte('(')
+		buffer.WriteBytes('(')
 		for _, v := range vals {
 			if named, ok := v.(sql.NamedArg); ok && named.Name != "" {
-				buffer.WriteByte('@')
+				buffer.WriteBytes('@')
 				buffer.WriteString(named.Name)
 			} else {
-				buffer.WriteByte('?')
+				buffer.WriteBytes('?')
 			}
-			buffer.WriteByte(',')
+			buffer.WriteBytes(',')
 			args = append(args, v)
 		}
 		buffer.TruncateLast(1) // 去掉最后的逗号

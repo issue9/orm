@@ -108,7 +108,7 @@ func count(e Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	stmt := e.SQL().Select().Count("COUNT(*) AS count").From("{#" + m.Name + "}")
+	stmt := e.SQL().Select().Count("COUNT(*) AS count").From("#" + m.Name)
 	if err = countWhere(stmt, m, rval); err != nil {
 		return 0, err
 	}
@@ -127,43 +127,43 @@ func create(e Engine, v interface{}) error {
 	}
 
 	sb := sqlbuilder.CreateTable(e, e.Dialect())
-	sb.Table("{#" + m.Name + "}") // 表名可能也是关键字
+	sb.Table("#" + m.Name)
 	for _, col := range m.Columns {
 		if col.AI {
-			sb.AutoIncrement("{"+col.Name+"}", col.GoType)
+			sb.AutoIncrement(col.Name, col.GoType)
 		} else {
-			sb.Column("{"+col.Name+"}", col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...)
+			sb.Column(col.Name, col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...)
 		}
 	}
 
 	for name, index := range m.Indexes {
 		cols := make([]string, 0, len(index))
 		for _, col := range index {
-			cols = append(cols, "{"+col.Name+"}")
+			cols = append(cols, col.Name)
 		}
-		sb.Index(sqlbuilder.IndexDefault, "{"+name+"}", cols...)
+		sb.Index(sqlbuilder.IndexDefault, name, cols...)
 	}
 
 	for name, unique := range m.Uniques {
 		cols := make([]string, 0, len(unique))
 		for _, col := range unique {
-			cols = append(cols, "{"+col.Name+"}")
+			cols = append(cols, col.Name)
 		}
-		sb.Unique("{"+name+"}", cols...)
+		sb.Unique(name, cols...)
 	}
 
 	for name, expr := range m.Checks {
-		sb.Check("{"+name+"}", expr)
+		sb.Check(name, expr)
 	}
 
 	for _, fk := range m.FK {
-		sb.ForeignKey("{"+fk.Name+"}", "{"+fk.Column.Name+"}", "{"+fk.RefTableName+"}", "{"+fk.RefColName+"}", fk.UpdateRule, fk.DeleteRule)
+		sb.ForeignKey(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 	}
 
 	if m.AI == nil && len(m.PK) > 0 {
 		cols := make([]string, 0, len(m.PK))
 		for _, col := range m.PK {
-			cols = append(cols, "{"+col.Name+"}")
+			cols = append(cols, col.Name)
 		}
 		sb.PK(cols...)
 	}
@@ -179,9 +179,9 @@ func truncate(e Engine, v interface{}) error {
 
 	stmt := e.SQL().TruncateTable()
 	if m.AI != nil {
-		stmt.Table("{#"+m.Name+"}", "{"+m.AI.Name+"}", "{"+sqlbuilder.AIName(m.Name)+"}")
+		stmt.Table("#"+m.Name, m.AI.Name, sqlbuilder.AIName(m.Name))
 	} else {
-		stmt.Table("{#"+m.Name+"}", "", "")
+		stmt.Table("#"+m.Name, "", "")
 	}
 
 	return stmt.Exec()
@@ -194,7 +194,7 @@ func drop(e Engine, v interface{}) error {
 		return err
 	}
 
-	return e.SQL().DropTable().Table("{#" + m.Name + "}").Exec()
+	return e.SQL().DropTable().Table("#" + m.Name).Exec()
 }
 
 func lastInsertID(e Engine, v interface{}) (int64, error) {
@@ -213,7 +213,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		}
 	}
 
-	stmt := e.SQL().Insert().Table("{#" + m.Name + "}")
+	stmt := e.SQL().Insert().Table("#" + m.Name)
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -225,7 +225,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 			continue
 		}
 
-		stmt.KeyValue("{"+col.Name+"}", field.Interface())
+		stmt.KeyValue(col.Name, field.Interface())
 	}
 
 	return stmt.LastInsertID(m.Name, m.AI.Name)
@@ -243,7 +243,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		}
 	}
 
-	stmt := e.SQL().Insert().Table("{#" + m.Name + "}")
+	stmt := e.SQL().Insert().Table("#" + m.Name)
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -255,7 +255,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 			continue
 		}
 
-		stmt.KeyValue("{"+col.Name+"}", field.Interface())
+		stmt.KeyValue(col.Name, field.Interface())
 	}
 
 	return stmt.Exec()
@@ -273,7 +273,7 @@ func find(e Engine, v interface{}) error {
 
 	stmt := e.SQL().Select().
 		Select("*").
-		From("{#" + m.Name + "}")
+		From("#" + m.Name)
 	if err = where(stmt, m, rval); err != nil {
 		return err
 	}
@@ -297,7 +297,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 
 	stmt := tx.SQL().Select().
 		Select("*").
-		From("{#" + m.Name + "}").
+		From("#" + m.Name).
 		ForUpdate()
 	if err = where(stmt, m, rval); err != nil {
 		return err
@@ -324,7 +324,7 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 		}
 	}
 
-	stmt := e.SQL().Update().Table("{#" + m.Name + "}")
+	stmt := e.SQL().Update().Table("#" + m.Name)
 	var occValue interface{}
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
@@ -341,12 +341,12 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 			occValue = field.Interface()
 			continue
 		} else {
-			stmt.Set("{"+col.Name+"}", field.Interface())
+			stmt.Set(col.Name, field.Interface())
 		}
 	}
 
 	if m.OCC != nil {
-		stmt.OCC("{"+m.OCC.Name+"}", occValue)
+		stmt.OCC(m.OCC.Name, occValue)
 	}
 
 	if err := where(stmt, m, rval); err != nil {
@@ -372,7 +372,7 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	stmt := e.SQL().Delete().Table("{#" + m.Name + "}")
+	stmt := e.SQL().Delete().Table("#" + m.Name)
 	if err = where(stmt, m, rval); err != nil {
 		return nil, err
 	}
@@ -403,7 +403,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
 			firstType = irval.Type()
-			query.Table("{#" + m.Name + "}")
+			query.Table("#" + m.Name)
 
 			for _, col := range m.Columns {
 				field := irval.FieldByName(col.GoName)
@@ -416,7 +416,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 					continue
 				}
 
-				query.KeyValue("{"+col.Name+"}", field.Interface())
+				query.KeyValue(col.Name, field.Interface())
 				keys = append(keys, col.Name)
 			}
 		} else { // 之后的元素，只需要获取其对应的值就行

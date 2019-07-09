@@ -9,7 +9,6 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -18,29 +17,6 @@ var (
 	_ sqlbuilder.SQLer       = &sqlbuilder.DeleteStmt{}
 	_ sqlbuilder.WhereStmter = &sqlbuilder.DeleteStmt{}
 )
-
-func TestDelete(t *testing.T) {
-	a := assert.New(t)
-
-	d := sqlbuilder.Delete(nil, nil).
-		Table("#table").
-		Where("id=?", 1).
-		Or("id=?", 2).
-		And("id=?", 3)
-	query, args, err := d.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, 2, 3})
-	sqltest.Equal(a, query, "delete from #table where id=? or id=? and id=?")
-
-	d.Reset()
-	query, args, err = d.Table("tb1").Where("id=?").Or("id=?", 1).SQL()
-	a.Equal(err, sqlbuilder.ErrArgsNotMatch) // 由 where 抛出
-	a.Empty(query).Nil(args)
-
-	d.Reset()
-	query, args, err = d.SQL()
-	a.ErrorType(err, sqlbuilder.ErrTableIsEmpty).Empty(query).Nil(args)
-}
 
 func TestDelete_Exec(t *testing.T) {
 	a := assert.New(t)
@@ -59,5 +35,16 @@ func TestDelete_Exec(t *testing.T) {
 			Where("id=?", 1)
 		_, err := sql.Exec()
 		a.NotError(err)
+
+		sql.Reset()
+		sql.Table("users").
+			Where("id=?").
+			Or("name=?", "xx")
+		_, err = sql.Exec()
+		a.ErrorType(err, sqlbuilder.ErrArgsNotMatch)
+
+		sql.Reset()
+		_, err = sql.Exec()
+		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
 	})
 }

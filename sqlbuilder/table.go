@@ -249,25 +249,27 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	}
 
 	w := New("CREATE TABLE IF NOT EXISTS ").
+		WriteBytes(stmt.l).
 		WriteString(stmt.name).
-		WriteByte('(')
+		WriteBytes(stmt.r, '(')
 
 	for _, col := range stmt.columns {
 		typ, err := stmt.dialect.SQLType(col)
 		if err != nil {
 			return nil, err
 		}
-		w.WriteString(col.Name).
-			WriteByte(' ').
+		w.WriteBytes(stmt.l).
+			WriteString(col.Name).
+			WriteBytes(stmt.r, ' ').
 			WriteString(typ).
-			WriteByte(',')
+			WriteBytes(',')
 	}
 
 	if err := stmt.createConstraints(w); err != nil {
 		return nil, err
 	}
 
-	w.TruncateLast(1).WriteByte(')')
+	w.TruncateLast(1).WriteBytes(')')
 
 	if err := stmt.dialect.CreateTableOptionsSQL(w, stmt.options); err != nil {
 		return nil, err
@@ -291,25 +293,25 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 	for _, c := range stmt.constraints {
 		switch c.Type {
 		case ConstraintCheck:
-			createCheckSQL(buf, c.Name, c.Columns[0])
+			stmt.createCheckSQL(buf, c.Name, c.Columns[0])
 		case ConstraintUnique:
-			createUniqueSQL(buf, c.Name, c.Columns...)
+			stmt.createUniqueSQL(buf, c.Name, c.Columns...)
 		default:
 			return ErrUnknownConstraint
 		}
-		buf.WriteByte(',')
+		buf.WriteBytes(',')
 	}
 
 	// foreign  key
 	for _, fk := range stmt.foreignKeys {
-		createFKSQL(buf, fk)
-		buf.WriteByte(',')
+		stmt.createFKSQL(buf, fk)
+		buf.WriteBytes(',')
 	}
 
 	// primary key
 	if stmt.pk != nil {
-		createPKSQL(buf, PKName(stmt.name), stmt.pk.Columns...)
-		buf.WriteByte(',')
+		stmt.createPKSQL(buf, PKName(stmt.name), stmt.pk.Columns...)
+		buf.WriteBytes(',')
 	}
 
 	// TODO 部分数据库，需要独立创建 AI 约束，比如 Oracle
@@ -343,49 +345,59 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 // create table 语句中 pk 约束的语句
 //
 // CONSTRAINT pk_name PRIMARY KEY (id,lastName)
-func createPKSQL(buf *SQLBuilder, name string, cols ...string) {
+func (stmt *CreateTableStmt) createPKSQL(buf *SQLBuilder, name string, cols ...string) {
 	buf.WriteString(" CONSTRAINT ").
+		WriteBytes(stmt.l).
 		WriteString(name).
+		WriteBytes(stmt.r).
 		WriteString(" PRIMARY KEY(")
 
 	for _, col := range cols {
-		buf.WriteString(col)
-		buf.WriteByte(',')
+		buf.WriteBytes(stmt.l).
+			WriteString(col).
+			WriteBytes(stmt.r, ',')
 	}
-	buf.TruncateLast(1) // 去掉最后一个逗号
-	buf.WriteByte(')')
+	buf.TruncateLast(1).WriteBytes(')')
 }
 
 // create table 语句中的 unique 约束部分的语句。
 //
 // CONSTRAINT unique_name UNIQUE (id,lastName)
-func createUniqueSQL(buf *SQLBuilder, name string, cols ...string) {
+func (stmt *CreateTableStmt) createUniqueSQL(buf *SQLBuilder, name string, cols ...string) {
 	buf.WriteString(" CONSTRAINT ").
+		WriteBytes(stmt.l).
 		WriteString(name).
+		WriteBytes(stmt.r).
 		WriteString(" UNIQUE(")
 	for _, col := range cols {
-		buf.WriteString(col).
-			WriteByte(',')
+		buf.WriteBytes(stmt.l).
+			WriteString(col).
+			WriteBytes(stmt.r, ',')
 	}
-	buf.TruncateLast(1) // 去掉最后一个逗号
-
-	buf.WriteByte(')')
+	buf.TruncateLast(1).WriteBytes(')')
 }
 
 // create table 语句中 fk 的约束部分的语句
-func createFKSQL(buf *SQLBuilder, fk *foreignKey) {
+func (stmt *CreateTableStmt) createFKSQL(buf *SQLBuilder, fk *foreignKey) {
 	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
-	buf.WriteString(" CONSTRAINT ").WriteString(fk.Name)
+	buf.WriteString(" CONSTRAINT ").
+		WriteBytes(stmt.l).
+		WriteString(fk.Name).
+		WriteBytes(stmt.r)
 
-	buf.WriteString(" FOREIGN KEY (")
-	buf.WriteString(fk.Column)
+	buf.WriteString(" FOREIGN KEY (").
+		WriteBytes(stmt.l).
+		WriteString(fk.Column).
+		WriteBytes(stmt.r)
 
 	buf.WriteString(") REFERENCES ").
-		WriteString(fk.RefTableName)
+		WriteBytes(stmt.l).
+		WriteString(fk.RefTableName).
+		WriteBytes(stmt.r)
 
-	buf.WriteByte('(')
-	buf.WriteString(fk.RefColName)
-	buf.WriteByte(')')
+	buf.WriteBytes('(', stmt.l).
+		WriteString(fk.RefColName).
+		WriteBytes(stmt.r, ')')
 
 	if len(fk.UpdateRule) > 0 {
 		buf.WriteString(" ON UPDATE ").WriteString(fk.UpdateRule)
@@ -397,13 +409,15 @@ func createFKSQL(buf *SQLBuilder, fk *foreignKey) {
 }
 
 // create table 语句中 check 约束部分的语句
-func createCheckSQL(buf *SQLBuilder, name, expr string) {
+func (stmt *CreateTableStmt) createCheckSQL(buf *SQLBuilder, name, expr string) {
 	// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 	buf.WriteString(" CONSTRAINT ").
+		WriteBytes(stmt.l).
 		WriteString(name).
+		WriteBytes(stmt.r).
 		WriteString(" CHECK(").
 		WriteString(expr).
-		WriteByte(')')
+		WriteBytes(')')
 }
 
 // TruncateTableStmtHooker TruncateTableStmt.DDLSQL 的钩子函数
@@ -487,8 +501,11 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 	qs := make([]string, 0, len(stmt.tables))
 
 	for _, table := range stmt.tables {
-		buf := New("DROP TABLE IF EXISTS ")
-		buf.WriteString(table)
+		buf := New("DROP TABLE IF EXISTS ").
+			WriteBytes(stmt.l).
+			WriteString(table).
+			WriteBytes(stmt.r)
+
 		qs = append(qs, buf.String())
 	}
 	return qs, nil

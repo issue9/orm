@@ -150,21 +150,29 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 	}
 
 	builder := New("ALTER TABLE ").
+		WriteBytes(stmt.l).
 		WriteString(stmt.TableName).
+		WriteBytes(stmt.r).
 		WriteString(" ADD CONSTRAINT ").
-		WriteString(stmt.Name)
+		WriteBytes(stmt.l).
+		WriteString(stmt.Name).
+		WriteBytes(stmt.r)
 
 	switch stmt.Type {
 	case ConstraintCheck:
-		builder.WriteString(" CHECK ").WriteByte('(').WriteString(stmt.Data[0]).WriteByte(')')
+		builder.WriteString(" CHECK(").WriteString(stmt.Data[0]).WriteBytes(')')
 	case ConstraintFK:
-		builder.WriteString(" FOREIGN KEY (").
+		builder.WriteString(" FOREIGN KEY(").
+			WriteBytes(stmt.l).
 			WriteString(stmt.Data[0]).
+			WriteBytes(stmt.r).
 			WriteString(") REFERENCES ").
+			WriteBytes(stmt.l).
 			WriteString(stmt.Data[1]).
-			WriteByte('(').
+			WriteBytes(stmt.r).
+			WriteBytes('(', stmt.l).
 			WriteString(stmt.Data[2]).
-			WriteByte(')')
+			WriteBytes(stmt.r, ')')
 
 		if stmt.Data[3] != "" {
 			builder.WriteString(" ON UPDATE ").WriteString(stmt.Data[3])
@@ -176,15 +184,22 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 	case ConstraintPK:
 		builder.WriteString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
-			builder.WriteString(col).WriteByte(',')
+			builder.
+				WriteBytes(stmt.l).
+				WriteString(col).
+				WriteBytes(stmt.r, ',')
 		}
-		builder.TruncateLast(1).WriteByte(')')
+		builder.TruncateLast(1).WriteBytes(')')
 	case ConstraintUnique:
-		builder.WriteString(" UNIQUE (")
+		builder.WriteString(" UNIQUE(")
 		for _, col := range stmt.Data {
-			builder.WriteString(col).WriteByte(',')
+			builder.
+				WriteBytes(stmt.l).
+				WriteString(col).
+				WriteBytes(stmt.r).
+				WriteBytes(',')
 		}
-		builder.TruncateLast(1).WriteByte(')')
+		builder.TruncateLast(1).WriteBytes(')')
 	default:
 		return nil, ErrUnknownConstraint
 	}
@@ -256,9 +271,13 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 	}
 
 	buf := New("ALTER TABLE ").
+		WriteBytes(stmt.l).
 		WriteString(stmt.TableName).
+		WriteBytes(stmt.r).
 		WriteString(" DROP CONSTRAINT ").
-		WriteString(stmt.Name)
+		WriteBytes(stmt.l).
+		WriteString(stmt.Name).
+		WriteBytes(stmt.r)
 	return []string{buf.String()}, nil
 }
 

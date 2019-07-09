@@ -36,7 +36,14 @@ func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 
-	return "DELETE FROM " + stmt.table + " WHERE " + query, args, nil
+	builder := New("DELETE FROM ").
+		WriteBytes(stmt.l).
+		WriteString(stmt.table).
+		WriteBytes(stmt.r).
+		WriteString(" WHERE ").
+		WriteString(query)
+
+	return builder.String(), args, nil
 }
 
 // Reset 重置语句

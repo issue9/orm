@@ -83,9 +83,6 @@ type Dialect interface {
 	// 数据库的名称
 	Name() string
 
-	// 返回符合当前数据库规范的引号对。
-	QuoteTuple() (openQuote, closeQuote byte)
-
 	// 是否允许在事务中执行 DDL
 	//
 	// 比如在 postgresql 中，如果创建一个带索引的表，会采用在事务中，

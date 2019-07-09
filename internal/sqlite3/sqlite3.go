@@ -54,17 +54,17 @@ type Constraint struct {
 func (t Table) CreateTableSQL(name string) string {
 	builder := sqlbuilder.New("CREATE TABLE ").
 		WriteString(name).
-		WriteByte('(')
+		WriteBytes('(')
 
 	for _, col := range t.Columns {
-		builder.WriteString(col).WriteByte(',')
+		builder.WriteString(col).WriteBytes(',')
 	}
 
 	for _, cont := range t.Constraints {
-		builder.WriteString(cont.SQL).WriteByte(',')
+		builder.WriteString(cont.SQL).WriteBytes(',')
 	}
 
-	builder.TruncateLast(1).WriteByte(')')
+	builder.TruncateLast(1).WriteBytes(')')
 
 	return builder.String()
 }

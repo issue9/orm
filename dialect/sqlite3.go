@@ -86,29 +86,29 @@ func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]s
 	case sqlbuilder.ConstraintUnique:
 		builder.WriteString(" UNIQUE(")
 		for _, col := range stmt.Data {
-			builder.WriteString(col).WriteByte(',')
+			builder.WriteString(col).WriteBytes(',')
 		}
 		builder.TruncateLast(1).
-			WriteByte(')')
+			WriteBytes(')')
 	case sqlbuilder.ConstraintPK:
 		builder.WriteString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
-			builder.WriteString(col).WriteByte(',')
+			builder.WriteString(col).WriteBytes(',')
 		}
 		builder.TruncateLast(1).
-			WriteByte(')')
+			WriteBytes(')')
 	case sqlbuilder.ConstraintCheck:
 		builder.WriteString(" CHECK(").
 			WriteString(stmt.Data[0]).
-			WriteByte(')')
+			WriteBytes(')')
 	case sqlbuilder.ConstraintFK:
 		builder.WriteString(" FOREIGN KEY(").
 			WriteString(stmt.Data[0]).
 			WriteString(") REFERENCES ").
 			WriteString(stmt.Data[1]).
-			WriteByte('(').
+			WriteBytes('(').
 			WriteString(stmt.Data[2]).
-			WriteByte(')')
+			WriteBytes(')')
 		if len(stmt.Data) >= 3 && stmt.Data[3] != "" {
 			builder.WriteString(" ON UPDATE ").WriteString(stmt.Data[3])
 		}
@@ -203,18 +203,12 @@ func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]s
 		return []string{builder.String()}, nil
 	}
 
-	// 获取表名，以下表名仅用为字符串使用，需要去掉 {} 两个符号
-	tableName := stmt.TableName
-	if tableName[0] == '{' {
-		tableName = tableName[1 : len(tableName)-1]
-	}
-
 	ret := make([]string, 2)
 	ret[0] = builder.String()
 	builder.Reset()
 	ret[1] = builder.WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name='").
-		WriteString(tableName).
-		WriteByte('\'').
+		WriteString(stmt.TableName).
+		WriteBytes('\'').
 		String()
 
 	return ret, nil
@@ -283,7 +277,7 @@ func buildSqlite3Type(typ string, col *sqlbuilder.Column) string {
 	if col.HasDefault {
 		w.WriteString(" DEFAULT '").
 			WriteString(fmt.Sprint(col.Default)).
-			WriteByte('\'')
+			WriteBytes('\'')
 	}
 
 	return w.String()

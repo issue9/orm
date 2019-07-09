@@ -64,12 +64,17 @@ func (b *SQLBuilder) WriteString(str string) *SQLBuilder {
 	return b
 }
 
-// WriteByte 写入一字符
-func (b *SQLBuilder) WriteByte(c byte) *SQLBuilder {
+func (b *SQLBuilder) writeByte(c byte) {
 	if err := b.buffer().WriteByte(c); err != nil {
 		panic(err)
 	}
+}
 
+// WriteBytes 写入多个字符
+func (b *SQLBuilder) WriteBytes(c ...byte) *SQLBuilder {
+	for _, bb := range c {
+		b.writeByte(bb)
+	}
 	return b
 }
 

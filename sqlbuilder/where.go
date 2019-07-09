@@ -43,7 +43,7 @@ func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 
 func (stmt *WhereStmt) writeAnd(and bool) {
 	if stmt.buffer.Len() == 0 {
-		stmt.buffer.WriteByte(' ')
+		stmt.buffer.WriteBytes(' ')
 		return
 	}
 
@@ -82,12 +82,12 @@ func (stmt *WhereStmt) addWhere(and bool, w *WhereStmt) *WhereStmt {
 	}
 
 	stmt.writeAnd(and)
-	stmt.buffer.WriteByte('(')
+	stmt.buffer.WriteBytes('(')
 
 	stmt.buffer.WriteString(cond)
 	stmt.args = append(stmt.args, w.args...)
 
-	stmt.buffer.WriteByte(')')
+	stmt.buffer.WriteBytes(')')
 
 	return stmt
 }

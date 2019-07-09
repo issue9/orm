@@ -5,8 +5,11 @@
 package sqlbuilder
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/issue9/orm/v2/fetch"
 )
@@ -98,27 +101,39 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 			buf.WriteString("DISTINCT ")
 		}
 		for _, c := range stmt.cols {
-			buf.WriteString(c)
-			buf.WriteByte(',')
+			switch {
+			case c == "*",
+				// 简单地通过是否包含空格判断是否为多列
+				strings.IndexFunc(c, func(r rune) bool { return unicode.IsSpace(r) }) > 0:
+				buf.WriteString(c).WriteBytes(',')
+			default:
+				buf.WriteBytes(stmt.l).
+					WriteString(c).
+					WriteBytes(stmt.r, ',')
+			}
 		}
 		buf.TruncateLast(1)
 	} else {
 		buf.WriteString(stmt.countExpr)
 	}
 
-	buf.WriteString(" FROM ")
-	buf.WriteString(stmt.table)
+	buf.WriteString(" FROM ").
+		WriteBytes(stmt.l).
+		WriteString(stmt.table).
+		WriteBytes(stmt.r)
 
 	// join
 	if len(stmt.joins) > 0 {
-		buf.WriteByte(' ')
+		buf.WriteBytes(' ')
 		for _, join := range stmt.joins {
-			buf.WriteString(join.typ)
-			buf.WriteString(" JOIN ")
-			buf.WriteString(join.table)
-			buf.WriteString(" ON ")
-			buf.WriteString(join.on)
-			buf.WriteByte(' ')
+			buf.WriteString(join.typ).
+				WriteString(" JOIN ").
+				WriteBytes(stmt.l).
+				WriteString(join.table).
+				WriteBytes(stmt.r).
+				WriteString(" ON ").
+				WriteString(join.on).
+				WriteBytes(' ')
 		}
 		buf.TruncateLast(1)
 	}
@@ -265,12 +280,13 @@ func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	if stmt.orders.Len() == 0 {
 		stmt.orders.WriteString(" ORDER BY ")
 	} else {
-		stmt.orders.WriteByte(',')
+		stmt.orders.WriteBytes(',')
 	}
 
 	for _, c := range col {
-		stmt.orders.WriteString(c)
-		stmt.orders.WriteByte(',')
+		stmt.orders.WriteBytes(stmt.l).
+			WriteString(c).
+			WriteBytes(stmt.r, ',')
 	}
 	stmt.orders.TruncateLast(1)
 
@@ -291,7 +307,8 @@ func (stmt *SelectStmt) ForUpdate() *SelectStmt {
 
 // Group 添加 GROUP BY 语句
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
-	stmt.group = " GROUP BY " + col + " "
+	b := New(" GROUP BY ").WriteBytes(stmt.l).WriteString(col).WriteBytes(stmt.r, ' ')
+	stmt.group = b.String()
 	return stmt
 }
 
@@ -306,6 +323,7 @@ func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectS
 // Count 指定 Count 表示式，如果指定了 count 表达式，则会造成 limit 失效。
 //
 // 传递空的 expr 参数，表示去除 count 表达式。
+// 格式为： count(*) AS cnt
 func (stmt *SelectStmt) Count(expr string) *SelectStmt {
 	stmt.countExpr = expr
 	return stmt
@@ -314,23 +332,31 @@ func (stmt *SelectStmt) Count(expr string) *SelectStmt {
 // QueryObject 将符合当前条件的所有记录依次写入 objs 中。
 //
 // 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Object 函数的相关介绍。
-func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (int, error) {
+func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (size int, err error) {
 	rows, err := stmt.Query()
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err1 := rows.Close(); err1 != nil {
+			err = errors.New(err1.Error() + err.Error())
+		}
+	}()
 
 	return fetch.Object(strict, rows, objs)
 }
 
 // QueryString 查询指定列的第一行数据，并将其转换成 string
-func (stmt *SelectStmt) QueryString(colName string) (string, error) {
+func (stmt *SelectStmt) QueryString(colName string) (v string, err error) {
 	rows, err := stmt.Query()
 	if err != nil {
 		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err1 := rows.Close(); err1 != nil {
+			err = errors.New(err1.Error() + err.Error())
+		}
+	}()
 
 	cols, err := fetch.ColumnString(true, colName, rows)
 	if err != nil {

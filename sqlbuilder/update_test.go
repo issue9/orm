@@ -2,158 +2,73 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlbuilder
+package sqlbuilder_test
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/internal/test"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 var (
-	_ SQLer       = &UpdateStmt{}
-	_ WhereStmter = &UpdateStmt{}
+	_ sqlbuilder.SQLer       = &sqlbuilder.UpdateStmt{}
+	_ sqlbuilder.WhereStmter = &sqlbuilder.UpdateStmt{}
 )
 
 func TestUpdate_columnsHasDup(t *testing.T) {
 	a := assert.New(t)
-	u := Update(nil, nil).Table("table")
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	u.values = []*updateSet{
-		{
-			column: "c1",
-			value:  1,
-		},
-		{
-			column: "c2",
-			value:  1,
-		},
+	suite.ForEach(func(t *test.Test) {
+		db := t.DB.DB
+		d := t.DB.Dialect()
 
-		{
-			column: "c2",
-			value:  1,
-		},
-	}
-	a.True(u.columnsHasDup())
-
-	u.values = []*updateSet{
-		{
-			column: "c1",
-			value:  1,
-		},
-		{
-			column: "c1",
-			value:  1,
-		},
-
-		{
-			column: "c2",
-			value:  1,
-		},
-	}
-	a.True(u.columnsHasDup())
-
-	u.values = []*updateSet{
-		{
-			column: "c1",
-			value:  1,
-		},
-		{
-			column: "c2",
-			value:  1,
-		},
-
-		{
-			column: "c1",
-			value:  1,
-		},
-	}
-	a.True(u.columnsHasDup())
-
-	u.values = []*updateSet{
-		{
-			column: "c1",
-			value:  1,
-		},
-		{
-			column: "c2",
-			value:  1,
-		},
-
-		{
-			column: "c3",
-			value:  1,
-		},
-	}
-	a.False(u.columnsHasDup())
+		u := sqlbuilder.Update(db, d).
+			Table("users").
+			Set("c1", "v1").
+			Set("c1", "v1")
+		_, err := u.Exec()
+		a.ErrorType(err, sqlbuilder.ErrDupColumn)
+	})
 }
 
 func TestUpdate(t *testing.T) {
 	a := assert.New(t)
-	u := Update(nil, nil).Table("table")
-	a.NotNil(u)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	// 不带 where 部分
-	u.Set("c1", 1).Set("c2", sql.Named("c2", 2))
-	query, args, err := u.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, sql.Named("c2", 2)})
-	sqltest.Equal(a, query, "update table SET c1=?,c2=@c2")
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
 
-	// bug(caixw): UpdateStmt 采用 map 保存修改的值，
-	// 而 map 的顺序是不一定的，所以测试的比较内容，可能会出现值顺序不一样，
-	// 从页导致测试失败
-	u.Increase("c3", 3).
-		Increase("c4", sql.Named("c4", 4)).
-		Decrease("c5", 5).
-		Decrease("c6", sql.Named("c6", 6))
-	query, args, err = u.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, sql.Named("c2", 2), 3, sql.Named("c4", 4), 5, sql.Named("c6", 6)})
-	sqltest.Equal(a, query, "update table SET c1=?,c2=@c2,c3=c3+?,c4=c4+@c4,c5=c5-?,c6=c6-@c6")
+		db := t.DB.DB
+		dialect := t.DB.Dialect()
 
-	// 重置
-	u.Reset()
-	a.Empty(u.table).Empty(u.values)
+		u := sqlbuilder.Update(db, dialect).Table("users")
+		t.NotNil(u)
 
-	u.Table("tb1").Table("tb2")
-	u.Increase("c1", 1).
-		Where("id=?", 1).
-		Or("id=?", 2)
-	query, args, err = u.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, 1, 2})
-	sqltest.Equal(a, query, "update tb2 SET c1=c1+? where id=? or id=?")
+		u.Set("name", "name222").Where("id=?", 2)
+		_, err := u.Exec()
+		a.NotError(err)
+
+		sel := sqlbuilder.Select(db, dialect).
+			Select("name").
+			From("users").
+			Where("id=?", 2)
+		rows, err := sel.Query()
+		t.NotError(err).NotNil(rows)
+		a.True(rows.Next())
+		var name string
+		a.NotError(rows.Scan(&name))
+		a.NotError(rows.Close())
+		a.Equal(name, "name222")
+	})
 }
 
-func TestUpdate_occ(t *testing.T) {
-	a := assert.New(t)
-	u := Update(nil, nil)
-	a.NotNil(u)
+// TODO increment 测试
 
-	// 仅有乐观锁作为条件
-	u.Set("c1", 1).Set("c2", 2).OCC("c3", 3).Table("table")
-	query, args, err := u.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, 2, 1, 3})
-	sqltest.Equal(a, query, "update table set c1=?,c2=?, c3=c3+? where (c3=?)")
-
-	// 多条件，乐观锁会加在最后
-	u.Reset()
-	u.Set("c1", 1).Set("c2", 2).OCC("c3", 3).Where("c4=?", 4).Table("table")
-	query, args, err = u.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, 2, 1, 4, 3})
-	sqltest.Equal(a, query, "update table set c1=?,c2=?, c3=c3+? where (c4=?) and (c3=?)")
-
-	// 多条件，乐观锁，命名参数
-	u.Reset()
-	u.Set("c1", 1).Set("c2", 2).OCC("c3", sql.Named("c3", 3)).Where("c4=?", 4).Table("table")
-	query, args, err = u.SQL()
-	a.NotError(err)
-	a.Equal(args, []interface{}{1, 2, 1, 4, sql.Named("c3", 3)})
-	sqltest.Equal(a, query, "update table set c1=?,c2=?, c3=c3+? where (c4=?) and (c3=@c3)")
-}
+// TODO occ

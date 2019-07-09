@@ -79,7 +79,7 @@ func TestSQLBuilder(t *testing.T) {
 	a := assert.New(t)
 
 	b := sqlbuilder.New("")
-	b.WriteByte('1')
+	b.WriteBytes('1')
 	b.WriteString("23")
 
 	a.Equal("123", b.String())
@@ -89,7 +89,7 @@ func TestSQLBuilder(t *testing.T) {
 	a.Equal(b.String(), "")
 	a.Equal(b.Len(), 0)
 
-	b.WriteByte('3').WriteString("21")
+	b.WriteBytes('3').WriteString("21")
 	a.Equal(b.String(), "321")
 
 	b.TruncateLast(1)
