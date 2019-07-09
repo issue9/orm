@@ -11,26 +11,7 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
-
-type sqltypeTester struct {
-	col     *sqlbuilder.Column
-	err     bool
-	SQLType string
-}
-
-func testSQLType(a *assert.Assertion, d sqlbuilder.Dialect, data []*sqltypeTester) {
-	for _, item := range data {
-		typ, err := d.SQLType(item.col)
-		if item.err {
-			a.Error(err)
-		} else {
-			a.NotError(err)
-		}
-		sqltest.Equal(a, typ, item.SQLType)
-	}
-}
 
 func TestMysqlLimitSQL(t *testing.T) {
 	a := assert.New(t)

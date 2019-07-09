@@ -72,7 +72,7 @@ func parseMysqlCreateTable(tableName string, lines []string) (*Table, error) {
 			}
 			table.Indexes[line[:index]] = sqlbuilder.IndexDefault
 		case "PRIMARY": // 主键约束，没有约束名
-			table.Constraints[tableName+"_pk"] = sqlbuilder.ConstraintPK
+			table.Constraints[sqlbuilder.PKName(tableName)] = sqlbuilder.ConstraintPK
 		case "UNIQUE":
 			words := strings.Fields(line)
 			table.Constraints[words[1]] = sqlbuilder.ConstraintUnique

@@ -102,7 +102,7 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 	case sqlbuilder.ConstraintFK:
 		builder.WriteString(" FOREIGN KEY ").WriteString(stmt.Name)
 	case sqlbuilder.ConstraintPK:
-		builder.WriteString(" PRIMARY ")
+		builder.WriteString(" PRIMARY KEY")
 	case sqlbuilder.ConstraintUnique:
 		builder.WriteString(" INDEX ").WriteString(stmt.Name)
 	default:

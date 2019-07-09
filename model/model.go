@@ -14,11 +14,7 @@ import (
 
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/tags"
-)
-
-const (
-	defaultAINameSuffix = "_ai"
-	defaultPKNameSuffix = "_pk"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
@@ -176,7 +172,7 @@ func (ms *Models) addModel(gotype reflect.Type, m *Model) error {
 // 必须要在 Model 初始化完成之后调用。
 func (m *Model) sanitize() error {
 	if m.AI != nil {
-		m.AIName = m.Name + defaultAINameSuffix
+		m.AIName = sqlbuilder.AIName(m.Name)
 
 		if m.AI.Nullable {
 			return propertyError(m.AI.Name, "nullable", "不能与自增列并存")
@@ -188,7 +184,7 @@ func (m *Model) sanitize() error {
 	}
 
 	if len(m.PK) > 0 {
-		m.PKName = m.Name + defaultPKNameSuffix
+		m.PKName = sqlbuilder.PKName(m.Name)
 	}
 
 	if len(m.PK) == 1 && m.PK[0].HasDefault {

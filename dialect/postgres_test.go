@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package dialect
+package dialect_test
 
 import (
 	"database/sql"
@@ -12,12 +12,26 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/dialect"
+	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-var (
-	_ sqlbuilder.TruncateTableStmtHooker = &postgres{}
-)
+func TestPostgresHooks(t *testing.T) {
+	a := assert.New(t)
+	_, ok := dialect.Postgres().(sqlbuilder.TruncateTableStmtHooker)
+	a.True(ok)
+}
+
+func TestPostgres_VersionSQL(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		testDialectVersionSQL(t)
+	}, "postgres")
+}
 
 func TestPostgres_SQLType(t *testing.T) {
 	a := assert.New(t)
@@ -201,12 +215,12 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, Postgres(), data)
+	testSQLType(a, dialect.Postgres(), data)
 }
 
 func TestPostgres_SQL(t *testing.T) {
 	a := assert.New(t)
-	p := Postgres()
+	p := dialect.Postgres()
 	a.NotNil(p)
 
 	eq := func(s1, s2 string) {
@@ -235,7 +249,7 @@ func TestPostgres_SQL(t *testing.T) {
 
 func BenchmarkPostgres_SQL(b *testing.B) {
 	a := assert.New(b)
-	p := Postgres()
+	p := dialect.Postgres()
 	a.NotNil(p)
 
 	s1 := "SELECT * FROM tbl WHERE uid>? AND group=? AND username LIKE ?"

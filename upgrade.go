@@ -329,15 +329,12 @@ func (u *Upgrader) addConstraints(e Engine) error {
 			break
 		}
 
-		if u.model.PK != nil && u.model.AIName == c {
-			// NOTE: u.Model.AIName 为自动生成，而 AddConstraints 为手动指定约束名。
-			// 有可能会造成主键名称不一样，而无法正确生成
-
+		if u.model.PK != nil {
 			cols := make([]string, 0, len(u.model.PK))
 			for _, col := range u.model.PK {
 				cols = append(cols, "{"+col.Name+"}")
 			}
-			stmt.PK(u.model.AIName, cols...)
+			stmt.PK(cols...)
 
 			if err := stmt.Exec(); err != nil {
 				return err

@@ -17,6 +17,27 @@ const (
 	ConstraintAI                // 自增
 )
 
+const (
+	defaultAINameSuffix = "_ai"
+	defaultPKNameSuffix = "_pk"
+)
+
+// PKName 生成主键约束的名称
+//
+// 各个数据库对主键约束的规定并不统一，mysql 会忽略约束名，
+// 为了统一，主键约束的名称统一由此函数生成，用户不能别外指定。
+func PKName(table string) string {
+	return table + defaultPKNameSuffix
+}
+
+// AIName 生成 AI 约束名称
+//
+// 自增约束的实现，各个数据库并不相同，诸如 mysql 直接加在列信息上，
+// 而 postgres 会创建 sequence，需要指定 sequence 名称。
+func AIName(table string) string {
+	return table + defaultAINameSuffix
+}
+
 // AddConstraintStmtHooker AddConstraintStmt.DDLSQL 的钩子函数
 type AddConstraintStmtHooker interface {
 	AddConstraintStmtHook(*AddConstraintStmt) ([]string, error)
@@ -73,13 +94,12 @@ func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraint
 }
 
 // PK 指定主键约束
-func (stmt *AddConstraintStmt) PK(name string, col ...string) *AddConstraintStmt {
+func (stmt *AddConstraintStmt) PK(col ...string) *AddConstraintStmt {
 	if stmt.Type != constraintNone {
 		panic(ErrConstraintType)
 	}
 
 	stmt.Type = ConstraintPK
-	stmt.Name = name
 	stmt.Data = col
 
 	return stmt
@@ -119,6 +139,10 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 
 	if len(stmt.Data) == 0 {
 		return nil, ErrColumnsIsEmpty
+	}
+
+	if stmt.Type == ConstraintPK {
+		stmt.Name = PKName(stmt.TableName)
 	}
 
 	if hook, ok := stmt.dialect.(AddConstraintStmtHooker); ok {
@@ -214,6 +238,8 @@ func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
 }
 
 // Constraint 指定需要删除的约束名
+//
+// NOTE: 如果需要删除主键，请使用 PKName 产生主键名称
 func (stmt *DropConstraintStmt) Constraint(name string) *DropConstraintStmt {
 	stmt.Name = name
 	return stmt

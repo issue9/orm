@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package dialect
+package dialect_test
 
 import (
 	"database/sql"
@@ -12,21 +12,119 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/dialect"
 	"github.com/issue9/orm/v2/internal/sqltest"
+	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-var (
-	_ sqlbuilder.TruncateTableStmtHooker  = &mysql{}
-	_ sqlbuilder.DropIndexStmtHooker      = &mysql{}
-	_ sqlbuilder.DropConstraintStmtHooker = &mysql{}
-)
+// 创建测试数据表的脚本
+var mysqlCreateTable = []string{`CREATE TABLE fk_table(
+	id bigint NOT NULL,
+	name varchar(20) not null,
+	address varchar(200) not null,
+	CONSTRAINT fk_table_pk PRIMARY KEY(id)
+	)`,
+	`CREATE TABLE usr (
+	id bigint NOT NULL,
+	created bigint NOT NULL,
+	nickname varchar(20) NOT NULL,
+	state bigint NOT NULL,
+	username varchar(20) NOT NULL,
+	mobile varchar(18) NOT NULL,
+	email varchar(200) NOT NULL,
+	pwd varchar(36) NOT NULL,
+	CONSTRAINT usr_pk PRIMARY KEY (id),
+	CONSTRAINT u_user_xx1 UNIQUE (mobile,username),
+	CONSTRAINT u_user_email1 UNIQUE (email,username),
+	CONSTRAINT unique_id UNIQUE (id),
+	CONSTRAINT xxx_fk FOREIGN KEY (id) REFERENCES fk_table (id),
+	CONSTRAINT xxx CHECK (created > 0)
+	)`,
+	`create index index_user_mobile on usr(mobile)`,
+	`create unique index index_user_unique_email_id on usr(email,id)`,
+}
+
+func TestMysqlHooks(t *testing.T) {
+	a := assert.New(t)
+
+	_, ok := dialect.Mysql().(sqlbuilder.TruncateTableStmtHooker)
+	a.True(ok)
+
+	_, ok = dialect.Mysql().(sqlbuilder.DropIndexStmtHooker)
+	a.True(ok)
+
+	_, ok = dialect.Mysql().(sqlbuilder.DropConstraintStmtHooker)
+	a.True(ok)
+}
+
+func TestMysql_VersionSQL(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		testDialectVersionSQL(t)
+	}, "mysql")
+}
+
+func TestMysql_DropConstrainStmtHook(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		db := t.DB.DB
+
+		for _, query := range mysqlCreateTable {
+			_, err := db.Exec(query)
+			t.NotError(err)
+		}
+
+		defer func() {
+			_, err := db.Exec("DROP TABLE usr")
+			a.NotError(err)
+
+			_, err = db.Exec("DROP TABLE fk_table")
+			a.NotError(err)
+		}()
+
+		testDialectDropConstraintStmtHook(t)
+	}, "mysql")
+}
+
+func TestMysql_DropIndexStmtHook(t *testing.T) {
+	a := assert.New(t)
+	my := dialect.Mysql()
+
+	stmt := sqlbuilder.DropIndex(nil, my).Table("tbl").Name("index_name")
+	a.NotNil(stmt)
+
+	hook, ok := my.(sqlbuilder.DropIndexStmtHooker)
+	a.True(ok).NotNil(hook)
+	qs, err := hook.DropIndexStmtHook(stmt)
+	a.NotError(err).Equal(qs, []string{"ALTER TABLE tbl DROP INDEX index_name"})
+}
+
+func TestMysql_TruncateTableStmtHook(t *testing.T) {
+	a := assert.New(t)
+	my := dialect.Mysql()
+
+	// mysql 不需要 ai 的相关设置
+	stmt := sqlbuilder.TruncateTable(nil, my).Table("tbl", "", "")
+	a.NotNil(stmt)
+
+	hook, ok := my.(sqlbuilder.TruncateTableStmtHooker)
+	a.True(ok).NotNil(hook)
+	qs, err := hook.TruncateTableStmtHook(stmt)
+	a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE tbl"})
+}
 
 func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	builder := sqlbuilder.New("")
 	a.NotNil(builder)
-	var m = Mysql()
+	var m = dialect.Mysql()
 
 	// 空的 meta
 	a.NotError(m.CreateTableOptionsSQL(builder, nil))
@@ -187,5 +285,5 @@ func TestMysql_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, Mysql(), data)
+	testSQLType(a, dialect.Mysql(), data)
 }
