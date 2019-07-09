@@ -125,12 +125,10 @@ func (stmt *CreateTableStmt) Columns(col ...*Column) *CreateTableStmt {
 // AutoIncrement 指定自增列，自增列必定是主键。
 // 如果指定了自增，则主键必定不启作用。
 //
-// name 自增约束的名称；
 // col 列名；
 // goType 对应的 Go 类型。
-func (stmt *CreateTableStmt) AutoIncrement(name, col string, goType reflect.Type) *CreateTableStmt {
+func (stmt *CreateTableStmt) AutoIncrement(col string, goType reflect.Type) *CreateTableStmt {
 	stmt.ai = &constraintColumn{
-		Name:    name,
 		Type:    ConstraintAI,
 		Columns: []string{col},
 	}
@@ -142,13 +140,12 @@ func (stmt *CreateTableStmt) AutoIncrement(name, col string, goType reflect.Type
 //
 // 如果多次指定主键信息，则会 panic
 // 自境会自动转换为主键
-func (stmt *CreateTableStmt) PK(name string, col ...string) *CreateTableStmt {
+func (stmt *CreateTableStmt) PK(col ...string) *CreateTableStmt {
 	if stmt.pk != nil || stmt.ai != nil {
 		panic("主键或是自增列已经存在")
 	}
 
 	stmt.pk = &constraintColumn{
-		Name:    name,
 		Type:    ConstraintPK,
 		Columns: col,
 	}
@@ -311,7 +308,7 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 
 	// primary key
 	if stmt.pk != nil {
-		createPKSQL(buf, stmt.pk.Name, stmt.pk.Columns...)
+		createPKSQL(buf, PKName(stmt.name), stmt.pk.Columns...)
 		buf.WriteByte(',')
 	}
 

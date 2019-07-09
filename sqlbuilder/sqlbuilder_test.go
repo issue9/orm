@@ -31,7 +31,7 @@ func initDB(t *test.Test) {
 	err := sqlbuilder.CreateTable(db, dialect).
 		Table("users").
 		Column("name", reflect.TypeOf(""), false, false, nil, 20).
-		AutoIncrement("user_ai", "id", reflect.TypeOf(1)).
+		AutoIncrement("id", reflect.TypeOf(1)).
 		Exec()
 	t.NotError(err, "%s@%s", err, t.DriverName)
 

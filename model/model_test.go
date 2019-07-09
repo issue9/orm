@@ -82,7 +82,6 @@ func TestModels_New(t *testing.T) {
 
 	// ai
 	a.Equal(m.AI, idCol).
-		Equal(m.AIName, "administrators_ai").
 		Empty(m.PK) // 有自增，则主键为空
 
 	// unique_name
@@ -176,8 +175,7 @@ func TestModel_sanitize(t *testing.T) {
 	// AI 不能是 nullable
 	m.PK = nil
 	m.AI = nullable
-	a.Error(m.sanitize()).
-		Equal(m.AIName, "m1"+defaultAINameSuffix)
+	a.Error(m.sanitize())
 
 	// AI 不能是 HasDefault=true
 	m.AI = def
@@ -196,14 +194,12 @@ func TestModel_sanitize(t *testing.T) {
 	// 单列主键，可以是 nullable
 	m.AI = nil
 	m.PK = []*Column{nullable}
-	a.NotError(m.sanitize()).
-		Equal(m.PKName, "m1"+defaultPKNameSuffix)
+	a.NotError(m.sanitize())
 
 	// 单列主键，不能是 default
 	m.AI = nil
 	m.PK = []*Column{def}
-	a.Error(m.sanitize()).
-		Equal(m.PKName, "m1"+defaultPKNameSuffix)
+	a.Error(m.sanitize())
 }
 
 func TestModel_parseColumn(t *testing.T) {
@@ -362,6 +358,5 @@ func TestModel_setAI(t *testing.T) {
 	a.Error(m.setAI(col, nil))
 
 	col.GoType = reflect.TypeOf(1)
-	a.NotError(m.setAI(col, nil)).
-		Empty(m.AIName) // 并不会设置 AIName 的值
+	a.NotError(m.setAI(col, nil))
 }

@@ -54,20 +54,8 @@ type Model struct {
 	Checks map[string]string
 
 	FK []*ForeignKey
-
-	// 自增约束
-	//
-	// AI 为自增约束的列。
-	// AIName 为自增约束的名称，部分数据库需要，如果不指定，会采用 表名 + _ai 的格式
-	AI     *Column
-	AIName string
-
-	// 主键约束
-	//
-	// PK 为主键约束的列列表。
-	// PKName 为主键约束的名称，如果未指定，会采用 表名 + _ai 的格式
-	PK     []*Column
-	PKName string
+	AI *Column
+	PK []*Column
 }
 
 func propertyError(field, name, message string) error {
@@ -125,8 +113,8 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 	return m, nil
 }
 
-func (ms *Models) addModel(gotype reflect.Type, m *Model) error {
-	ms.items[gotype] = m
+func (ms *Models) addModel(goType reflect.Type, m *Model) error {
+	ms.items[goType] = m
 
 	for name := range m.Indexes {
 		if err := ms.addNames(name); err != nil {
@@ -152,14 +140,14 @@ func (ms *Models) addModel(gotype reflect.Type, m *Model) error {
 		}
 	}
 
-	if m.AIName != "" {
-		if err := ms.addNames(m.AIName); err != nil {
+	if m.AI != nil {
+		if err := ms.addNames(sqlbuilder.AIName(m.Name)); err != nil {
 			return err
 		}
 	}
 
-	if m.PKName != "" {
-		if err := ms.addNames(m.PKName); err != nil {
+	if len(m.PK) > 0 {
+		if err := ms.addNames(sqlbuilder.PKName(m.Name)); err != nil {
 			return err
 		}
 	}
@@ -172,8 +160,6 @@ func (ms *Models) addModel(gotype reflect.Type, m *Model) error {
 // 必须要在 Model 初始化完成之后调用。
 func (m *Model) sanitize() error {
 	if m.AI != nil {
-		m.AIName = sqlbuilder.AIName(m.Name)
-
 		if m.AI.Nullable {
 			return propertyError(m.AI.Name, "nullable", "不能与自增列并存")
 		}
@@ -181,10 +167,6 @@ func (m *Model) sanitize() error {
 		if m.AI.HasDefault {
 			return propertyError(m.AI.Name, "default", "不能与自增列并存")
 		}
-	}
-
-	if len(m.PK) > 0 {
-		m.PKName = sqlbuilder.PKName(m.Name)
 	}
 
 	if len(m.PK) == 1 && m.PK[0].HasDefault {

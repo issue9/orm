@@ -35,14 +35,18 @@ func hasCount(e sqlbuilder.Engine, a *assert.Assertion, table string, size int) 
 func initData(t *test.Test) {
 	db := t.DB
 
-	t.NotError(db.Create(&Group{}))
-	t.NotError(db.MultCreate(&Admin{}, &UserInfo{}))
+	err := db.Create(&Group{})
+	t.NotError(err, "%s@%s", err, t.DriverName)
+
+	err = db.MultCreate(&Admin{}, &UserInfo{})
+	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	insert := func(obj interface{}) {
 		r, err := db.Insert(obj)
-		t.NotError(err)
+		t.NotError(err, "%s@%s", err, t.DriverName)
 		cnt, err := r.RowsAffected()
-		t.NotError(err).Equal(cnt, 1)
+		t.NotError(err, "%s@%s", err, t.DriverName).
+			Equal(cnt, 1)
 	}
 
 	insert(&Group{

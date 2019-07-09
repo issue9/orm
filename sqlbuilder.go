@@ -130,7 +130,7 @@ func create(e Engine, v interface{}) error {
 	sb.Table("{#" + m.Name + "}") // 表名可能也是关键字
 	for _, col := range m.Columns {
 		if col.AI {
-			sb.AutoIncrement(m.AIName, "{"+col.Name+"}", col.GoType)
+			sb.AutoIncrement("{"+col.Name+"}", col.GoType)
 		} else {
 			sb.Column("{"+col.Name+"}", col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...)
 		}
@@ -165,7 +165,7 @@ func create(e Engine, v interface{}) error {
 		for _, col := range m.PK {
 			cols = append(cols, "{"+col.Name+"}")
 		}
-		sb.PK(m.PKName, cols...)
+		sb.PK(cols...)
 	}
 
 	return sb.Exec()
@@ -179,7 +179,7 @@ func truncate(e Engine, v interface{}) error {
 
 	stmt := e.SQL().TruncateTable()
 	if m.AI != nil {
-		stmt.Table("{#"+m.Name+"}", "{"+m.AI.Name+"}", "{"+m.AIName+"}")
+		stmt.Table("{#"+m.Name+"}", "{"+m.AI.Name+"}", "{"+sqlbuilder.AIName(m.Name)+"}")
 	} else {
 		stmt.Table("{#"+m.Name+"}", "", "")
 	}

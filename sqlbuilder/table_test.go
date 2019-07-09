@@ -31,7 +31,7 @@ func TestCreateTableStmt(t *testing.T) {
 		dialect := t.DB.Dialect()
 		stmt := sqlbuilder.CreateTable(db, dialect).
 			Table(table).
-			AutoIncrement("create_table_test_ai", "id", reflect.TypeOf(int(1))).
+			AutoIncrement("id", reflect.TypeOf(int(1))).
 			Column("age", reflect.TypeOf(int(1)), false, false, nil).
 			Column("name", reflect.TypeOf(""), true, true, "", 100).
 			Column("address", reflect.TypeOf(""), false, false, nil, 100).
