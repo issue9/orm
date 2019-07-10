@@ -97,15 +97,20 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 		builder.WriteString(" TEMPORARY ")
 	}
 
-	builder.WriteString(" VIEW ").WriteString(stmt.name)
+	builder.WriteString(" VIEW ").
+		WriteBytes(stmt.l).
+		WriteString(stmt.name).
+		WriteBytes(stmt.r)
 
 	if len(stmt.columns) > 0 {
-		builder.WriteByte('(')
+		builder.WriteBytes('(')
 		for _, col := range stmt.columns {
-			builder.WriteString(col).WriteByte(',')
+			builder.WriteBytes(stmt.l).
+				WriteString(col).
+				WriteBytes(stmt.r, ',')
 		}
 		builder.TruncateLast(1)
-		builder.WriteByte(')')
+		builder.WriteBytes(')')
 	}
 
 	q, args, err := stmt.selectStmt.SQL()
