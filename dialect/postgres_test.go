@@ -13,6 +13,7 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v2/dialect"
+	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -216,6 +217,26 @@ func TestPostgres_SQLType(t *testing.T) {
 	}
 
 	testSQLType(a, dialect.Postgres(), data)
+}
+
+func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
+	a := assert.New(t)
+	s := dialect.Postgres()
+
+	hook, ok := s.(sqlbuilder.TruncateTableStmtHooker)
+	a.True(ok).NotNil(hook)
+
+	stmt := sqlbuilder.TruncateTable(nil, s).Table("tbl", "")
+	a.NotNil(stmt)
+	qs, err := hook.TruncateTableStmtHook(stmt)
+	a.NotError(err).Equal(1, len(qs))
+	sqltest.Equal(a, qs[0], `TRUNCATE TABLE "tbl"`)
+
+	stmt = sqlbuilder.TruncateTable(nil, s).Table("tbl", "id")
+	a.NotNil(stmt)
+	qs, err = hook.TruncateTableStmtHook(stmt)
+	a.NotError(err).Equal(1, len(qs))
+	sqltest.Equal(a, qs[0], `TRUNCATE TABLE "tbl" RESTART IDENTITY`)
 }
 
 func TestPostgres_SQL(t *testing.T) {

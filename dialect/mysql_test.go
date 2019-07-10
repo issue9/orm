@@ -111,7 +111,7 @@ func TestMysql_TruncateTableStmtHook(t *testing.T) {
 	my := dialect.Mysql()
 
 	// mysql 不需要 ai 的相关设置
-	stmt := sqlbuilder.TruncateTable(nil, my).Table("tbl", "", "")
+	stmt := sqlbuilder.TruncateTable(nil, my).Table("tbl", "")
 	a.NotNil(stmt)
 
 	hook, ok := my.(sqlbuilder.TruncateTableStmtHooker)

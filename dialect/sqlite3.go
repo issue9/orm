@@ -202,8 +202,11 @@ func buildSQLS(table *s3.Table, tableName string) ([]string, error) {
 }
 
 func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
+	l, r := s.QuoteTuple()
 	builder := sqlbuilder.New("DELETE FROM ").
-		WriteString(stmt.TableName)
+		WriteBytes(l).
+		WriteString(stmt.TableName).
+		WriteBytes(r)
 	if stmt.AIColumnName == "" {
 		return []string{builder.String()}, nil
 	}

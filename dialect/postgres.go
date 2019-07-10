@@ -79,13 +79,17 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 }
 
 func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	query := "TRUNCATE TABLE " + stmt.TableName
+	l, r := p.QuoteTuple()
+	builder := sqlbuilder.New("TRUNCATE TABLE ").
+		WriteBytes(l).
+		WriteString(stmt.TableName).
+		WriteBytes(r)
 
 	if stmt.AIColumnName != "" {
-		query += " RESTART IDENTITY"
+		builder.WriteString(" RESTART IDENTITY")
 	}
 
-	return []string{query}, nil
+	return []string{builder.String()}, nil
 }
 
 func (p *postgres) TransactionalDDL() bool {
