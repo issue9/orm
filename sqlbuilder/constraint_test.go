@@ -39,7 +39,7 @@ func TestConstraint(t *testing.T) {
 			Exec()
 		a.NotError(err, "%s@%s", err, t.DriverName)
 
-		// 不存在的约束名
+		// 删除不存在的约束名
 		err = sqlbuilder.DropConstraint(db, dialect).
 			Table("users").
 			Constraint("u_user_name_not_exists___").

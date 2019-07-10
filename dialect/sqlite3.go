@@ -79,6 +79,7 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 }
 
 // https://www.sqlite.org/lang_altertable.html
+// BUG: 可能会让视图失去关联
 func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]string, error) {
 	builder := sqlbuilder.New("CONSTRAINT ").
 		WriteString(stmt.Name)
@@ -137,6 +138,7 @@ func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]s
 }
 
 // https://www.sqlite.org/lang_altertable.html
+// BUG: 可能会让视图失去关联
 func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
 	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())
 	if err != nil {
@@ -153,6 +155,7 @@ func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([
 }
 
 // https://www.sqlite.org/lang_altertable.html
+// BUG: 可能会让视图失去关联
 func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string, error) {
 	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())
 	if err != nil {
@@ -180,7 +183,9 @@ func buildSQLS(table *s3.Table, tableName string) ([]string, error) {
 	}
 
 	// 将数据插入到新表
-	ret = append(ret, fmt.Sprintf("INSERT INTO %s SELECT %s FROM %s", tmpName, strings.Join(cols, ","), tableName))
+	// NOTE: 必须指定列，否则直接从 SELECT 中获取列，可能造成列错位。
+	colsExpr := strings.Join(cols, ",")
+	ret = append(ret, fmt.Sprintf("INSERT INTO %s(%s) SELECT %s FROM %s", tmpName, colsExpr, colsExpr, tableName))
 
 	// 删除旧表
 	ret = append(ret, "DROP TABLE "+tableName)
