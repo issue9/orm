@@ -16,8 +16,10 @@ import (
 
 // user 需要与 initDB 中的 users 表中的字段相同
 type user struct {
-	ID   int64  `orm:"name(id);ai"`
-	Name string `orm:"name(name);len(20)"`
+	ID      int64  `orm:"name(id);ai"`
+	Name    string `orm:"name(name);len(20)"`
+	Age     int    `orm:"name(age)"`
+	Version int64  `orm:"name(version);default(0)"`
 }
 
 func (u *user) Meta() string {
@@ -30,16 +32,18 @@ func initDB(t *test.Test) {
 
 	err := sqlbuilder.CreateTable(db, dialect).
 		Table("users").
+		AutoIncrement("id", reflect.TypeOf(int64(1))).
 		Column("name", reflect.TypeOf(""), false, false, nil, 20).
-		AutoIncrement("id", reflect.TypeOf(1)).
+		Column("age", reflect.TypeOf(1), true, false, nil).
+		Column("version", reflect.TypeOf(int64(1)), false, true, 0).
 		Exec()
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	sql := sqlbuilder.Insert(db, dialect).
-		Columns("name").
+		Columns("name", "age").
 		Table("users").
-		Values("1").
-		Values("2")
+		Values("1", 1).
+		Values("2", 2)
 	_, err = sql.Exec()
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
@@ -47,9 +51,9 @@ func initDB(t *test.Test) {
 	t.NotError(err, "%s@%s", err, t.DriverName).
 		NotNil(stmt, "not nil @s", t.DriverName)
 
-	_, err = stmt.Exec("3", "4")
+	_, err = stmt.Exec("3", 3, "4", 4)
 	t.NotError(err, "%s@%s", err, t.DriverName)
-	_, err = stmt.Exec("5", "6")
+	_, err = stmt.Exec("5", 6, "6", 6)
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	sql.Reset()

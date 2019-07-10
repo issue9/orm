@@ -77,7 +77,7 @@ func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
 
 // OCC 指定一个用于乐观锁的字段。
 //
-// val 表示乐观锁原始的值。
+// val 表示乐观锁原始的值，更新时如果值不等于 val，将更新失败。
 func (stmt *UpdateStmt) OCC(col string, val interface{}) *UpdateStmt {
 	stmt.occColumn = col
 	stmt.occValue = val
@@ -168,18 +168,15 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
 		return stmt.where.SQL()
 	}
 
-	w := Where()
-
+	occColumn := string(stmt.l) + stmt.occColumn + string(stmt.r)
 	occ := Where()
 	if named, ok := stmt.occValue.(sql.NamedArg); ok && named.Name != "" {
-		occ.And(stmt.occColumn+"=@"+named.Name, stmt.occValue)
+		occ.And(occColumn+"=@"+named.Name, stmt.occValue)
 	} else {
-		occ.And(stmt.occColumn+"=?", stmt.occValue)
+		occ.And(occColumn+"=?", stmt.occValue)
 	}
 
-	w.AndWhere(stmt.where).AndWhere(occ)
-
-	return w.SQL()
+	return Where().AndWhere(stmt.where).AndWhere(occ).SQL()
 }
 
 // 检测列名是否存在重复，先排序，再与后一元素比较。
