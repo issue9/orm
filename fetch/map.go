@@ -56,6 +56,7 @@ func Map(once bool, rows *sql.Rows) ([]map[string]interface{}, error) {
 }
 
 // MapString 将 rows 中的数据导出到一个 map[string]string 中。
+//
 // 功能上与 Map() 上一样，但 map 的键值固定为 string。
 func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) {
 	cols, err := rows.Columns()
@@ -88,5 +89,6 @@ func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) 
 			return data, nil
 		}
 	}
+
 	return data, nil
 }

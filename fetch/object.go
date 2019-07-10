@@ -25,7 +25,7 @@ type AfterFetcher interface {
 var ErrInvalidKind = errors.New("无效的 Kind 类型")
 
 // 输出无法转换时的字段信息
-func converError(field, message string) error {
+func convertError(field, message string) error {
 	return fmt.Errorf("字段 %s 转换出错：%s", field, message)
 }
 
@@ -231,7 +231,7 @@ func fetchOnceObjNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 			continue
 		}
 		if err = conv.Value(v, item); err != nil {
-			return 0, converError(index, err.Error())
+			return 0, convertError(index, err.Error())
 		}
 	}
 
@@ -313,7 +313,7 @@ func fetchObjToFixedSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error
 				continue
 			}
 			if err = conv.Value(v, item); err != nil {
-				return i, converError(index, err.Error()) // 已经有 i 条数据被正确导出
+				return i, convertError(index, err.Error()) // 已经有 i 条数据被正确导出
 			}
 		} // end for objItem
 
@@ -413,7 +413,7 @@ func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 				continue
 			}
 			if err = conv.Value(e, item); err != nil {
-				return i, converError(index, err.Error())
+				return i, convertError(index, err.Error())
 			}
 		} // end for objItem
 

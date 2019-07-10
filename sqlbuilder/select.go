@@ -6,13 +6,16 @@ package sqlbuilder
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
 
 	"github.com/issue9/orm/v2/fetch"
 )
+
+// ErrNoData 在 Select.QueryInt 等函数中，
+// 如果没有符合条件的数据，则返回此错误。
+var ErrNoData = errors.New("不存在符合和条件的数据")
 
 // SelectStmt 查询语句
 type SelectStmt struct {
@@ -364,7 +367,7 @@ func (stmt *SelectStmt) QueryString(colName string) (v string, err error) {
 	}
 
 	if len(cols) == 0 {
-		return "", fmt.Errorf("不存在列：%s", colName)
+		return "", ErrNoData
 	}
 
 	return cols[0], nil

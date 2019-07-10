@@ -26,6 +26,7 @@ func TestSelect_Query(t *testing.T) {
 	suite.ForEach(func(t *test.Test) {
 		initDB(t)
 		defer clearDB(t)
+
 		db := t.DB.DB
 		d := t.DB.Dialect()
 
@@ -37,6 +38,14 @@ func TestSelect_Query(t *testing.T) {
 		id, err := stmt.QueryInt("id")
 		a.NotError(err).
 			Equal(id, 4)
+
+		f, err := stmt.QueryFloat("id")
+		a.NotError(err).
+			Equal(f, 4.0)
+
+		// 不存在的列
+		f, err = stmt.QueryFloat("id_not_exists")
+		a.Error(err).Empty(f)
 
 		name, err := stmt.QueryString("name")
 		a.NotError(err).
@@ -50,5 +59,14 @@ func TestSelect_Query(t *testing.T) {
 		cnt, err := stmt.Count("count(*) AS cnt").QueryInt("cnt")
 		a.NotError(err).
 			Equal(cnt, 4)
+
+		// 没有符合条件的数据
+		stmt.Reset()
+		stmt.Select("*").
+			From("users").
+			Where("id<?", -100).
+			Desc("id")
+		id, err = stmt.QueryInt("id")
+		a.ErrorType(err, sqlbuilder.ErrNoData)
 	})
 }
