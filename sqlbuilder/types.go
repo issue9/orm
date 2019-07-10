@@ -35,8 +35,7 @@ type WhereStmter interface {
 }
 
 // Engine 数据库执行的基本接口。
-//
-// NOTE: 需要符合 SQL.DB 和 SQL.Tx 的定义。
+// 是 sql.DB 与 sql.Tx 的共有接口。
 type Engine interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 
