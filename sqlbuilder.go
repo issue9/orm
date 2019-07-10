@@ -179,9 +179,9 @@ func truncate(e Engine, v interface{}) error {
 
 	stmt := e.SQL().TruncateTable()
 	if m.AI != nil {
-		stmt.Table("#"+m.Name, m.AI.Name, sqlbuilder.AIName(m.Name))
+		stmt.Table("#"+m.Name, m.AI.Name)
 	} else {
-		stmt.Table("#"+m.Name, "", "")
+		stmt.Table("#"+m.Name, "")
 	}
 
 	return stmt.Exec()

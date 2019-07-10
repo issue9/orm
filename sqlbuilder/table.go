@@ -430,7 +430,6 @@ type TruncateTableStmt struct {
 	*ddlStmt
 	TableName    string
 	AIColumnName string
-	AIName       string // 约束名
 }
 
 // TruncateTable 生成清空表语句
@@ -448,12 +447,10 @@ func (stmt *TruncateTableStmt) Reset() {
 
 // Table 指定表名
 //
-// aiName 表示自增约束的约束名，大部分数据库可以为空；
 // aiColumn 表示自增列；
-func (stmt *TruncateTableStmt) Table(t, aiColumn, aiName string) *TruncateTableStmt {
+func (stmt *TruncateTableStmt) Table(t, aiColumn string) *TruncateTableStmt {
 	stmt.TableName = t
 	stmt.AIColumnName = aiColumn
-	stmt.AIName = aiName
 	return stmt
 }
 
