@@ -241,6 +241,44 @@ func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]s
 	return ret, nil
 }
 
+func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, error) {
+	selectQuery, err := stmt.SelectQuery()
+	if err != nil {
+		return nil, err
+	}
+
+	builder := sqlbuilder.New("CREATE ")
+
+	/*if stmt.IsReplace {
+		builder.WriteString(" OR REPLACE ")
+	}*/
+
+	if stmt.IsTemporary {
+		builder.WriteString(" TEMPORARY ")
+	}
+
+	l, r := m.QuoteTuple()
+
+	builder.WriteString(" VIEW ").
+		WriteBytes(l).
+		WriteString(stmt.ViewName).
+		WriteBytes(r)
+
+	if len(stmt.Columns) > 0 {
+		builder.WriteBytes('(')
+		for _, col := range stmt.Columns {
+			builder.WriteBytes(l).
+				WriteString(col).
+				WriteBytes(r, ',')
+		}
+		builder.TruncateLast(1).WriteBytes(')')
+	}
+
+	builder.WriteString(selectQuery)
+
+	return []string{builder.String()}, nil
+}
+
 func (s *sqlite3) TransactionalDDL() bool {
 	return true
 }

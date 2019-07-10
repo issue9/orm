@@ -8,12 +8,11 @@ package sqlbuilder
 type CreateViewStmt struct {
 	*ddlStmt
 
-	name        string
 	selectStmt  *SelectStmt
-	columns     []string
-	checkOption string
-	temporary   bool
-	replace     bool
+	ViewName    string
+	Columns     []string
+	IsTemporary bool
+	IsReplace   bool
 }
 
 // CreateViewStmtHooker CreateViewStmt.DDLSQL 的钩子函数
@@ -37,40 +36,65 @@ func (stmt *SelectStmt) View(name string) *CreateViewStmt {
 
 // Reset 重置对象
 func (stmt *CreateViewStmt) Reset() *CreateViewStmt {
-	stmt.name = ""
+	stmt.ViewName = ""
 	stmt.selectStmt = nil
-	stmt.columns = stmt.columns[:0]
-	stmt.temporary = false
-	stmt.replace = false
+	stmt.Columns = stmt.Columns[:0]
+	stmt.IsTemporary = false
+	stmt.IsReplace = false
 
+	return stmt
+}
+
+// Column 指定视图的列，如果未指定，则会直接采用 Select 中的列信息
+func (stmt *CreateViewStmt) Column(col ...string) *CreateViewStmt {
+	if stmt.Columns == nil {
+		stmt.Columns = col
+		return stmt
+	}
+
+	stmt.Columns = append(stmt.Columns, col...)
 	return stmt
 }
 
 // Name 指定视图名称
 func (stmt *CreateViewStmt) Name(name string) *CreateViewStmt {
-	stmt.name = name
+	stmt.ViewName = name
 	return stmt
 }
 
 // Temporary 临时视图
 func (stmt *CreateViewStmt) Temporary() *CreateViewStmt {
-	stmt.temporary = true
+	stmt.IsTemporary = true
 	return stmt
 }
 
 // Replace 如果已经存在，则更新视图内容
 func (stmt *CreateViewStmt) Replace() *CreateViewStmt {
-	stmt.replace = true
+	stmt.IsReplace = true
 	return stmt
 }
 
-// CheckOption 指定 CHECK OPTION 选项
-func (stmt *CreateViewStmt) CheckOption(opt string) *CreateViewStmt {
-	stmt.checkOption = opt
-	return stmt
+// SelectQuery 获取 SELECT 的查询内容内容
+func (stmt *CreateViewStmt) SelectQuery() (string, error) {
+	if stmt.selectStmt == nil {
+		return "", ErrValueIsEmpty
+	}
+
+	query, args, err := stmt.selectStmt.SQL()
+	if err != nil {
+		return "", err
+	}
+
+	if len(args) > 0 {
+		return "", ErrViewSelectNotAllowArgs
+	}
+
+	return query, nil
 }
 
 // From 指定 Select 语句
+//
+// 在调用 DDLSQL 之前，可以继续修改 sel 的内容。
 func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
 	stmt.selectStmt = sel
 	return stmt
@@ -78,52 +102,45 @@ func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
 
 // DDLSQL 返回创建视图的 SQL 语句
 func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
-	if stmt.name == "" {
+	if stmt.ViewName == "" {
 		return nil, ErrTableIsEmpty
-	}
-
-	if stmt.selectStmt == nil {
-		return nil, ErrValueIsEmpty
 	}
 
 	if hook, ok := stmt.Dialect().(CreateViewStmtHooker); ok {
 		return hook.CreateViewStmtHook(stmt)
 	}
 
+	selectQuery, err := stmt.SelectQuery()
+	if err != nil {
+		return nil, err
+	}
+
 	builder := New("CREATE ")
 
-	if stmt.replace {
+	if stmt.IsReplace {
 		builder.WriteString(" OR REPLACE ")
 	}
 
-	if stmt.temporary {
+	if stmt.IsTemporary {
 		builder.WriteString(" TEMPORARY ")
 	}
 
 	builder.WriteString(" VIEW ").
 		WriteBytes(stmt.l).
-		WriteString(stmt.name).
+		WriteString(stmt.ViewName).
 		WriteBytes(stmt.r)
 
-	if len(stmt.columns) > 0 {
+	if len(stmt.Columns) > 0 {
 		builder.WriteBytes('(')
-		for _, col := range stmt.columns {
+		for _, col := range stmt.Columns {
 			builder.WriteBytes(stmt.l).
 				WriteString(col).
 				WriteBytes(stmt.r, ',')
 		}
-		builder.TruncateLast(1)
-		builder.WriteBytes(')')
+		builder.TruncateLast(1).WriteBytes(')')
 	}
 
-	q, args, err := stmt.selectStmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-	if len(args) > 0 {
-		return nil, ErrViewSelectNotAllowArgs
-	}
-	builder.WriteString(q)
+	builder.WriteString(selectQuery)
 
 	return []string{builder.String()}, nil
 }
