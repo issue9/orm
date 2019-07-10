@@ -13,6 +13,10 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+// ErrNeedAutoIncrementColumn 当以 LastInsertID
+// 的方式插入一条没有 AI 列的对象时，会返回此错误。
+var ErrNeedAutoIncrementColumn = errors.New("必须存在自增列")
+
 func getModel(e Engine, v interface{}) (*Model, reflect.Value, error) {
 	m, err := e.NewModel(v)
 	if err != nil {
@@ -204,7 +208,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 	}
 
 	if m.AI == nil {
-		return 0, errors.New("该对象并没有自增列")
+		return 0, ErrNeedAutoIncrementColumn
 	}
 
 	if obj, ok := v.(BeforeInserter); ok {
@@ -380,6 +384,8 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 	return stmt.Exec()
 }
 
+var errInsertHasDifferentType = errors.New("参数中包含了不同类型的元素")
+
 // rval 为结构体指针组成的数据
 func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, error) {
 	query := e.SQL().Insert()
@@ -421,7 +427,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 			}
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
-				return nil, errors.New("参数 v 中包含了不同类型的元素")
+				return nil, errInsertHasDifferentType
 			}
 
 			vals := make([]interface{}, 0, len(keys))
