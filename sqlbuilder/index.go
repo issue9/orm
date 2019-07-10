@@ -165,7 +165,8 @@ func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
 }
 
 // Reset 重置
-func (stmt *DropIndexStmt) Reset() {
+func (stmt *DropIndexStmt) Reset() *DropIndexStmt {
 	stmt.TableName = ""
 	stmt.IndexName = ""
+	return stmt
 }

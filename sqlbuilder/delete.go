@@ -47,9 +47,10 @@ func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 }
 
 // Reset 重置语句
-func (stmt *DeleteStmt) Reset() {
+func (stmt *DeleteStmt) Reset() *DeleteStmt {
 	stmt.table = ""
 	stmt.where.Reset()
+	return stmt
 }
 
 // WhereStmt 实现 WhereStmter 接口

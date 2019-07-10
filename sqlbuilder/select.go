@@ -64,7 +64,7 @@ func (stmt *SelectStmt) Distinct() *SelectStmt {
 }
 
 // Reset 重置语句
-func (stmt *SelectStmt) Reset() {
+func (stmt *SelectStmt) Reset() *SelectStmt {
 	stmt.table = ""
 	stmt.where.Reset()
 	stmt.cols = stmt.cols[:0]
@@ -84,6 +84,8 @@ func (stmt *SelectStmt) Reset() {
 
 	stmt.limitQuery = ""
 	stmt.limitVals = nil
+
+	return stmt
 }
 
 // SQL 获取 SQL 语句及对应的参数

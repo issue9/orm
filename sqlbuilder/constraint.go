@@ -67,11 +67,12 @@ func AddConstraint(e Engine, d Dialect) *AddConstraintStmt {
 }
 
 // Reset 重置内容
-func (stmt *AddConstraintStmt) Reset() {
+func (stmt *AddConstraintStmt) Reset() *AddConstraintStmt {
 	stmt.TableName = ""
 	stmt.Name = ""
 	stmt.Type = constraintNone
 	stmt.Data = stmt.Data[:0]
+	return stmt
 }
 
 // Table 指定表名
@@ -282,7 +283,8 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 }
 
 // Reset 重置
-func (stmt *DropConstraintStmt) Reset() {
+func (stmt *DropConstraintStmt) Reset() *DropConstraintStmt {
 	stmt.TableName = ""
 	stmt.Name = ""
+	return stmt
 }

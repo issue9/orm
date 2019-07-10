@@ -108,13 +108,15 @@ func (stmt *UpdateStmt) Or(cond string, args ...interface{}) *UpdateStmt {
 }
 
 // Reset 重置语句
-func (stmt *UpdateStmt) Reset() {
+func (stmt *UpdateStmt) Reset() *UpdateStmt {
 	stmt.table = ""
 	stmt.where.Reset()
 	stmt.values = stmt.values[:0]
 
 	stmt.occColumn = ""
 	stmt.occValue = nil
+
+	return stmt
 }
 
 // SQL 获取 SQL 语句以及对应的参数

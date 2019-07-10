@@ -64,9 +64,10 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 }
 
 // Reset 重置
-func (stmt *AddColumnStmt) Reset() {
+func (stmt *AddColumnStmt) Reset() *AddColumnStmt {
 	stmt.table = ""
 	stmt.column = nil
+	return stmt
 }
 
 // DropColumnStmtHooker DropColumnStmt.DDLSQL 的钩子函数
@@ -124,7 +125,8 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 }
 
 // Reset 重置
-func (stmt *DropColumnStmt) Reset() {
+func (stmt *DropColumnStmt) Reset() *DropColumnStmt {
 	stmt.TableName = ""
 	stmt.ColumnName = ""
+	return stmt
 }

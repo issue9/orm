@@ -69,10 +69,11 @@ func (stmt *InsertStmt) Values(vals ...interface{}) *InsertStmt {
 }
 
 // Reset 重置语句
-func (stmt *InsertStmt) Reset() {
+func (stmt *InsertStmt) Reset() *InsertStmt {
 	stmt.table = ""
 	stmt.cols = stmt.cols[:0]
 	stmt.args = stmt.args[:0]
+	return stmt
 }
 
 // SQL 获取 SQL 的语句及参数部分

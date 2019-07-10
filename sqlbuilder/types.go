@@ -9,13 +9,6 @@ import (
 	"database/sql"
 )
 
-// Rester 重置对象数据
-//
-// 实现该接口的对象，可以调用 Reset 方法重置对象的数据以达到重复利用数据的问题。
-type Rester interface {
-	Reset()
-}
-
 // SQLer 定义 SQL 语句的基本接口
 type SQLer interface {
 	SQL() (query string, args []interface{}, err error)

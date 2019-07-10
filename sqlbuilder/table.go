@@ -71,7 +71,7 @@ func CreateTable(e Engine, d Dialect) *CreateTableStmt {
 }
 
 // Reset 重置内容
-func (stmt *CreateTableStmt) Reset() {
+func (stmt *CreateTableStmt) Reset() *CreateTableStmt {
 	stmt.name = ""
 	stmt.columns = stmt.columns[:0]
 	stmt.indexes = stmt.indexes[:0]
@@ -80,6 +80,8 @@ func (stmt *CreateTableStmt) Reset() {
 	stmt.constraints = stmt.constraints[:0]
 	stmt.pk = nil
 	stmt.ai = nil
+
+	return stmt
 }
 
 // Table 指定表名
@@ -440,9 +442,10 @@ func TruncateTable(e Engine, d Dialect) *TruncateTableStmt {
 }
 
 // Reset 重置内容
-func (stmt *TruncateTableStmt) Reset() {
+func (stmt *TruncateTableStmt) Reset() *TruncateTableStmt {
 	stmt.TableName = ""
 	stmt.AIColumnName = ""
+	return stmt
 }
 
 // Table 指定表名
@@ -509,6 +512,7 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 }
 
 // Reset 重置
-func (stmt *DropTableStmt) Reset() {
+func (stmt *DropTableStmt) Reset() *DropTableStmt {
 	stmt.tables = stmt.tables[:0]
+	return stmt
 }
