@@ -36,11 +36,14 @@ func (stmt *SelectStmt) View(name string) *CreateViewStmt {
 }
 
 // Reset 重置对象
-func (stmt *CreateViewStmt) Reset() {
+func (stmt *CreateViewStmt) Reset() *CreateViewStmt {
 	stmt.name = ""
 	stmt.selectStmt = nil
 	stmt.columns = stmt.columns[:0]
 	stmt.temporary = false
+	stmt.replace = false
+
+	return stmt
 }
 
 // Name 指定视图名称
