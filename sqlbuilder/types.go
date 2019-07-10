@@ -56,6 +56,10 @@ type Engine interface {
 }
 
 // Dialect 接口用于描述与数据库相关的一些语言特性。
+//
+// 除了 Dialect，同时还提供了部分 *Hooker 的接口，用于自定义某一条语句的实现。
+// 一般情况下， 如果有多个数据是遵循 SQL 标准的，只有个别有例外，
+// 那么该例外的 Dialect 实现，可以同时实现 Hooker 接口， 自定义该语句的实现。
 type Dialect interface {
 	// 返回符合当前数据库规范的引号对。
 	QuoteTuple() (openQuote, closeQuote byte)

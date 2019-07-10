@@ -3,9 +3,6 @@
 // license that can be found in the LICENSE file.
 
 // Package sqlbuilder 提供一套通过字符串拼接来构成 SQL 语句的工具。
-//
-// TODO: hook
-// TODO: dialect
 package sqlbuilder
 
 import (
