@@ -30,16 +30,26 @@ func TestColumn(t *testing.T) {
 
 		db := t.DB.DB
 		dialect := t.DB.Dialect()
-		err := sqlbuilder.AddColumn(db, dialect).
-			Table("users").
+
+		addStmt := sqlbuilder.AddColumn(db, dialect)
+		err := addStmt.Table("users").
 			Column("col1", reflect.TypeOf(1), true, false, nil).
 			Exec()
 		a.NotError(err, "%s@%s", err, t.DriverName)
 
-		err = sqlbuilder.DropColumn(db, dialect).
-			Table("users").
+		dropStmt := sqlbuilder.DropColumn(db, dialect)
+		err = dropStmt.Table("users").
 			Column("col1").
 			Exec()
 		t.NotError(err, "%s@%s", err, t.DriverName)
+
+		err = addStmt.Reset().Exec()
+		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
+
+		err = addStmt.Reset().Table("users").Exec()
+		a.ErrorType(err, sqlbuilder.ErrColumnsIsEmpty)
+
+		err = dropStmt.Reset().Exec()
+		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
 	}) // end suite.ForEach
 }

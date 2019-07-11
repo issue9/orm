@@ -146,6 +146,10 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		stmt.Name = PKName(stmt.TableName)
 	}
 
+	if stmt.Name == "" {
+		return nil, ErrConstraintIsEmpty
+	}
+
 	if hook, ok := stmt.dialect.(AddConstraintStmtHooker); ok {
 		return hook.AddConstraintStmtHook(stmt)
 	}
@@ -265,6 +269,10 @@ func (stmt *DropConstraintStmt) Constraint(name string) *DropConstraintStmt {
 func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 	if stmt.TableName == "" {
 		return nil, ErrTableIsEmpty
+	}
+
+	if stmt.Name == "" {
+		return nil, ErrValueIsEmpty
 	}
 
 	if hook, ok := stmt.dialect.(DropConstraintStmtHooker); ok {

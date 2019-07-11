@@ -40,6 +40,25 @@ func TestCreateTableStmt(t *testing.T) {
 		err := stmt.Exec()
 		a.NotError(err)
 
+		a.Panic(func() {
+			stmt.Reset().
+				Table("users").
+				AutoIncrement("id", reflect.TypeOf(1)).
+				PK("id")
+		})
+
+		// 约束名重和昨
+		err = stmt.Reset().Table("users").
+			Column("name", reflect.TypeOf(""), false, false, nil).
+			Unique("c1", "name").
+			Check("c1", "name IS NOT NULL").
+			Exec()
+		a.Error(err)
+
+		a.Error(stmt.Reset().Exec(), sqlbuilder.ErrTableIsEmpty)
+
+		a.Error(stmt.Reset().Table("users").Exec(), sqlbuilder.ErrColumnsIsEmpty)
+
 		insert := sqlbuilder.Insert(db, dialect).
 			Table(table).
 			KeyValue("age", 1).
@@ -77,14 +96,26 @@ func TestTruncateTable(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		err := sqlbuilder.TruncateTable(t.DB.DB, t.DB.Dialect()).
-			Table("users", "id").
+		_, err := sqlbuilder.Insert(t.DB.DB, t.DB.Dialect()).
+			Table("info").
+			KeyValue("uid", 1).
+			KeyValue("tel", "18011112222").
+			KeyValue("nickname", "nickname1").
+			KeyValue("address", "address1").
 			Exec()
+		a.NotError(err)
+
+		truncate := sqlbuilder.TruncateTable(t.DB.DB, t.DB.Dialect())
+		err = truncate.Table("info", "").Exec()
+		t.NotError(err)
+
+		// 可重复调用
+		err = truncate.Reset().Table("info", "").Exec()
 		t.NotError(err)
 
 		sel := sqlbuilder.Select(t.DB.DB, t.DB.Dialect()).
 			Select("count(*) as cnt").
-			From("users")
+			From("info")
 		rows, err := sel.Query()
 		t.NotError(err).NotNil(rows)
 		t.True(rows.Next())
@@ -92,5 +123,21 @@ func TestTruncateTable(t *testing.T) {
 		t.NotError(rows.Scan(&val))
 		t.NotError(rows.Close())
 		t.Equal(val, 0)
+	})
+}
+
+func TestDropTable(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
+
+		drop := sqlbuilder.DropTable(t.DB.DB, t.DB.Dialect())
+		a.Error(drop.Exec())
+
+		a.NotError(drop.Reset().Table("info").Exec())
 	})
 }

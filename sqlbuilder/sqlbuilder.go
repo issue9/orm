@@ -23,6 +23,9 @@ var (
 	// 若未指定任何列表，则返回此错误
 	ErrColumnsIsEmpty = errors.New("未指定列")
 
+	// ErrConstraintIsEmpty 约束名不能为空，某些需要操作约束的 SQL 会返回此值。
+	ErrConstraintIsEmpty = errors.New("约束名不能为空")
+
 	// ErrDupColumn 在 Update 中可能存在重复设置的列名。
 	ErrDupColumn = errors.New("重复的列名")
 

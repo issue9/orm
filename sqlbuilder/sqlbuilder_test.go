@@ -30,14 +30,26 @@ func initDB(t *test.Test) {
 	db := t.DB.DB
 	dialect := t.DB.Dialect()
 
-	err := sqlbuilder.CreateTable(db, dialect).
+	creator := sqlbuilder.CreateTable(db, dialect).
 		Table("users").
 		AutoIncrement("id", reflect.TypeOf(int64(1))).
 		Column("name", reflect.TypeOf(""), false, false, nil, 20).
 		Column("age", reflect.TypeOf(1), true, false, nil).
 		Column("version", reflect.TypeOf(int64(1)), false, true, 0).
-		Exec()
+		Unique("unique_users_id", "id")
+	err := creator.Exec()
 	t.NotError(err, "%s@%s", err, t.DriverName)
+
+	creator.Reset().Table("info").
+		Column("uid", reflect.TypeOf(int64(1)), false, false, nil).
+		Column("tel", reflect.TypeOf(""), false, false, nil, 11).
+		Column("nickname", reflect.TypeOf(""), false, false, nil, 20).
+		Column("address", reflect.TypeOf(""), false, false, nil, 1024).
+		//Column("birthday", reflect.TypeOf(time.Time{}), false, true, time.Time{}).
+		PK("tel", "nickname").
+		ForeignKey("info_fk", "uid", "users", "id", "CASCADE", "CASCADE")
+	err = creator.Exec()
+	t.NotError(err)
 
 	sql := sqlbuilder.Insert(db, dialect).
 		Columns("name", "age").
@@ -75,7 +87,10 @@ func initDB(t *test.Test) {
 }
 
 func clearDB(t *test.Test) {
-	err := sqlbuilder.DropTable(t.DB.DB, t.DB.Dialect()).Table("users").Exec()
+	err := sqlbuilder.DropTable(t.DB.DB, t.DB.Dialect()).
+		Table("info"). // 需要先删除 info，info 的外键依赖 users
+		Table("users").
+		Exec()
 	t.NotError(err)
 }
 
