@@ -88,6 +88,13 @@ func (stmt *SelectStmt) Reset() *SelectStmt {
 	return stmt
 }
 
+// 判断是否可以加上引号
+func canNotQuote(val string) bool {
+	return strings.IndexFunc(val, func(r rune) bool {
+		return unicode.IsSpace(r) || r == '.' || r == '*'
+	}) > 0
+}
+
 // SQL 获取 SQL 语句及对应的参数
 func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	if stmt.table == "" {
@@ -106,16 +113,13 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 			buf.WriteString("DISTINCT ")
 		}
 		for _, c := range stmt.cols {
-			switch {
-			case c == "*",
-				// 简单地通过是否包含空格判断是否为多列
-				strings.IndexFunc(c, func(r rune) bool { return unicode.IsSpace(r) }) > 0:
+			if canNotQuote(c) {
 				buf.WriteString(c).WriteBytes(',')
-			default:
-				buf.WriteBytes(stmt.l).
-					WriteString(c).
-					WriteBytes(stmt.r, ',')
+				continue
 			}
+			buf.WriteBytes(stmt.l).
+				WriteString(c).
+				WriteBytes(stmt.r, ',')
 		}
 		buf.TruncateLast(1)
 	} else {

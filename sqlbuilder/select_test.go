@@ -9,6 +9,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -18,7 +19,7 @@ var (
 	_ sqlbuilder.WhereStmter = &sqlbuilder.SelectStmt{}
 )
 
-func TestSelect_Query(t *testing.T) {
+func TestSelect(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
 	defer suite.Close()
@@ -68,5 +69,52 @@ func TestSelect_Query(t *testing.T) {
 			Desc("id")
 		id, err = stmt.QueryInt("id")
 		a.ErrorType(err, sqlbuilder.ErrNoData)
+	})
+}
+
+func TestSelectStmt_Join(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
+		db := t.DB.DB
+		dialect := t.DB.Dialect()
+
+		insert := sqlbuilder.Insert(db, dialect)
+		r, err := insert.Table("info").
+			Columns("uid", "nickname", "tel", "address").
+			Values(1, "n1", "tel-1", "address-1").
+			Values(1, "n2", "tel-2", "address-2").
+			Exec()
+		t.NotError(err).NotNil(r)
+
+		sel := sqlbuilder.Select(db, dialect)
+		rows, err := sel.Select("i.nickname,i.uid").
+			From("users", "u").
+			Where("uid=?", 1).
+			Join("LEFT", "info AS i", "i.uid=u.id").
+			Query()
+		a.NotError(err).NotNil(rows)
+		defer func() {
+			t.NotError(rows.Close())
+		}()
+		maps, err := fetch.Map(false, rows)
+		a.NotError(err).
+			NotNil(maps).
+			Equal(1, len(maps)).
+			Equal(maps[0]["nickname"], "n1")
+	})
+}
+
+func TestSelectStmt_Group(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		// TODO
 	})
 }
