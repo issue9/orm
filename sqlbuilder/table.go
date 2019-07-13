@@ -251,18 +251,16 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	}
 
 	w := New("CREATE TABLE IF NOT EXISTS ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.name).
-		WriteBytes(stmt.r, '(')
+		Quote(stmt.name, stmt.l, stmt.r).
+		WriteBytes('(')
 
 	for _, col := range stmt.columns {
 		typ, err := stmt.dialect.SQLType(col)
 		if err != nil {
 			return nil, err
 		}
-		w.WriteBytes(stmt.l).
-			WriteString(col.Name).
-			WriteBytes(stmt.r, ' ').
+		w.Quote(col.Name, stmt.l, stmt.r).
+			WriteBytes(' ').
 			WriteString(typ).
 			WriteBytes(',')
 	}
@@ -349,15 +347,11 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 // CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 func (stmt *CreateTableStmt) createPKSQL(buf *SQLBuilder, name string, cols ...string) {
 	buf.WriteString(" CONSTRAINT ").
-		WriteBytes(stmt.l).
-		WriteString(name).
-		WriteBytes(stmt.r).
+		Quote(name, stmt.l, stmt.r).
 		WriteString(" PRIMARY KEY(")
 
 	for _, col := range cols {
-		buf.WriteBytes(stmt.l).
-			WriteString(col).
-			WriteBytes(stmt.r, ',')
+		buf.Quote(col, stmt.l, stmt.r).WriteBytes(',')
 	}
 	buf.TruncateLast(1).WriteBytes(')')
 }
@@ -367,14 +361,10 @@ func (stmt *CreateTableStmt) createPKSQL(buf *SQLBuilder, name string, cols ...s
 // CONSTRAINT unique_name UNIQUE (id,lastName)
 func (stmt *CreateTableStmt) createUniqueSQL(buf *SQLBuilder, name string, cols ...string) {
 	buf.WriteString(" CONSTRAINT ").
-		WriteBytes(stmt.l).
-		WriteString(name).
-		WriteBytes(stmt.r).
+		Quote(name, stmt.l, stmt.r).
 		WriteString(" UNIQUE(")
 	for _, col := range cols {
-		buf.WriteBytes(stmt.l).
-			WriteString(col).
-			WriteBytes(stmt.r, ',')
+		buf.Quote(col, stmt.l, stmt.r).WriteBytes(',')
 	}
 	buf.TruncateLast(1).WriteBytes(')')
 }
@@ -383,23 +373,17 @@ func (stmt *CreateTableStmt) createUniqueSQL(buf *SQLBuilder, name string, cols 
 func (stmt *CreateTableStmt) createFKSQL(buf *SQLBuilder, fk *foreignKey) {
 	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ").
-		WriteBytes(stmt.l).
-		WriteString(fk.Name).
-		WriteBytes(stmt.r)
+		Quote(fk.Name, stmt.l, stmt.r)
 
 	buf.WriteString(" FOREIGN KEY (").
-		WriteBytes(stmt.l).
-		WriteString(fk.Column).
-		WriteBytes(stmt.r)
+		Quote(fk.Column, stmt.l, stmt.r)
 
 	buf.WriteString(") REFERENCES ").
-		WriteBytes(stmt.l).
-		WriteString(fk.RefTableName).
-		WriteBytes(stmt.r)
+		Quote(fk.RefTableName, stmt.l, stmt.r)
 
-	buf.WriteBytes('(', stmt.l).
-		WriteString(fk.RefColName).
-		WriteBytes(stmt.r, ')')
+	buf.WriteBytes('(').
+		Quote(fk.RefColName, stmt.l, stmt.r).
+		WriteBytes(')')
 
 	if len(fk.UpdateRule) > 0 {
 		buf.WriteString(" ON UPDATE ").WriteString(fk.UpdateRule)
@@ -414,9 +398,7 @@ func (stmt *CreateTableStmt) createFKSQL(buf *SQLBuilder, fk *foreignKey) {
 func (stmt *CreateTableStmt) createCheckSQL(buf *SQLBuilder, name, expr string) {
 	// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 	buf.WriteString(" CONSTRAINT ").
-		WriteBytes(stmt.l).
-		WriteString(name).
-		WriteBytes(stmt.r).
+		Quote(name, stmt.l, stmt.r).
 		WriteString(" CHECK(").
 		WriteString(expr).
 		WriteBytes(')')
@@ -502,9 +484,7 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 
 	for _, table := range stmt.tables {
 		buf := New("DROP TABLE IF EXISTS ").
-			WriteBytes(stmt.l).
-			WriteString(table).
-			WriteBytes(stmt.r)
+			Quote(table, stmt.l, stmt.r)
 
 		qs = append(qs, buf.String())
 	}

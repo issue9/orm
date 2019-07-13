@@ -55,13 +55,10 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 	}
 
 	buf := New("ALTER TABLE ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.table).
-		WriteBytes(stmt.r).
+		Quote(stmt.table, stmt.l, stmt.r).
 		WriteString(" ADD ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.column.Name).
-		WriteBytes(stmt.r, ' ').
+		Quote(stmt.column.Name, stmt.l, stmt.r).
+		WriteBytes(' ').
 		WriteString(typ)
 
 	return []string{buf.String()}, nil
@@ -118,13 +115,9 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 	}
 
 	buf := New("ALTER TABLE ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.TableName).
-		WriteBytes(stmt.r).
+		Quote(stmt.TableName, stmt.l, stmt.r).
 		WriteString(" DROP COLUMN ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.ColumnName).
-		WriteBytes(stmt.r)
+		Quote(stmt.ColumnName, stmt.l, stmt.r)
 	return []string{buf.String()}, nil
 }
 

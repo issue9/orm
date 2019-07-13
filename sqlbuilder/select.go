@@ -166,20 +166,17 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 func (stmt *SelectStmt) buildColumns(builder *SQLBuilder) {
 	for _, col := range stmt.columns {
 		if col.table != "" {
-			builder.WriteBytes(stmt.l).WriteString(col.table).WriteBytes(stmt.r, '.')
+			builder.Quote(col.table, stmt.l, stmt.r).WriteBytes('.')
 		}
 
 		if col.name == "*" {
 			builder.WriteBytes('*')
 		} else {
-			builder.WriteBytes(stmt.l).WriteString(col.name).WriteBytes(stmt.r)
+			builder.Quote(col.name, stmt.l, stmt.r)
 		}
 
 		if col.alias != "" {
-			builder.WriteString(" AS ").
-				WriteBytes(stmt.l).
-				WriteString(col.alias).
-				WriteBytes(stmt.r)
+			builder.WriteString(" AS ").Quote(col.alias, stmt.l, stmt.r)
 		}
 
 		builder.WriteBytes(',')
@@ -254,10 +251,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 		panic("不能重复指定表名")
 	}
 
-	builder := New("").
-		WriteBytes(stmt.l).
-		WriteString(table).
-		WriteBytes(stmt.r)
+	builder := New("").Quote(table, stmt.l, stmt.r)
 
 	switch len(alias) {
 	case 0:
@@ -267,8 +261,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 			break
 		}
 
-		builder.WriteString(" AS ").
-			WriteBytes(stmt.l).WriteString(alias[0]).WriteBytes(stmt.r)
+		builder.WriteString(" AS ").Quote(alias[0], stmt.l, stmt.r)
 		stmt.tableExpr = builder.String()
 	default:
 		panic("过多的 alias 参数")
@@ -340,13 +333,9 @@ func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 	stmt.joins.WriteBytes(' ').
 		WriteString(typ).
 		WriteString(" JOIN ").
-		WriteBytes(stmt.l).
-		WriteString(table).
-		WriteBytes(stmt.r).
+		Quote(table, stmt.l, stmt.r).
 		WriteString(" AS ").
-		WriteBytes(stmt.l).
-		WriteString(alias).
-		WriteBytes(stmt.r).
+		Quote(alias, stmt.l, stmt.r).
 		WriteString(" ON ").
 		WriteString(on)
 
@@ -422,13 +411,12 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 func (stmt *baseStmt) quoteColumn(b *SQLBuilder, col string) {
 	index := strings.IndexByte(col, ',')
 	if index <= 0 {
-		b.WriteBytes(stmt.l).WriteString(col).WriteBytes(stmt.r, ' ')
+		b.Quote(col, stmt.l, stmt.r).WriteBytes(' ')
 	} else {
-		b.WriteBytes(stmt.l).
-			WriteString(col[:index]).
-			WriteBytes(stmt.r, ' ', stmt.l).
-			WriteString(col[index+1:]).
-			WriteBytes(stmt.r, ' ')
+		b.Quote(col[:index], stmt.l, stmt.r).
+			WriteBytes(' ').
+			Quote(col[index+1:], stmt.l, stmt.r).
+			WriteBytes(' ')
 	}
 }
 
@@ -460,15 +448,11 @@ func (stmt *SelectStmt) Count(cnt, col string, distinct bool) *SelectStmt {
 	if col == "*" {
 		builder.WriteString("*)")
 	} else {
-		builder.WriteBytes(stmt.l).
-			WriteString(col).
-			WriteBytes(stmt.r, ')')
+		builder.Quote(col, stmt.l, stmt.r).
+			WriteBytes(')')
 	}
 
-	builder.WriteString(" AS ").
-		WriteBytes(stmt.l).
-		WriteString(cnt).
-		WriteBytes(stmt.r)
+	builder.WriteString(" AS ").Quote(cnt, stmt.l, stmt.r)
 
 	stmt.countExpr = builder.String()
 

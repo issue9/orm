@@ -78,6 +78,11 @@ func (b *SQLBuilder) WriteBytes(c ...byte) *SQLBuilder {
 	return b
 }
 
+// Quote 给 str 添加引号
+func (b *SQLBuilder) Quote(str string, l, r byte) *SQLBuilder {
+	return b.WriteBytes(l).WriteString(str).WriteBytes(r)
+}
+
 // Reset 重置内容
 func (b *SQLBuilder) Reset() *SQLBuilder {
 	b.buffer().Reset()

@@ -90,13 +90,11 @@ func (stmt *CreateIndexStmt) DDLSQL() ([]string, error) {
 
 	builder.WriteString(stmt.name).
 		WriteString(" ON ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.table).
-		WriteBytes(stmt.r, '(')
+		Quote(stmt.table, stmt.l, stmt.r).
+		WriteBytes('(')
 	for _, col := range stmt.cols {
-		builder.WriteBytes(stmt.l).
-			WriteString(col).
-			WriteBytes(stmt.r, ',')
+		builder.Quote(col, stmt.l, stmt.r).
+			WriteBytes(',')
 	}
 	builder.TruncateLast(1).WriteBytes(')')
 
@@ -156,12 +154,9 @@ func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
 		return hook.DropIndexStmtHook(stmt)
 	}
 
-	builder := New("DROP INDEX ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.IndexName).
-		WriteBytes(stmt.r)
+	b := New("DROP INDEX ").Quote(stmt.IndexName, stmt.l, stmt.r)
 
-	return []string{builder.String()}, nil
+	return []string{b.String()}, nil
 }
 
 // Reset 重置

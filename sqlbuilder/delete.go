@@ -37,9 +37,7 @@ func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 	}
 
 	builder := New("DELETE FROM ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.table).
-		WriteBytes(stmt.r).
+		Quote(stmt.table, stmt.l, stmt.r).
 		WriteString(" WHERE ").
 		WriteString(query)
 
