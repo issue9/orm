@@ -6,6 +6,9 @@ package sqlbuilder
 
 import "strings"
 
+// operation
+// =, >=, <=, >, <, <>, between, is null, is not null, like, not like, in, not in
+
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
 	builder *SQLBuilder
@@ -112,8 +115,59 @@ func (stmt *WhereStmt) OrBetween(col string, v1, v2 interface{}) *WhereStmt {
 	return stmt
 }
 
+// AndLike 指定 WHERE ... AND col LIKE content
 func (stmt *WhereStmt) AndLike(col, content string) *WhereStmt {
 	stmt.And(col + " LIKE '" + content + "'")
+	return stmt
+}
+
+// OrLike 指定 WHERE ... OR col LIKE content
+func (stmt *WhereStmt) OrLike(col, content string) *WhereStmt {
+	stmt.Or(col + " LIKE '" + content + "'")
+	return stmt
+}
+
+// AndNotLike 指定 WHERE ... AND col NOT LIKE content
+func (stmt *WhereStmt) AndNotLike(col, content string) *WhereStmt {
+	stmt.And(col + " NOT LIKE '" + content + "'")
+	return stmt
+}
+
+// OrNotLike 指定 WHERE ... OR col NOT LIKE content
+func (stmt *WhereStmt) OrNotLike(col, content string) *WhereStmt {
+	stmt.Or(col + " NOT LIKE '" + content + "'")
+	return stmt
+}
+
+// AndIn 指定 WHERE ... AND col IN(v...)
+func (stmt *WhereStmt) AndIn(col string, v ...interface{}) *WhereStmt {
+	cols := strings.Repeat("?,", len(v))
+	cols = cols[:len(cols)-1]
+	stmt.And(col+" IN ("+cols+")", v...)
+	return stmt
+}
+
+// OrIn 指定 WHERE ... OR col IN(v...)
+func (stmt *WhereStmt) OrIn(col string, v ...interface{}) *WhereStmt {
+	cols := strings.Repeat("?,", len(v))
+	cols = cols[:len(cols)-1]
+	stmt.Or(col+" IN ("+cols+")", v...)
+	return stmt
+}
+
+// AndNotIn 指定 WHERE ... AND col NOT IN(v...)
+func (stmt *WhereStmt) AndNotIn(col string, v ...interface{}) *WhereStmt {
+	cols := strings.Repeat("?,", len(v))
+	cols = cols[:len(cols)-1]
+	stmt.And(col+" NOT IN ("+cols+")", v...)
+	return stmt
+}
+
+// OrNotIn 指定 WHERE ... OR col IN(v...)
+func (stmt *WhereStmt) OrNotIn(col string, v ...interface{}) *WhereStmt {
+	cols := strings.Repeat("?,", len(v))
+	cols = cols[:len(cols)-1]
+	stmt.Or(col+" NOT IN ("+cols+")", v...)
 	return stmt
 }
 

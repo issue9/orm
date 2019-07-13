@@ -9,6 +9,7 @@ import (
 	"unicode"
 )
 
+// 根据 AS 拆分字符串
 func splitWithAS(col string) (column, alias string) {
 	var state byte
 	for index, c := range col {
