@@ -102,7 +102,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		if stmt.distinct {
 			buf.WriteString("DISTINCT ")
 		}
-		buf.WriteString(stmt.columnsExpr.String())
+		buf.Append(stmt.columnsExpr)
 	} else {
 		buf.WriteString(stmt.countExpr)
 	}
@@ -111,7 +111,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 
 	// join
 	if stmt.joins != nil {
-		buf.WriteString(stmt.joins.String()).WriteBytes(' ')
+		buf.Append(stmt.joins).WriteBytes(' ')
 	}
 
 	// where
@@ -139,7 +139,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	if stmt.countExpr == "" {
 		// order by
 		if stmt.orders != nil && stmt.orders.Len() > 0 {
-			buf.WriteString(stmt.orders.String())
+			buf.Append(stmt.orders)
 		}
 
 		// limit

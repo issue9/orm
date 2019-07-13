@@ -105,3 +105,9 @@ func (b *SQLBuilder) Bytes() []byte {
 func (b *SQLBuilder) Len() int {
 	return b.buffer().Len()
 }
+
+// Append 追加加一个 SQLBuilder 的内容
+func (b *SQLBuilder) Append(v *SQLBuilder) *SQLBuilder {
+	b.buffer().WriteString(v.String())
+	return b
+}
