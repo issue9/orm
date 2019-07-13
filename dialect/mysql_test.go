@@ -5,10 +5,8 @@
 package dialect_test
 
 import (
-	"database/sql"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/issue9/assert"
 
@@ -152,38 +150,38 @@ func TestMysql_SQLType(t *testing.T) {
 			err: true,
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1)},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.IntType},
 			SQLType: "BIGINT NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType:  reflect.TypeOf(1),
+				GoType:  sqlbuilder.Int16Type,
 				Default: 5,
 			},
-			SQLType: "BIGINT NOT NULL",
+			SQLType: "mediumint NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType:     reflect.TypeOf(1),
+				GoType:     sqlbuilder.Int32Type,
 				HasDefault: true,
 				Default:    5,
 			},
-			SQLType: "BIGINT NOT NULL DEFAULT '5'",
+			SQLType: "INT NOT NULL DEFAULT '5'",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(true)},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.BoolType},
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(time.Time{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.TimeType},
 			SQLType: "DATETIME NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(uint16(16))},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.Uint16Type},
 			SQLType: "MEDIUMINT UNSIGNED NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(int8(1))},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.Int8Type},
 			SQLType: "SMALLINT NOT NULL",
 		},
 		{
@@ -192,89 +190,89 @@ func TestMysql_SQLType(t *testing.T) {
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(int(1)),
+				GoType: sqlbuilder.IntType,
 				Length: []int{5, 6},
 			},
 			SQLType: "BIGINT(5) NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(""),
+				GoType: sqlbuilder.StringType,
 				Length: []int{5, 6},
 			},
 			SQLType: "VARCHAR(5) NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(""),
+				GoType: sqlbuilder.StringType,
 				Length: []int{-1},
 			},
 			SQLType: "LONGTEXT NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1.2),
+				GoType: sqlbuilder.Float32Type,
 				Length: []int{5, 6},
 			},
 			SQLType: "DOUBLE(5,6) NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1.2),
+				GoType: sqlbuilder.Float64Type,
 				Length: []int{5},
 			},
 			err: true,
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullFloat64{}),
+				GoType: sqlbuilder.NullFloat64Type,
 				Length: []int{5},
 			},
 			err: true,
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullFloat64{}),
+				GoType: sqlbuilder.NullFloat64Type,
 				Length: []int{5, 7},
 			},
 			SQLType: "DOUBLE(5,7) NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullInt64{}),
+				GoType: sqlbuilder.NullInt64Type,
 				Length: []int{5},
 			},
 			SQLType: "BIGINT(5) NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullString{}),
+				GoType: sqlbuilder.NullStringType,
 				Length: []int{5},
 			},
 			SQLType: "VARCHAR(5) NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullString{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullStringType},
 			SQLType: "LONGTEXT NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullBool{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullBoolType},
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{ // sql.RawBytes 会被转换成 []byte
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.RawBytes{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.RawBytesType},
 			SQLType: "BLOB NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(int64(1)),
+				GoType: sqlbuilder.Int64Type,
 				AI:     true,
 			},
 			SQLType: "BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(uint64(1)),
+				GoType: sqlbuilder.Uint64Type,
 				AI:     true,
 			},
 			SQLType: "BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT NOT NULL",

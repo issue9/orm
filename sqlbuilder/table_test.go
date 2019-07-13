@@ -5,7 +5,6 @@
 package sqlbuilder_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -30,10 +29,10 @@ func TestCreateTableStmt(t *testing.T) {
 		dialect := t.DB.Dialect()
 		stmt := sqlbuilder.CreateTable(db, dialect).
 			Table(table).
-			AutoIncrement("id", reflect.TypeOf(int(1))).
-			Column("age", reflect.TypeOf(int(1)), false, false, nil).
-			Column("name", reflect.TypeOf(""), true, true, "", 100).
-			Column("address", reflect.TypeOf(""), false, false, nil, 100).
+			AutoIncrement("id", sqlbuilder.IntType).
+			Column("age", sqlbuilder.IntType, false, false, nil).
+			Column("name", sqlbuilder.StringType, true, true, "", 100).
+			Column("address", sqlbuilder.StringType, false, false, nil, 100).
 			Index(sqlbuilder.IndexDefault, "index_index", "name", "address").
 			Unique("u_age", "name", "address").
 			Check("age_gt_0", "age>0")
@@ -43,13 +42,13 @@ func TestCreateTableStmt(t *testing.T) {
 		a.Panic(func() {
 			stmt.Reset().
 				Table("users").
-				AutoIncrement("id", reflect.TypeOf(1)).
+				AutoIncrement("id", sqlbuilder.IntType).
 				PK("id")
 		})
 
 		// 约束名重和昨
 		err = stmt.Reset().Table("users").
-			Column("name", reflect.TypeOf(""), false, false, nil).
+			Column("name", sqlbuilder.StringType, false, false, nil).
 			Unique("c1", "name").
 			Check("c1", "name IS NOT NULL").
 			Exec()

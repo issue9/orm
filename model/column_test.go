@@ -5,11 +5,11 @@
 package model
 
 import (
-	"database/sql"
 	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
+
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -34,7 +34,7 @@ func TestColumn_IsZero(t *testing.T) {
 		Column: &sqlbuilder.Column{},
 	}
 
-	col.GoType = reflect.TypeOf(int(5))
+	col.GoType = sqlbuilder.IntType
 	col.zero = reflect.Zero(col.GoType).Interface()
 	a.True(col.IsZero(reflect.ValueOf(int(0))))
 	a.False(col.IsZero(reflect.ValueOf(1)))
@@ -45,7 +45,7 @@ func TestColumn_IsZero(t *testing.T) {
 	a.True(col.IsZero(reflect.ValueOf([]byte(""))))
 	a.False(col.IsZero(reflect.ValueOf([]byte{'0'})))
 
-	col.GoType = reflect.TypeOf(sql.RawBytes{})
+	col.GoType = sqlbuilder.RawBytesType
 	col.zero = reflect.Zero(col.GoType).Interface()
 	a.True(col.IsZero(reflect.ValueOf([]byte{})))
 	a.True(col.IsZero(reflect.ValueOf([]byte(""))))
@@ -57,7 +57,7 @@ func TestColumn_checkLen(t *testing.T) {
 
 	col := &Column{
 		Column: &sqlbuilder.Column{
-			GoType: reflect.TypeOf("string"),
+			GoType: sqlbuilder.StringType,
 			Length: []int{-1},
 		},
 	}
@@ -69,7 +69,7 @@ func TestColumn_checkLen(t *testing.T) {
 	col.Length[0] = -2
 	a.Error(col.checkLen())
 
-	col.GoType = reflect.TypeOf(1)
+	col.GoType = sqlbuilder.IntType
 	col.Length[0] = -2
 	a.Error(col.checkLen())
 

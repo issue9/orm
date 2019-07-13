@@ -5,10 +5,8 @@
 package dialect_test
 
 import (
-	"database/sql"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/issue9/assert"
 
@@ -195,15 +193,15 @@ func TestSqlite3_SQLType(t *testing.T) {
 			err: true,
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1)},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.IntType},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullBool{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullBoolType},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(false)},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.BoolType},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
@@ -211,34 +209,34 @@ func TestSqlite3_SQLType(t *testing.T) {
 			SQLType: "BLOB NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullInt64Type},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullFloat64{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullFloat64Type},
 			SQLType: "REAL NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullString{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullStringType},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType:   reflect.TypeOf(sql.NullString{}),
+				GoType:   sqlbuilder.NullStringType,
 				Nullable: true,
 			},
 			SQLType: "TEXT",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType:  reflect.TypeOf(sql.NullString{}),
+				GoType:  sqlbuilder.NullStringType,
 				Default: "123",
 			},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType:     reflect.TypeOf(sql.NullString{}),
+				GoType:     sqlbuilder.NullStringType,
 				Default:    "123",
 				HasDefault: true,
 			},
@@ -246,33 +244,33 @@ func TestSqlite3_SQLType(t *testing.T) {
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1),
+				GoType: sqlbuilder.IntType,
 				Length: []int{5, 6},
 			},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1),
+				GoType: sqlbuilder.IntType,
 				AI:     true,
 			},
 			SQLType: "INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf("")},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.StringType},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1.2)},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.Float64Type},
 			SQLType: "REAL NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullInt64Type},
 			SQLType: "INTEGER NOT NULL",
 		},
 
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(time.Time{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.TimeType},
 			SQLType: "DATETIME NOT NULL",
 		},
 

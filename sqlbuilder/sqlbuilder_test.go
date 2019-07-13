@@ -5,7 +5,6 @@
 package sqlbuilder_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -32,19 +31,19 @@ func initDB(t *test.Test) {
 
 	creator := sqlbuilder.CreateTable(db, dialect).
 		Table("users").
-		AutoIncrement("id", reflect.TypeOf(int64(1))).
-		Column("name", reflect.TypeOf(""), false, false, nil, 20).
-		Column("age", reflect.TypeOf(1), true, false, nil).
-		Column("version", reflect.TypeOf(int64(1)), false, true, 0).
+		AutoIncrement("id", sqlbuilder.Int64Type).
+		Column("name", sqlbuilder.StringType, false, false, nil, 20).
+		Column("age", sqlbuilder.IntType, true, false, nil).
+		Column("version", sqlbuilder.Int64Type, false, true, 0).
 		Unique("unique_users_id", "id")
 	err := creator.Exec()
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	creator.Reset().Table("info").
-		Column("uid", reflect.TypeOf(int64(1)), false, false, nil).
-		Column("tel", reflect.TypeOf(""), false, false, nil, 11).
-		Column("nickname", reflect.TypeOf(""), false, false, nil, 20).
-		Column("address", reflect.TypeOf(""), false, false, nil, 1024).
+		Column("uid", sqlbuilder.Int64Type, false, false, nil).
+		Column("tel", sqlbuilder.StringType, false, false, nil, 11).
+		Column("nickname", sqlbuilder.StringType, false, false, nil, 20).
+		Column("address", sqlbuilder.StringType, false, false, nil, 1024).
 		//Column("birthday", reflect.TypeOf(time.Time{}), false, true, time.Time{}).
 		PK("tel", "nickname").
 		ForeignKey("info_fk", "uid", "users", "id", "CASCADE", "CASCADE")

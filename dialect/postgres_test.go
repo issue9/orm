@@ -5,10 +5,8 @@
 package dialect_test
 
 import (
-	"database/sql"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/issue9/assert"
 
@@ -46,17 +44,17 @@ func TestPostgres_SQLType(t *testing.T) {
 			err: true,
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(false)},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.BoolType},
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(1)},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.IntType},
 			SQLType: "BIGINT NOT NULL",
 		},
 
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(int8(1)),
+				GoType: sqlbuilder.Int8Type,
 				AI:     true,
 				Length: []int{5, 6},
 			},
@@ -64,7 +62,7 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType:  reflect.TypeOf(int8(1)),
+				GoType:  sqlbuilder.Int8Type,
 				Length:  []int{5, 6},
 				Default: 1,
 			},
@@ -72,7 +70,7 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType:     reflect.TypeOf(int8(1)),
+				GoType:     sqlbuilder.Int8Type,
 				Length:     []int{5, 6},
 				HasDefault: true,
 				Default:    1,
@@ -82,19 +80,19 @@ func TestPostgres_SQLType(t *testing.T) {
 
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullInt64{}),
+				GoType: sqlbuilder.NullInt64Type,
 				AI:     true,
 			},
 			SQLType: "BIGSERIAL NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullInt64{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullInt64Type},
 			SQLType: "BIGINT NOT NULL",
 		},
 
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(uint32(1)),
+				GoType: sqlbuilder.Uint32Type,
 				AI:     true,
 				Length: []int{5, 6},
 			},
@@ -102,7 +100,7 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(uint32(1)),
+				GoType: sqlbuilder.Uint32Type,
 				Length: []int{5, 6},
 			},
 			SQLType: "INT NOT NULL",
@@ -110,14 +108,14 @@ func TestPostgres_SQLType(t *testing.T) {
 
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1),
+				GoType: sqlbuilder.IntType,
 				Length: []int{5, 6},
 			},
 			SQLType: "BIGINT NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1),
+				GoType: sqlbuilder.IntType,
 				AI:     true,
 			},
 			SQLType: "BIGSERIAL NOT NULL",
@@ -125,40 +123,40 @@ func TestPostgres_SQLType(t *testing.T) {
 
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1.2),
+				GoType: sqlbuilder.Float32Type,
 				Length: []int{5, 9},
 			},
 			SQLType: "NUMERIC(5,9) NOT NULL",
 		},
 		{ // 长度必须为 2
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1.2),
+				GoType: sqlbuilder.Float32Type,
 			},
 			err: true,
 		},
 		{ // 长度必须为 2
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(1.2),
+				GoType: sqlbuilder.Float64Type,
 				Length: []int{1},
 			},
 			err: true,
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullFloat64{}),
+				GoType: sqlbuilder.NullFloat64Type,
 				Length: []int{5, 9},
 			},
 			SQLType: "NUMERIC(5,9) NOT NULL",
 		},
 		{ // 长度必须为 2
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullFloat64{}),
+				GoType: sqlbuilder.NullFloat64Type,
 			},
 			err: true,
 		},
 
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf("")},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.StringType},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
@@ -167,19 +165,19 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.NullString{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullStringType},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullString{}),
+				GoType: sqlbuilder.NullStringType,
 				Length: []int{-1, 111},
 			},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(sql.NullString{}),
+				GoType: sqlbuilder.NullStringType,
 				Length: []int{99, 111},
 			},
 			SQLType: "VARCHAR(99) NOT NULL",
@@ -187,26 +185,26 @@ func TestPostgres_SQLType(t *testing.T) {
 
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(""),
+				GoType: sqlbuilder.StringType,
 				Length: []int{99},
 			},
 			SQLType: "VARCHAR(99) NOT NULL",
 		},
 		{
 			col: &sqlbuilder.Column{
-				GoType: reflect.TypeOf(""),
+				GoType: sqlbuilder.StringType,
 				Length: []int{11111111},
 			},
 			SQLType: "TEXT NOT NULL",
 		},
 
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(sql.RawBytes{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.RawBytesType},
 			SQLType: "BYTEA NOT NULL",
 		},
 
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf(time.Time{})},
+			col:     &sqlbuilder.Column{GoType: sqlbuilder.TimeType},
 			SQLType: "TIMESTAMP NOT NULL",
 		},
 

@@ -5,10 +5,10 @@
 package model
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
+
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -133,32 +133,32 @@ func TestModel_sanitize(t *testing.T) {
 
 	ai := &Column{
 		Column: &sqlbuilder.Column{
-			GoType: reflect.TypeOf(1),
+			GoType: sqlbuilder.IntType,
 		},
 	}
 
 	pk1 := &Column{
 		Column: &sqlbuilder.Column{
-			GoType: reflect.TypeOf(1),
+			GoType: sqlbuilder.IntType,
 		},
 	}
 
 	pk2 := &Column{
 		Column: &sqlbuilder.Column{
-			GoType: reflect.TypeOf(2),
+			GoType: sqlbuilder.IntType,
 		},
 	}
 
 	nullable := &Column{
 		Column: &sqlbuilder.Column{
-			GoType:   reflect.TypeOf(2),
+			GoType:   sqlbuilder.IntType,
 			Nullable: true,
 		},
 	}
 
 	def := &Column{
 		Column: &sqlbuilder.Column{
-			GoType:     reflect.TypeOf(2),
+			GoType:     sqlbuilder.IntType,
 			HasDefault: true,
 			Default:    "1",
 		},
@@ -262,7 +262,7 @@ func TestModel_setOCC(t *testing.T) {
 	col := &Column{
 		model: m,
 		Column: &sqlbuilder.Column{
-			GoType: reflect.TypeOf(123),
+			GoType: sqlbuilder.IntType,
 		},
 	}
 
@@ -300,7 +300,7 @@ func TestModel_setOCC(t *testing.T) {
 	m.OCC = nil
 	m.AI = nil
 	col.Nullable = false
-	col.GoType = reflect.TypeOf("string")
+	col.GoType = sqlbuilder.StringType
 	a.Error(m.setOCC(col, []string{"true"}))
 }
 
@@ -345,7 +345,7 @@ func TestModel_setAI(t *testing.T) {
 
 	col := &Column{
 		Column: &sqlbuilder.Column{
-			GoType:     reflect.TypeOf(1),
+			GoType:     sqlbuilder.StringType,
 			HasDefault: true,
 		},
 	}
@@ -354,9 +354,9 @@ func TestModel_setAI(t *testing.T) {
 	a.Error(m.setAI(col, []string{"true", "false"}))
 
 	// 列类型只能是整数型
-	col.GoType = reflect.TypeOf(1.1)
+	col.GoType = sqlbuilder.Float32Type
 	a.Error(m.setAI(col, nil))
 
-	col.GoType = reflect.TypeOf(1)
+	col.GoType = sqlbuilder.IntType
 	a.NotError(m.setAI(col, nil))
 }

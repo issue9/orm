@@ -5,7 +5,6 @@
 package sqlbuilder_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -33,7 +32,7 @@ func TestColumn(t *testing.T) {
 
 		addStmt := sqlbuilder.AddColumn(db, dialect)
 		err := addStmt.Table("users").
-			Column("col1", reflect.TypeOf(1), true, false, nil).
+			Column("col1", sqlbuilder.IntType, true, false, nil).
 			Exec()
 		a.NotError(err, "%s@%s", err, t.DriverName)
 
