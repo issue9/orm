@@ -182,23 +182,23 @@ func (m *mysql) SQLType(col *sqlbuilder.Column) (string, error) {
 		}
 	case reflect.Struct:
 		switch col.GoType {
-		case rawBytes:
+		case sqlbuilder.RawBytesType:
 			return buildMysqlType("BLOB", col, false, 0), nil
-		case nullBool:
+		case sqlbuilder.NullBoolType:
 			return buildMysqlType("BOOLEAN", col, false, 0), nil
-		case nullFloat64:
+		case sqlbuilder.NullFloat64Type:
 			if len(col.Length) != 2 {
 				return "", errMissLength
 			}
 			return buildMysqlType("DOUBLE", col, false, 2), nil
-		case nullInt64:
+		case sqlbuilder.NullInt64Type:
 			return buildMysqlType("BIGINT", col, false, 1), nil
-		case nullString:
+		case sqlbuilder.NullStringType:
 			if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
 				return buildMysqlType("LONGTEXT", col, false, 0), nil
 			}
 			return buildMysqlType("VARCHAR", col, false, 1), nil
-		case timeType:
+		case sqlbuilder.TimeType:
 			return buildMysqlType("DATETIME", col, false, 0), nil
 		}
 	}

@@ -252,17 +252,17 @@ func (s *sqlite3) SQLType(col *sqlbuilder.Column) (string, error) {
 		}
 	case reflect.Struct:
 		switch col.GoType {
-		case rawBytes:
+		case sqlbuilder.RawBytesType:
 			return buildSqlite3Type("BLOB", col), nil
-		case nullBool:
+		case sqlbuilder.NullBoolType:
 			return buildSqlite3Type("INTEGER", col), nil
-		case nullFloat64:
+		case sqlbuilder.NullFloat64Type:
 			return buildSqlite3Type("REAL", col), nil
-		case nullInt64:
+		case sqlbuilder.NullInt64Type:
 			return buildSqlite3Type("INTEGER", col), nil
-		case nullString:
+		case sqlbuilder.NullStringType:
 			return buildSqlite3Type("TEXT", col), nil
-		case timeType:
+		case sqlbuilder.TimeType:
 			return buildSqlite3Type("DATETIME", col), nil
 		}
 	}
