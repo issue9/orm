@@ -7,12 +7,14 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type baseStmt struct {
-	dialect Dialect
-	engine  Engine
-	l, r    byte
+	dialect  Dialect
+	engine   Engine
+	l, r     byte
+	replacer *strings.Replacer
 }
 
 type queryStmt struct {
@@ -35,10 +37,11 @@ func newQueryStmt(e Engine, d Dialect, sql SQLer) *queryStmt {
 	return &queryStmt{
 		SQLer: sql,
 		baseStmt: baseStmt{
-			engine:  e,
-			dialect: d,
-			l:       l,
-			r:       r,
+			engine:   e,
+			dialect:  d,
+			l:        l,
+			r:        r,
+			replacer: strings.NewReplacer("{", string(l), "}", string(r)),
 		},
 	}
 }

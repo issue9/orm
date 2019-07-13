@@ -28,7 +28,7 @@ func TestWhere(t *testing.T) {
 	sqltest.Equal(a, sql, "id=? and name like ? or type=?")
 
 	w.Reset()
-	a.Equal(0, w.buffer.Len())
+	a.Equal(0, w.builder.Len())
 	a.Equal(0, len(w.args))
 
 	w.And("id=?", 5)
@@ -38,7 +38,7 @@ func TestWhere(t *testing.T) {
 	sqltest.Equal(a, sql, "id=?")
 
 	w.Reset()
-	a.Equal(0, w.buffer.Len())
+	a.Equal(0, w.builder.Len())
 	a.Equal(0, len(w.args))
 
 	w.And("id=?", 5, 7)

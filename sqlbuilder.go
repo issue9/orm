@@ -112,7 +112,7 @@ func count(e Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	stmt := e.SQL().Select().Count("COUNT(*) AS count").From("#" + m.Name)
+	stmt := e.SQL().Select().Count("count", "*", false).From("#" + m.Name)
 	if err = countWhere(stmt, m, rval); err != nil {
 		return 0, err
 	}
@@ -276,7 +276,7 @@ func find(e Engine, v interface{}) error {
 	}
 
 	stmt := e.SQL().Select().
-		Select("*").
+		Column("*").
 		From("#" + m.Name)
 	if err = where(stmt, m, rval); err != nil {
 		return err
@@ -300,7 +300,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 	}
 
 	stmt := tx.SQL().Select().
-		Select("*").
+		Column("*").
 		From("#" + m.Name).
 		ForUpdate()
 	if err = where(stmt, m, rval); err != nil {

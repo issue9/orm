@@ -8,7 +8,6 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/issue9/orm/v2/fetch"
 )
@@ -21,16 +20,16 @@ var ErrNoData = errors.New("不存在符合和条件的数据")
 type SelectStmt struct {
 	*queryStmt
 
-	table     string
-	where     *WhereStmt
-	cols      []string
-	distinct  bool
-	forUpdate bool
+	tableExpr   string
+	where       *WhereStmt
+	columnsExpr *SQLBuilder
+	distinct    bool
+	forUpdate   bool
 
 	// COUNT 查询的列内容
 	countExpr string
 
-	joins  []*join
+	joins  *SQLBuilder
 	orders *SQLBuilder
 	group  string
 
@@ -39,12 +38,6 @@ type SelectStmt struct {
 
 	limitQuery string
 	limitVals  []interface{}
-}
-
-type join struct {
-	typ   string
-	on    string
-	table string
 }
 
 // Select 声明一条 Select 语句
@@ -65,15 +58,19 @@ func (stmt *SelectStmt) Distinct() *SelectStmt {
 
 // Reset 重置语句
 func (stmt *SelectStmt) Reset() *SelectStmt {
-	stmt.table = ""
+	stmt.tableExpr = ""
 	stmt.where.Reset()
-	stmt.cols = stmt.cols[:0]
+	if stmt.columnsExpr != nil {
+		stmt.columnsExpr.Reset()
+	}
 	stmt.distinct = false
 	stmt.forUpdate = false
 
 	stmt.countExpr = ""
 
-	stmt.joins = stmt.joins[:0]
+	if stmt.joins != nil {
+		stmt.joins.Reset()
+	}
 	if stmt.orders != nil {
 		stmt.orders.Reset()
 	}
@@ -88,20 +85,13 @@ func (stmt *SelectStmt) Reset() *SelectStmt {
 	return stmt
 }
 
-// 判断是否可以加上引号
-func canNotQuote(val string) bool {
-	return strings.IndexFunc(val, func(r rune) bool {
-		return unicode.IsSpace(r) || r == '.' || r == '*'
-	}) > 0
-}
-
 // SQL 获取 SQL 语句及对应的参数
 func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
-	if stmt.table == "" {
+	if stmt.tableExpr == "" {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	if len(stmt.cols) == 0 && stmt.countExpr == "" {
+	if (stmt.columnsExpr == nil || stmt.columnsExpr.Len() == 0) && stmt.countExpr == "" {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
@@ -112,39 +102,16 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		if stmt.distinct {
 			buf.WriteString("DISTINCT ")
 		}
-		for _, c := range stmt.cols {
-			if canNotQuote(c) {
-				buf.WriteString(c).WriteBytes(',')
-				continue
-			}
-			buf.WriteBytes(stmt.l).
-				WriteString(c).
-				WriteBytes(stmt.r, ',')
-		}
-		buf.TruncateLast(1)
+		buf.WriteString(stmt.columnsExpr.String())
 	} else {
 		buf.WriteString(stmt.countExpr)
 	}
 
-	buf.WriteString(" FROM ").
-		WriteBytes(stmt.l).
-		WriteString(stmt.table).
-		WriteBytes(stmt.r)
+	buf.WriteString(" FROM ").WriteString(stmt.tableExpr)
 
 	// join
-	if len(stmt.joins) > 0 {
-		buf.WriteBytes(' ')
-		for _, join := range stmt.joins {
-			buf.WriteString(join.typ).
-				WriteString(" JOIN ").
-				WriteBytes(stmt.l).
-				WriteString(join.table).
-				WriteBytes(stmt.r).
-				WriteString(" ON ").
-				WriteString(join.on).
-				WriteBytes(' ')
-		}
-		buf.TruncateLast(1)
+	if stmt.joins != nil {
+		buf.WriteString(stmt.joins.String()).WriteBytes(' ')
 	}
 
 	// where
@@ -190,19 +157,104 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	return buf.String(), args, nil
 }
 
-// Select 指定列名
-func (stmt *SelectStmt) Select(cols ...string) *SelectStmt {
-	if stmt.cols == nil {
-		stmt.cols = make([]string, 0, len(cols))
+// Column 指定列，一次只能指定一列，别外可使用 alias 参数
+//
+// col 表示列名，可以是以下形式：
+//  *
+//  col
+//  table.col
+//  table.*
+func (stmt *SelectStmt) Column(col string, alias ...string) *SelectStmt {
+	if stmt.columnsExpr == nil {
+		stmt.columnsExpr = New("")
+	} else if stmt.columnsExpr.Len() > 0 {
+		stmt.columnsExpr.WriteBytes(',')
 	}
 
-	stmt.cols = append(stmt.cols, cols...)
+	if index := strings.IndexByte(col, '.'); index > 0 {
+		stmt.columnsExpr.WriteBytes(stmt.l).
+			WriteString(col[:index]).
+			WriteBytes(stmt.r, '.')
+		col = col[index+1:]
+	}
+
+	if col == "*" {
+		stmt.columnsExpr.WriteString(col)
+	} else {
+		stmt.columnsExpr.WriteBytes(stmt.l).
+			WriteString(col).
+			WriteBytes(stmt.r)
+	}
+
+	switch len(alias) {
+	case 0:
+	case 1:
+		if alias[0] == "" {
+			break
+		}
+
+		stmt.columnsExpr.WriteString(" AS ").
+			WriteBytes(stmt.l).
+			WriteString(alias[0]).
+			WriteBytes(stmt.r)
+	default:
+		panic("过多的别名参数")
+	}
+
+	return stmt
+}
+
+// AliasColumns 同时指定多列，必须存在别名。
+//
+// 参数中，键名为别名，键值为列名。
+func (stmt *SelectStmt) AliasColumns(cols map[string]string) *SelectStmt {
+	for alias, col := range cols {
+		stmt.Column(col, alias)
+	}
+
+	return stmt
+}
+
+// Columns 指定列名，可以指定多列。
+//
+// 相当于按参数顺序依次调用 Select.Column，如果存在别名，
+// 可以使用 col AS alias 的方式指定每一个参数。
+func (stmt *SelectStmt) Columns(cols ...string) *SelectStmt {
+	for _, col := range cols {
+		if len(col) <= 6 { // " AS " 再加上前后最少一个字符，最少 6 个字符
+			stmt.Column(col)
+			continue
+		}
+
+		col, alias := splitWithAS(col)
+		stmt.Column(col, alias)
+	}
 	return stmt
 }
 
 // From 指定表名
-func (stmt *SelectStmt) From(table string) *SelectStmt {
-	stmt.table = table
+//
+// table 为表名，如果需要指定别名，可以通过 alias 指定。
+func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
+	if stmt.tableExpr != "" {
+		panic("不能重复指定表名")
+	}
+
+	builder := New("").
+		WriteBytes(stmt.l).
+		WriteString(table).
+		WriteBytes(stmt.r)
+
+	switch len(alias) {
+	case 0:
+		stmt.tableExpr = builder.String()
+	case 1:
+		builder.WriteString(" AS ").
+			WriteBytes(stmt.l).WriteString(alias[0]).WriteBytes(stmt.r)
+		stmt.tableExpr = builder.String()
+	default:
+		panic("过多的 alias 参数")
+	}
 
 	return stmt
 }
@@ -239,44 +291,66 @@ func (stmt *SelectStmt) Or(cond string, args ...interface{}) *SelectStmt {
 
 // AndIsNull 指定 WHERE ... AND col IS NULL
 func (stmt *SelectStmt) AndIsNull(col string) *SelectStmt {
-	stmt.where.And(col + " IS NULL")
+	stmt.where.AndIsNull(col)
 	return stmt
 }
 
 // OrIsNull 指定 WHERE ... OR col IS NULL
 func (stmt *SelectStmt) OrIsNull(col string) *SelectStmt {
-	stmt.where.Or(col + " IS NULL")
+	stmt.where.OrIsNull(col)
 	return stmt
 }
 
 // AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
 func (stmt *SelectStmt) AndIsNotNull(col string) *SelectStmt {
-	stmt.where.And(col + " IS NOT NULL")
+	stmt.where.AndIsNotNull(col)
 	return stmt
 }
 
 // OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
 func (stmt *SelectStmt) OrIsNotNull(col string) *SelectStmt {
-	stmt.where.Or(col + " IS NOT NULL")
+	stmt.where.OrIsNotNull(col)
 	return stmt
 }
 
 // Join 添加一条 Join 语句
-func (stmt *SelectStmt) Join(typ, table, on string) *SelectStmt {
+func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 	if stmt.joins == nil {
-		stmt.joins = make([]*join, 0, 5)
+		stmt.joins = New("")
 	}
 
-	stmt.joins = append(stmt.joins, &join{typ: typ, table: table, on: on})
+	stmt.joins.WriteBytes(' ').
+		WriteString(typ).
+		WriteString(" JOIN ").
+		WriteBytes(stmt.l).
+		WriteString(table).
+		WriteBytes(stmt.r).
+		WriteString(" AS ").
+		WriteBytes(stmt.l).
+		WriteString(alias).
+		WriteBytes(stmt.r).
+		WriteString(" ON ").
+		WriteString(on)
+
 	return stmt
 }
 
 // Desc 倒序查询
+//
+// col 为分组的列名，格式可以单纯的列名，或是带表名的列：
+//  col
+//  table.col
+// table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Desc(col ...string) *SelectStmt {
 	return stmt.orderBy(false, col...)
 }
 
 // Asc 正序查询
+//
+// col 为分组的列名，格式可以单纯的列名，或是带表名的列：
+//  col
+//  table.col
+// table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Asc(col ...string) *SelectStmt {
 	return stmt.orderBy(true, col...)
 }
@@ -293,9 +367,8 @@ func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	}
 
 	for _, c := range col {
-		stmt.orders.WriteBytes(stmt.l).
-			WriteString(c).
-			WriteBytes(stmt.r, ',')
+		stmt.quoteColumn(stmt.orders, c)
+		stmt.orders.WriteBytes(',')
 	}
 	stmt.orders.TruncateLast(1)
 
@@ -315,10 +388,30 @@ func (stmt *SelectStmt) ForUpdate() *SelectStmt {
 }
 
 // Group 添加 GROUP BY 语句
+//
+// col 为分组的列名，格式可以单纯的列名，或是带表名的列：
+//  col
+//  table.col
+// table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
-	b := New(" GROUP BY ").WriteBytes(stmt.l).WriteString(col).WriteBytes(stmt.r, ' ')
+	b := New(" GROUP BY ")
+	stmt.quoteColumn(b, col)
 	stmt.group = b.String()
 	return stmt
+}
+
+// 为列名添加数据库转属的引号，列名可以带表名前缀。可以正确处理
+func (stmt *baseStmt) quoteColumn(b *SQLBuilder, col string) {
+	index := strings.IndexByte(col, ',')
+	if index <= 0 {
+		b.WriteBytes(stmt.l).WriteString(col).WriteBytes(stmt.r, ' ')
+	} else {
+		b.WriteBytes(stmt.l).
+			WriteString(col[:index]).
+			WriteBytes(stmt.r, ' ', stmt.l).
+			WriteString(col[index+1:]).
+			WriteBytes(stmt.r, ' ')
+	}
 }
 
 // Limit 生成 SQL 的 Limit 语句
@@ -329,12 +422,38 @@ func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectS
 	return stmt
 }
 
-// Count 指定 Count 表示式，如果指定了 count 表达式，则会造成 limit 失效。
+// ResetCount 重置 Count
+func (stmt *SelectStmt) ResetCount() *SelectStmt {
+	stmt.countExpr = ""
+	return stmt
+}
+
+// Count 指定 Count 表达式，如果指定了 count 表达式，则会造成 limit 失效。
 //
-// 传递空的 expr 参数，表示去除 count 表达式。
-// 格式为： count(*) AS cnt
-func (stmt *SelectStmt) Count(expr string) *SelectStmt {
-	stmt.countExpr = expr
+// 会被拼接成以下格式：
+//  COUNT(DISTINCT col) AS cnt
+func (stmt *SelectStmt) Count(cnt, col string, distinct bool) *SelectStmt {
+	builder := New("COUNT(")
+
+	if distinct {
+		builder.WriteString(" DISTINCT ")
+	}
+
+	if col == "*" {
+		builder.WriteString("*)")
+	} else {
+		builder.WriteBytes(stmt.l).
+			WriteString(col).
+			WriteBytes(stmt.r, ')')
+	}
+
+	builder.WriteString(" AS ").
+		WriteBytes(stmt.l).
+		WriteString(cnt).
+		WriteBytes(stmt.r)
+
+	stmt.countExpr = builder.String()
+
 	return stmt
 }
 

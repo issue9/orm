@@ -31,7 +31,7 @@ func TestSelect(t *testing.T) {
 		db := t.DB.DB
 		d := t.DB.Dialect()
 
-		stmt := sqlbuilder.Select(db, d).Select("*").
+		stmt := sqlbuilder.Select(db, d).Column("*").
 			From("users").
 			Where("id<?", 5).
 			Desc("id")
@@ -57,13 +57,13 @@ func TestSelect(t *testing.T) {
 		a.NotError(err).Equal(1, size)
 		a.Equal(obj.ID, 4)
 
-		cnt, err := stmt.Count("count(*) AS cnt").QueryInt("cnt")
+		cnt, err := stmt.Count("cnt", "*", false).QueryInt("cnt")
 		a.NotError(err).
 			Equal(cnt, 4)
 
 		// 没有符合条件的数据
 		stmt.Reset()
-		stmt.Select("*").
+		stmt.Column("*").
 			From("users").
 			Where("id<?", -100).
 			Desc("id")
@@ -92,10 +92,10 @@ func TestSelectStmt_Join(t *testing.T) {
 		t.NotError(err).NotNil(r)
 
 		sel := sqlbuilder.Select(db, dialect)
-		rows, err := sel.Select("i.nickname,i.uid").
+		rows, err := sel.Columns("i.nickname", "i.uid").
 			From("users", "u").
 			Where("uid=?", 1).
-			Join("LEFT", "info AS i", "i.uid=u.id").
+			Join("LEFT", "info", "i", "i.uid=u.id").
 			Query()
 		a.NotError(err).NotNil(rows)
 		defer func() {
@@ -104,17 +104,8 @@ func TestSelectStmt_Join(t *testing.T) {
 		maps, err := fetch.Map(false, rows)
 		a.NotError(err).
 			NotNil(maps).
-			Equal(1, len(maps)).
-			Equal(maps[0]["nickname"], "n1")
-	})
-}
-
-func TestSelectStmt_Group(t *testing.T) {
-	a := assert.New(t)
-	suite := test.NewSuite(a)
-	defer suite.Close()
-
-	suite.ForEach(func(t *test.Test) {
-		// TODO
+			Equal(2, len(maps)).
+			Equal(maps[0]["nickname"], "n1").
+			Equal(maps[1]["nickname"], "n2")
 	})
 }

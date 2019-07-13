@@ -56,7 +56,7 @@ func TestUpdate(t *testing.T) {
 		t.NotError(err)
 
 		sel := sqlbuilder.Select(db, dialect).
-			Select("name").
+			Column("name").
 			From("users").
 			Where("id=?", 2)
 		rows, err := sel.Query()
@@ -89,7 +89,7 @@ func TestUpdateStmt_Increase(t *testing.T) {
 		t.NotError(u.Exec())
 
 		sel := sqlbuilder.Select(db, dialect).
-			Select("age").
+			Column("age").
 			From("users").
 			Where("id=?", 1)
 		rows, err := sel.Query()
@@ -107,8 +107,8 @@ func TestUpdateStmt_Increase(t *testing.T) {
 			Where("id=?", 1)
 		t.NotNil(u)
 		t.NotError(u.Exec())
-		sel.Reset()
-		sel.Select("age").
+		sel.Reset().
+			Column("age").
 			From("users").
 			Where("id=?", 1)
 		rows, err = sel.Query()
@@ -140,7 +140,7 @@ func TestUpdateStmt_OCC(t *testing.T) {
 		a.NotError(err).NotNil(r)
 
 		sel := sqlbuilder.Select(db, dialect).
-			Select("age").
+			Column("age").
 			From("users").
 			Where("id=?", 1)
 		rows, err := sel.Query()
@@ -161,7 +161,7 @@ func TestUpdateStmt_OCC(t *testing.T) {
 		a.NotError(err).NotNil(r)
 
 		sel.Reset()
-		sel.Select("age").
+		sel.Column("age").
 			From("users").
 			Where("id=?", 1)
 		rows, err = sel.Query()

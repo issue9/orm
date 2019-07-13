@@ -8,28 +8,28 @@ import "strings"
 
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
-	buffer *SQLBuilder
-	args   []interface{}
+	builder *SQLBuilder
+	args    []interface{}
 }
 
 // Where 生成一条 Where 语句
 func Where() *WhereStmt {
 	return &WhereStmt{
-		buffer: New(""),
-		args:   make([]interface{}, 0, 10),
+		builder: New(""),
+		args:    make([]interface{}, 0, 10),
 	}
 }
 
 // Reset 重置内容
 func (stmt *WhereStmt) Reset() {
-	stmt.buffer.Reset()
+	stmt.builder.Reset()
 	stmt.args = stmt.args[:0]
 }
 
 // SQL 生成 SQL 语句和对应的参数返回
 func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 	cnt := 0
-	for _, c := range stmt.buffer.Bytes() {
+	for _, c := range stmt.builder.Bytes() {
 		if c == '?' || c == '@' {
 			cnt++
 		}
@@ -38,12 +38,12 @@ func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrArgsNotMatch
 	}
 
-	return stmt.buffer.String(), stmt.args, nil
+	return stmt.builder.String(), stmt.args, nil
 }
 
 func (stmt *WhereStmt) writeAnd(and bool) {
-	if stmt.buffer.Len() == 0 {
-		stmt.buffer.WriteBytes(' ')
+	if stmt.builder.Len() == 0 {
+		stmt.builder.WriteBytes(' ')
 		return
 	}
 
@@ -51,7 +51,7 @@ func (stmt *WhereStmt) writeAnd(and bool) {
 	if !and {
 		v = " OR "
 	}
-	stmt.buffer.WriteString(v)
+	stmt.builder.WriteString(v)
 }
 
 // and 表示当前的语句是 and 还是 or；
@@ -59,7 +59,7 @@ func (stmt *WhereStmt) writeAnd(and bool) {
 // args 则表示 cond 中表示的值，可以是直接的值或是 sql.NamedArg
 func (stmt *WhereStmt) where(and bool, cond string, args ...interface{}) *WhereStmt {
 	stmt.writeAnd(and)
-	stmt.buffer.WriteString(cond)
+	stmt.builder.WriteString(cond)
 	stmt.args = append(stmt.args, args...)
 
 	return stmt
@@ -75,19 +75,43 @@ func (stmt *WhereStmt) Or(cond string, args ...interface{}) *WhereStmt {
 	return stmt.where(false, cond, args...)
 }
 
+// AndIsNull 指定 WHERE ... AND col IS NULL
+func (stmt *WhereStmt) AndIsNull(col string) *WhereStmt {
+	stmt.And(col + " IS NULL")
+	return stmt
+}
+
+// OrIsNull 指定 WHERE ... OR col IS NULL
+func (stmt *WhereStmt) OrIsNull(col string) *WhereStmt {
+	stmt.Or(col + " IS NULL")
+	return stmt
+}
+
+// AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
+func (stmt *WhereStmt) AndIsNotNull(col string) *WhereStmt {
+	stmt.And(col + " IS NOT NULL")
+	return stmt
+}
+
+// OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
+func (stmt *WhereStmt) OrIsNotNull(col string) *WhereStmt {
+	stmt.Or(col + " IS NOT NULL")
+	return stmt
+}
+
 func (stmt *WhereStmt) addWhere(and bool, w *WhereStmt) *WhereStmt {
-	cond := w.buffer.String()
+	cond := w.builder.String()
 	if strings.TrimSpace(cond) == "" {
 		return stmt
 	}
 
 	stmt.writeAnd(and)
-	stmt.buffer.WriteBytes('(')
+	stmt.builder.WriteBytes('(')
 
-	stmt.buffer.WriteString(cond)
+	stmt.builder.WriteString(cond)
 	stmt.args = append(stmt.args, w.args...)
 
-	stmt.buffer.WriteBytes(')')
+	stmt.builder.WriteBytes(')')
 
 	return stmt
 }

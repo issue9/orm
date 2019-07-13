@@ -261,12 +261,6 @@ lastID,err := db.InsertLastID(&User{FirstName:"abc"})
 Tx拥有一组与 DB 相同的接口，另外还提供了一组以 `Mult` 开头的函数，
 用以同时操作多条记录的。
 
-### 安装
-
-```shell
-go get github.com/issue9/orm
-```
-
 
 
 ### 版权
