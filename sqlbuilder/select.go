@@ -104,14 +104,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	buf := New("SELECT ")
 	args := make([]interface{}, 0, 10)
 
-	if stmt.countExpr == "" {
-		if stmt.distinct {
-			buf.WriteString("DISTINCT ")
-		}
-		stmt.buildColumns(buf)
-	} else {
-		buf.WriteString(stmt.countExpr)
-	}
+	stmt.buildColumns(buf)
 
 	buf.WriteString(" FROM ").WriteString(stmt.tableExpr)
 
@@ -164,6 +157,15 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 }
 
 func (stmt *SelectStmt) buildColumns(builder *SQLBuilder) {
+	if stmt.countExpr != "" {
+		builder.WriteString(stmt.countExpr)
+		return
+	}
+
+	if stmt.distinct {
+		builder.WriteString("DISTINCT ")
+	}
+
 	for _, col := range stmt.columns {
 		if col.table != "" {
 			builder.Quote(col.table, stmt.l, stmt.r).WriteBytes('.')

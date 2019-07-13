@@ -34,6 +34,7 @@ func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 			cnt++
 		}
 	}
+
 	if cnt != len(stmt.args) {
 		return "", nil, ErrArgsNotMatch
 	}
@@ -96,6 +97,23 @@ func (stmt *WhereStmt) AndIsNotNull(col string) *WhereStmt {
 // OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
 func (stmt *WhereStmt) OrIsNotNull(col string) *WhereStmt {
 	stmt.Or(col + " IS NOT NULL")
+	return stmt
+}
+
+// AndBetween 指定 WHERE ... AND col BETWEEN v1 AND v2
+func (stmt *WhereStmt) AndBetween(col string, v1, v2 interface{}) *WhereStmt {
+	stmt.And(col+" BETWEEN (? and ?)", v1, v2)
+	return stmt
+}
+
+// OrBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
+func (stmt *WhereStmt) OrBetween(col string, v1, v2 interface{}) *WhereStmt {
+	stmt.Or(col+" BETWEEN (? and ?)", v1, v2)
+	return stmt
+}
+
+func (stmt *WhereStmt) AndLike(col, content string) *WhereStmt {
+	stmt.And(col + " LIKE '" + content + "'")
 	return stmt
 }
 
