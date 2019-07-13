@@ -20,11 +20,11 @@ var ErrNoData = errors.New("不存在符合和条件的数据")
 type SelectStmt struct {
 	*queryStmt
 
-	tableExpr   string
-	where       *WhereStmt
-	columnsExpr *SQLBuilder
-	distinct    bool
-	forUpdate   bool
+	tableExpr string
+	where     *WhereStmt
+	columns   []*column
+	distinct  bool
+	forUpdate bool
 
 	// COUNT 查询的列内容
 	countExpr string
@@ -40,9 +40,17 @@ type SelectStmt struct {
 	limitVals  []interface{}
 }
 
+type column struct {
+	// 分别表示列前的表名，列名以及列的别名
+	table, name, alias string
+}
+
 // Select 声明一条 Select 语句
 func Select(e Engine, d Dialect) *SelectStmt {
-	stmt := &SelectStmt{where: Where()}
+	stmt := &SelectStmt{
+		where:   Where(),
+		columns: make([]*column, 0, 10),
+	}
 	stmt.queryStmt = newQueryStmt(e, d, stmt)
 
 	return stmt
@@ -60,9 +68,7 @@ func (stmt *SelectStmt) Distinct() *SelectStmt {
 func (stmt *SelectStmt) Reset() *SelectStmt {
 	stmt.tableExpr = ""
 	stmt.where.Reset()
-	if stmt.columnsExpr != nil {
-		stmt.columnsExpr.Reset()
-	}
+	stmt.columns = stmt.columns[:0]
 	stmt.distinct = false
 	stmt.forUpdate = false
 
@@ -91,7 +97,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	if (stmt.columnsExpr == nil || stmt.columnsExpr.Len() == 0) && stmt.countExpr == "" {
+	if len(stmt.columns) == 0 && stmt.countExpr == "" {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
@@ -102,7 +108,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		if stmt.distinct {
 			buf.WriteString("DISTINCT ")
 		}
-		buf.Append(stmt.columnsExpr)
+		stmt.buildColumns(buf)
 	} else {
 		buf.WriteString(stmt.countExpr)
 	}
@@ -157,6 +163,31 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	return buf.String(), args, nil
 }
 
+func (stmt *SelectStmt) buildColumns(builder *SQLBuilder) {
+	for _, col := range stmt.columns {
+		if col.table != "" {
+			builder.WriteBytes(stmt.l).WriteString(col.table).WriteBytes(stmt.r, '.')
+		}
+
+		if col.name == "*" {
+			builder.WriteBytes('*')
+		} else {
+			builder.WriteBytes(stmt.l).WriteString(col.name).WriteBytes(stmt.r)
+		}
+
+		if col.alias != "" {
+			builder.WriteString(" AS ").
+				WriteBytes(stmt.l).
+				WriteString(col.alias).
+				WriteBytes(stmt.r)
+		}
+
+		builder.WriteBytes(',')
+	}
+
+	builder.TruncateLast(1)
+}
+
 // Column 指定列，一次只能指定一列，别外可使用 alias 参数
 //
 // col 表示列名，可以是以下形式：
@@ -165,25 +196,10 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 //  table.col
 //  table.*
 func (stmt *SelectStmt) Column(col string, alias ...string) *SelectStmt {
-	if stmt.columnsExpr == nil {
-		stmt.columnsExpr = New("")
-	} else if stmt.columnsExpr.Len() > 0 {
-		stmt.columnsExpr.WriteBytes(',')
-	}
-
+	c := &column{name: col}
 	if index := strings.IndexByte(col, '.'); index > 0 {
-		stmt.columnsExpr.WriteBytes(stmt.l).
-			WriteString(col[:index]).
-			WriteBytes(stmt.r, '.')
-		col = col[index+1:]
-	}
-
-	if col == "*" {
-		stmt.columnsExpr.WriteString(col)
-	} else {
-		stmt.columnsExpr.WriteBytes(stmt.l).
-			WriteString(col).
-			WriteBytes(stmt.r)
+		c.table = col[:index]
+		c.name = col[index+1:]
 	}
 
 	switch len(alias) {
@@ -192,14 +208,12 @@ func (stmt *SelectStmt) Column(col string, alias ...string) *SelectStmt {
 		if alias[0] == "" {
 			break
 		}
-
-		stmt.columnsExpr.WriteString(" AS ").
-			WriteBytes(stmt.l).
-			WriteString(alias[0]).
-			WriteBytes(stmt.r)
+		c.alias = alias[0]
 	default:
 		panic("过多的别名参数")
 	}
+
+	stmt.columns = append(stmt.columns, c)
 
 	return stmt
 }
@@ -249,6 +263,10 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 	case 0:
 		stmt.tableExpr = builder.String()
 	case 1:
+		if alias[0] == "" {
+			break
+		}
+
 		builder.WriteString(" AS ").
 			WriteBytes(stmt.l).WriteString(alias[0]).WriteBytes(stmt.r)
 		stmt.tableExpr = builder.String()
@@ -400,7 +418,7 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 	return stmt
 }
 
-// 为列名添加数据库转属的引号，列名可以带表名前缀。可以正确处理
+// 为列名添加数据库专属的引号，列名可以带表名前缀。
 func (stmt *baseStmt) quoteColumn(b *SQLBuilder, col string) {
 	index := strings.IndexByte(col, ',')
 	if index <= 0 {

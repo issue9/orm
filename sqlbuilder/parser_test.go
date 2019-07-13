@@ -30,4 +30,7 @@ func TestSplitWithAS(t *testing.T) {
 
 	col, alias = splitWithAS("col tS alias")
 	a.Equal(col, "col tS alias").Equal(alias, "")
+
+	col, alias = splitWithAS("col AS alias AS name")
+	a.Equal(col, "col").Equal(alias, "alias AS name")
 }

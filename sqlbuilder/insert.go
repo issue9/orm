@@ -14,9 +14,10 @@ import (
 type InsertStmt struct {
 	*execStmt
 
-	table string
-	cols  []string
-	args  [][]interface{}
+	table      string
+	cols       []string
+	args       [][]interface{}
+	selectStmt *SelectStmt
 }
 
 // Insert 声明一条插入语句
@@ -27,6 +28,18 @@ func Insert(e Engine, d Dialect) *InsertStmt {
 	}
 	stmt.execStmt = newExecStmt(e, d, stmt)
 
+	return stmt
+}
+
+// Insert 将当前查询结果作为 Insert 的值
+func (stmt *SelectStmt) Insert() *InsertStmt {
+	insert := Insert(stmt.Engine(), stmt.Dialect())
+	return insert.Select(stmt)
+}
+
+// Insert 当前插入数据从 Select 中获取
+func (stmt *InsertStmt) Select(sel *SelectStmt) *InsertStmt {
+	stmt.selectStmt = sel
 	return stmt
 }
 
@@ -73,6 +86,7 @@ func (stmt *InsertStmt) Reset() *InsertStmt {
 	stmt.table = ""
 	stmt.cols = stmt.cols[:0]
 	stmt.args = stmt.args[:0]
+	stmt.selectStmt = nil
 	return stmt
 }
 
@@ -82,11 +96,11 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	if len(stmt.cols) == 0 {
+	if len(stmt.cols) == 0 && (stmt.selectStmt == nil || len(stmt.selectStmt.columns) == 0) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
-	if len(stmt.args) == 0 {
+	if len(stmt.args) == 0 && stmt.selectStmt == nil {
 		return "", nil, ErrValueIsEmpty
 	}
 
@@ -96,37 +110,74 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		}
 	}
 
-	buffer := New("INSERT INTO ").WriteString(stmt.table)
+	builder := New("INSERT INTO ").WriteString(stmt.table)
 
-	buffer.WriteBytes('(')
+	if stmt.selectStmt != nil {
+		return stmt.fromSelect(builder)
+	}
+
+	builder.WriteBytes('(')
 	for _, col := range stmt.cols {
-		buffer.WriteBytes(stmt.l).
+		builder.WriteBytes(stmt.l).
 			WriteString(col).
 			WriteBytes(stmt.r, ',')
 	}
-	buffer.TruncateLast(1)
-	buffer.WriteBytes(')')
+	builder.TruncateLast(1)
+	builder.WriteBytes(')')
 
 	args := make([]interface{}, 0, len(stmt.cols)*len(stmt.args))
-	buffer.WriteString(" VALUES ")
+	builder.WriteString(" VALUES ")
 	for _, vals := range stmt.args {
-		buffer.WriteBytes('(')
+		builder.WriteBytes('(')
 		for _, v := range vals {
 			if named, ok := v.(sql.NamedArg); ok && named.Name != "" {
-				buffer.WriteBytes('@')
-				buffer.WriteString(named.Name)
+				builder.WriteBytes('@')
+				builder.WriteString(named.Name)
 			} else {
-				buffer.WriteBytes('?')
+				builder.WriteBytes('?')
 			}
-			buffer.WriteBytes(',')
+			builder.WriteBytes(',')
 			args = append(args, v)
 		}
-		buffer.TruncateLast(1) // 去掉最后的逗号
-		buffer.WriteString("),")
+		builder.TruncateLast(1) // 去掉最后的逗号
+		builder.WriteString("),")
 	}
-	buffer.TruncateLast(1)
+	builder.TruncateLast(1)
 
-	return buffer.String(), args, nil
+	return builder.String(), args, nil
+}
+
+func (stmt *InsertStmt) fromSelect(builder *SQLBuilder) (string, []interface{}, error) {
+	builder.WriteBytes('(')
+	if len(stmt.cols) > 0 {
+		for _, col := range stmt.cols {
+			builder.WriteBytes(stmt.l).
+				WriteString(col).
+				WriteBytes(stmt.r, ',')
+		}
+		builder.TruncateLast(1)
+	} else {
+		for _, col := range stmt.selectStmt.columns {
+			name := col.alias
+			if name == "" {
+				name = col.name
+			}
+			builder.WriteBytes(stmt.l).
+				WriteString(name).
+				WriteBytes(stmt.r, ',')
+		}
+		builder.TruncateLast(1)
+	}
+	builder.WriteBytes(')')
+
+	query, args, err := stmt.selectStmt.SQL()
+	if err != nil {
+		return "", nil, err
+	}
+
+	builder.WriteString(query)
+
+	return builder.String(), args, nil
 }
 
 // LastInsertID 执行 SQL 语句

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/issue9/orm/v2"
 	s3 "github.com/issue9/orm/v2/internal/sqlite3"
@@ -134,7 +133,7 @@ func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]s
 		SQL:  builder.String(),
 	}
 
-	return buildSQLS(info, stmt.TableName)
+	return s.buildSQLS(stmt.Engine(), info, stmt.TableName)
 }
 
 // https://www.sqlite.org/lang_altertable.html
@@ -151,7 +150,7 @@ func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([
 
 	delete(info.Constraints, stmt.Name)
 
-	return buildSQLS(info, stmt.TableName)
+	return s.buildSQLS(stmt.Engine(), info, stmt.TableName)
 }
 
 // https://www.sqlite.org/lang_altertable.html
@@ -168,24 +167,28 @@ func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string,
 
 	delete(info.Columns, stmt.ColumnName)
 
-	return buildSQLS(info, stmt.TableName)
+	return s.buildSQLS(stmt.Engine(), info, stmt.TableName)
 }
 
-func buildSQLS(table *s3.Table, tableName string) ([]string, error) {
+func (s *sqlite3) buildSQLS(e sqlbuilder.Engine, table *s3.Table, tableName string) ([]string, error) {
 	ret := make([]string, 0, len(table.Indexes)+1)
 
 	tmpName := "temp_" + tableName + "_temp"
 	ret = append(ret, table.CreateTableSQL(tmpName))
 
-	cols := make([]string, 0, len(table.Columns))
+	sel := sqlbuilder.Select(e, s).From(tableName)
 	for col := range table.Columns {
-		cols = append(cols, col)
+		sel.Column(col)
 	}
 
-	// 将数据插入到新表
-	// NOTE: 必须指定列，否则直接从 SELECT 中获取列，可能造成列错位。
-	colsExpr := strings.Join(cols, ",")
-	ret = append(ret, fmt.Sprintf("INSERT INTO %s(%s) SELECT %s FROM %s", tmpName, colsExpr, colsExpr, tableName))
+	query, args, err := sel.Insert().Table(tmpName).SQL()
+	if err != nil {
+		return nil, err
+	}
+	if len(args) > 0 {
+		panic("复制表时，SELECT 不应该有参数")
+	}
+	ret = append(ret, query)
 
 	// 删除旧表
 	ret = append(ret, "DROP TABLE "+tableName)
