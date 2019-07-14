@@ -9,6 +9,10 @@ package sqlbuilder
 
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
+	parent    *WhereStmt
+	andGroups []*WhereStmt
+	orGroups  []*WhereStmt
+
 	builder *SQLBuilder
 	args    []interface{}
 	l, r    byte
@@ -29,6 +33,10 @@ func newWhere(l, r byte) *WhereStmt {
 
 // Reset 重置内容
 func (stmt *WhereStmt) Reset() {
+	stmt.parent = nil
+	stmt.andGroups = stmt.andGroups[:0]
+	stmt.orGroups = stmt.orGroups[:0]
+
 	stmt.builder.Reset()
 	stmt.args = stmt.args[:0]
 }
@@ -46,7 +54,32 @@ func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrArgsNotMatch
 	}
 
+	for _, w := range stmt.andGroups {
+		if err := stmt.buildGroup(true, w); err != nil {
+			return "", nil, err
+		}
+	}
+
+	for _, w := range stmt.orGroups {
+		if err := stmt.buildGroup(false, w); err != nil {
+			return "", nil, err
+		}
+	}
+
 	return stmt.builder.String(), stmt.args, nil
+}
+
+func (stmt *WhereStmt) buildGroup(and bool, g *WhereStmt) error {
+	query, args, err := g.SQL()
+	if err != nil {
+		return err
+	}
+
+	stmt.writeAnd(and)
+	stmt.builder.WriteBytes('(').WriteString(query).WriteBytes(')')
+	stmt.args = append(stmt.args, args...)
+
+	return nil
 }
 
 func (stmt *WhereStmt) writeAnd(and bool) {
@@ -228,12 +261,46 @@ func (stmt *WhereStmt) addWhere(and bool, w *WhereStmt) *WhereStmt {
 	return stmt
 }
 
-// AndWhere 开始一个子条件语句
-func (stmt *WhereStmt) AndWhere(w *WhereStmt) *WhereStmt {
-	return stmt.addWhere(true, w)
+// AndGroup 开始一个子条件语句
+func (stmt *WhereStmt) AndGroup() *WhereStmt {
+	w := newWhere(stmt.l, stmt.r)
+	w.parent = stmt
+	stmt.appendGroup(true, w)
+
+	return w
 }
 
-// OrWhere 开始一个子条件语句
-func (stmt *WhereStmt) OrWhere(w *WhereStmt) *WhereStmt {
-	return stmt.addWhere(false, w)
+// OrGroup 开始一个子条件语句
+func (stmt *WhereStmt) OrGroup() *WhereStmt {
+	w := newWhere(stmt.l, stmt.r)
+	w.parent = stmt
+	stmt.appendGroup(false, w)
+
+	return w
+}
+
+func (stmt *WhereStmt) appendGroup(and bool, w *WhereStmt) {
+	w.parent = stmt
+
+	if and {
+		if stmt.andGroups == nil {
+			stmt.andGroups = []*WhereStmt{w}
+		} else {
+			stmt.andGroups = append(stmt.andGroups, w)
+		}
+	} else {
+		if stmt.orGroups == nil {
+			stmt.orGroups = []*WhereStmt{w}
+		} else {
+			stmt.orGroups = append(stmt.orGroups, w)
+		}
+	}
+}
+
+func (stmt *WhereStmt) EndGroup() (parent *WhereStmt) {
+	if stmt.parent == nil {
+		panic("没有更高层的查询条件了")
+	}
+
+	return stmt.parent
 }

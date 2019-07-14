@@ -169,3 +169,13 @@ func (stmt *DeleteStmt) OrNotIn(col string, v ...interface{}) *DeleteStmt {
 	stmt.where.OrNotIn(col, v...)
 	return stmt
 }
+
+// AndGroup 开始一个子条件语句
+func (stmt *DeleteStmt) AndGroup() *WhereStmt {
+	return stmt.where.AndGroup()
+}
+
+// OrGroup 开始一个子条件语句
+func (stmt *DeleteStmt) OrGroup() *WhereStmt {
+	return stmt.where.OrGroup()
+}

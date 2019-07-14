@@ -150,14 +150,20 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
 		return stmt.where.SQL()
 	}
 
-	occ := newWhere(stmt.l, stmt.r)
+	w := newWhere(stmt.l, stmt.r)
+	w.appendGroup(true, stmt.where)
+
+	occ := w.AndGroup()
 	if named, ok := stmt.occValue.(sql.NamedArg); ok && named.Name != "" {
 		occ.And(stmt.occColumn+"=@"+named.Name, stmt.occValue)
 	} else {
 		occ.And(stmt.occColumn+"=?", stmt.occValue)
 	}
 
-	return newWhere(stmt.l, stmt.r).AndWhere(stmt.where).AndWhere(occ).SQL()
+	q, a, err := w.SQL()
+	println(q)
+
+	return q, a, err
 }
 
 // 检测列名是否存在重复，先排序，再与后一元素比较。
@@ -307,4 +313,14 @@ func (stmt *UpdateStmt) AndNotIn(col string, v ...interface{}) *UpdateStmt {
 func (stmt *UpdateStmt) OrNotIn(col string, v ...interface{}) *UpdateStmt {
 	stmt.where.OrNotIn(col, v...)
 	return stmt
+}
+
+// AndGroup 开始一个子条件语句
+func (stmt *UpdateStmt) AndGroup() *WhereStmt {
+	return stmt.where.AndGroup()
+}
+
+// OrGroup 开始一个子条件语句
+func (stmt *UpdateStmt) OrGroup() *WhereStmt {
+	return stmt.where.OrGroup()
 }

@@ -46,27 +46,28 @@ func TestWhere(t *testing.T) {
 	a.Equal(err, ErrArgsNotMatch).Nil(args).Empty(sql)
 }
 
-func TestWhere_addWhere(t *testing.T) {
+func TestWhere_Group(t *testing.T) {
 	a := assert.New(t)
 	w := newWhere('{', '}')
 
-	w2 := newWhere('{', '}').And("id=?", 4)
-	w1 := newWhere('{', '}').And("id=?", 2).Or("id=?", 3).OrWhere(w2)
+	w.AndGroup().And("id=?", 4)
+	w.AndGroup().And("id=?", 2).
+		OrGroup().And("id=?", 3).
+		EndGroup().
+		And("id=?", 6)
 
-	w.And("id=?", 1).
-		AndWhere(w1).
-		And("id=?", 5)
+	w.And("id=?", 1).And("id=?", 5)
 
 	query, args, err := w.SQL()
 	a.NotError(err)
-	a.Equal(args, []interface{}{1, 2, 3, 4, 5})
-	sqltest.Equal(a, query, "id=? AND(id=? OR id=? OR(id=?)) and id=?")
+	a.Equal(args, []interface{}{1, 5, 4, 2, 6, 3})
+	sqltest.Equal(a, query, "id=? AND id=? and(id=?) AND (id=? and id=? OR(id=?))")
 
 	// Reset
 	w.Reset()
-	w.AndWhere(w1).OrWhere(w2)
+	w.And("id=?", 1)
 	query, args, err = w.SQL()
 	a.NotError(err)
-	a.Equal(args, []interface{}{2, 3, 4, 4})
-	sqltest.Equal(a, query, "(id=? or id=? or(id=?)) or (id=?)")
+	a.Equal(args, []interface{}{1})
+	sqltest.Equal(a, query, "id=?")
 }

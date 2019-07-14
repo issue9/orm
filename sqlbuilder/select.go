@@ -594,3 +594,13 @@ func (stmt *SelectStmt) OrNotIn(col string, v ...interface{}) *SelectStmt {
 	stmt.where.OrNotIn(col, v...)
 	return stmt
 }
+
+// AndGroup 开始一个子条件语句
+func (stmt *SelectStmt) AndGroup() *WhereStmt {
+	return stmt.where.AndGroup()
+}
+
+// OrGroup 开始一个子条件语句
+func (stmt *SelectStmt) OrGroup() *WhereStmt {
+	return stmt.where.OrGroup()
+}
