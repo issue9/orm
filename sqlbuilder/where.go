@@ -76,7 +76,7 @@ func (stmt *WhereStmt) buildGroup(and bool, g *WhereStmt) error {
 	}
 
 	stmt.writeAnd(and)
-	stmt.builder.WriteBytes('(').WriteString(query).WriteBytes(')')
+	stmt.builder.Quote(query, '(', ')')
 	stmt.args = append(stmt.args, args...)
 
 	return nil
