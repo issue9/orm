@@ -179,7 +179,7 @@ func (stmt *WhereStmt) OrNotBetween(col string, v1, v2 interface{}) *WhereStmt {
 // AndLike 指定 WHERE ... AND col LIKE content
 func (stmt *WhereStmt) AndLike(col string, content interface{}) *WhereStmt {
 	stmt.writeAnd(true)
-	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" LIKE '?'")
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" LIKE ?")
 	stmt.args = append(stmt.args, content)
 	return stmt
 }
@@ -187,7 +187,7 @@ func (stmt *WhereStmt) AndLike(col string, content interface{}) *WhereStmt {
 // OrLike 指定 WHERE ... OR col LIKE content
 func (stmt *WhereStmt) OrLike(col string, content interface{}) *WhereStmt {
 	stmt.writeAnd(false)
-	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" LIKE '?'")
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" LIKE ?")
 	stmt.args = append(stmt.args, content)
 	return stmt
 }
@@ -195,7 +195,7 @@ func (stmt *WhereStmt) OrLike(col string, content interface{}) *WhereStmt {
 // AndNotLike 指定 WHERE ... AND col NOT LIKE content
 func (stmt *WhereStmt) AndNotLike(col string, content interface{}) *WhereStmt {
 	stmt.writeAnd(true)
-	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" NOT LIKE '?'")
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" NOT LIKE ?")
 	stmt.args = append(stmt.args, content)
 	return stmt
 }
@@ -203,7 +203,7 @@ func (stmt *WhereStmt) AndNotLike(col string, content interface{}) *WhereStmt {
 // OrNotLike 指定 WHERE ... OR col NOT LIKE content
 func (stmt *WhereStmt) OrNotLike(col string, content interface{}) *WhereStmt {
 	stmt.writeAnd(false)
-	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" NOT LIKE '?'")
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" NOT LIKE ?")
 	stmt.args = append(stmt.args, content)
 	return stmt
 }
