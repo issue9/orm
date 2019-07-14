@@ -161,7 +161,6 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
 	}
 
 	q, a, err := w.SQL()
-	println(q)
 
 	return q, a, err
 }
