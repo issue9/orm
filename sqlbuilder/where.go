@@ -4,8 +4,6 @@
 
 package sqlbuilder
 
-import "strings"
-
 // operation
 // =, >=, <=, >, <, <>, between, is null, is not null, like, not like, in, not in
 
@@ -13,13 +11,19 @@ import "strings"
 type WhereStmt struct {
 	builder *SQLBuilder
 	args    []interface{}
+	l, r    byte
 }
 
-// Where 生成一条 Where 语句
-func Where() *WhereStmt {
+func newWhere(l, r byte) *WhereStmt {
+	if l == 0 || r == 0 {
+		panic("l 和 r 不能为零值")
+	}
+
 	return &WhereStmt{
 		builder: New(""),
 		args:    make([]interface{}, 0, 10),
+		l:       l,
+		r:       r,
 	}
 }
 
@@ -81,109 +85,145 @@ func (stmt *WhereStmt) Or(cond string, args ...interface{}) *WhereStmt {
 
 // AndIsNull 指定 WHERE ... AND col IS NULL
 func (stmt *WhereStmt) AndIsNull(col string) *WhereStmt {
-	stmt.And(col + " IS NULL")
+	stmt.writeAnd(true)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" IS NULL ")
 	return stmt
 }
 
 // OrIsNull 指定 WHERE ... OR col IS NULL
 func (stmt *WhereStmt) OrIsNull(col string) *WhereStmt {
-	stmt.Or(col + " IS NULL")
+	stmt.writeAnd(false)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" IS NULL ")
 	return stmt
 }
 
 // AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
 func (stmt *WhereStmt) AndIsNotNull(col string) *WhereStmt {
-	stmt.And(col + " IS NOT NULL")
+	stmt.writeAnd(true)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" IS NOT NULL ")
 	return stmt
 }
 
 // OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
 func (stmt *WhereStmt) OrIsNotNull(col string) *WhereStmt {
-	stmt.Or(col + " IS NOT NULL")
+	stmt.writeAnd(false)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" IS NOT NULL ")
 	return stmt
 }
 
 // AndBetween 指定 WHERE ... AND col BETWEEN v1 AND v2
 func (stmt *WhereStmt) AndBetween(col string, v1, v2 interface{}) *WhereStmt {
-	stmt.And(col+" BETWEEN (? and ?)", v1, v2)
+	stmt.writeAnd(true)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" BETWEEN ? AND ? ")
+	stmt.args = append(stmt.args, v1, v2)
 	return stmt
 }
 
 // OrBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
 func (stmt *WhereStmt) OrBetween(col string, v1, v2 interface{}) *WhereStmt {
-	stmt.Or(col+" BETWEEN (? and ?)", v1, v2)
+	stmt.writeAnd(false)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" BETWEEN ? AND ? ")
+	stmt.args = append(stmt.args, v1, v2)
+	return stmt
+}
+
+// AndNotBetween 指定 WHERE ... AND col NOT BETWEEN v1 AND v2
+func (stmt *WhereStmt) AndNotBetween(col string, v1, v2 interface{}) *WhereStmt {
+	stmt.writeAnd(true)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" NOT BETWEEN ? AND ? ")
+	stmt.args = append(stmt.args, v1, v2)
+	return stmt
+}
+
+// OrNotBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
+func (stmt *WhereStmt) OrNotBetween(col string, v1, v2 interface{}) *WhereStmt {
+	stmt.writeAnd(false)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" NOT BETWEEN ? AND ? ")
+	stmt.args = append(stmt.args, v1, v2)
 	return stmt
 }
 
 // AndLike 指定 WHERE ... AND col LIKE content
-func (stmt *WhereStmt) AndLike(col, content string) *WhereStmt {
-	stmt.And(col + " LIKE '" + content + "'")
+func (stmt *WhereStmt) AndLike(col string, content interface{}) *WhereStmt {
+	stmt.writeAnd(true)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" LIKE '?'")
+	stmt.args = append(stmt.args, content)
 	return stmt
 }
 
 // OrLike 指定 WHERE ... OR col LIKE content
-func (stmt *WhereStmt) OrLike(col, content string) *WhereStmt {
-	stmt.Or(col + " LIKE '" + content + "'")
+func (stmt *WhereStmt) OrLike(col string, content interface{}) *WhereStmt {
+	stmt.writeAnd(false)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" LIKE '?'")
+	stmt.args = append(stmt.args, content)
 	return stmt
 }
 
 // AndNotLike 指定 WHERE ... AND col NOT LIKE content
-func (stmt *WhereStmt) AndNotLike(col, content string) *WhereStmt {
-	stmt.And(col + " NOT LIKE '" + content + "'")
+func (stmt *WhereStmt) AndNotLike(col string, content interface{}) *WhereStmt {
+	stmt.writeAnd(true)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" NOT LIKE '?'")
+	stmt.args = append(stmt.args, content)
 	return stmt
 }
 
 // OrNotLike 指定 WHERE ... OR col NOT LIKE content
-func (stmt *WhereStmt) OrNotLike(col, content string) *WhereStmt {
-	stmt.Or(col + " NOT LIKE '" + content + "'")
+func (stmt *WhereStmt) OrNotLike(col string, content interface{}) *WhereStmt {
+	stmt.writeAnd(false)
+	stmt.builder.Quote(col, stmt.l, stmt.r).WriteString(" NOT LIKE '?'")
+	stmt.args = append(stmt.args, content)
 	return stmt
 }
 
 // AndIn 指定 WHERE ... AND col IN(v...)
 func (stmt *WhereStmt) AndIn(col string, v ...interface{}) *WhereStmt {
-	cols := strings.Repeat("?,", len(v))
-	cols = cols[:len(cols)-1]
-	stmt.And(col+" IN ("+cols+")", v...)
-	return stmt
+	return stmt.in(true, false, col, v...)
 }
 
 // OrIn 指定 WHERE ... OR col IN(v...)
 func (stmt *WhereStmt) OrIn(col string, v ...interface{}) *WhereStmt {
-	cols := strings.Repeat("?,", len(v))
-	cols = cols[:len(cols)-1]
-	stmt.Or(col+" IN ("+cols+")", v...)
-	return stmt
+	return stmt.in(false, false, col, v...)
 }
 
 // AndNotIn 指定 WHERE ... AND col NOT IN(v...)
 func (stmt *WhereStmt) AndNotIn(col string, v ...interface{}) *WhereStmt {
-	cols := strings.Repeat("?,", len(v))
-	cols = cols[:len(cols)-1]
-	stmt.And(col+" NOT IN ("+cols+")", v...)
-	return stmt
+	return stmt.in(true, true, col, v...)
 }
 
 // OrNotIn 指定 WHERE ... OR col IN(v...)
 func (stmt *WhereStmt) OrNotIn(col string, v ...interface{}) *WhereStmt {
-	cols := strings.Repeat("?,", len(v))
-	cols = cols[:len(cols)-1]
-	stmt.Or(col+" NOT IN ("+cols+")", v...)
+	return stmt.in(false, true, col, v...)
+}
+
+func (stmt *WhereStmt) in(and, not bool, col string, v ...interface{}) *WhereStmt {
+	if len(v) == 0 {
+		panic("参数 v 不能为空")
+	}
+
+	stmt.writeAnd(and)
+	stmt.builder.Quote(col, stmt.l, stmt.r)
+
+	if not {
+		stmt.builder.WriteString(" NOT")
+	}
+
+	stmt.builder.WriteString(" IN(")
+	for range v {
+		stmt.builder.WriteBytes('?', ',')
+	}
+	stmt.builder.TruncateLast(1)
+	stmt.builder.WriteBytes(')')
+
+	stmt.args = append(stmt.args, v...)
+
 	return stmt
 }
 
 func (stmt *WhereStmt) addWhere(and bool, w *WhereStmt) *WhereStmt {
-	cond := w.builder.String()
-	if strings.TrimSpace(cond) == "" {
-		return stmt
-	}
-
 	stmt.writeAnd(and)
-	stmt.builder.WriteBytes('(')
 
-	stmt.builder.WriteString(cond)
+	stmt.builder.WriteBytes('(').Append(w.builder).WriteBytes(')')
 	stmt.args = append(stmt.args, w.args...)
-
-	stmt.builder.WriteBytes(')')
 
 	return stmt
 }

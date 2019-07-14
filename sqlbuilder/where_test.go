@@ -16,7 +16,7 @@ var _ SQLer = &WhereStmt{}
 
 func TestWhere(t *testing.T) {
 	a := assert.New(t)
-	w := Where()
+	w := newWhere('{', '}')
 	a.NotNil(w)
 
 	w.And("id=?", 1)
@@ -48,10 +48,10 @@ func TestWhere(t *testing.T) {
 
 func TestWhere_addWhere(t *testing.T) {
 	a := assert.New(t)
-	w := Where()
+	w := newWhere('{', '}')
 
-	w2 := Where().And("id=?", 4)
-	w1 := Where().And("id=?", 2).Or("id=?", 3).OrWhere(w2)
+	w2 := newWhere('{', '}').And("id=?", 4)
+	w1 := newWhere('{', '}').And("id=?", 2).Or("id=?", 3).OrWhere(w2)
 
 	w.And("id=?", 1).
 		AndWhere(w1).

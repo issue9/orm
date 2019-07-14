@@ -47,11 +47,9 @@ type column struct {
 
 // Select 声明一条 Select 语句
 func Select(e Engine, d Dialect) *SelectStmt {
-	stmt := &SelectStmt{
-		where:   Where(),
-		columns: make([]*column, 0, 10),
-	}
+	stmt := &SelectStmt{columns: make([]*column, 0, 10)}
 	stmt.queryStmt = newQueryStmt(e, d, stmt)
+	stmt.where = newWhere(stmt.l, stmt.r)
 
 	return stmt
 }
@@ -285,47 +283,6 @@ func (stmt *SelectStmt) WhereStmt() *WhereStmt {
 	return stmt.where
 }
 
-// Where 指定 where 语句
-func (stmt *SelectStmt) Where(cond string, args ...interface{}) *SelectStmt {
-	return stmt.And(cond, args...)
-}
-
-// And 指定 where ... AND ... 语句
-func (stmt *SelectStmt) And(cond string, args ...interface{}) *SelectStmt {
-	stmt.where.And(cond, args...)
-	return stmt
-}
-
-// Or 指定 where ... OR ... 语句
-func (stmt *SelectStmt) Or(cond string, args ...interface{}) *SelectStmt {
-	stmt.where.Or(cond, args...)
-	return stmt
-}
-
-// AndIsNull 指定 WHERE ... AND col IS NULL
-func (stmt *SelectStmt) AndIsNull(col string) *SelectStmt {
-	stmt.where.AndIsNull(col)
-	return stmt
-}
-
-// OrIsNull 指定 WHERE ... OR col IS NULL
-func (stmt *SelectStmt) OrIsNull(col string) *SelectStmt {
-	stmt.where.OrIsNull(col)
-	return stmt
-}
-
-// AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
-func (stmt *SelectStmt) AndIsNotNull(col string) *SelectStmt {
-	stmt.where.AndIsNotNull(col)
-	return stmt
-}
-
-// OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
-func (stmt *SelectStmt) OrIsNotNull(col string) *SelectStmt {
-	stmt.where.OrIsNotNull(col)
-	return stmt
-}
-
 // Join 添加一条 Join 语句
 func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 	if stmt.joins == nil {
@@ -523,4 +480,117 @@ func (stmt *SelectStmt) QueryInt(colName string) (int64, error) {
 	}
 
 	return strconv.ParseInt(v, 10, 64)
+}
+
+// Where SelectStmt.And 的别名
+func (stmt *SelectStmt) Where(cond string, args ...interface{}) *SelectStmt {
+	return stmt.And(cond, args...)
+}
+
+// And 添加一条 and 语句
+func (stmt *SelectStmt) And(cond string, args ...interface{}) *SelectStmt {
+	stmt.where.And(cond, args...)
+	return stmt
+}
+
+// Or 添加一条 OR 语句
+func (stmt *SelectStmt) Or(cond string, args ...interface{}) *SelectStmt {
+	stmt.where.Or(cond, args...)
+	return stmt
+}
+
+// AndIsNull 指定 WHERE ... AND col IS NULL
+func (stmt *SelectStmt) AndIsNull(col string) *SelectStmt {
+	stmt.where.AndIsNull(col)
+	return stmt
+}
+
+// OrIsNull 指定 WHERE ... OR col IS NULL
+func (stmt *SelectStmt) OrIsNull(col string) *SelectStmt {
+	stmt.where.OrIsNull(col)
+	return stmt
+}
+
+// AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
+func (stmt *SelectStmt) AndIsNotNull(col string) *SelectStmt {
+	stmt.where.AndIsNotNull(col)
+	return stmt
+}
+
+// OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
+func (stmt *SelectStmt) OrIsNotNull(col string) *SelectStmt {
+	stmt.where.OrIsNotNull(col)
+	return stmt
+}
+
+// AndBetween 指定 WHERE ... AND col BETWEEN v1 AND v2
+func (stmt *SelectStmt) AndBetween(col string, v1, v2 interface{}) *SelectStmt {
+	stmt.where.AndBetween(col, v1, v2)
+	return stmt
+}
+
+// OrBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
+func (stmt *SelectStmt) OrBetween(col string, v1, v2 interface{}) *SelectStmt {
+	stmt.where.OrBetween(col, v1, v2)
+	return stmt
+}
+
+// AndNotBetween 指定 WHERE ... AND col NOT BETWEEN v1 AND v2
+func (stmt *SelectStmt) AndNotBetween(col string, v1, v2 interface{}) *SelectStmt {
+	stmt.where.AndNotBetween(col, v1, v2)
+	return stmt
+}
+
+// OrNotBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
+func (stmt *SelectStmt) OrNotBetween(col string, v1, v2 interface{}) *SelectStmt {
+	stmt.where.OrNotBetween(col, v1, v2)
+	return stmt
+}
+
+// AndLike 指定 WHERE ... AND col LIKE content
+func (stmt *SelectStmt) AndLike(col string, content interface{}) *SelectStmt {
+	stmt.where.AndLike(col, content)
+	return stmt
+}
+
+// OrLike 指定 WHERE ... OR col LIKE content
+func (stmt *SelectStmt) OrLike(col string, content interface{}) *SelectStmt {
+	stmt.where.OrLike(col, content)
+	return stmt
+}
+
+// AndNotLike 指定 WHERE ... AND col NOT LIKE content
+func (stmt *SelectStmt) AndNotLike(col string, content interface{}) *SelectStmt {
+	stmt.where.AndNotLike(col, content)
+	return stmt
+}
+
+// OrNotLike 指定 WHERE ... OR col NOT LIKE content
+func (stmt *SelectStmt) OrNotLike(col string, content interface{}) *SelectStmt {
+	stmt.where.OrNotLike(col, content)
+	return stmt
+}
+
+// AndIn 指定 WHERE ... AND col IN(v...)
+func (stmt *SelectStmt) AndIn(col string, v ...interface{}) *SelectStmt {
+	stmt.where.AndIn(col, v...)
+	return stmt
+}
+
+// OrIn 指定 WHERE ... OR col IN(v...)
+func (stmt *SelectStmt) OrIn(col string, v ...interface{}) *SelectStmt {
+	stmt.where.OrIn(col, v...)
+	return stmt
+}
+
+// AndNotIn 指定 WHERE ... AND col NOT IN(v...)
+func (stmt *SelectStmt) AndNotIn(col string, v ...interface{}) *SelectStmt {
+	stmt.where.AndNotIn(col, v...)
+	return stmt
+}
+
+// OrNotIn 指定 WHERE ... OR col IN(v...)
+func (stmt *SelectStmt) OrNotIn(col string, v ...interface{}) *SelectStmt {
+	stmt.where.OrNotIn(col, v...)
+	return stmt
 }

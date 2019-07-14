@@ -30,11 +30,9 @@ type updateSet struct {
 
 // Update 声明一条 UPDATE 的 SQL 语句
 func Update(e Engine, d Dialect) *UpdateStmt {
-	stmt := &UpdateStmt{
-		where:  Where(),
-		values: []*updateSet{},
-	}
+	stmt := &UpdateStmt{values: []*updateSet{}}
 	stmt.execStmt = newExecStmt(e, d, stmt)
+	stmt.where = newWhere(stmt.l, stmt.r)
 
 	return stmt
 }
@@ -88,23 +86,6 @@ func (stmt *UpdateStmt) OCC(col string, val interface{}) *UpdateStmt {
 // WhereStmt 实现 WhereStmter 接口
 func (stmt *UpdateStmt) WhereStmt() *WhereStmt {
 	return stmt.where
-}
-
-// Where 指定 where 语句
-func (stmt *UpdateStmt) Where(cond string, args ...interface{}) *UpdateStmt {
-	return stmt.And(cond, args...)
-}
-
-// And 指定 where ... AND ... 语句
-func (stmt *UpdateStmt) And(cond string, args ...interface{}) *UpdateStmt {
-	stmt.where.And(cond, args...)
-	return stmt
-}
-
-// Or 指定 where ... OR ... 语句
-func (stmt *UpdateStmt) Or(cond string, args ...interface{}) *UpdateStmt {
-	stmt.where.Or(cond, args...)
-	return stmt
 }
 
 // Reset 重置语句
@@ -169,15 +150,14 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
 		return stmt.where.SQL()
 	}
 
-	occColumn := string(stmt.l) + stmt.occColumn + string(stmt.r)
-	occ := Where()
+	occ := newWhere(stmt.l, stmt.r)
 	if named, ok := stmt.occValue.(sql.NamedArg); ok && named.Name != "" {
-		occ.And(occColumn+"=@"+named.Name, stmt.occValue)
+		occ.And(stmt.occColumn+"=@"+named.Name, stmt.occValue)
 	} else {
-		occ.And(occColumn+"=?", stmt.occValue)
+		occ.And(stmt.occColumn+"=?", stmt.occValue)
 	}
 
-	return Where().AndWhere(stmt.where).AndWhere(occ).SQL()
+	return newWhere(stmt.l, stmt.r).AndWhere(stmt.where).AndWhere(occ).SQL()
 }
 
 // 检测列名是否存在重复，先排序，再与后一元素比较。
@@ -214,4 +194,117 @@ func (stmt *UpdateStmt) columnsHasDup() bool {
 	}
 
 	return false
+}
+
+// Where UpdateStmt.And 的别名
+func (stmt *UpdateStmt) Where(cond string, args ...interface{}) *UpdateStmt {
+	return stmt.And(cond, args...)
+}
+
+// And 添加一条 and 语句
+func (stmt *UpdateStmt) And(cond string, args ...interface{}) *UpdateStmt {
+	stmt.where.And(cond, args...)
+	return stmt
+}
+
+// Or 添加一条 OR 语句
+func (stmt *UpdateStmt) Or(cond string, args ...interface{}) *UpdateStmt {
+	stmt.where.Or(cond, args...)
+	return stmt
+}
+
+// AndIsNull 指定 WHERE ... AND col IS NULL
+func (stmt *UpdateStmt) AndIsNull(col string) *UpdateStmt {
+	stmt.where.AndIsNull(col)
+	return stmt
+}
+
+// OrIsNull 指定 WHERE ... OR col IS NULL
+func (stmt *UpdateStmt) OrIsNull(col string) *UpdateStmt {
+	stmt.where.OrIsNull(col)
+	return stmt
+}
+
+// AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
+func (stmt *UpdateStmt) AndIsNotNull(col string) *UpdateStmt {
+	stmt.where.AndIsNotNull(col)
+	return stmt
+}
+
+// OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
+func (stmt *UpdateStmt) OrIsNotNull(col string) *UpdateStmt {
+	stmt.where.OrIsNotNull(col)
+	return stmt
+}
+
+// AndBetween 指定 WHERE ... AND col BETWEEN v1 AND v2
+func (stmt *UpdateStmt) AndBetween(col string, v1, v2 interface{}) *UpdateStmt {
+	stmt.where.AndBetween(col, v1, v2)
+	return stmt
+}
+
+// OrBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
+func (stmt *UpdateStmt) OrBetween(col string, v1, v2 interface{}) *UpdateStmt {
+	stmt.where.OrBetween(col, v1, v2)
+	return stmt
+}
+
+// AndNotBetween 指定 WHERE ... AND col NOT BETWEEN v1 AND v2
+func (stmt *UpdateStmt) AndNotBetween(col string, v1, v2 interface{}) *UpdateStmt {
+	stmt.where.AndNotBetween(col, v1, v2)
+	return stmt
+}
+
+// OrNotBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
+func (stmt *UpdateStmt) OrNotBetween(col string, v1, v2 interface{}) *UpdateStmt {
+	stmt.where.OrNotBetween(col, v1, v2)
+	return stmt
+}
+
+// AndLike 指定 WHERE ... AND col LIKE content
+func (stmt *UpdateStmt) AndLike(col string, content interface{}) *UpdateStmt {
+	stmt.where.AndLike(col, content)
+	return stmt
+}
+
+// OrLike 指定 WHERE ... OR col LIKE content
+func (stmt *UpdateStmt) OrLike(col string, content interface{}) *UpdateStmt {
+	stmt.where.OrLike(col, content)
+	return stmt
+}
+
+// AndNotLike 指定 WHERE ... AND col NOT LIKE content
+func (stmt *UpdateStmt) AndNotLike(col string, content interface{}) *UpdateStmt {
+	stmt.where.AndNotLike(col, content)
+	return stmt
+}
+
+// OrNotLike 指定 WHERE ... OR col NOT LIKE content
+func (stmt *UpdateStmt) OrNotLike(col string, content interface{}) *UpdateStmt {
+	stmt.where.OrNotLike(col, content)
+	return stmt
+}
+
+// AndIn 指定 WHERE ... AND col IN(v...)
+func (stmt *UpdateStmt) AndIn(col string, v ...interface{}) *UpdateStmt {
+	stmt.where.AndIn(col, v...)
+	return stmt
+}
+
+// OrIn 指定 WHERE ... OR col IN(v...)
+func (stmt *UpdateStmt) OrIn(col string, v ...interface{}) *UpdateStmt {
+	stmt.where.OrIn(col, v...)
+	return stmt
+}
+
+// AndNotIn 指定 WHERE ... AND col NOT IN(v...)
+func (stmt *UpdateStmt) AndNotIn(col string, v ...interface{}) *UpdateStmt {
+	stmt.where.AndNotIn(col, v...)
+	return stmt
+}
+
+// OrNotIn 指定 WHERE ... OR col IN(v...)
+func (stmt *UpdateStmt) OrNotIn(col string, v ...interface{}) *UpdateStmt {
+	stmt.where.OrNotIn(col, v...)
+	return stmt
 }
