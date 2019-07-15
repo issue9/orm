@@ -155,20 +155,20 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 	}
 
 	builder := New("ALTER TABLE ").
-		Quote(stmt.TableName, stmt.l, stmt.r).
+		QuoteKey(stmt.TableName).
 		WriteString(" ADD CONSTRAINT ").
-		Quote(stmt.Name, stmt.l, stmt.r)
+		QuoteKey(stmt.Name)
 
 	switch stmt.Type {
 	case ConstraintCheck:
 		builder.WriteString(" CHECK(").WriteString(stmt.Data[0]).WriteBytes(')')
 	case ConstraintFK:
 		builder.WriteString(" FOREIGN KEY(").
-			Quote(stmt.Data[0], stmt.l, stmt.r).
+			QuoteKey(stmt.Data[0]).
 			WriteString(") REFERENCES ").
-			Quote(stmt.Data[1], stmt.l, stmt.r).
+			QuoteKey(stmt.Data[1]).
 			WriteBytes('(').
-			Quote(stmt.Data[2], stmt.l, stmt.r).
+			QuoteKey(stmt.Data[2]).
 			WriteBytes(')')
 
 		if stmt.Data[3] != "" {
@@ -182,7 +182,7 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		builder.WriteString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
 			builder.
-				Quote(col, stmt.l, stmt.r).
+				QuoteKey(col).
 				WriteBytes(',')
 		}
 		builder.TruncateLast(1).WriteBytes(')')
@@ -190,7 +190,7 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		builder.WriteString(" UNIQUE(")
 		for _, col := range stmt.Data {
 			builder.
-				Quote(col, stmt.l, stmt.r).
+				QuoteKey(col).
 				WriteBytes(',')
 		}
 		builder.TruncateLast(1).WriteBytes(')')
@@ -269,9 +269,9 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 	}
 
 	buf := New("ALTER TABLE ").
-		Quote(stmt.TableName, stmt.l, stmt.r).
+		QuoteKey(stmt.TableName).
 		WriteString(" DROP CONSTRAINT ").
-		Quote(stmt.Name, stmt.l, stmt.r)
+		QuoteKey(stmt.Name)
 	return []string{buf.String()}, nil
 }
 

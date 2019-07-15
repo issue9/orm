@@ -118,7 +118,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 
 	builder.WriteBytes('(')
 	for _, col := range stmt.cols {
-		builder.Quote(col, stmt.l, stmt.r).
+		builder.QuoteKey(col).
 			WriteBytes(',')
 	}
 	builder.TruncateLast(1)
@@ -150,7 +150,7 @@ func (stmt *InsertStmt) fromSelect(builder *SQLBuilder) (string, []interface{}, 
 	builder.WriteBytes('(')
 	if len(stmt.cols) > 0 {
 		for _, col := range stmt.cols {
-			builder.Quote(col, stmt.l, stmt.r).WriteBytes(',')
+			builder.QuoteKey(col).WriteBytes(',')
 		}
 		builder.TruncateLast(1)
 	} else {
@@ -159,7 +159,7 @@ func (stmt *InsertStmt) fromSelect(builder *SQLBuilder) (string, []interface{}, 
 			if name == "" {
 				name = col.name
 			}
-			builder.Quote(name, stmt.l, stmt.r).WriteBytes(',')
+			builder.QuoteKey(name).WriteBytes(',')
 		}
 		builder.TruncateLast(1)
 	}

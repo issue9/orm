@@ -19,12 +19,16 @@ const postgresName = "postgres"
 
 var postgresInst *postgres
 
-type postgres struct{}
+type postgres struct {
+	replacer *strings.Replacer
+}
 
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
 func Postgres() orm.Dialect {
 	if postgresInst == nil {
-		postgresInst = &postgres{}
+		postgresInst = &postgres{
+			replacer: strings.NewReplacer("{", `"`, "}", `"`),
+		}
 	}
 
 	return postgresInst
@@ -32,10 +36,6 @@ func Postgres() orm.Dialect {
 
 func (p *postgres) Name() string {
 	return postgresName
-}
-
-func (p *postgres) QuoteTuple() (byte, byte) {
-	return '"', '"'
 }
 
 func (p *postgres) VersionSQL() string {
@@ -48,6 +48,8 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 
 // 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
 func (p *postgres) SQL(sql string) (string, error) {
+	sql = p.replacer.Replace(sql)
+
 	if strings.IndexByte(sql, '?') < 0 {
 		return sql, nil
 	}
@@ -79,11 +81,8 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 }
 
 func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	l, r := p.QuoteTuple()
 	builder := sqlbuilder.New("TRUNCATE TABLE ").
-		WriteBytes(l).
-		WriteString(stmt.TableName).
-		WriteBytes(r)
+		QuoteKey(stmt.TableName)
 
 	if stmt.AIColumnName != "" {
 		builder.WriteString(" RESTART IDENTITY")

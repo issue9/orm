@@ -32,7 +32,7 @@ type updateSet struct {
 func Update(e Engine, d Dialect) *UpdateStmt {
 	stmt := &UpdateStmt{values: []*updateSet{}}
 	stmt.execStmt = newExecStmt(e, d, stmt)
-	stmt.where = newWhere(stmt.l, stmt.r)
+	stmt.where = newWhere()
 
 	return stmt
 }
@@ -113,11 +113,11 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	args := make([]interface{}, 0, len(stmt.values))
 
 	for _, val := range stmt.values {
-		buf.Quote(val.column, stmt.l, stmt.r)
+		buf.QuoteKey(val.column)
 		buf.WriteBytes('=')
 
 		if val.typ != 0 {
-			buf.Quote(val.column, stmt.l, stmt.r).WriteBytes(val.typ)
+			buf.QuoteKey(val.column).WriteBytes(val.typ)
 		}
 
 		if named, ok := val.value.(sql.NamedArg); ok && named.Name != "" {
@@ -150,7 +150,7 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
 		return stmt.where.SQL()
 	}
 
-	w := newWhere(stmt.l, stmt.r)
+	w := newWhere()
 	w.appendGroup(true, stmt.where)
 
 	occ := w.AndGroup()

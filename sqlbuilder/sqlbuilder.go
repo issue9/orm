@@ -10,6 +10,13 @@ import (
 	"errors"
 )
 
+// 作用于表名，列名等非关键字上的引号占位符。
+// 在 Dialect.SQL 中会自动替换成该数据相应的符号。
+const (
+	QuoteLeft  = '{'
+	QuoteRight = '}'
+)
+
 var (
 	// ErrTableIsEmpty 未指定表名，任何 SQL 语句中，
 	// 若未指定表名时，会返回此错误
@@ -78,9 +85,14 @@ func (b *SQLBuilder) WriteBytes(c ...byte) *SQLBuilder {
 	return b
 }
 
-// Quote 给 str 添加引号
+// Quote 给 str 左右添加 l 和 r 两个字符
 func (b *SQLBuilder) Quote(str string, l, r byte) *SQLBuilder {
 	return b.WriteBytes(l).WriteString(str).WriteBytes(r)
+}
+
+// QuoteKey 给 str 左右添加 QuoteLeft 和 QuoteRight 两个字符
+func (b *SQLBuilder) QuoteKey(str string) *SQLBuilder {
+	return b.Quote(str, QuoteLeft, QuoteRight)
 }
 
 // Reset 重置内容

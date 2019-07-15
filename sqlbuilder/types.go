@@ -84,15 +84,13 @@ type Engine interface {
 // 一般情况下， 如果有多个数据是遵循 SQL 标准的，只有个别有例外，
 // 那么该例外的 Dialect 实现，可以同时实现 Hooker 接口， 自定义该语句的实现。
 type Dialect interface {
-	// 返回符合当前数据库规范的引号对。
-	QuoteTuple() (openQuote, closeQuote byte)
-
 	// 将列转换成数据支持的类型
 	SQLType(col *Column) (string, error)
 
 	// 根据当前的数据库，对 SQL 作调整。
 	//
-	// 比如占位符 postgresql 可以使用 $1 等形式。
+	// 比如占位符 postgresql 可以使用 $1 等形式；
+	// 以及 {} 等符号换成当前数据库相应的引号。
 	SQL(sql string) (string, error)
 
 	// 查询服务器版本号的 SQL 语句。

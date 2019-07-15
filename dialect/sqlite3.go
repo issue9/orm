@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/issue9/orm/v2"
 	s3 "github.com/issue9/orm/v2/internal/sqlite3"
@@ -22,7 +23,9 @@ const (
 
 var sqlite3Inst *sqlite3
 
-type sqlite3 struct{}
+type sqlite3 struct {
+	replacer *strings.Replacer
+}
 
 // Sqlite3 返回一个适配 sqlite3 的 orm.Dialect 接口
 //
@@ -30,7 +33,9 @@ type sqlite3 struct{}
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
 func Sqlite3() orm.Dialect {
 	if sqlite3Inst == nil {
-		sqlite3Inst = &sqlite3{}
+		sqlite3Inst = &sqlite3{
+			replacer: strings.NewReplacer("{", "`", "}", "`"),
+		}
 	}
 
 	return sqlite3Inst
@@ -40,12 +45,8 @@ func (s *sqlite3) Name() string {
 	return sqlite3Name
 }
 
-func (s *sqlite3) QuoteTuple() (byte, byte) {
-	return '`', '`'
-}
-
 func (s *sqlite3) SQL(sql string) (string, error) {
-	return sql, nil
+	return s.replacer.Replace(sql), nil
 }
 
 func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {
@@ -205,11 +206,9 @@ func (s *sqlite3) buildSQLS(e sqlbuilder.Engine, table *s3.Table, tableName stri
 }
 
 func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	l, r := s.QuoteTuple()
 	builder := sqlbuilder.New("DELETE FROM ").
-		WriteBytes(l).
-		WriteString(stmt.TableName).
-		WriteBytes(r)
+		QuoteKey(stmt.TableName)
+
 	if stmt.AIColumnName == "" {
 		return []string{builder.String()}, nil
 	}

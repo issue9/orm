@@ -101,7 +101,7 @@ func TestMysql_DropIndexStmtHook(t *testing.T) {
 	hook, ok := my.(sqlbuilder.DropIndexStmtHooker)
 	a.True(ok).NotNil(hook)
 	qs, err := hook.DropIndexStmtHook(stmt)
-	a.NotError(err).Equal(qs, []string{"ALTER TABLE `tbl` DROP INDEX `index_name`"})
+	a.NotError(err).Equal(qs, []string{"ALTER TABLE {tbl} DROP INDEX {index_name}"})
 }
 
 func TestMysql_TruncateTableStmtHook(t *testing.T) {
@@ -115,7 +115,7 @@ func TestMysql_TruncateTableStmtHook(t *testing.T) {
 	hook, ok := my.(sqlbuilder.TruncateTableStmtHooker)
 	a.True(ok).NotNil(hook)
 	qs, err := hook.TruncateTableStmtHook(stmt)
-	a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE `tbl`"})
+	a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE {tbl}"})
 }
 
 func TestMysql_CreateTableOptions(t *testing.T) {

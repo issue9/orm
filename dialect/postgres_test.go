@@ -228,13 +228,13 @@ func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
 	a.NotNil(stmt)
 	qs, err := hook.TruncateTableStmtHook(stmt)
 	a.NotError(err).Equal(1, len(qs))
-	sqltest.Equal(a, qs[0], `TRUNCATE TABLE "tbl"`)
+	sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl}`)
 
 	stmt = sqlbuilder.TruncateTable(nil, s).Table("tbl", "id")
 	a.NotNil(stmt)
 	qs, err = hook.TruncateTableStmtHook(stmt)
 	a.NotError(err).Equal(1, len(qs))
-	sqltest.Equal(a, qs[0], `TRUNCATE TABLE "tbl" RESTART IDENTITY`)
+	sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl} RESTART IDENTITY`)
 }
 
 func TestPostgres_SQL(t *testing.T) {

@@ -171,13 +171,13 @@ func TestSqlite3_TruncateTableStmtHooker(t *testing.T) {
 	a.NotNil(stmt)
 	qs, err := hook.TruncateTableStmtHook(stmt)
 	a.NotError(err).Equal(1, len(qs))
-	sqltest.Equal(a, qs[0], "DELETE FROM `tbl`")
+	sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
 
 	stmt = sqlbuilder.TruncateTable(nil, s).Table("tbl", "id")
 	a.NotNil(stmt)
 	qs, err = hook.TruncateTableStmtHook(stmt)
 	a.NotError(err).Equal(2, len(qs))
-	sqltest.Equal(a, qs[0], "DELETE FROM `tbl`")
+	sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
 	sqltest.Equal(a, qs[1], "DELETE FROM SQLITE_SEQUENCE WHERE name='tbl'")
 }
 

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/issue9/orm/v2"
 	my "github.com/issue9/orm/v2/internal/mysql"
@@ -23,7 +24,9 @@ const (
 
 var mysqlInst *mysql
 
-type mysql struct{}
+type mysql struct {
+	replacer *strings.Replacer
+}
 
 // Mysql 返回一个适配 mysql 的 Dialect 接口
 //
@@ -32,7 +35,9 @@ type mysql struct{}
 //  engine 使用的引擎，语法为： engine(innodb)
 func Mysql() orm.Dialect {
 	if mysqlInst == nil {
-		mysqlInst = &mysql{}
+		mysqlInst = &mysql{
+			replacer: strings.NewReplacer("{", "`", "}", "`"),
+		}
 	}
 
 	return mysqlInst
@@ -42,12 +47,8 @@ func (m *mysql) Name() string {
 	return mysqlName
 }
 
-func (m *mysql) QuoteTuple() (byte, byte) {
-	return '`', '`'
-}
-
 func (m *mysql) SQL(sql string) (string, error) {
-	return sql, nil
+	return m.replacer.Replace(sql), nil
 }
 
 func (m *mysql) LastInsertIDSQL(table, col string) (sql string, append bool) {
@@ -113,24 +114,17 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 }
 
 func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
-	l, r := m.QuoteTuple()
 	builder := sqlbuilder.New("ALTER TABLE ").
-		WriteBytes(l).
-		WriteString(stmt.TableName).
-		WriteBytes(r).
+		QuoteKey(stmt.TableName).
 		WriteString(" DROP INDEX ").
-		WriteBytes(l).
-		WriteString(stmt.IndexName).
-		WriteBytes(r)
+		QuoteKey(stmt.IndexName)
+
 	return []string{builder.String()}, nil
 }
 
 func (m *mysql) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	l, r := m.QuoteTuple()
-	builder := sqlbuilder.New("TRUNCATE TABLE ").
-		WriteBytes(l).
-		WriteString(stmt.TableName).
-		WriteBytes(r)
+	builder := sqlbuilder.New("TRUNCATE TABLE ").QuoteKey(stmt.TableName)
+
 	return []string{builder.String()}, nil
 }
 

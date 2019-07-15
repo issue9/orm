@@ -15,7 +15,7 @@ type DeleteStmt struct {
 func Delete(e Engine, d Dialect) *DeleteStmt {
 	stmt := &DeleteStmt{}
 	stmt.execStmt = newExecStmt(e, d, stmt)
-	stmt.where = newWhere(stmt.l, stmt.r)
+	stmt.where = newWhere()
 
 	return stmt
 }
@@ -38,7 +38,7 @@ func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 	}
 
 	builder := New("DELETE FROM ").
-		Quote(stmt.table, stmt.l, stmt.r).
+		QuoteKey(stmt.table).
 		WriteString(" WHERE ").
 		WriteString(query)
 

@@ -12,7 +12,6 @@ import (
 type baseStmt struct {
 	dialect Dialect
 	engine  Engine
-	l, r    byte
 }
 
 type queryStmt struct {
@@ -31,40 +30,31 @@ type ddlStmt struct {
 }
 
 func newQueryStmt(e Engine, d Dialect, sql SQLer) *queryStmt {
-	l, r := d.QuoteTuple()
 	return &queryStmt{
 		SQLer: sql,
 		baseStmt: baseStmt{
 			engine:  e,
 			dialect: d,
-			l:       l,
-			r:       r,
 		},
 	}
 }
 
 func newExecStmt(e Engine, d Dialect, sql SQLer) *execStmt {
-	l, r := d.QuoteTuple()
 	return &execStmt{
 		SQLer: sql,
 		baseStmt: baseStmt{
 			engine:  e,
 			dialect: d,
-			l:       l,
-			r:       r,
 		},
 	}
 }
 
 func newDDLStmt(e Engine, d Dialect, sql DDLSQLer) *ddlStmt {
-	l, r := d.QuoteTuple()
 	return &ddlStmt{
 		DDLSQLer: sql,
 		baseStmt: baseStmt{
 			engine:  e,
 			dialect: d,
-			l:       l,
-			r:       r,
 		},
 	}
 }

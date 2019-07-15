@@ -49,7 +49,7 @@ type column struct {
 func Select(e Engine, d Dialect) *SelectStmt {
 	stmt := &SelectStmt{columns: make([]*column, 0, 10)}
 	stmt.queryStmt = newQueryStmt(e, d, stmt)
-	stmt.where = newWhere(stmt.l, stmt.r)
+	stmt.where = newWhere()
 
 	return stmt
 }
@@ -166,17 +166,17 @@ func (stmt *SelectStmt) buildColumns(builder *SQLBuilder) {
 
 	for _, col := range stmt.columns {
 		if col.table != "" {
-			builder.Quote(col.table, stmt.l, stmt.r).WriteBytes('.')
+			builder.QuoteKey(col.table).WriteBytes('.')
 		}
 
 		if col.name == "*" {
 			builder.WriteBytes('*')
 		} else {
-			builder.Quote(col.name, stmt.l, stmt.r)
+			builder.QuoteKey(col.name)
 		}
 
 		if col.alias != "" {
-			builder.WriteString(" AS ").Quote(col.alias, stmt.l, stmt.r)
+			builder.WriteString(" AS ").QuoteKey(col.alias)
 		}
 
 		builder.WriteBytes(',')
@@ -251,7 +251,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 		panic("不能重复指定表名")
 	}
 
-	builder := New("").Quote(table, stmt.l, stmt.r)
+	builder := New("").QuoteKey(table)
 
 	switch len(alias) {
 	case 0:
@@ -261,7 +261,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 			break
 		}
 
-		builder.WriteString(" AS ").Quote(alias[0], stmt.l, stmt.r)
+		builder.WriteString(" AS ").QuoteKey(alias[0])
 		stmt.tableExpr = builder.String()
 	default:
 		panic("过多的 alias 参数")
@@ -292,9 +292,9 @@ func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 	stmt.joins.WriteBytes(' ').
 		WriteString(typ).
 		WriteString(" JOIN ").
-		Quote(table, stmt.l, stmt.r).
+		QuoteKey(table).
 		WriteString(" AS ").
-		Quote(alias, stmt.l, stmt.r).
+		QuoteKey(alias).
 		WriteString(" ON ").
 		WriteString(on)
 
@@ -370,11 +370,11 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 func (stmt *baseStmt) quoteColumn(b *SQLBuilder, col string) {
 	index := strings.IndexByte(col, '.')
 	if index <= 0 {
-		b.Quote(col, stmt.l, stmt.r).WriteBytes(' ')
+		b.QuoteKey(col).WriteBytes(' ')
 	} else {
-		b.Quote(col[:index], stmt.l, stmt.r).
+		b.QuoteKey(col[:index]).
 			WriteBytes(' ').
-			Quote(col[index+1:], stmt.l, stmt.r).
+			QuoteKey(col[index+1:]).
 			WriteBytes(' ')
 	}
 }
@@ -407,11 +407,11 @@ func (stmt *SelectStmt) Count(cnt, col string, distinct bool) *SelectStmt {
 	if col == "*" {
 		builder.WriteString("*)")
 	} else {
-		builder.Quote(col, stmt.l, stmt.r).
+		builder.QuoteKey(col).
 			WriteBytes(')')
 	}
 
-	builder.WriteString(" AS ").Quote(cnt, stmt.l, stmt.r)
+	builder.WriteString(" AS ").QuoteKey(cnt)
 
 	stmt.countExpr = builder.String()
 
