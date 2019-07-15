@@ -368,7 +368,7 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 
 // 为列名添加数据库专属的引号，列名可以带表名前缀。
 func (stmt *baseStmt) quoteColumn(b *SQLBuilder, col string) {
-	index := strings.IndexByte(col, ',')
+	index := strings.IndexByte(col, '.')
 	if index <= 0 {
 		b.Quote(col, stmt.l, stmt.r).WriteBytes(' ')
 	} else {
