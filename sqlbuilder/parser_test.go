@@ -13,26 +13,45 @@ import (
 func TestSplitWithAS(t *testing.T) {
 	a := assert.New(t)
 
-	col, alias := splitWithAS("col as alias")
-	a.Equal(col, "col").Equal(alias, "alias")
+	var data = []*struct {
+		input  string
+		output []string // 第一个元素为列名，第二个元素为别名
+	}{
+		{
+			input:  "col as alias",
+			output: []string{"col", "alias"},
+		},
+		{
+			input:  "col As alias",
+			output: []string{"col", "alias"},
+		},
+		{
+			input:  "col AS\talias",
+			output: []string{"col", "alias"},
+		},
+		{
+			input:  "col\tAS\talias",
+			output: []string{"col", "alias"},
+		},
+		{
+			input:  "col AS alias name",
+			output: []string{"col", "alias name"},
+		},
+		{
+			input:  "col tS alias",
+			output: []string{"col tS alias", ""},
+		},
+		{
+			input:  "col AS alias AS name",
+			output: []string{"col", "alias AS name"},
+		},
+	}
 
-	col, alias = splitWithAS("col As alias")
-	a.Equal(col, "col").Equal(alias, "alias")
-
-	col, alias = splitWithAS("col AS\talias")
-	a.Equal(col, "col").Equal(alias, "alias")
-
-	col, alias = splitWithAS("col\taS alias")
-	a.Equal(col, "col").Equal(alias, "alias")
-
-	col, alias = splitWithAS("col aS alias name")
-	a.Equal(col, "col").Equal(alias, "alias name")
-
-	col, alias = splitWithAS("col tS alias")
-	a.Equal(col, "col tS alias").Equal(alias, "")
-
-	col, alias = splitWithAS("col AS alias AS name")
-	a.Equal(col, "col").Equal(alias, "alias AS name")
+	for index, item := range data {
+		col, alias := splitWithAS(item.input)
+		a.Equal(col, item.output[0], "not equal @%d v1:%v,v2:%v", index, col, item.output[0])
+		a.Equal(alias, item.output[1], "not equal @%d v1:%v,v2:%v", index, col, item.output[1])
+	}
 }
 
 func TestQuoteColumn(t *testing.T) {
