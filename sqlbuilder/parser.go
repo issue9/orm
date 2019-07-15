@@ -33,3 +33,14 @@ func splitWithAS(col string) (column, alias string) {
 	}
 	return col, ""
 }
+
+// 为列名添加数据库专属的引号日，列名可以带表名前缀。
+func quoteColumn(b *SQLBuilder, col string) {
+	if index := strings.IndexByte(col, '.'); index <= 0 {
+		b.QuoteKey(col)
+	} else {
+		b.QuoteKey(col[:index]).
+			WriteBytes('.').
+			QuoteKey(col[index+1:])
+	}
+}

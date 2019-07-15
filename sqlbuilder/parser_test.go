@@ -34,3 +34,33 @@ func TestSplitWithAS(t *testing.T) {
 	col, alias = splitWithAS("col AS alias AS name")
 	a.Equal(col, "col").Equal(alias, "alias AS name")
 }
+
+func TestQuoteColumn(t *testing.T) {
+	a := assert.New(t)
+
+	var data = []*struct {
+		input  string
+		output string
+	}{
+		{
+			input:  "column",
+			output: "{column}",
+		},
+		{
+			input:  "column_name",
+			output: "{column_name}",
+		},
+		{
+			input:  "table.column_name",
+			output: "{table}.{column_name}",
+		},
+	}
+
+	b := New("")
+	for index, item := range data {
+		b.Reset()
+		quoteColumn(b, item.input)
+		output := b.String()
+		a.Equal(output, item.output, "在第 %d 个元素出错，v1: %v，v2: %v", index, output, item.output)
+	}
+}

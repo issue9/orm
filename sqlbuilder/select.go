@@ -333,7 +333,7 @@ func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	}
 
 	for _, c := range col {
-		stmt.quoteColumn(stmt.orders, c)
+		quoteColumn(stmt.orders, c)
 		stmt.orders.WriteBytes(',')
 	}
 	stmt.orders.TruncateLast(1)
@@ -361,22 +361,9 @@ func (stmt *SelectStmt) ForUpdate() *SelectStmt {
 // table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
 	b := New(" GROUP BY ")
-	stmt.quoteColumn(b, col)
-	stmt.group = b.String()
+	quoteColumn(b, col)
+	stmt.group = b.WriteBytes(' ').String()
 	return stmt
-}
-
-// 为列名添加数据库专属的引号，列名可以带表名前缀。
-func (stmt *baseStmt) quoteColumn(b *SQLBuilder, col string) {
-	index := strings.IndexByte(col, '.')
-	if index <= 0 {
-		b.QuoteKey(col).WriteBytes(' ')
-	} else {
-		b.QuoteKey(col[:index]).
-			WriteBytes(' ').
-			QuoteKey(col[index+1:]).
-			WriteBytes(' ')
-	}
 }
 
 // Limit 生成 SQL 的 Limit 语句
