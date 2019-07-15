@@ -84,13 +84,18 @@ type Engine interface {
 // 一般情况下， 如果有多个数据是遵循 SQL 标准的，只有个别有例外，
 // 那么该例外的 Dialect 实现，可以同时实现 Hooker 接口， 自定义该语句的实现。
 type Dialect interface {
-	// 将列转换成数据支持的类型
+	// Dialect 的名称
+	//
+	// 自定义，不需要与 DriverName 相同。
+	Name() string
+
+	// 将列转换成数据支持的类型表达式
 	SQLType(col *Column) (string, error)
 
 	// 根据当前的数据库，对 SQL 作调整。
 	//
-	// 比如占位符 postgresql 可以使用 $1 等形式；
-	// 以及 {} 等符号换成当前数据库相应的引号。
+	// 比如替换 {} 符号；
+	// postgresql 需要将 ? 改成 $1 等形式。
 	SQL(sql string) (string, error)
 
 	// 查询服务器版本号的 SQL 语句。

@@ -41,10 +41,8 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 		DB:          db,
 		dialect:     dialect,
 		tablePrefix: tablePrefix,
-		replacer: strings.NewReplacer(
-			"#", tablePrefix,
-		),
-		models: model.NewModels(),
+		replacer:    strings.NewReplacer("#", tablePrefix),
+		models:      model.NewModels(),
 	}
 
 	inst.sql = &SQL{engine: inst}

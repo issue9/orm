@@ -80,9 +80,6 @@ type Engine interface {
 type Dialect interface {
 	sqlbuilder.Dialect
 
-	// 数据库的名称
-	Name() string
-
 	// 是否允许在事务中执行 DDL
 	//
 	// 比如在 postgresql 中，如果创建一个带索引的表，会采用在事务中，
