@@ -245,19 +245,9 @@ func (stmt *WhereStmt) in(and, not bool, col string, v ...interface{}) *WhereStm
 	return stmt
 }
 
-func (stmt *WhereStmt) addWhere(and bool, w *WhereStmt) *WhereStmt {
-	stmt.writeAnd(and)
-
-	stmt.builder.WriteBytes('(').Append(w.builder).WriteBytes(')')
-	stmt.args = append(stmt.args, w.args...)
-
-	return stmt
-}
-
 // AndGroup 开始一个子条件语句
 func (stmt *WhereStmt) AndGroup() *WhereStmt {
 	w := newWhere()
-	w.parent = stmt
 	stmt.appendGroup(true, w)
 
 	return w
@@ -266,7 +256,6 @@ func (stmt *WhereStmt) AndGroup() *WhereStmt {
 // OrGroup 开始一个子条件语句
 func (stmt *WhereStmt) OrGroup() *WhereStmt {
 	w := newWhere()
-	w.parent = stmt
 	stmt.appendGroup(false, w)
 
 	return w
@@ -290,6 +279,7 @@ func (stmt *WhereStmt) appendGroup(and bool, w *WhereStmt) {
 	}
 }
 
+// EndGroup 结束当前组的条件输出，返回上一层。如果没有上一层，则 panic
 func (stmt *WhereStmt) EndGroup() (parent *WhereStmt) {
 	if stmt.parent == nil {
 		panic("没有更高层的查询条件了")

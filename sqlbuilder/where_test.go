@@ -46,6 +46,130 @@ func TestWhere(t *testing.T) {
 	a.Equal(err, ErrArgsNotMatch).Nil(args).Empty(sql)
 }
 
+func TestWhereStmt_IsNull(t *testing.T) {
+	a := assert.New(t)
+	w := newWhere()
+
+	w.AndIsNull("col1")
+	query, args, err := w.SQL()
+	a.NotError(err).Empty(args)
+	sqltest.Equal(a, query, "{col1} is null")
+
+	w.OrIsNull("col2")
+	query, args, err = w.SQL()
+	a.NotError(err).Empty(args)
+	sqltest.Equal(a, query, "{col1} is null or {col2} is null")
+
+	w.Reset()
+	w.AndIsNotNull("col1")
+	query, args, err = w.SQL()
+	a.NotError(err).Empty(args)
+	sqltest.Equal(a, query, "{col1} is not null")
+
+	w.OrIsNotNull("col2")
+	query, args, err = w.SQL()
+	a.NotError(err).Empty(args)
+	sqltest.Equal(a, query, "{col1} is not null or {col2} is not null")
+}
+
+func TestWhereStmt_Like(t *testing.T) {
+	a := assert.New(t)
+	w := newWhere()
+
+	w.AndLike("col1", "%str1")
+	query, args, err := w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{"%str1"})
+	sqltest.Equal(a, query, "{col1} like ?")
+
+	w.OrLike("col2", "str2%")
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{"%str1", "str2%"})
+	sqltest.Equal(a, query, "{col1} like ?  or {col2} like ?")
+
+	w.Reset()
+	w.AndNotLike("col1", "%str1")
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{"%str1"})
+	sqltest.Equal(a, query, "{col1} not like ?")
+
+	w.OrNotLike("col2", "str2%")
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{"%str1", "str2%"})
+	sqltest.Equal(a, query, "{col1} not like ? or {col2} not like ?")
+}
+
+func TestWhereStmt_Between(t *testing.T) {
+	a := assert.New(t)
+	w := newWhere()
+
+	// AndBetween
+	w.AndBetween("col1", 1, 2)
+	query, args, err := w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{1, 2})
+	sqltest.Equal(a, query, "{col1} between ? and ?")
+
+	// OrBetween
+	w.OrBetween("col2", 3, 4)
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{1, 2, 3, 4})
+	sqltest.Equal(a, query, "{col1} between ? and ? or {col2} between ? and ?")
+
+	// AndNotBetween
+	w.Reset()
+	w.AndNotBetween("col1", 1, 2)
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{1, 2})
+	sqltest.Equal(a, query, "{col1} not between ? and ?")
+
+	// OrBetween
+	w.OrNotBetween("col2", 3, 4)
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{1, 2, 3, 4})
+	sqltest.Equal(a, query, "{col1} not between ? and ? or {col2} not between ? and ?")
+}
+
+func TestWhereStmt_In(t *testing.T) {
+	a := assert.New(t)
+	w := newWhere()
+
+	a.Panic(func() {
+		w.OrIn("col1")
+	})
+
+	w.OrIn("col1", 1, 2, 3)
+	query, args, err := w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{1, 2, 3})
+	sqltest.Equal(a, query, "{col1} in(?,?,?)")
+
+	w.AndIn("col2", "1", "2", "test")
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{1, 2, 3, "1", "2", "test"})
+	sqltest.Equal(a, query, "{col1} in(?,?,?) and {col2} in(?,?,?)")
+
+	w.Reset()
+	w.OrNotIn("col1", 1, 2, 3)
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{1, 2, 3})
+	sqltest.Equal(a, query, "{col1} not in(?,?,?)")
+
+	w.AndNotIn("col2", "1", "2", "test")
+	query, args, err = w.SQL()
+	a.NotError(err).
+		Equal(args, []interface{}{1, 2, 3, "1", "2", "test"})
+	sqltest.Equal(a, query, "{col1} not in(?,?,?) and {col2} not in(?,?,?)")
+}
+
 func TestWhere_Group(t *testing.T) {
 	a := assert.New(t)
 	w := newWhere()
@@ -70,4 +194,8 @@ func TestWhere_Group(t *testing.T) {
 	a.NotError(err)
 	a.Equal(args, []interface{}{1})
 	sqltest.Equal(a, query, "id=?")
+
+	a.Panic(func() {
+		w.EndGroup()
+	})
 }
