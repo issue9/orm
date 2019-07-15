@@ -43,19 +43,6 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 	`create unique index index_user_unique_email_id on usr(email,id)`,
 }
 
-func TestMysqlHooks(t *testing.T) {
-	a := assert.New(t)
-
-	_, ok := dialect.Mysql().(sqlbuilder.TruncateTableStmtHooker)
-	a.True(ok)
-
-	_, ok = dialect.Mysql().(sqlbuilder.DropIndexStmtHooker)
-	a.True(ok)
-
-	_, ok = dialect.Mysql().(sqlbuilder.DropConstraintStmtHooker)
-	a.True(ok)
-}
-
 func TestMysql_VersionSQL(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)

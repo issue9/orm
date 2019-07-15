@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/issue9/orm/v2"
 	s3 "github.com/issue9/orm/v2/internal/sqlite3"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -27,11 +26,18 @@ type sqlite3 struct {
 	replacer *strings.Replacer
 }
 
-// Sqlite3 返回一个适配 sqlite3 的 orm.Dialect 接口
+var (
+	_ sqlbuilder.TruncateTableStmtHooker  = &sqlite3{}
+	_ sqlbuilder.DropColumnStmtHooker     = &sqlite3{}
+	_ sqlbuilder.DropConstraintStmtHooker = &sqlite3{}
+	_ sqlbuilder.AddConstraintStmtHooker  = &sqlite3{}
+)
+
+// Sqlite3 返回一个适配 sqlite3 的 Dialect 接口
 //
 // Meta 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
-func Sqlite3() orm.Dialect {
+func Sqlite3() sqlbuilder.Dialect {
 	if sqlite3Inst == nil {
 		sqlite3Inst = &sqlite3{
 			replacer: strings.NewReplacer("{", "`", "}", "`"),

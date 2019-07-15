@@ -16,12 +16,6 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-func TestPostgresHooks(t *testing.T) {
-	a := assert.New(t)
-	_, ok := dialect.Postgres().(sqlbuilder.TruncateTableStmtHooker)
-	a.True(ok)
-}
-
 func TestPostgres_VersionSQL(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)

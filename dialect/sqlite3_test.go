@@ -43,23 +43,6 @@ var sqlite3CreateTable = []string{`CREATE TABLE fk_table(
 	`create unique index index_user_unique_email_id on usr(email,id)`,
 }
 
-func TestSqliteHooks(t *testing.T) {
-	a := assert.New(t)
-	s := dialect.Sqlite3()
-
-	_, ok := s.(sqlbuilder.TruncateTableStmtHooker)
-	a.True(ok)
-
-	_, ok = s.(sqlbuilder.DropColumnStmtHooker)
-	a.True(ok)
-
-	_, ok = s.(sqlbuilder.DropConstraintStmtHooker)
-	a.True(ok)
-
-	_, ok = s.(sqlbuilder.AddConstraintStmtHooker)
-	a.True(ok)
-}
-
 func TestSqlite3_VersionSQL(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)

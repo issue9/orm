@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -23,8 +22,12 @@ type postgres struct {
 	replacer *strings.Replacer
 }
 
+var (
+	_ sqlbuilder.TruncateTableStmtHooker = &postgres{}
+)
+
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
-func Postgres() orm.Dialect {
+func Postgres() sqlbuilder.Dialect {
 	if postgresInst == nil {
 		postgresInst = &postgres{
 			replacer: strings.NewReplacer("{", `"`, "}", `"`),
