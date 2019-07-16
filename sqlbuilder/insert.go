@@ -32,12 +32,16 @@ func Insert(e Engine, d Dialect) *InsertStmt {
 }
 
 // Insert 将当前查询结果作为 Insert 的值
+//
+// 构建 insert into (...) select .... 语句
 func (stmt *SelectStmt) Insert() *InsertStmt {
 	insert := Insert(stmt.Engine(), stmt.Dialect())
 	return insert.Select(stmt)
 }
 
-// Insert 当前插入数据从 Select 中获取
+// Select 当前插入数据从 Select 中获取
+//
+// 构建 insert into (...) select .... 语句
 func (stmt *InsertStmt) Select(sel *SelectStmt) *InsertStmt {
 	stmt.selectStmt = sel
 	return stmt

@@ -336,15 +336,11 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 		}
 
-		// 零值，但是不属于指定需要更新的列
-		if !inStrSlice(col.Name, cols) && col.IsZero(field) {
-			continue
-		}
-
 		if m.OCC == col { // 乐观锁
 			occValue = field.Interface()
 			continue
-		} else {
+		} else if inStrSlice(col.Name, cols) || !col.IsZero(field) {
+			// 非零值或是明确指定需要更新的列，才会更新
 			stmt.Set(col.Name, field.Interface())
 		}
 	}

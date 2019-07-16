@@ -94,7 +94,7 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 ##### pk:
 
-主键，支持联合主键，给多个字段加上pk 的 struct tag 即可。
+主键，支持联合主键，给多个字段加上 pk 的 struct tag 即可。
 
 ##### ai:
 
@@ -114,6 +114,8 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 当前列作为乐观锁字段。
 
+作为乐观锁的字段，其值表示的是线上数据的值，在更新时，会自动给线上的值加 1。
+
 ##### default(value):
 
 指定默认值。相当于定义表结构时的 DEFAULT。
@@ -123,7 +125,7 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 ##### fk(fk_name,refTable,refColName,updateRule,deleteRule):
 
-定义物理外键，最少需要指定 fk_name,refTabl,refColName 三个值。分别对应约束名，
+定义物理外键，最少需要指定 fk_name、refTable 和 refColName 三个值。分别对应约束名，
 引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
 refTable 如果需要表名前缀，需要添加 # 符号。
 
@@ -249,7 +251,7 @@ r, err := fetch.Object(rows, &data)
 
 ##### InsertLastID:
 
-像 postgresql 之类的数据库，插入语句返回的 sql.Result 并不支持 LastInsertId()
+像 postgres 之类的数据库，插入语句返回的 sql.Result 并不支持 LastInsertId()
 所以得通过其它方式得到该 ID，可以直接尝试使用 InsertLastID 来代码 Insert 操作。
 
 ```go

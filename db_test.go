@@ -8,105 +8,9 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/conv"
 
-	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/test"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
-
-// table 表中是否存在 size 条记录，若不是，则触发 error
-func hasCount(e sqlbuilder.Engine, a *assert.Assertion, table string, size int) {
-	rows, err := e.Query("SELECT COUNT(*) as cnt FROM #" + table)
-	a.NotError(err).
-		NotNil(rows)
-	defer func() {
-		a.NotError(rows.Close())
-	}()
-
-	data, err := fetch.Map(true, rows)
-	a.NotError(err).
-		NotNil(data)
-	a.Equal(conv.MustInt(data[0]["cnt"], -1), size)
-}
-
-// 初始化测试数据，同时可当作 DB.Insert 的测试
-// 清空其它数据，初始化成原始的测试数据
-func initData(t *test.Test) {
-	db := t.DB
-
-	err := db.Create(&Group{})
-	t.NotError(err, "%s@%s", err, t.DriverName)
-
-	err = db.MultCreate(&Admin{}, &UserInfo{})
-	t.NotError(err, "%s@%s", err, t.DriverName)
-
-	insert := func(obj interface{}) {
-		r, err := db.Insert(obj)
-		t.NotError(err, "%s@%s", err, t.DriverName)
-		cnt, err := r.RowsAffected()
-		t.NotError(err, "%s@%s", err, t.DriverName).
-			Equal(cnt, 1)
-	}
-
-	insert(&Group{
-		Name: "group1",
-		ID:   1,
-	})
-
-	insert(&Admin{
-		Admin1: Admin1{Username: "username1", Password: "password1"},
-		Email:  "email1",
-		Group:  1,
-	})
-
-	insert(&UserInfo{
-		UID:       1,
-		FirstName: "f1",
-		LastName:  "l1",
-		Sex:       "female",
-	})
-	insert(&UserInfo{ // sex 使用默认值
-		UID:       2,
-		FirstName: "f2",
-		LastName:  "l2",
-	})
-
-	// select
-	u1 := &UserInfo{UID: 1}
-	u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
-	a1 := &Admin{Email: "email1"}
-
-	t.NotError(db.Select(u1))
-	t.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "female"})
-
-	t.NotError(db.Select(u2))
-	t.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
-
-	t.NotError(db.Select(a1))
-	t.Equal(a1.Username, "username1")
-}
-
-func clearData(t *test.Test) {
-	t.NotError(t.DB.MultDrop(&Admin{}, &User{}))
-	t.NotError(t.DB.Drop(&Group{})) // admin 外键依赖 group
-	t.NotError(t.DB.Drop(&UserInfo{}))
-}
-
-func TestDB_Update_error(t *testing.T) {
-	a := assert.New(t)
-	suite := test.NewSuite(a)
-	defer suite.Close()
-
-	suite.ForEach(func(t *test.Test) {
-		initData(t)
-		defer clearData(t)
-
-		// 非结构体传入
-		r, err := t.DB.Update(123)
-		t.Error(err, "%s@%s", err, t.DriverName).Nil(r)
-	})
-}
 
 func TestDB_LastInsertID(t *testing.T) {
 	a := assert.New(t)
@@ -168,6 +72,74 @@ func TestDB_Update(t *testing.T) {
 		u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
 		t.NotError(t.DB.Select(u2))
 		t.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
+	})
+}
+
+func TestDB_Update_occ(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
+
+		r, err := t.DB.Insert(&Account{
+			UID:     1,
+			Account: 1,
+		})
+		t.NotError(err).NotNil(r)
+
+		// 正常更新
+		r, err = t.DB.Update(&Account{
+			UID:     1,
+			Account: 2,
+			Version: 0, // 如果线上数据为 0，则能正常更新
+		})
+		t.NotError(err).NotNil(r)
+		cnt, err := r.RowsAffected()
+		t.NotError(err).Equal(1, cnt)
+
+		r, err = t.DB.Update(&Account{
+			UID:     1,
+			Account: 2,
+			Version: 1, // 更新一次之后，应该变为 1，则值为 1 时能正常更新。
+		})
+		t.NotError(err).NotNil(r)
+		cnt, err = r.RowsAffected()
+		t.NotError(err).Equal(1, cnt)
+
+		r, err = t.DB.Update(&Account{
+			UID:     1,
+			Account: 2,
+			Version: 1, // 多次更新之后，肯定不为 1，则此次更新失败
+		})
+		t.NotError(err).NotNil(r)
+		cnt, err = r.RowsAffected()
+		t.NotError(err).Equal(0, cnt)
+
+		obj := &Account{UID: 1}
+		obj.Account = 100
+		t.NotError(t.DB.Select(obj))
+		r, err = t.DB.Update(obj)
+		t.NotError(err).NotNil(r)
+		cnt, err = r.RowsAffected()
+		t.NotError(err).Equal(1, cnt)
+	})
+}
+
+func TestDB_Update_error(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		initData(t)
+		defer clearData(t)
+
+		// 非结构体传入
+		r, err := t.DB.Update(123)
+		t.Error(err, "%s@%s", err, t.DriverName).Nil(r)
 	})
 }
 
@@ -262,9 +234,9 @@ func TestDB_Truncate(t *testing.T) {
 		t.NotError(t.DB.Truncate(&Admin{}))
 		hasCount(t.DB, t.Assertion, "administrators", 0)
 
-		_, err := t.DB.Insert(&Admin{Group: 1, Email: "email1", Admin1: Admin1{Username: "u1"}})
+		_, err := t.DB.Insert(&Admin{Group: 1, Email: "email1", User: User{Username: "u1"}})
 		t.NotError(err)
-		_, err = t.DB.Insert(&Admin{Group: 1, Email: "email2", Admin1: Admin1{Username: "u2"}})
+		_, err = t.DB.Insert(&Admin{Group: 1, Email: "email2", User: User{Username: "u2"}})
 		t.NotError(err)
 
 		a1 := &Admin{Email: "email1"}
