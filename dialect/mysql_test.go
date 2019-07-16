@@ -164,6 +164,20 @@ func TestMysql_SQLType(t *testing.T) {
 			SQLType: "DATETIME NOT NULL",
 		},
 		{
+			col: &sqlbuilder.Column{
+				GoType: sqlbuilder.TimeType,
+				Length: []int{-1},
+			},
+			err: true,
+		},
+		{
+			col: &sqlbuilder.Column{
+				GoType: sqlbuilder.TimeType,
+				Length: []int{7},
+			},
+			err: true,
+		},
+		{
 			col:     &sqlbuilder.Column{GoType: sqlbuilder.Uint16Type},
 			SQLType: "MEDIUMINT UNSIGNED NOT NULL",
 		},

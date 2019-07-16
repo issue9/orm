@@ -254,7 +254,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 
 		{
 			col:     &sqlbuilder.Column{GoType: sqlbuilder.TimeType},
-			SQLType: "DATETIME NOT NULL",
+			SQLType: "TIMESTAMP NOT NULL",
 		},
 
 		{

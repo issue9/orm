@@ -198,6 +198,9 @@ func (m *mysql) SQLType(col *sqlbuilder.Column) (string, error) {
 			}
 			return buildMysqlType("VARCHAR", col, false, 1), nil
 		case sqlbuilder.TimeType:
+			if len(col.Length) > 0 && (col.Length[0] < 0 || col.Length[0] > 6) {
+				return "", errTimeFractionalInvalid
+			}
 			return buildMysqlType("DATETIME", col, false, 0), nil
 		}
 	}

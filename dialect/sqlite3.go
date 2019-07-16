@@ -271,7 +271,7 @@ func (s *sqlite3) SQLType(col *sqlbuilder.Column) (string, error) {
 		case sqlbuilder.NullStringType:
 			return buildSqlite3Type("TEXT", col), nil
 		case sqlbuilder.TimeType:
-			return buildSqlite3Type("DATETIME", col), nil
+			return buildSqlite3Type("TIMESTAMP", col), nil
 		}
 	}
 

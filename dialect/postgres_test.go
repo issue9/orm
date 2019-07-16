@@ -201,6 +201,20 @@ func TestPostgres_SQLType(t *testing.T) {
 			col:     &sqlbuilder.Column{GoType: sqlbuilder.TimeType},
 			SQLType: "TIMESTAMP NOT NULL",
 		},
+		{
+			col: &sqlbuilder.Column{
+				GoType: sqlbuilder.TimeType,
+				Length: []int{-1},
+			},
+			err: true,
+		},
+		{
+			col: &sqlbuilder.Column{
+				GoType: sqlbuilder.TimeType,
+				Length: []int{7},
+			},
+			err: true,
+		},
 
 		{ // 无法转换的类型
 			col: &sqlbuilder.Column{GoType: reflect.TypeOf(struct{}{})},

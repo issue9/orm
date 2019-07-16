@@ -40,7 +40,7 @@ var cases = []struct {
 	},
 	{
 		prefix:     "prefix_",
-		dsn:        "root@/orm_test?charset=utf8",
+		dsn:        "root@/orm_test?charset=utf8&parseTime=true",
 		dialect:    dialect.Mysql(),
 		driverName: "mysql",
 	},

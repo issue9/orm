@@ -161,6 +161,9 @@ func (p *postgres) SQLType(col *sqlbuilder.Column) (string, error) {
 			}
 			return buildPostgresType("VARCHAR", col, 1), nil
 		case sqlbuilder.TimeType:
+			if len(col.Length) > 0 && (col.Length[0] < 0 || col.Length[0] > 6) {
+				return "", errTimeFractionalInvalid
+			}
 			return buildPostgresType("TIMESTAMP", col, 1), nil
 		}
 	}

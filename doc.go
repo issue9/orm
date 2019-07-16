@@ -69,6 +69,7 @@
 //  不支持该特性的数据，将会忽略该标签的内容，比如 sqlite3。
 //  NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了 -1，
 //  想使用类似于 TEXT 等不定长的形式表达。
+//  如果是日期类型，则第一个可选参数表示日期精度。
 //
 //  nullable(true|false): 相当于定义表结构时的 NULL，建议尽量少用该属性，
 //  若非用不可的话，与之对应的 Go 属性必须声明为 NullString 之类的结构。
@@ -91,7 +92,7 @@
 //  所以在需要用到零值的字段，最好不要用 default 的 struct tag。
 //
 //  fk(fk_name,refTable,refColName,updateRule,deleteRule):
-//  定义物理外键，最少需要指定 fk_name,refTabl,refColName 三个值。
+//  定义物理外键，最少需要指定 fk_name,refTable,refColName 三个值。
 //  分别对应约束名，引用的表和引用的字段，updateRule,deleteRule，
 //  在不指定的情况下，使用数据库的默认值。
 //  refTable 如果需要表名前缀，需要添加 # 符号。
