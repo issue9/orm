@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"github.com/issue9/orm/v2/core"
+	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -131,6 +132,10 @@ func create(e Engine, v interface{}) error {
 		return err
 	}
 
+	if m.Type == model.View {
+		return createView(e, m)
+	}
+
 	sb := sqlbuilder.CreateTable(e)
 	sb.Table(m.FullName)
 	for _, col := range m.Columns {
@@ -174,6 +179,12 @@ func create(e Engine, v interface{}) error {
 	}
 
 	return sb.Exec()
+}
+
+func createView(e Engine, m *model.Model) error {
+	// TODO
+
+	return nil
 }
 
 func truncate(e Engine, v interface{}) error {

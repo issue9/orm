@@ -17,6 +17,15 @@ import (
 	"github.com/issue9/orm/v2/internal/tags"
 )
 
+// Type 表示数据模型的类别
+type Type int8
+
+// 定义了数据模型的类型，目前可以是表和视图
+const (
+	Table Type = iota
+	View
+)
+
 // Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
 //  "name(tbl_name);mysql_engine(myISAM);mysql_charset(utf8)"
 type Metaer interface {
@@ -39,6 +48,7 @@ type Model struct {
 	FullName string
 	Name     string
 
+	Type    Type
 	Columns []*core.Column      // 所有的列
 	OCC     *core.Column        // 乐观锁
 	Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
@@ -295,6 +305,11 @@ func (m *Model) parseMeta(tag string) error {
 
 			name := strings.ToLower(v.Args[0])
 			m.Checks[name] = v.Args[1]
+		case "view":
+			if len(v.Args) > 0 {
+				return propertyError("Metaer", "view", "不需要参数")
+			}
+			m.Type = View
 		default:
 			m.Meta[v.Name] = v.Args
 		}
