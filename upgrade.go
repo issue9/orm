@@ -193,7 +193,7 @@ func (u *Upgrader) Do() error {
 	}
 
 	if len(u.dropIdxs) > 0 {
-		if err := u.dropIndexs(e); err != nil {
+		if err := u.dropIndexes(e); err != nil {
 			if err1 := rollback(); err1 != nil {
 				return errors.New(err1.Error() + err.Error())
 			}
@@ -232,7 +232,7 @@ func (u *Upgrader) Do() error {
 	}
 
 	if len(u.addIdxs) > 0 {
-		if err := u.addIndexs(e); err != nil {
+		if err := u.addIndexes(e); err != nil {
 			if err1 := rollback(); err1 != nil {
 				return errors.New(err1.Error() + err.Error())
 			}
@@ -358,7 +358,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 	return nil
 }
 
-func (u *Upgrader) addIndexs(e Engine) error {
+func (u *Upgrader) addIndexes(e Engine) error {
 	stmt := sqlbuilder.CreateIndex(e, e.Dialect())
 
 	for _, index := range u.addIdxs {
@@ -386,7 +386,7 @@ func (u *Upgrader) addIndexs(e Engine) error {
 	return nil
 }
 
-func (u *Upgrader) dropIndexs(e Engine) error {
+func (u *Upgrader) dropIndexes(e Engine) error {
 	stmt := sqlbuilder.DropIndex(e, e.Dialect())
 
 	for _, index := range u.dropIdxs {
