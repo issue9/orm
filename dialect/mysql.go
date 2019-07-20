@@ -34,6 +34,7 @@ var (
 	_ sqlbuilder.TruncateTableStmtHooker  = &mysql{}
 	_ sqlbuilder.DropIndexStmtHooker      = &mysql{}
 	_ sqlbuilder.DropConstraintStmtHooker = &mysql{}
+	_ sqlbuilder.CreateViewStmtHooker     = &mysql{}
 )
 
 // Mysql 返回一个适配 mysql 的 Dialect 接口

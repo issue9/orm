@@ -6,11 +6,41 @@ package sqlbuilder
 
 import (
 	"bufio"
+	"fmt"
 	"strings"
 	"unicode"
 )
 
 var quoteReplacer = strings.NewReplacer("{", "", "}", "")
+
+// 将 ？替换成参数的实际值
+func fillArgs(sql SQLer) (string, error) {
+	query, args, err := sql.SQL()
+	if err != nil {
+		return "", err
+	}
+
+	var builder strings.Builder
+	var index int
+	for _, r := range query {
+		switch r {
+		case '?':
+			_, err := builder.WriteString("'" + fmt.Sprint(args[index]) + "'")
+			if err != nil {
+				return "", err
+			}
+			index++
+		default:
+			if _, err := builder.WriteRune(r); err != nil {
+				return "", err
+			}
+		}
+	}
+
+	// bug(caixw) 需要处理 sql.Named 类型的参数
+
+	return builder.String(), nil
+}
 
 // 从表达式中获取列的名称。
 //

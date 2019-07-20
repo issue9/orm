@@ -80,16 +80,7 @@ func (stmt *CreateViewStmt) SelectQuery() (string, error) {
 		return "", ErrValueIsEmpty
 	}
 
-	query, args, err := stmt.selectStmt.SQL()
-	if err != nil {
-		return "", err
-	}
-
-	if len(args) > 0 {
-		return "", ErrViewSelectNotAllowArgs
-	}
-
-	return query, nil
+	return fillArgs(stmt.selectStmt)
 }
 
 // From 指定 Select 语句

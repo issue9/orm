@@ -34,6 +34,7 @@ var (
 	_ sqlbuilder.DropColumnStmtHooker     = &sqlite3{}
 	_ sqlbuilder.DropConstraintStmtHooker = &sqlite3{}
 	_ sqlbuilder.AddConstraintStmtHooker  = &sqlite3{}
+	_ sqlbuilder.CreateViewStmtHooker     = &sqlite3{}
 )
 
 // Sqlite3 返回一个适配 sqlite3 的 Dialect 接口
