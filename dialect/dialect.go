@@ -9,6 +9,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 )
 
 var (
@@ -72,4 +74,42 @@ func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interfa
 	}
 
 	return query, []interface{}{offset[0], limit}
+}
+
+type namedArg struct {
+	sql.NamedArg
+	index int
+}
+
+func replaceNamedArgs(query string, args []interface{}) string {
+	as := make([]namedArg, 0, len(args))
+
+	for index, arg := range args {
+		if named, ok := arg.(sql.NamedArg); ok {
+			as = append(as, namedArg{
+				NamedArg: named,
+				index:    index,
+			})
+			continue
+		}
+
+		if named, ok := arg.(*sql.NamedArg); ok {
+			as = append(as, namedArg{
+				NamedArg: *named,
+				index:    index,
+			})
+		}
+	}
+
+	// 将名称长的排到前面，确保可以正确替换
+	sort.SliceStable(as, func(i, j int) bool {
+		return len(as[i].Name) > len(as[j].Name)
+	})
+
+	for _, arg := range as {
+		query = strings.Replace(query, "@"+arg.Name, "?", 1)
+		args[arg.index] = arg.Value
+	}
+
+	return query
 }

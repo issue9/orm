@@ -46,3 +46,61 @@ func TestOracleLimitSQL(t *testing.T) {
 	a.Equal(ret, []interface{}{2, sql.Named("limit", 1)})
 	sqltest.Equal(a, query, "offset ? rows fetch next @limit rows only")
 }
+
+func TestReplaceNamedArgs(t *testing.T) {
+	a := assert.New(t)
+
+	var data = []*struct {
+		inputQuery  string
+		inputArgs   []interface{}
+		outputQuery string
+		outputArgs  []interface{}
+	}{
+		{
+			inputQuery:  "select * from table",
+			outputQuery: "select * from table",
+		},
+		{
+			inputQuery:  "select * from table where id=?",
+			inputArgs:   []interface{}{1},
+			outputQuery: "select * from table where id=?",
+			outputArgs:  []interface{}{1},
+		},
+		{
+			inputQuery:  "select * from table where id=@id",
+			inputArgs:   []interface{}{sql.Named("id", 1)},
+			outputQuery: "select * from table where id=?",
+			outputArgs:  []interface{}{1},
+		},
+		{
+			inputQuery:  "select * from table where id=@id and id=? and id=1",
+			inputArgs:   []interface{}{sql.Named("id", 1), 2},
+			outputQuery: "select * from table where id=? and id=? and id=1",
+			outputArgs:  []interface{}{1, 2},
+		},
+		{
+			inputQuery:  "select * from table where id=@id and id=? and id=1",
+			inputArgs:   []interface{}{&sql.NamedArg{Name: "id", Value: 1}, 2},
+			outputQuery: "select * from table where id=? and id=? and id=1",
+			outputArgs:  []interface{}{1, 2},
+		},
+		{ // 参数名称是另一个参数名称的一部分
+			inputQuery:  "select * from table where id=@id and id=@idMax and id=1",
+			inputArgs:   []interface{}{sql.Named("id", 1), sql.Named("idMax", 2)},
+			outputQuery: "select * from table where id=? and id=? and id=1",
+			outputArgs:  []interface{}{1, 2},
+		},
+		{ // 参数名称是另一个参数名称的一部分
+			inputQuery:  "select * from table where id=@idMax and id=@id and id=1",
+			inputArgs:   []interface{}{sql.Named("id", 1), sql.Named("idMax", 2)},
+			outputQuery: "select * from table where id=? and id=? and id=1",
+			outputArgs:  []interface{}{1, 2},
+		},
+	}
+
+	for _, item := range data {
+		output := replaceNamedArgs(item.inputQuery, item.inputArgs)
+		sqltest.Equal(a, output, item.outputQuery)
+		a.Equal(item.inputArgs, item.outputArgs)
+	}
+}

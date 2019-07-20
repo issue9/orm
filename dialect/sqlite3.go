@@ -51,8 +51,9 @@ func (s *sqlite3) Name() string {
 	return sqlite3Name
 }
 
-func (s *sqlite3) SQL(sql string) (string, error) {
-	return s.replacer.Replace(sql), nil
+func (s *sqlite3) SQL(query string, args []interface{}) (string, []interface{}, error) {
+	query = replaceNamedArgs(query, args)
+	return s.replacer.Replace(query), args, nil
 }
 
 func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {

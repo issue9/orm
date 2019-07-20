@@ -50,29 +50,30 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 }
 
 // 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
-func (p *postgres) SQL(sql string) (string, error) {
-	sql = p.replacer.Replace(sql)
+func (p *postgres) SQL(query string, args []interface{}) (string, []interface{}, error) {
+	query = replaceNamedArgs(query, args)
+	query = p.replacer.Replace(query)
 
-	if strings.IndexByte(sql, '?') < 0 {
-		return sql, nil
+	if strings.IndexByte(query, '?') < 0 {
+		return query, args, nil
 	}
 
 	num := 1
-	ret := make([]rune, 0, len(sql))
-	for _, c := range sql {
+	ret := make([]rune, 0, len(query))
+	for _, c := range query {
 		switch c {
 		case '?':
 			ret = append(ret, '$')
 			ret = append(ret, []rune(strconv.Itoa(num))...)
 			num++
 		case '$':
-			return "", errors.New("语句中包含非法的字符串:$")
+			return "", nil, errors.New("语句中包含非法的字符串:$")
 		default:
 			ret = append(ret, c)
 		}
 	}
 
-	return string(ret), nil
+	return string(ret), args, nil
 }
 
 func (p *postgres) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {

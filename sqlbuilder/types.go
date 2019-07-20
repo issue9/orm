@@ -102,9 +102,9 @@ type Dialect interface {
 
 	// 根据当前的数据库，对 SQL 作调整。
 	//
-	// 比如替换 {} 符号；
+	// 比如替换 {} 符号；处理 sql.NamedArgs；
 	// postgresql 需要将 ? 改成 $1 等形式。
-	SQL(sql string) (string, error)
+	SQL(query string, args []interface{}) (string, []interface{}, error)
 
 	// 查询服务器版本号的 SQL 语句。
 	VersionSQL() string

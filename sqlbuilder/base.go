@@ -78,7 +78,7 @@ func (stmt *ddlStmt) ExecContext(ctx context.Context) error {
 	}
 
 	for k, v := range qs {
-		if qs[k], err = stmt.Dialect().SQL(v); err != nil {
+		if qs[k], _, err = stmt.Dialect().SQL(v, nil); err != nil {
 			return err
 		}
 	}
@@ -102,7 +102,8 @@ func (stmt *execStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 		return nil, err
 	}
 
-	if query, err = stmt.Dialect().SQL(query); err != nil {
+	query, args, err = stmt.Dialect().SQL(query, args)
+	if err != nil {
 		return nil, err
 	}
 
@@ -114,12 +115,13 @@ func (stmt *execStmt) Prepare() (*sql.Stmt, error) {
 }
 
 func (stmt *execStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
+	query, args, err := stmt.SQL()
 	if err != nil {
 		return nil, err
 	}
 
-	if query, err = stmt.Dialect().SQL(query); err != nil {
+	query, _, err = stmt.Dialect().SQL(query, args)
+	if err != nil {
 		return nil, err
 	}
 
@@ -131,12 +133,13 @@ func (stmt *queryStmt) Prepare() (*sql.Stmt, error) {
 }
 
 func (stmt *queryStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	query, _, err := stmt.SQL()
+	query, args, err := stmt.SQL()
 	if err != nil {
 		return nil, err
 	}
 
-	if query, err = stmt.Dialect().SQL(query); err != nil {
+	query, _, err = stmt.Dialect().SQL(query, args)
+	if err != nil {
 		return nil, err
 	}
 
@@ -153,7 +156,8 @@ func (stmt *queryStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 		return nil, err
 	}
 
-	if query, err = stmt.Dialect().SQL(query); err != nil {
+	query, args, err = stmt.Dialect().SQL(query, args)
+	if err != nil {
 		return nil, err
 	}
 

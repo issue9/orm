@@ -52,8 +52,9 @@ func (m *mysql) Name() string {
 	return mysqlName
 }
 
-func (m *mysql) SQL(sql string) (string, error) {
-	return m.replacer.Replace(sql), nil
+func (m *mysql) SQL(query string, args []interface{}) (string, []interface{}, error) {
+	query = replaceNamedArgs(query, args)
+	return m.replacer.Replace(query), args, nil
 }
 
 func (m *mysql) LastInsertIDSQL(table, col string) (sql string, append bool) {

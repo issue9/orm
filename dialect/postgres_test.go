@@ -251,13 +251,13 @@ func TestPostgres_SQL(t *testing.T) {
 	a.NotNil(p)
 
 	eq := func(s1, s2 string) {
-		ret, err := p.SQL(s1)
+		ret, _, err := p.SQL(s1, nil)
 		a.NotError(err)
 		a.Equal(ret, s2)
 	}
 
 	err := func(s1 string) {
-		ret, err := p.SQL(s1)
+		ret, _, err := p.SQL(s1, nil)
 		a.Error(err).Empty(ret)
 	}
 
@@ -282,6 +282,6 @@ func BenchmarkPostgres_SQL(b *testing.B) {
 	s1 := "SELECT * FROM tbl WHERE uid>? AND group=? AND username LIKE ?"
 
 	for i := 0; i < b.N; i++ {
-		a.NotError(p.SQL(s1))
+		a.NotError(p.SQL(s1, nil))
 	}
 }
