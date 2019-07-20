@@ -20,6 +20,12 @@ var (
 	_ sqlbuilder.Engine = &sql.Tx{}
 )
 
+func quoteColumns(stmt *sqlbuilder.SelectStmt, col ...string) {
+	for _, c := range col {
+		stmt.Column("{" + c + "}")
+	}
+}
+
 func TestTypes(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
@@ -51,7 +57,7 @@ func TestTypes(t *testing.T) {
 			Column("null_bool", sqlbuilder.NullBoolType, false, false, nil).
 			Column("null_float64", sqlbuilder.NullFloat64Type, false, false, nil, 5, 3).
 			Column("raw_bytes", sqlbuilder.RawBytesType, false, false, nil).
-			Column("time", sqlbuilder.TimeType, false, false, nil).
+			Column("time", sqlbuilder.TimeType, false, false, nil, 0).
 			Table(tableName)
 		t.NotError(creator.Exec())
 		defer func() {
@@ -110,10 +116,10 @@ func TestTypes(t *testing.T) {
 			Exec()
 		t.NotError(err).NotNil(r)
 
-		rows, err := sqlbuilder.Select(e, d).
-			From(tableName).
-			Columns(cols...).
-			Query()
+		selStmt := sqlbuilder.Select(e, d).
+			From(tableName)
+		quoteColumns(selStmt, cols...)
+		rows, err := selStmt.Query()
 		t.NotError(err).NotNil(rows)
 		defer func() {
 			t.NotError(rows.Close())
@@ -168,8 +174,8 @@ func TestTypes(t *testing.T) {
 
 		// bug(caixw) lib/pq 处理 time 时有 bug，更换驱动？
 		//
-		// lib/pq 对 time 的处理有问题，保存时不会考虑其时间，
-		// 直接从字面值当作零时间进行保存。
+		// lib/pq 对 time.Time 的处理有问题，保存时不会考虑其时区，
+		// 直接从字面值当作零时区进行保存。
 		// https://github.com/lib/pq/issues/329
 		if t.DriverName != "postgres" {
 			t.Equal(Time.Unix(), now.Unix())

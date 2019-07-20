@@ -159,11 +159,7 @@ func (stmt *InsertStmt) fromSelect(builder *SQLBuilder) (string, []interface{}, 
 		builder.TruncateLast(1)
 	} else {
 		for _, col := range stmt.selectStmt.columns {
-			name := col.alias
-			if name == "" {
-				name = col.name
-			}
-			builder.QuoteKey(name).WriteBytes(',')
+			builder.WriteString(getColumnName(col)).WriteBytes(',')
 		}
 		builder.TruncateLast(1)
 	}

@@ -5,56 +5,15 @@
 package sqlbuilder
 
 import (
+	"bufio"
 	"testing"
 
 	"github.com/issue9/assert"
 )
 
-func TestSplitWithAS(t *testing.T) {
-	a := assert.New(t)
+var _ bufio.SplitFunc = splitWithAS
 
-	var data = []*struct {
-		input  string
-		output []string // 第一个元素为列名，第二个元素为别名
-	}{
-		{
-			input:  "col as alias",
-			output: []string{"col", "alias"},
-		},
-		{
-			input:  "col As alias",
-			output: []string{"col", "alias"},
-		},
-		{
-			input:  "col AS\talias",
-			output: []string{"col", "alias"},
-		},
-		{
-			input:  "col\tAS\talias",
-			output: []string{"col", "alias"},
-		},
-		{
-			input:  "col AS alias name",
-			output: []string{"col", "alias name"},
-		},
-		{
-			input:  "col tS alias",
-			output: []string{"col tS alias", ""},
-		},
-		{
-			input:  "col AS alias AS name",
-			output: []string{"col", "alias AS name"},
-		},
-	}
-
-	for index, item := range data {
-		col, alias := splitWithAS(item.input)
-		a.Equal(col, item.output[0], "not equal @%d v1:%v,v2:%v", index, col, item.output[0])
-		a.Equal(alias, item.output[1], "not equal @%d v1:%v,v2:%v", index, col, item.output[1])
-	}
-}
-
-func TestQuoteColumn(t *testing.T) {
+func TestGetColumnName(t *testing.T) {
 	a := assert.New(t)
 
 	var data = []*struct {
@@ -62,24 +21,81 @@ func TestQuoteColumn(t *testing.T) {
 		output string
 	}{
 		{
-			input:  "column",
-			output: "{column}",
+			input:  "",
+			output: "",
 		},
 		{
-			input:  "column_name",
-			output: "{column_name}",
+			input:  "table.*",
+			output: "*",
 		},
 		{
-			input:  "table.column_name",
-			output: "{table}.{column_name}",
+			input:  "{table}.*",
+			output: "*",
+		},
+		{
+			input:  "{table}.{as}",
+			output: "{as}",
+		},
+		{ // 多个 as
+			input:  "table.{as} as {as}",
+			output: "{as}",
+		},
+		{
+			input:  "count({table}.*) as cnt",
+			output: "{cnt}",
+		},
+		{ // 别名中包含 AS
+			input:  "count({table}.*) as {col as name}",
+			output: "{col as name}",
+		},
+		{
+			input:  "count({table}.*) as {count\t  name}",
+			output: "{count\t  name}",
+		},
+		{ // 采用 \t 分隔
+			input:  "count({table}.*)\tas\tcnt",
+			output: "{cnt}",
+		},
+		{ // 采用 \t、\n 混合
+			input:  "count({table}.*)\tas\ncnt",
+			output: "{cnt}",
+		},
+		{ // 采用 \t 与空格混合
+			input:  "count({table}.*) \tas\t cnt",
+			output: "{cnt}",
+		},
+		{
+			input:  "sum(count({table}.*)) as cnt",
+			output: "{cnt}",
+		},
+		{ // 整个内容作为列名
+			input:  "count({table}.*)",
+			output: "{count(table.*)}",
+		},
+		{
+			input:  "sum(count({table}.*)) as cnt",
+			output: "{cnt}",
+		},
+		{
+			input:  "sum(count({table}.as)) as {as}",
+			output: "{as}",
+		},
+		{
+			input:  "{table}.{as} as {as}",
+			output: "{as}",
+		},
+		{
+			input:  "{table}.{as} as 列名1",
+			output: "{列名1}",
+		},
+		{
+			input:  "{table}.{as} as {列名1}",
+			output: "{列名1}",
 		},
 	}
 
-	b := New("")
 	for index, item := range data {
-		b.Reset()
-		quoteColumn(b, item.input)
-		output := b.String()
-		a.Equal(output, item.output, "在第 %d 个元素出错，v1: %v，v2: %v", index, output, item.output)
+		col := getColumnName(item.input)
+		a.Equal(col, item.output, "not equal @%d v1:%v,v2:%v", index, col, item.output)
 	}
 }

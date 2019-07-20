@@ -7,7 +7,6 @@ package sqlbuilder
 import (
 	"errors"
 	"strconv"
-	"strings"
 
 	"github.com/issue9/orm/v2/fetch"
 )
@@ -22,7 +21,7 @@ type SelectStmt struct {
 
 	tableExpr string
 	where     *WhereStmt
-	columns   []*column
+	columns   []string
 	distinct  bool
 	forUpdate bool
 
@@ -40,14 +39,9 @@ type SelectStmt struct {
 	limitVals  []interface{}
 }
 
-type column struct {
-	// 分别表示列前的表名，列名以及列的别名
-	table, name, alias string
-}
-
 // Select 声明一条 Select 语句
 func Select(e Engine, d Dialect) *SelectStmt {
-	stmt := &SelectStmt{columns: make([]*column, 0, 10)}
+	stmt := &SelectStmt{columns: make([]string, 0, 10)}
 	stmt.queryStmt = newQueryStmt(e, d, stmt)
 	stmt.where = newWhere()
 
@@ -165,64 +159,24 @@ func (stmt *SelectStmt) buildColumns(builder *SQLBuilder) {
 	}
 
 	for _, col := range stmt.columns {
-		if col.table != "" {
-			builder.QuoteKey(col.table).WriteBytes('.')
-		}
-
-		if col.name == "*" {
-			builder.WriteBytes('*')
-		} else {
-			builder.QuoteKey(col.name)
-		}
-
-		if col.alias != "" {
-			builder.WriteString(" AS ").QuoteKey(col.alias)
-		}
-
-		builder.WriteBytes(',')
+		builder.WriteString(col).WriteBytes(',')
 	}
 
 	builder.TruncateLast(1)
 }
 
-// Column 指定列，一次只能指定一列，别外可使用 alias 参数
+// Column 指定列，一次只能指定一列。
 //
 // col 表示列名，可以是以下形式：
 //  *
 //  col
 //  table.col
 //  table.*
-func (stmt *SelectStmt) Column(col string, alias ...string) *SelectStmt {
-	c := &column{name: col}
-	if index := strings.IndexByte(col, '.'); index > 0 {
-		c.table = col[:index]
-		c.name = col[index+1:]
-	}
-
-	switch len(alias) {
-	case 0:
-	case 1:
-		if alias[0] == "" {
-			break
-		}
-		c.alias = alias[0]
-	default:
-		panic("过多的别名参数")
-	}
-
-	stmt.columns = append(stmt.columns, c)
-
-	return stmt
-}
-
-// AliasColumns 同时指定多列，必须存在别名。
+//  sum({table}.{col}) as col1
 //
-// 参数中，键名为别名，键值为列名。
-func (stmt *SelectStmt) AliasColumns(cols map[string]string) *SelectStmt {
-	for alias, col := range cols {
-		stmt.Column(col, alias)
-	}
-
+// 如果列名是关键字，可以使用 {} 包含。
+func (stmt *SelectStmt) Column(col string) *SelectStmt {
+	stmt.columns = append(stmt.columns, col)
 	return stmt
 }
 
@@ -230,15 +184,11 @@ func (stmt *SelectStmt) AliasColumns(cols map[string]string) *SelectStmt {
 //
 // 相当于按参数顺序依次调用 Select.Column，如果存在别名，
 // 可以使用 col AS alias 的方式指定每一个参数。
+//
+// 如果列名是关键字，可以使用 {} 包含。
 func (stmt *SelectStmt) Columns(cols ...string) *SelectStmt {
 	for _, col := range cols {
-		if len(col) <= 6 { // " AS " 再加上前后最少一个字符，最少 6 个字符
-			stmt.Column(col)
-			continue
-		}
-
-		col, alias := splitWithAS(col)
-		stmt.Column(col, alias)
+		stmt.Column(col)
 	}
 	return stmt
 }
@@ -333,8 +283,7 @@ func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	}
 
 	for _, c := range col {
-		quoteColumn(stmt.orders, c)
-		stmt.orders.WriteBytes(',')
+		stmt.orders.WriteString(c).WriteBytes(',')
 	}
 	stmt.orders.TruncateLast(1)
 
@@ -360,9 +309,10 @@ func (stmt *SelectStmt) ForUpdate() *SelectStmt {
 //  table.col
 // table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
-	b := New(" GROUP BY ")
-	quoteColumn(b, col)
-	stmt.group = b.WriteBytes(' ').String()
+	stmt.group = New(" GROUP BY ").
+		WriteString(col).
+		WriteBytes(' ').
+		String()
 	return stmt
 }
 
@@ -374,33 +324,11 @@ func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectS
 	return stmt
 }
 
-// ResetCount 重置 Count
-func (stmt *SelectStmt) ResetCount() *SelectStmt {
-	stmt.countExpr = ""
-	return stmt
-}
-
 // Count 指定 Count 表达式，如果指定了 count 表达式，则会造成 limit 失效。
 //
-// 会被拼接成以下格式：
-//  COUNT(DISTINCT col) AS cnt
-func (stmt *SelectStmt) Count(cnt, col string, distinct bool) *SelectStmt {
-	builder := New("COUNT(")
-
-	if distinct {
-		builder.WriteString(" DISTINCT ")
-	}
-
-	if col == "*" {
-		builder.WriteString("*)")
-	} else {
-		builder.QuoteKey(col).
-			WriteBytes(')')
-	}
-
-	builder.WriteString(" AS ").QuoteKey(cnt)
-
-	stmt.countExpr = builder.String()
+// 如果设置为空值，则取消 count，恢复普通的 select
+func (stmt *SelectStmt) Count(expr string) *SelectStmt {
+	stmt.countExpr = expr
 
 	return stmt
 }

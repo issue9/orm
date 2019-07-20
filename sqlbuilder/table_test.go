@@ -74,7 +74,7 @@ func TestCreateTableStmt(t *testing.T) {
 		a.NotError(err).NotNil(rslt)
 
 		cnt, err := sqlbuilder.Select(db, dialect).
-			Count("cnt", "*", false).
+			Count("count(*) as cnt").
 			From(table).
 			QueryInt("cnt")
 		a.NotError(err).Equal(cnt, 3)
@@ -113,7 +113,7 @@ func TestTruncateTable(t *testing.T) {
 		t.NotError(err)
 
 		sel := sqlbuilder.Select(t.DB.DB, t.DB.Dialect()).
-			Count("cnt", "*", false).
+			Count("count(*) as cnt").
 			From("info")
 		rows, err := sel.Query()
 		t.NotError(err).NotNil(rows)

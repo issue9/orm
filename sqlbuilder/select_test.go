@@ -57,7 +57,7 @@ func TestSelect(t *testing.T) {
 		a.NotError(err).Equal(1, size)
 		a.Equal(obj.ID, 4)
 
-		cnt, err := stmt.Count("cnt", "*", false).QueryInt("cnt")
+		cnt, err := stmt.Count("count(*) as cnt").QueryInt("cnt")
 		a.NotError(err).
 			Equal(cnt, 4)
 
@@ -107,5 +107,34 @@ func TestSelectStmt_Join(t *testing.T) {
 			Equal(2, len(maps)).
 			Equal(maps[0]["nickname"], "n1").
 			Equal(maps[1]["nickname"], "n2")
+	})
+}
+
+func TestSelectStmt_Group(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		initDB(t)
+		defer clearDB(t)
+
+		e := t.DB.DB
+		d := t.DB.Dialect()
+
+		r, err := sqlbuilder.Update(e, d).
+			Table("users").
+			Set("name", "2").
+			Where("id>?", 1).
+			Exec()
+		a.NotError(err).NotNil(r)
+
+		var list []*user
+		cnt, err := sqlbuilder.Select(e, d).
+			Columns("sum(age) as {age}", "name").
+			From("users").
+			Group("name").
+			QueryObject(true, &list)
+		a.NotError(err).NotEmpty(cnt).Equal(2, len(list))
 	})
 }

@@ -112,7 +112,7 @@ func count(e Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	stmt := e.SQL().Select().Count("count", "*", false).From("#" + m.Name)
+	stmt := e.SQL().Select().Count("count(*) as cnt").From("#" + m.Name)
 	if err = countWhere(stmt, m, rval); err != nil {
 		return 0, err
 	}
