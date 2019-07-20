@@ -44,6 +44,8 @@ func (stmt *UpdateStmt) Table(table string) *UpdateStmt {
 }
 
 // Set 设置值，若 col 相同，则会覆盖
+//
+// val 可以是 sql.NamedArg 类型
 func (stmt *UpdateStmt) Set(col string, val interface{}) *UpdateStmt {
 	stmt.values = append(stmt.values, &updateSet{
 		column: col,
@@ -113,16 +115,14 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	args := make([]interface{}, 0, len(stmt.values))
 
 	for _, val := range stmt.values {
-		buf.QuoteKey(val.column)
-		buf.WriteBytes('=')
+		buf.QuoteKey(val.column).WriteBytes('=')
 
 		if val.typ != 0 {
 			buf.QuoteKey(val.column).WriteBytes(val.typ)
 		}
 
 		if named, ok := val.value.(sql.NamedArg); ok && named.Name != "" {
-			buf.WriteBytes('@')
-			buf.WriteString(named.Name)
+			buf.WriteBytes('@').WriteString(named.Name)
 		} else {
 			buf.WriteBytes('?')
 		}
@@ -137,8 +137,7 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	}
 
 	if wq != "" {
-		buf.WriteString(" WHERE ")
-		buf.WriteString(wq)
+		buf.WriteString(" WHERE ").WriteString(wq)
 		args = append(args, wa...)
 	}
 
