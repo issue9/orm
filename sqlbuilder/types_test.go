@@ -6,6 +6,7 @@ package sqlbuilder_test
 
 import (
 	"database/sql"
+	"math"
 	"testing"
 	"time"
 
@@ -178,7 +179,9 @@ func TestTypes(t *testing.T) {
 		// 直接从字面值当作零时区进行保存。
 		// https://github.com/lib/pq/issues/329
 		if t.DriverName != "postgres" {
-			t.Equal(Time.Unix(), now.Unix())
+			// 部分数据库可能保存时间，会相差 1 秒。
+			tt := math.Abs(float64(Time.Unix() - now.Unix()))
+			t.True(tt < 2)
 		}
 	})
 }

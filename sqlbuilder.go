@@ -117,7 +117,7 @@ func count(e Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	return stmt.QueryInt("count")
+	return stmt.QueryInt("cnt")
 }
 
 // 创建表。
