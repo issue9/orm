@@ -18,7 +18,7 @@ import (
 )
 
 // Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
-//  "name(tbl_name);engine(myISAM);charset(utf8)"
+//  "name(tbl_name);mysql_engine(myISAM);mysql_charset(utf8)"
 type Metaer interface {
 	Meta() string
 }
