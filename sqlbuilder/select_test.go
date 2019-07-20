@@ -138,3 +138,91 @@ func TestSelectStmt_Group(t *testing.T) {
 		a.NotError(err).NotEmpty(cnt).Equal(2, len(list))
 	})
 }
+
+func TestSelectStmt_Union(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		e := t.DB.DB
+		d := t.DB.Dialect()
+		initDB(t)
+		defer clearDB(t)
+
+		r, err := sqlbuilder.Insert(e, d).Columns("uid", "tel", "nickname", "address").
+			Values(1, "1", "1", "1").
+			Values(2, "2", "2", "2").
+			Table("info").
+			Exec()
+		t.NotError(err).NotNil(r)
+
+		sel1 := sqlbuilder.Select(e, d).
+			Column("id").
+			From("users").
+			Where("id=?", 1)
+		sel2 := sqlbuilder.Select(e, d).
+			Column("uid").
+			From("info").
+			Where("uid=?", 1)
+		rows, err := sel1.Union(false, sel2).Query()
+		t.NotError(err).NotNil(rows)
+		defer func() {
+			t.NotError(rows.Close())
+		}()
+
+		maps, err := fetch.Map(false, rows)
+		t.NotError(err).NotNil(maps)
+		t.Equal(1, len(maps)).
+			Equal(maps[0]["id"], 1)
+		_, found := maps[0]["uid"] // 名称跟随第一个 select
+		t.False(found)
+
+		// 添加了一个新的列名。导致长度不相同
+		sel2.Column("name")
+		rs, err := sel1.Query() // 不能命名为 rows，否则会影响上面 rows.Close 的执行
+		a.ErrorType(err, sqlbuilder.ErrUnionColumnNotMatch).Nil(rs)
+	})
+}
+
+func TestSelectStmt_UnionAll(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		e := t.DB.DB
+		d := t.DB.Dialect()
+		initDB(t)
+		defer clearDB(t)
+
+		r, err := sqlbuilder.Insert(e, d).Columns("uid", "tel", "nickname", "address").
+			Values(1, "1", "1", "1").
+			Values(2, "2", "2", "2").
+			Table("info").
+			Exec()
+		t.NotError(err).NotNil(r)
+
+		sel1 := sqlbuilder.Select(e, d).
+			Column("id").
+			From("users").
+			Where("id=?", 1)
+		sel2 := sqlbuilder.Select(e, d).
+			Column("uid").
+			From("info").
+			Where("uid=?", 1)
+		rows, err := sel1.Union(true, sel2).Query()
+		t.NotError(err).NotNil(rows)
+		defer func() {
+			t.NotError(rows.Close())
+		}()
+
+		maps, err := fetch.Map(false, rows)
+		t.NotError(err).NotNil(maps)
+		t.Equal(2, len(maps)).
+			Equal(maps[0]["id"], 1).
+			Equal(maps[1]["id"], 1)
+		_, found := maps[0]["uid"] // 名称跟随第一个 select
+		t.False(found)
+	})
+}

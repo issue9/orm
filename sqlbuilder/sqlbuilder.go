@@ -47,6 +47,9 @@ var (
 
 	// ErrConstraintType 约束类型错误
 	ErrConstraintType = errors.New("约束类型错误，已经设置为其它约束")
+
+	// ErrUnionColumnNotMatch 在 Union 中，各个 select 中的列长度不相同。
+	ErrUnionColumnNotMatch = errors.New("union 列长度不相同")
 )
 
 // SQLBuilder 对 bytes.Buffer 的一个简单封装。

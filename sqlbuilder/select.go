@@ -28,6 +28,8 @@ type SelectStmt struct {
 	// COUNT 查询的列内容
 	countExpr string
 
+	unions []*unionSelect
+
 	joins  *SQLBuilder
 	orders *SQLBuilder
 	group  string
@@ -37,6 +39,11 @@ type SelectStmt struct {
 
 	limitQuery string
 	limitVals  []interface{}
+}
+
+type unionSelect struct {
+	typ  string
+	stmt *SelectStmt
 }
 
 // Select 声明一条 Select 语句
@@ -66,6 +73,10 @@ func (stmt *SelectStmt) Reset() *SelectStmt {
 
 	stmt.countExpr = ""
 
+	if stmt.unions != nil {
+		stmt.unions = stmt.unions[:0]
+	}
+
 	if stmt.joins != nil {
 		stmt.joins.Reset()
 	}
@@ -93,16 +104,16 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
-	buf := New("SELECT ")
+	builder := New("SELECT ")
 	args := make([]interface{}, 0, 10)
 
-	stmt.buildColumns(buf)
+	stmt.buildColumns(builder)
 
-	buf.WriteString(" FROM ").WriteString(stmt.tableExpr)
+	builder.WriteString(" FROM ").WriteString(stmt.tableExpr)
 
 	// join
 	if stmt.joins != nil {
-		buf.Append(stmt.joins).WriteBytes(' ')
+		builder.Append(stmt.joins).WriteBytes(' ')
 	}
 
 	// where
@@ -111,41 +122,70 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 	if wq != "" {
-		buf.WriteString(" WHERE ")
-		buf.WriteString(wq)
+		builder.WriteString(" WHERE ")
+		builder.WriteString(wq)
 		args = append(args, wa...)
 	}
 
 	// group by
 	if stmt.group != "" {
-		buf.WriteString(stmt.group)
+		builder.WriteString(stmt.group)
 	}
 
 	// having
 	if stmt.havingQuery != "" {
-		buf.WriteString(stmt.havingQuery)
+		builder.WriteString(stmt.havingQuery)
 		args = append(args, stmt.havingVals...)
 	}
 
 	if stmt.countExpr == "" {
 		// order by
 		if stmt.orders != nil && stmt.orders.Len() > 0 {
-			buf.Append(stmt.orders)
+			builder.Append(stmt.orders)
 		}
 
 		// limit
 		if stmt.limitQuery != "" {
-			buf.WriteString(stmt.limitQuery)
+			builder.WriteString(stmt.limitQuery)
 			args = append(args, stmt.limitVals...)
 		}
 	}
 
-	// for update
-	if stmt.forUpdate {
-		buf.WriteString(" FOR UPDATE")
+	// union
+	if stmt.unions != nil {
+		a, err := stmt.buildUnions(builder)
+		if err != nil {
+			return "", nil, err
+		}
+		args = append(args, a...)
 	}
 
-	return buf.String(), args, nil
+	// for update
+	if stmt.forUpdate {
+		builder.WriteString(" FOR UPDATE")
+	}
+
+	return builder.String(), args, nil
+}
+
+func (stmt *SelectStmt) buildUnions(builder *SQLBuilder) (args []interface{}, err error) {
+	l := len(stmt.columns)
+
+	for _, u := range stmt.unions {
+		if len(u.stmt.columns) != l {
+			return nil, ErrUnionColumnNotMatch
+		}
+
+		query, a, err := u.stmt.SQL()
+		if err != nil {
+			return nil, err
+		}
+
+		builder.WriteString(u.typ).WriteBytes(' ').WriteString(query)
+		args = append(args, a...)
+	}
+
+	return args, nil
 }
 
 func (stmt *SelectStmt) buildColumns(builder *SQLBuilder) {
@@ -329,6 +369,31 @@ func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectS
 // 如果设置为空值，则取消 count，恢复普通的 select
 func (stmt *SelectStmt) Count(expr string) *SelectStmt {
 	stmt.countExpr = expr
+
+	return stmt
+}
+
+// Union 语句
+//
+// all 表示是否执行 Union all 语法；
+// sel 表示需要进行并接的 Select 语句，传入 sel 之后，
+// 后续对 sel 的操作依赖会影响到语句的最终生成。
+func (stmt *SelectStmt) Union(all bool, sel ...*SelectStmt) *SelectStmt {
+	if stmt.unions == nil {
+		stmt.unions = make([]*unionSelect, 0, len(sel))
+	}
+
+	typ := " UNION "
+	if all {
+		typ += "ALL "
+	}
+
+	for _, s := range sel {
+		stmt.unions = append(stmt.unions, &unionSelect{
+			typ:  typ,
+			stmt: s,
+		})
+	}
 
 	return stmt
 }
