@@ -290,3 +290,13 @@ func BenchmarkPostgres_SQL(b *testing.B) {
 		a.NotError(p.SQL(s1, nil))
 	}
 }
+
+func TestPostgres_Types(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		testTypes(t)
+	}, "postgres")
+}

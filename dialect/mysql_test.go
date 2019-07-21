@@ -295,3 +295,13 @@ func TestMysql_SQLType(t *testing.T) {
 
 	testSQLType(a, dialect.Mysql(), data)
 }
+
+func TestMysql_Types(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		testTypes(t)
+	}, "mysql")
+}

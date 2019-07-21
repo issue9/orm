@@ -270,3 +270,13 @@ func TestSqlite3_SQLType(t *testing.T) {
 
 	testSQLType(a, dialect.Sqlite3(), data)
 }
+
+func TestSqlite3_Types(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Test) {
+		testTypes(t)
+	}, "sqlite3")
+}
