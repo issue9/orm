@@ -24,9 +24,16 @@ func TestSQLBuilder(t *testing.T) {
 	a.Equal(b.String(), "")
 	a.Equal(b.Len(), 0)
 
-	b.WriteBytes('3').WriteString("21")
-	a.Equal(b.String(), "321")
+	b.WriteBytes('B', 'y', 't', 'e').
+		WriteRunes('R', 'u', 'n', 'e').
+		WriteString("String")
+	a.Equal(b.String(), "ByteRuneString")
 
-	b.TruncateLast(1)
-	a.Equal(b.String(), "32").Equal(2, b.Len())
+	b.WriteBytes('1', '2')
+	b.TruncateLast(2)
+	a.Equal(b.String(), "ByteRuneString").Equal(14, b.Len())
+
+	b.Reset()
+	b.QuoteKey("key")
+	a.Equal(b.Bytes(), []byte("{key}"))
 }

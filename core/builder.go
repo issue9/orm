@@ -49,6 +49,20 @@ func (b *Builder) WriteBytes(c ...byte) *Builder {
 	return b
 }
 
+func (b *Builder) writeRune(r rune) {
+	if _, err := b.buffer().WriteRune(r); err != nil {
+		panic(err)
+	}
+}
+
+// WriteRunes 写入多个字符
+func (b *Builder) WriteRunes(r ...rune) *Builder {
+	for _, rr := range r {
+		b.writeRune(rr)
+	}
+	return b
+}
+
 // Quote 给 str 左右添加 l 和 r 两个字符
 func (b *Builder) Quote(str string, l, r byte) *Builder {
 	return b.WriteBytes(l).WriteString(str).WriteBytes(r)

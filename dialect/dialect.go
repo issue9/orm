@@ -134,7 +134,7 @@ func PrepareNamedArgs(query string) (string, map[string]int) {
 			cnt++
 			start = -1
 		case start == -1:
-			builder.WriteString(string(c))
+			builder.WriteRunes(c)
 		}
 	}
 
