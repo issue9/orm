@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"unicode"
+
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 var (
@@ -112,4 +115,33 @@ func replaceNamedArgs(query string, args []interface{}) string {
 	}
 
 	return query
+}
+
+// PrepareNamedArgs 对命名参数进行预处理
+func PrepareNamedArgs(query string) (string, map[string]int) {
+	orders := map[string]int{}
+	builder := sqlbuilder.New("")
+	start := -1
+	cnt := 0
+
+	for index, c := range query {
+		switch {
+		case c == '@':
+			start = index + 1
+		case start != -1 && !unicode.IsLetter(c):
+			builder.WriteString(" ? ")
+			orders[query[start:index]] = cnt
+			cnt++
+			start = -1
+		case start == -1:
+			builder.WriteString(string(c))
+		}
+	}
+
+	if start > -1 {
+		builder.WriteString(" ?")
+		orders[query[start:]] = cnt
+	}
+
+	return builder.String(), orders
 }

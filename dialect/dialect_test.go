@@ -104,3 +104,45 @@ func TestReplaceNamedArgs(t *testing.T) {
 		a.Equal(item.inputArgs, item.outputArgs)
 	}
 }
+
+func TestPrepareNamedArgs(t *testing.T) {
+	a := assert.New(t)
+
+	var data = []*struct {
+		input  string
+		query  string
+		orders map[string]int
+	}{
+		{
+			input:  "select * from table",
+			query:  "select * from table",
+			orders: map[string]int{},
+		},
+		{
+			input:  "select * from table where id=@id",
+			query:  "select * from table where id=?",
+			orders: map[string]int{"id": 0},
+		},
+		{
+			input:  "select * from table where id=@id and name like @name",
+			query:  "select * from table where id=? and name like ?",
+			orders: map[string]int{"id": 0, "name": 1},
+		},
+		{
+			input:  "select * from table where {id}=@id and {name} like @name",
+			query:  "select * from table where {id}=? and {name} like ?",
+			orders: map[string]int{"id": 0, "name": 1},
+		},
+		{
+			input:  "select * from table where {编号}=@编号 and {name} like @name",
+			query:  "select * from table where {编号}=? and {name} like ?",
+			orders: map[string]int{"编号": 0, "name": 1},
+		},
+	}
+
+	for _, item := range data {
+		q, o := PrepareNamedArgs(item.input)
+		a.Equal(o, item.orders)
+		sqltest.Equal(a, q, item.query)
+	}
+}

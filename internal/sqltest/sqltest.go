@@ -12,7 +12,12 @@ import (
 	"github.com/issue9/assert"
 )
 
-var replacer = strings.NewReplacer(")", " ) ", "(", " ( ", ",", " , ")
+var replacer = strings.NewReplacer(
+	")", " ) ",
+	"(", " ( ",
+	",", " , ",
+	"=", " = ",
+)
 
 var spaceReplaceRegexp = regexp.MustCompile("\\s+")
 

@@ -7,6 +7,8 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
+
+	"github.com/issue9/orm/v2/stmt"
 )
 
 type baseStmt struct {
@@ -95,11 +97,11 @@ func (stmt *execStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 	return stmt.Engine().ExecContext(ctx, query, args...)
 }
 
-func (stmt *execStmt) Prepare() (*sql.Stmt, error) {
+func (stmt *execStmt) Prepare() (*stmt.Stmt, error) {
 	return stmt.PrepareContext(context.Background())
 }
 
-func (stmt *execStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
+func (stmt *execStmt) PrepareContext(ctx context.Context) (*stmt.Stmt, error) {
 	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err
@@ -108,11 +110,11 @@ func (stmt *execStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
 	return stmt.Engine().PrepareContext(ctx, query)
 }
 
-func (stmt *queryStmt) Prepare() (*sql.Stmt, error) {
+func (stmt *queryStmt) Prepare() (*stmt.Stmt, error) {
 	return stmt.PrepareContext(context.Background())
 }
 
-func (stmt *queryStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
+func (stmt *queryStmt) PrepareContext(ctx context.Context) (*stmt.Stmt, error) {
 	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err
