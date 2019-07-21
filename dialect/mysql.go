@@ -65,6 +65,11 @@ func (m *mysql) VersionSQL() string {
 	return `select version();`
 }
 
+func (m *mysql) Prepare(query string) (string, map[string]int) {
+	query, orders := PrepareNamedArgs(query)
+	return m.replacer.Replace(query), orders
+}
+
 func (m *mysql) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
 	if len(options[mysqlEngine]) == 1 {
 		w.WriteString(" ENGINE=")

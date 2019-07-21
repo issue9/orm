@@ -9,6 +9,8 @@ import (
 	"database/sql"
 	"reflect"
 	"time"
+
+	"github.com/issue9/orm/v2/stmt"
 )
 
 // CreateTableStmt.Column 用到的数据类型。
@@ -76,9 +78,9 @@ type Engine interface {
 
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 
-	Prepare(query string) (*sql.Stmt, error)
+	Prepare(query string) (*stmt.Stmt, error)
 
-	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+	PrepareContext(ctx context.Context, query string) (*stmt.Stmt, error)
 }
 
 // Dialect 接口用于描述与数据库和驱动相关的一些语言特性。
@@ -131,6 +133,14 @@ type Dialect interface {
 
 	// 创建表时根据附加信息返回的部分 SQL 语句
 	CreateTableOptionsSQL(sql *SQLBuilder, meta map[string][]string) error
+
+	// 对预编译的内容进行处理。
+	//
+	// 目前大部分驱动都不支持 sql.NamedArgs，为了支持该功能，
+	// 需要在预编译之前，对语句进行如下处理：
+	// 1. 将 sql 中的 @xx 替换成 ?
+	// 2. 将 sql 中的 @xx 在 sql 中的位置进行记录，并通过 orders 返回。
+	Prepare(sql string) (query string, orders map[string]int)
 
 	// 创建 AI 约束
 	//CreateConstraintAI(name,col string)(string,error)

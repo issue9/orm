@@ -12,6 +12,7 @@ import (
 
 	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v2/stmt"
 )
 
 // DB 数据库操作实例。
@@ -130,19 +131,20 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 }
 
 // Prepare 预编译查询语句。
-func (db *DB) Prepare(query string) (*sql.Stmt, error) {
+func (db *DB) Prepare(query string) (*stmt.Stmt, error) {
 	return db.PrepareContext(context.Background(), query)
 }
 
 // PrepareContext 预编译查询语句。
-func (db *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+func (db *DB) PrepareContext(ctx context.Context, query string) (*stmt.Stmt, error) {
 	query = db.replacer.Replace(query)
-	query, _, err := db.dialect.SQL(query, nil)
+	query, orders := db.Dialect().Prepare(query)
+
+	s, err := db.DB.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
-
-	return db.DB.PrepareContext(ctx, query)
+	return stmt.New(s, orders), nil
 }
 
 // LastInsertID 插入数据，并获取其自增的 ID。

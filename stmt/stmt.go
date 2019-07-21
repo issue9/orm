@@ -17,20 +17,20 @@ import (
 // 只能自定义一个类似 sql.Stmt 的实现。
 type Stmt struct {
 	*sql.Stmt
-	args map[string]int
+	orders map[string]int
 }
 
 // New 声明 Stmt 实例
 func New(stmt *sql.Stmt, args map[string]int) *Stmt {
 	return &Stmt{
-		Stmt: stmt,
-		args: args,
+		Stmt:   stmt,
+		orders: args,
 	}
 }
 
 // Close 关闭 Stmt 实例
 func (stmt *Stmt) Close() error {
-	stmt.args = nil
+	stmt.orders = nil
 	return stmt.Stmt.Close()
 }
 
@@ -78,7 +78,7 @@ func (stmt *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql
 }
 
 func (stmt *Stmt) buildArgs(args []interface{}) ([]interface{}, error) {
-	if len(stmt.args) == 0 {
+	if len(stmt.orders) == 0 {
 		return args, nil
 	}
 
@@ -90,7 +90,7 @@ func (stmt *Stmt) buildArgs(args []interface{}) ([]interface{}, error) {
 			return nil, fmt.Errorf("%d is not sql.namedArg", index)
 		}
 
-		i, found := stmt.args[named.Name]
+		i, found := stmt.orders[named.Name]
 		if !found {
 			return nil, fmt.Errorf("%s not found", named.Name)
 		}

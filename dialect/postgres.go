@@ -45,6 +45,15 @@ func (p *postgres) VersionSQL() string {
 	return `SHOW server_version;`
 }
 
+func (p *postgres) Prepare(query string) (string, map[string]int) {
+	query, orders := PrepareNamedArgs(query)
+	query, err := p.replace(query)
+	if err != nil {
+		panic(err)
+	}
+	return query, orders
+}
+
 func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) {
 	return " RETURNING " + col, true
 }
@@ -52,10 +61,19 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 // 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
 func (p *postgres) SQL(query string, args []interface{}) (string, []interface{}, error) {
 	query = replaceNamedArgs(query, args)
+	query, err := p.replace(query)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return query, args, nil
+}
+
+func (p *postgres) replace(query string) (string, error) {
 	query = p.replacer.Replace(query)
 
 	if strings.IndexByte(query, '?') < 0 {
-		return query, args, nil
+		return query, nil
 	}
 
 	num := 1
@@ -67,13 +85,13 @@ func (p *postgres) SQL(query string, args []interface{}) (string, []interface{},
 			ret = append(ret, []rune(strconv.Itoa(num))...)
 			num++
 		case '$':
-			return "", nil, errors.New("语句中包含非法的字符串:$")
+			return "", errors.New("语句中包含非法的字符串:$")
 		default:
 			ret = append(ret, c)
 		}
 	}
 
-	return string(ret), args, nil
+	return string(ret), nil
 }
 
 func (p *postgres) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {

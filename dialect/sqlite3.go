@@ -64,6 +64,11 @@ func (s *sqlite3) VersionSQL() string {
 	return `select sqlite_version();`
 }
 
+func (s *sqlite3) Prepare(query string) (string, map[string]int) {
+	query, orders := PrepareNamedArgs(query)
+	return s.replacer.Replace(query), orders
+}
+
 func (s *sqlite3) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
 	if len(options[sqlite3RowID]) == 1 {
 		val, err := strconv.ParseBool(options[sqlite3RowID][0])
