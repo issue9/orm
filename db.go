@@ -138,7 +138,10 @@ func (db *DB) Prepare(query string) (*core.Stmt, error) {
 // PrepareContext 预编译查询语句。
 func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
 	query = db.replacer.Replace(query)
-	query, orders := db.Dialect().Prepare(query)
+	query, orders, err := db.Dialect().Prepare(query)
+	if err != nil {
+		return nil, err
+	}
 
 	s, err := db.DB.PrepareContext(ctx, query)
 	if err != nil {

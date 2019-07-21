@@ -46,13 +46,14 @@ func (p *postgres) VersionSQL() string {
 	return `SHOW server_version;`
 }
 
-func (p *postgres) Prepare(query string) (string, map[string]int) {
+func (p *postgres) Prepare(query string) (string, map[string]int, error) {
 	query, orders := PrepareNamedArgs(query)
 	query, err := p.replace(query)
 	if err != nil {
-		panic(err)
+		return "", nil, err
 	}
-	return query, orders
+
+	return query, orders, nil
 }
 
 func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) {
@@ -70,6 +71,8 @@ func (p *postgres) SQL(query string, args []interface{}) (string, []interface{},
 	return query, args, nil
 }
 
+var errInvalidDollar = errors.New("语句中包含非法的字符串:$")
+
 func (p *postgres) replace(query string) (string, error) {
 	query = p.replacer.Replace(query)
 
@@ -78,21 +81,20 @@ func (p *postgres) replace(query string) (string, error) {
 	}
 
 	num := 1
-	ret := make([]rune, 0, len(query))
+	build := core.NewBuilder("")
 	for _, c := range query {
 		switch c {
 		case '?':
-			ret = append(ret, '$')
-			ret = append(ret, []rune(strconv.Itoa(num))...)
+			build.WriteBytes('$').WriteString(strconv.Itoa(num))
 			num++
 		case '$':
-			return "", errors.New("语句中包含非法的字符串:$")
+			return "", errInvalidDollar
 		default:
-			ret = append(ret, c)
+			build.WriteRunes(c)
 		}
 	}
 
-	return string(ret), nil
+	return build.String(), nil
 }
 
 func (p *postgres) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {

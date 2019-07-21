@@ -36,4 +36,8 @@ func TestSQLBuilder(t *testing.T) {
 	b.Reset()
 	b.QuoteKey("key")
 	a.Equal(b.Bytes(), []byte("{key}"))
+
+	buf := NewBuilder("buf-")
+	buf.Append(b)
+	a.Equal(buf.String(), "buf-{key}")
 }

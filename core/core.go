@@ -76,12 +76,6 @@ type Dialect interface {
 	// 依次提交语句。
 	TransactionalDDL() bool
 
-	// 根据当前的数据库，对 SQL 作调整。
-	//
-	// 比如替换 {} 符号；处理 sql.NamedArgs；
-	// postgresql 需要将 ? 改成 $1 等形式。
-	SQL(query string, args []interface{}) (string, []interface{}, error)
-
 	// 查询服务器版本号的 SQL 语句。
 	VersionSQL() string
 
@@ -105,13 +99,21 @@ type Dialect interface {
 	// 创建表时根据附加信息返回的部分 SQL 语句
 	CreateTableOptionsSQL(sql *Builder, meta map[string][]string) error
 
+	// 根据当前的数据库，对 SQL 作调整。
+	//
+	// 比如替换 {} 符号；处理 sql.NamedArgs；
+	// postgresql 需要将 ? 改成 $1 等形式。
+	SQL(query string, args []interface{}) (string, []interface{}, error)
+
 	// 对预编译的内容进行处理。
 	//
 	// 目前大部分驱动都不支持 sql.NamedArgs，为了支持该功能，
 	// 需要在预编译之前，对语句进行如下处理：
-	// 1. 将 sql 中的 @xx 替换成 ?
-	// 2. 将 sql 中的 @xx 在 sql 中的位置进行记录，并通过 orders 返回。
-	Prepare(sql string) (query string, orders map[string]int)
+	//  1. 将 sql 中的 @xx 替换成 ?
+	//  2. 将 sql 中的 @xx 在 sql 中的位置进行记录，并通过 orders 返回。
+	// query 为处理后的 SQL 语句；
+	// orders 为参数名在 query 中对应的位置。
+	Prepare(sql string) (query string, orders map[string]int, err error)
 
 	// 创建 AI 约束
 	//CreateConstraintAI(name,col string)(string,error)

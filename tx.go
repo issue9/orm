@@ -110,7 +110,10 @@ func (tx *Tx) Prepare(query string) (*core.Stmt, error) {
 // PrepareContext 将一条 SQL 语句进行预编译。
 func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
 	query = tx.db.replacer.Replace(query)
-	query, orders := tx.db.Dialect().Prepare(query)
+	query, orders, err := tx.db.Dialect().Prepare(query)
+	if err != nil {
+		return nil, err
+	}
 
 	s, err := tx.db.DB.PrepareContext(ctx, query)
 	if err != nil {

@@ -66,9 +66,9 @@ func (m *mysql) VersionSQL() string {
 	return `select version();`
 }
 
-func (m *mysql) Prepare(query string) (string, map[string]int) {
+func (m *mysql) Prepare(query string) (string, map[string]int, error) {
 	query, orders := PrepareNamedArgs(query)
-	return m.replacer.Replace(query), orders
+	return m.replacer.Replace(query), orders, nil
 }
 
 func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {

@@ -65,9 +65,9 @@ func (s *sqlite3) VersionSQL() string {
 	return `select sqlite_version();`
 }
 
-func (s *sqlite3) Prepare(query string) (string, map[string]int) {
+func (s *sqlite3) Prepare(query string) (string, map[string]int, error) {
 	query, orders := PrepareNamedArgs(query)
-	return s.replacer.Replace(query), orders
+	return s.replacer.Replace(query), orders, nil
 }
 
 func (s *sqlite3) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
