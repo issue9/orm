@@ -19,6 +19,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+const sqlite3DBFile = "orm_test.db"
+
 // 需要测试的数据用例
 var cases = []struct {
 	prefix     string
@@ -28,7 +30,7 @@ var cases = []struct {
 }{
 	{
 		prefix:     "prefix_",
-		dsn:        "./orm_test.db?_fk=true",
+		dsn:        "./" + sqlite3DBFile + "?_fk=true",
 		dialect:    dialect.Sqlite3(),
 		driverName: "sqlite3",
 	},
@@ -89,8 +91,8 @@ func (s Suite) Close() {
 			return
 		}
 
-		if _, err := os.Stat(t.dsn); err == nil || os.IsExist(err) {
-			t.NotError(os.Remove(t.dsn))
+		if _, err := os.Stat(sqlite3DBFile); err == nil || os.IsExist(err) {
+			t.NotError(os.Remove(sqlite3DBFile))
 		}
 	}
 }
