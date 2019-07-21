@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -145,7 +146,7 @@ func create(e Engine, v interface{}) error {
 		for _, col := range index {
 			cols = append(cols, col.Name)
 		}
-		sb.Index(sqlbuilder.IndexDefault, name, cols...)
+		sb.Index(core.IndexDefault, name, cols...)
 	}
 
 	for name, unique := range m.Uniques {

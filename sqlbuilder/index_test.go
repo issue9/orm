@@ -9,6 +9,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -17,15 +18,6 @@ var (
 	_ sqlbuilder.DDLSQLer = &sqlbuilder.CreateIndexStmt{}
 	_ sqlbuilder.DDLSQLer = &sqlbuilder.DropIndexStmt{}
 )
-
-func TestIndex_String(t *testing.T) {
-	a := assert.New(t)
-
-	a.Equal(sqlbuilder.IndexUnique.String(), "UNIQUE INDEX")
-	a.Equal(sqlbuilder.IndexDefault.String(), "INDEX")
-	a.Equal(sqlbuilder.Index(3).String(), "<unknown>")
-	a.Equal(sqlbuilder.Index(-1).String(), "<unknown>")
-}
 
 func TestIndex(t *testing.T) {
 	a := assert.New(t)
@@ -55,7 +47,7 @@ func TestIndex(t *testing.T) {
 		createStmt.Reset()
 		err = createStmt.Table("users").
 			Name("index_unique_key").
-			Type(sqlbuilder.IndexUnique).
+			Type(core.IndexUnique).
 			Columns("id", "name").
 			Exec()
 		t.NotError(err)

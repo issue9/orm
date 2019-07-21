@@ -7,6 +7,7 @@ package orm
 import (
 	"database/sql"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -26,7 +27,7 @@ type AfterFetcher = fetch.AfterFetcher
 
 // Engine 是 DB 与 Tx 的共有接口。
 type Engine interface {
-	sqlbuilder.Engine
+	core.Engine
 
 	// 理论上功能等同于以下两步操作：
 	//  rslt, err := engine.Insert(obj)
@@ -74,7 +75,7 @@ type Engine interface {
 }
 
 // Dialect 数据库驱动特有的语言特性实现
-type Dialect = sqlbuilder.Dialect
+type Dialect = core.Dialect
 
 // SQL 用于生成 SQL 语句
 type SQL struct {

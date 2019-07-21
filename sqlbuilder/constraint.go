@@ -4,39 +4,7 @@
 
 package sqlbuilder
 
-// Constraint 表示约束类型
-type Constraint int8
-
-// 约束类型
-const (
-	constraintNone   Constraint = iota
-	ConstraintUnique            // 唯一约束
-	ConstraintFK                // 外键约束
-	ConstraintCheck             // Check 约束
-	ConstraintPK                // 主键约束
-	ConstraintAI                // 自增
-)
-
-const (
-	defaultAINameSuffix = "_ai"
-	defaultPKNameSuffix = "_pk"
-)
-
-// PKName 生成主键约束的名称
-//
-// 各个数据库对主键约束的规定并不统一，mysql 会忽略约束名，
-// 为了统一，主键约束的名称统一由此函数生成，用户不能别外指定。
-func PKName(table string) string {
-	return table + defaultPKNameSuffix
-}
-
-// AIName 生成 AI 约束名称
-//
-// 自增约束的实现，各个数据库并不相同，诸如 mysql 直接加在列信息上，
-// 而 postgres 会创建 sequence，需要指定 sequence 名称。
-func AIName(table string) string {
-	return table + defaultAINameSuffix
-}
+import "github.com/issue9/orm/v2/core"
 
 // AddConstraintStmtHooker AddConstraintStmt.DDLSQL 的钩子函数
 type AddConstraintStmtHooker interface {
@@ -49,7 +17,7 @@ type AddConstraintStmt struct {
 
 	TableName string
 	Name      string
-	Type      Constraint
+	Type      core.Constraint
 
 	// 约束的值，根据 Type 的不同，略有不同：
 	// check 下表示的 check 表达式，仅有一个元素；
@@ -60,7 +28,7 @@ type AddConstraintStmt struct {
 }
 
 // AddConstraint 声明添加约束的语句
-func AddConstraint(e Engine) *AddConstraintStmt {
+func AddConstraint(e core.Engine) *AddConstraintStmt {
 	stmt := &AddConstraintStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
@@ -70,7 +38,7 @@ func AddConstraint(e Engine) *AddConstraintStmt {
 func (stmt *AddConstraintStmt) Reset() *AddConstraintStmt {
 	stmt.TableName = ""
 	stmt.Name = ""
-	stmt.Type = constraintNone
+	stmt.Type = core.ConstraintNone
 	stmt.Data = stmt.Data[:0]
 	return stmt
 }
@@ -83,11 +51,11 @@ func (stmt *AddConstraintStmt) Table(t string) *AddConstraintStmt {
 
 // Unique 指定唯一约束
 func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraintStmt {
-	if stmt.Type != constraintNone {
+	if stmt.Type != core.ConstraintNone {
 		panic(ErrConstraintType)
 	}
 
-	stmt.Type = ConstraintUnique
+	stmt.Type = core.ConstraintUnique
 	stmt.Name = name
 	stmt.Data = col
 
@@ -96,11 +64,11 @@ func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraint
 
 // PK 指定主键约束
 func (stmt *AddConstraintStmt) PK(col ...string) *AddConstraintStmt {
-	if stmt.Type != constraintNone {
+	if stmt.Type != core.ConstraintNone {
 		panic(ErrConstraintType)
 	}
 
-	stmt.Type = ConstraintPK
+	stmt.Type = core.ConstraintPK
 	stmt.Data = col
 
 	return stmt
@@ -108,11 +76,11 @@ func (stmt *AddConstraintStmt) PK(col ...string) *AddConstraintStmt {
 
 // Check Check 约束
 func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
-	if stmt.Type != constraintNone {
+	if stmt.Type != core.ConstraintNone {
 		panic(ErrConstraintType)
 	}
 
-	stmt.Type = ConstraintCheck
+	stmt.Type = core.ConstraintCheck
 	stmt.Name = name
 	stmt.Data = []string{expr}
 
@@ -121,11 +89,11 @@ func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
 
 // FK 外键约束
 func (stmt *AddConstraintStmt) FK(name, col, refTable, refColumn, updateRule, deleteRule string) *AddConstraintStmt {
-	if stmt.Type != constraintNone {
+	if stmt.Type != core.ConstraintNone {
 		panic(ErrConstraintType)
 	}
 
-	stmt.Type = ConstraintFK
+	stmt.Type = core.ConstraintFK
 	stmt.Name = name
 	stmt.Data = []string{col, refTable, refColumn, updateRule, deleteRule}
 
@@ -142,8 +110,8 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		return nil, ErrColumnsIsEmpty
 	}
 
-	if stmt.Type == ConstraintPK {
-		stmt.Name = PKName(stmt.TableName)
+	if stmt.Type == core.ConstraintPK {
+		stmt.Name = core.PKName(stmt.TableName)
 	}
 
 	if stmt.Name == "" {
@@ -154,15 +122,15 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		return hook.AddConstraintStmtHook(stmt)
 	}
 
-	builder := New("ALTER TABLE ").
+	builder := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
 		WriteString(" ADD CONSTRAINT ").
 		QuoteKey(stmt.Name)
 
 	switch stmt.Type {
-	case ConstraintCheck:
+	case core.ConstraintCheck:
 		builder.WriteString(" CHECK(").WriteString(stmt.Data[0]).WriteBytes(')')
-	case ConstraintFK:
+	case core.ConstraintFK:
 		builder.WriteString(" FOREIGN KEY(").
 			QuoteKey(stmt.Data[0]).
 			WriteString(") REFERENCES ").
@@ -178,7 +146,7 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		if stmt.Data[4] != "" {
 			builder.WriteString(" ON DELETE ").WriteString(stmt.Data[4])
 		}
-	case ConstraintPK:
+	case core.ConstraintPK:
 		builder.WriteString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
 			builder.
@@ -186,7 +154,7 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 				WriteBytes(',')
 		}
 		builder.TruncateLast(1).WriteBytes(')')
-	case ConstraintUnique:
+	case core.ConstraintUnique:
 		builder.WriteString(" UNIQUE(")
 		for _, col := range stmt.Data {
 			builder.
@@ -199,23 +167,6 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 	}
 
 	return []string{builder.String()}, nil
-}
-
-func (t Constraint) String() string {
-	switch t {
-	case ConstraintUnique:
-		return "UNIQUE"
-	case ConstraintFK:
-		return "FOREIGN KEY"
-	case ConstraintPK:
-		return "PRIMARY KEY"
-	case ConstraintCheck:
-		return "CHECK"
-	case ConstraintAI:
-		return "AUTO INCREMENT"
-	default:
-		return "<unknown>"
-	}
 }
 
 // DropConstraintStmtHooker DropConstraintStmt.DDLSQL 的钩子函数
@@ -232,7 +183,7 @@ type DropConstraintStmt struct {
 }
 
 // DropConstraint 声明一条删除表约束的语句
-func DropConstraint(e Engine) *DropConstraintStmt {
+func DropConstraint(e core.Engine) *DropConstraintStmt {
 	stmt := &DropConstraintStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
@@ -268,7 +219,7 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 		return hook.DropConstraintStmtHook(stmt)
 	}
 
-	buf := New("ALTER TABLE ").
+	buf := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
 		WriteString(" DROP CONSTRAINT ").
 		QuoteKey(stmt.Name)

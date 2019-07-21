@@ -8,6 +8,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
 )
 
@@ -30,8 +31,8 @@ type SelectStmt struct {
 
 	unions []*unionSelect
 
-	joins  *SQLBuilder
-	orders *SQLBuilder
+	joins  *core.Builder
+	orders *core.Builder
 	group  string
 
 	havingQuery string
@@ -47,7 +48,7 @@ type unionSelect struct {
 }
 
 // Select 声明一条 Select 语句
-func Select(e Engine) *SelectStmt {
+func Select(e core.Engine) *SelectStmt {
 	stmt := &SelectStmt{columns: make([]string, 0, 10)}
 	stmt.queryStmt = newQueryStmt(e, stmt)
 	stmt.where = newWhere()
@@ -104,7 +105,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
-	builder := New("SELECT ")
+	builder := core.NewBuilder("SELECT ")
 	args := make([]interface{}, 0, 10)
 
 	stmt.buildColumns(builder)
@@ -168,7 +169,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	return builder.String(), args, nil
 }
 
-func (stmt *SelectStmt) buildUnions(builder *SQLBuilder) (args []interface{}, err error) {
+func (stmt *SelectStmt) buildUnions(builder *core.Builder) (args []interface{}, err error) {
 	l := len(stmt.columns)
 
 	for _, u := range stmt.unions {
@@ -188,7 +189,7 @@ func (stmt *SelectStmt) buildUnions(builder *SQLBuilder) (args []interface{}, er
 	return args, nil
 }
 
-func (stmt *SelectStmt) buildColumns(builder *SQLBuilder) {
+func (stmt *SelectStmt) buildColumns(builder *core.Builder) {
 	if stmt.countExpr != "" {
 		builder.WriteString(stmt.countExpr)
 		return
@@ -241,7 +242,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 		panic("不能重复指定表名")
 	}
 
-	builder := New("").QuoteKey(table)
+	builder := core.NewBuilder("").QuoteKey(table)
 
 	switch len(alias) {
 	case 0:
@@ -276,7 +277,7 @@ func (stmt *SelectStmt) WhereStmt() *WhereStmt {
 // Join 添加一条 Join 语句
 func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 	if stmt.joins == nil {
-		stmt.joins = New("")
+		stmt.joins = core.NewBuilder("")
 	}
 
 	stmt.joins.WriteBytes(' ').
@@ -313,7 +314,7 @@ func (stmt *SelectStmt) Asc(col ...string) *SelectStmt {
 
 func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	if stmt.orders == nil {
-		stmt.orders = New("")
+		stmt.orders = core.NewBuilder("")
 	}
 
 	if stmt.orders.Len() == 0 {
@@ -349,7 +350,7 @@ func (stmt *SelectStmt) ForUpdate() *SelectStmt {
 //  table.col
 // table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
-	stmt.group = New(" GROUP BY ").
+	stmt.group = core.NewBuilder(" GROUP BY ").
 		WriteString(col).
 		WriteBytes(' ').
 		String()

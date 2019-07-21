@@ -4,8 +4,10 @@
 
 package sqlbuilder
 
+import "github.com/issue9/orm/v2/core"
+
 // Version 查询数据库服务器的版本信息
-func Version(e Engine) (version string, err error) {
+func Version(e core.Engine) (version string, err error) {
 	if err := e.QueryRow(e.Dialect().VersionSQL()).Scan(&version); err != nil {
 		return "", err
 	}

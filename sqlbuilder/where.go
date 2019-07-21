@@ -4,8 +4,12 @@
 
 package sqlbuilder
 
-// operation
-// =, >=, <=, >, <, <>, between, is null, is not null, like, not like, in, not in
+import "github.com/issue9/orm/v2/core"
+
+// WhereStmter 带 Where 语句的 SQL
+type WhereStmter interface {
+	WhereStmt() *WhereStmt
+}
 
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
@@ -13,13 +17,13 @@ type WhereStmt struct {
 	andGroups []*WhereStmt
 	orGroups  []*WhereStmt
 
-	builder *SQLBuilder
+	builder *core.Builder
 	args    []interface{}
 }
 
 func newWhere() *WhereStmt {
 	return &WhereStmt{
-		builder: New(""),
+		builder: core.NewBuilder(""),
 		args:    make([]interface{}, 0, 10),
 	}
 }

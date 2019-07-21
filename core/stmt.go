@@ -2,8 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// Package stmt 实现自定义的 Stmt 实例
-package stmt
+package core
 
 import (
 	"context"
@@ -20,8 +19,8 @@ type Stmt struct {
 	orders map[string]int
 }
 
-// New 声明 Stmt 实例
-func New(stmt *sql.Stmt, args map[string]int) *Stmt {
+// NewStmt 声明 Stmt 实例
+func NewStmt(stmt *sql.Stmt, args map[string]int) *Stmt {
 	return &Stmt{
 		Stmt:   stmt,
 		orders: args,

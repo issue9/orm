@@ -9,8 +9,8 @@ import (
 	"database/sql"
 	"reflect"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
-	"github.com/issue9/orm/v2/stmt"
 )
 
 // Tx 事务对象
@@ -103,12 +103,12 @@ func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}
 }
 
 // Prepare 将一条 SQL 语句进行预编译。
-func (tx *Tx) Prepare(query string) (*stmt.Stmt, error) {
+func (tx *Tx) Prepare(query string) (*core.Stmt, error) {
 	return tx.PrepareContext(context.Background(), query)
 }
 
 // PrepareContext 将一条 SQL 语句进行预编译。
-func (tx *Tx) PrepareContext(ctx context.Context, query string) (*stmt.Stmt, error) {
+func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
 	query = tx.db.replacer.Replace(query)
 	query, orders := tx.db.Dialect().Prepare(query)
 
@@ -116,7 +116,7 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*stmt.Stmt, err
 	if err != nil {
 		return nil, err
 	}
-	return stmt.New(s, orders), nil
+	return core.NewStmt(s, orders), nil
 }
 
 // Dialect 返回对应的 Dialect 实例

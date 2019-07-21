@@ -8,6 +8,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
+	"github.com/issue9/orm/v2/core"
 )
 
 // InsertStmt 表示插入操作的 SQL 语句
@@ -21,7 +23,7 @@ type InsertStmt struct {
 }
 
 // Insert 声明一条插入语句
-func Insert(e Engine) *InsertStmt {
+func Insert(e core.Engine) *InsertStmt {
 	stmt := &InsertStmt{
 		cols: make([]string, 0, 10),
 		args: make([][]interface{}, 0, 10),
@@ -114,7 +116,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		}
 	}
 
-	builder := New("INSERT INTO ").WriteString(stmt.table)
+	builder := core.NewBuilder("INSERT INTO ").WriteString(stmt.table)
 
 	if stmt.selectStmt != nil {
 		return stmt.fromSelect(builder)
@@ -150,7 +152,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	return builder.String(), args, nil
 }
 
-func (stmt *InsertStmt) fromSelect(builder *SQLBuilder) (string, []interface{}, error) {
+func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []interface{}, error) {
 	builder.WriteBytes('(')
 	if len(stmt.cols) > 0 {
 		for _, col := range stmt.cols {

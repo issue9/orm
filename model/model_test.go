@@ -9,8 +9,8 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // User 带自增和一个唯一约束
@@ -132,33 +132,33 @@ func TestModel_sanitize(t *testing.T) {
 	a := assert.New(t)
 
 	ai := &Column{
-		Column: &sqlbuilder.Column{
-			GoType: sqlbuilder.IntType,
+		Column: &core.Column{
+			GoType: core.IntType,
 		},
 	}
 
 	pk1 := &Column{
-		Column: &sqlbuilder.Column{
-			GoType: sqlbuilder.IntType,
+		Column: &core.Column{
+			GoType: core.IntType,
 		},
 	}
 
 	pk2 := &Column{
-		Column: &sqlbuilder.Column{
-			GoType: sqlbuilder.IntType,
+		Column: &core.Column{
+			GoType: core.IntType,
 		},
 	}
 
 	nullable := &Column{
-		Column: &sqlbuilder.Column{
-			GoType:   sqlbuilder.IntType,
+		Column: &core.Column{
+			GoType:   core.IntType,
 			Nullable: true,
 		},
 	}
 
 	def := &Column{
-		Column: &sqlbuilder.Column{
-			GoType:     sqlbuilder.IntType,
+		Column: &core.Column{
+			GoType:     core.IntType,
 			HasDefault: true,
 			Default:    "1",
 		},
@@ -210,7 +210,7 @@ func TestModel_parseColumn(t *testing.T) {
 
 	// 不存在 struct tag，则以 col.Name 作为键名
 	col := &Column{
-		Column: &sqlbuilder.Column{
+		Column: &core.Column{
 			Name: "xx",
 		},
 	}
@@ -219,13 +219,13 @@ func TestModel_parseColumn(t *testing.T) {
 
 	// name 值过多
 	col = &Column{
-		Column: &sqlbuilder.Column{},
+		Column: &core.Column{},
 	}
 	a.Error(m.parseColumn(col, "name(m1,m2)"))
 
 	// 不存在的属性名称
 	col = &Column{
-		Column: &sqlbuilder.Column{},
+		Column: &core.Column{},
 	}
 	a.Error(m.parseColumn(col, "not-exists-property(p1)"))
 }
@@ -261,8 +261,8 @@ func TestModel_setOCC(t *testing.T) {
 	m := &Model{}
 	col := &Column{
 		model: m,
-		Column: &sqlbuilder.Column{
-			GoType: sqlbuilder.IntType,
+		Column: &core.Column{
+			GoType: core.IntType,
 		},
 	}
 
@@ -300,7 +300,7 @@ func TestModel_setOCC(t *testing.T) {
 	m.OCC = nil
 	m.AI = nil
 	col.Nullable = false
-	col.GoType = sqlbuilder.StringType
+	col.GoType = core.StringType
 	a.Error(m.setOCC(col, []string{"true"}))
 }
 
@@ -309,7 +309,7 @@ func TestModel_setDefault(t *testing.T) {
 	m := &Model{}
 	col := &Column{
 		model:  m,
-		Column: &sqlbuilder.Column{},
+		Column: &core.Column{},
 	}
 
 	// 未指定参数
@@ -332,7 +332,7 @@ func TestModel_setPK(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
 	col := &Column{
-		Column: &sqlbuilder.Column{},
+		Column: &core.Column{},
 	}
 
 	// 过多的参数
@@ -344,8 +344,8 @@ func TestModel_setAI(t *testing.T) {
 	m := &Model{}
 
 	col := &Column{
-		Column: &sqlbuilder.Column{
-			GoType:     sqlbuilder.StringType,
+		Column: &core.Column{
+			GoType:     core.StringType,
 			HasDefault: true,
 		},
 	}
@@ -354,9 +354,9 @@ func TestModel_setAI(t *testing.T) {
 	a.Error(m.setAI(col, []string{"true", "false"}))
 
 	// 列类型只能是整数型
-	col.GoType = sqlbuilder.Float32Type
+	col.GoType = core.Float32Type
 	a.Error(m.setAI(col, nil))
 
-	col.GoType = sqlbuilder.IntType
+	col.GoType = core.IntType
 	a.NotError(m.setAI(col, nil))
 }

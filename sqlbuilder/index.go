@@ -4,14 +4,7 @@
 
 package sqlbuilder
 
-// Index 索引的类型
-type Index int8
-
-// 索引的类型
-const (
-	IndexDefault Index = iota // 普通的索引
-	IndexUnique               // 唯一索纱
-)
+import "github.com/issue9/orm/v2/core"
 
 // CreateIndexStmt 创建索引的语句
 type CreateIndexStmt struct {
@@ -19,23 +12,12 @@ type CreateIndexStmt struct {
 	table string
 	name  string   // 索引名称
 	cols  []string // 索引列
-	typ   Index
-}
-
-func (t Index) String() string {
-	switch t {
-	case IndexDefault:
-		return "INDEX"
-	case IndexUnique:
-		return "UNIQUE INDEX"
-	default:
-		return "<unknown>"
-	}
+	typ   core.Index
 }
 
 // CreateIndex 声明一条 CreateIndexStmt 语句
-func CreateIndex(e Engine) *CreateIndexStmt {
-	stmt := &CreateIndexStmt{typ: IndexDefault}
+func CreateIndex(e core.Engine) *CreateIndexStmt {
+	stmt := &CreateIndexStmt{typ: core.IndexDefault}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 
 	return stmt
@@ -54,7 +36,7 @@ func (stmt *CreateIndexStmt) Name(index string) *CreateIndexStmt {
 }
 
 // Type 指定索引类型
-func (stmt *CreateIndexStmt) Type(t Index) *CreateIndexStmt {
+func (stmt *CreateIndexStmt) Type(t core.Index) *CreateIndexStmt {
 	stmt.typ = t
 	return stmt
 }
@@ -80,12 +62,12 @@ func (stmt *CreateIndexStmt) DDLSQL() ([]string, error) {
 		return nil, ErrColumnsIsEmpty
 	}
 
-	var builder *SQLBuilder
+	var builder *core.Builder
 
-	if stmt.typ == IndexDefault {
-		builder = New("CREATE INDEX ")
+	if stmt.typ == core.IndexDefault {
+		builder = core.NewBuilder("CREATE INDEX ")
 	} else {
-		builder = New("CREATE UNIQUE INDEX ")
+		builder = core.NewBuilder("CREATE UNIQUE INDEX ")
 	}
 
 	builder.WriteString(stmt.name).
@@ -106,7 +88,7 @@ func (stmt *CreateIndexStmt) Reset() {
 	stmt.table = ""
 	stmt.cols = stmt.cols[:0]
 	stmt.name = ""
-	stmt.typ = IndexDefault
+	stmt.typ = core.IndexDefault
 }
 
 // DropIndexStmtHooker DropIndexStmt.DDLSQL 的勾子函数
@@ -122,7 +104,7 @@ type DropIndexStmt struct {
 }
 
 // DropIndex 声明一条 DropIndexStmt 语句
-func DropIndex(e Engine) *DropIndexStmt {
+func DropIndex(e core.Engine) *DropIndexStmt {
 	stmt := &DropIndexStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
@@ -154,7 +136,7 @@ func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
 		return hook.DropIndexStmtHook(stmt)
 	}
 
-	b := New("DROP INDEX ").QuoteKey(stmt.IndexName)
+	b := core.NewBuilder("DROP INDEX ").QuoteKey(stmt.IndexName)
 
 	return []string{b.String()}, nil
 }

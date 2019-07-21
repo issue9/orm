@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/issue9/orm/v2/core"
 	s3 "github.com/issue9/orm/v2/internal/sqlite3"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -37,7 +38,7 @@ var (
 //
 // Meta 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
-func Sqlite3() sqlbuilder.Dialect {
+func Sqlite3() core.Dialect {
 	if sqlite3Inst == nil {
 		sqlite3Inst = &sqlite3{
 			replacer: strings.NewReplacer("{", "`", "}", "`"),
@@ -69,7 +70,7 @@ func (s *sqlite3) Prepare(query string) (string, map[string]int) {
 	return s.replacer.Replace(query), orders
 }
 
-func (s *sqlite3) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
+func (s *sqlite3) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
 	if len(options[sqlite3RowID]) == 1 {
 		val, err := strconv.ParseBool(options[sqlite3RowID][0])
 		if err != nil {
@@ -93,28 +94,28 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 // https://www.sqlite.org/lang_altertable.html
 // BUG: 可能会让视图失去关联
 func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]string, error) {
-	builder := sqlbuilder.New("CONSTRAINT ").
+	builder := core.NewBuilder("CONSTRAINT ").
 		WriteString(stmt.Name)
 	switch stmt.Type {
-	case sqlbuilder.ConstraintUnique:
+	case core.ConstraintUnique:
 		builder.WriteString(" UNIQUE(")
 		for _, col := range stmt.Data {
 			builder.WriteString(col).WriteBytes(',')
 		}
 		builder.TruncateLast(1).
 			WriteBytes(')')
-	case sqlbuilder.ConstraintPK:
+	case core.ConstraintPK:
 		builder.WriteString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
 			builder.WriteString(col).WriteBytes(',')
 		}
 		builder.TruncateLast(1).
 			WriteBytes(')')
-	case sqlbuilder.ConstraintCheck:
+	case core.ConstraintCheck:
 		builder.WriteString(" CHECK(").
 			WriteString(stmt.Data[0]).
 			WriteBytes(')')
-	case sqlbuilder.ConstraintFK:
+	case core.ConstraintFK:
 		builder.WriteString(" FOREIGN KEY(").
 			WriteString(stmt.Data[0]).
 			WriteString(") REFERENCES ").
@@ -183,7 +184,7 @@ func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string,
 	return s.buildSQLS(stmt.Engine(), info, stmt.TableName)
 }
 
-func (s *sqlite3) buildSQLS(e sqlbuilder.Engine, table *s3.Table, tableName string) ([]string, error) {
+func (s *sqlite3) buildSQLS(e core.Engine, table *s3.Table, tableName string) ([]string, error) {
 	ret := make([]string, 0, len(table.Indexes)+1)
 
 	tmpName := "temp_" + tableName + "_temp"
@@ -218,7 +219,7 @@ func (s *sqlite3) buildSQLS(e sqlbuilder.Engine, table *s3.Table, tableName stri
 }
 
 func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	builder := sqlbuilder.New("DELETE FROM ").
+	builder := core.NewBuilder("DELETE FROM ").
 		QuoteKey(stmt.TableName)
 
 	if stmt.AIColumnName == "" {
@@ -241,7 +242,7 @@ func (s *sqlite3) TransactionalDDL() bool {
 }
 
 // 具体规则参照:http://www.sqlite.org/datatype3.html
-func (s *sqlite3) SQLType(col *sqlbuilder.Column) (string, error) {
+func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 	if col == nil {
 		return "", errColIsNil
 	}
@@ -266,17 +267,17 @@ func (s *sqlite3) SQLType(col *sqlbuilder.Column) (string, error) {
 		}
 	case reflect.Struct:
 		switch col.GoType {
-		case sqlbuilder.RawBytesType:
+		case core.RawBytesType:
 			return buildSqlite3Type("BLOB", col), nil
-		case sqlbuilder.NullBoolType:
+		case core.NullBoolType:
 			return buildSqlite3Type("INTEGER", col), nil
-		case sqlbuilder.NullFloat64Type:
+		case core.NullFloat64Type:
 			return buildSqlite3Type("REAL", col), nil
-		case sqlbuilder.NullInt64Type:
+		case core.NullInt64Type:
 			return buildSqlite3Type("INTEGER", col), nil
-		case sqlbuilder.NullStringType:
+		case core.NullStringType:
 			return buildSqlite3Type("TEXT", col), nil
-		case sqlbuilder.TimeType:
+		case core.TimeType:
 			return buildSqlite3Type("TIMESTAMP", col), nil
 		}
 	}
@@ -285,8 +286,8 @@ func (s *sqlite3) SQLType(col *sqlbuilder.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildSqlite3Type(typ string, col *sqlbuilder.Column) string {
-	w := sqlbuilder.New(typ)
+func buildSqlite3Type(typ string, col *core.Column) string {
+	w := core.NewBuilder(typ)
 
 	if col.AI {
 		w.WriteString(" PRIMARY KEY AUTOINCREMENT ")

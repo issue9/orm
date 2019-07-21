@@ -10,18 +10,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v2/core"
 )
 
 // Table 表信息
 type Table struct {
-	Columns     map[string]string                // 列信息，名称=>类型
-	Constraints map[string]sqlbuilder.Constraint // 约束信息，名称=>约束类型
-	Indexes     map[string]sqlbuilder.Index      // 索引信息，名称=>索引类型
+	Columns     map[string]string          // 列信息，名称=>类型
+	Constraints map[string]core.Constraint // 约束信息，名称=>约束类型
+	Indexes     map[string]core.Index      // 索引信息，名称=>索引类型
 }
 
 // ParseCreateTable 分析 create table 的语法
-func ParseCreateTable(table string, engine sqlbuilder.Engine) (*Table, error) {
+func ParseCreateTable(table string, engine core.Engine) (*Table, error) {
 	// show index 语句无法获取 check 约束的相关信息
 	rows, err := engine.Query("SHOW CREATE TABLE `" + table + "`")
 	if err != nil {
@@ -50,8 +50,8 @@ func ParseCreateTable(table string, engine sqlbuilder.Engine) (*Table, error) {
 func parseMysqlCreateTable(tableName string, lines []string) (*Table, error) {
 	table := &Table{
 		Columns:     make(map[string]string, len(lines)),
-		Constraints: make(map[string]sqlbuilder.Constraint, len(lines)),
-		Indexes:     make(map[string]sqlbuilder.Index, len(lines)),
+		Constraints: make(map[string]core.Constraint, len(lines)),
+		Indexes:     make(map[string]core.Index, len(lines)),
 	}
 
 	for _, line := range lines {
@@ -68,19 +68,19 @@ func parseMysqlCreateTable(tableName string, lines []string) (*Table, error) {
 			if index <= 0 {
 				return nil, fmt.Errorf("语法错误:%s", line)
 			}
-			table.Indexes[line[:index]] = sqlbuilder.IndexDefault
+			table.Indexes[line[:index]] = core.IndexDefault
 		case "PRIMARY": // 主键约束，没有约束名
-			table.Constraints[sqlbuilder.PKName(tableName)] = sqlbuilder.ConstraintPK
+			table.Constraints[core.PKName(tableName)] = core.ConstraintPK
 		case "UNIQUE":
 			words := strings.Fields(line)
-			table.Constraints[words[1]] = sqlbuilder.ConstraintUnique
+			table.Constraints[words[1]] = core.ConstraintUnique
 		case "CONSTRAINT": // check 或是 fk 约束
 			words := strings.Fields(line)
 			switch strings.ToUpper(words[1]) {
 			case "FOREIGN":
-				table.Constraints[words[0]] = sqlbuilder.ConstraintFK
+				table.Constraints[words[0]] = core.ConstraintFK
 			case "CHECK":
-				table.Constraints[words[0]] = sqlbuilder.ConstraintCheck
+				table.Constraints[words[0]] = core.ConstraintCheck
 			default:
 				return nil, fmt.Errorf("未知的约束类型:%s", words[1])
 			}

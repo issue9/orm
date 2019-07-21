@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+
+	"github.com/issue9/orm/v2/core"
 )
 
 // CreateTableStmt 创建表的语句
@@ -15,7 +17,7 @@ type CreateTableStmt struct {
 	*ddlStmt
 
 	name    string
-	columns []*Column
+	columns []*core.Column
 	indexes []*indexColumn
 
 	// 约束
@@ -29,17 +31,6 @@ type CreateTableStmt struct {
 	options map[string][]string
 }
 
-// Column 列结构
-type Column struct {
-	Name       string       // 数据库的字段名
-	GoType     reflect.Type // Go 语言中的数据类型
-	AI         bool
-	Nullable   bool
-	HasDefault bool
-	Default    interface{}
-	Length     []int
-}
-
 type foreignKey struct {
 	Name                     string // 约束名
 	Column                   string // 列名
@@ -49,13 +40,13 @@ type foreignKey struct {
 
 type indexColumn struct {
 	Name    string
-	Type    Index
+	Type    core.Index
 	Columns []string
 }
 
 type constraintColumn struct {
 	Name    string
-	Type    Constraint
+	Type    core.Constraint
 	Columns []string
 }
 
@@ -64,7 +55,7 @@ type constraintColumn struct {
 // 执行创建表操作，可能包含了创建索引等多个语句，
 // 如果 e 是一个事务类型，且 e.Dialect() 是支持事务 DDL 的，
 // 那么在执行时，会当作一个事务处理，否则为多个语句依次执行。
-func CreateTable(e Engine) *CreateTableStmt {
+func CreateTable(e core.Engine) *CreateTableStmt {
 	stmt := &CreateTableStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
@@ -90,8 +81,8 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	return stmt
 }
 
-func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *Column {
-	return &Column{
+func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *core.Column {
+	return &core.Column{
 		Name:       name,
 		GoType:     goType,
 		AI:         ai,
@@ -118,7 +109,7 @@ func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, nullable, 
 //
 // name 列名
 // typ 包括了长度 PK 等所有信息，比如 INT NOT NULL PRIMARY KEY AUTO_INCREMENT
-func (stmt *CreateTableStmt) Columns(col ...*Column) *CreateTableStmt {
+func (stmt *CreateTableStmt) Columns(col ...*core.Column) *CreateTableStmt {
 	stmt.columns = append(stmt.columns, col...)
 
 	return stmt
@@ -131,7 +122,7 @@ func (stmt *CreateTableStmt) Columns(col ...*Column) *CreateTableStmt {
 // goType 对应的 Go 类型。
 func (stmt *CreateTableStmt) AutoIncrement(col string, goType reflect.Type) *CreateTableStmt {
 	stmt.ai = &constraintColumn{
-		Type:    ConstraintAI,
+		Type:    core.ConstraintAI,
 		Columns: []string{col},
 	}
 
@@ -148,7 +139,7 @@ func (stmt *CreateTableStmt) PK(col ...string) *CreateTableStmt {
 	}
 
 	stmt.pk = &constraintColumn{
-		Type:    ConstraintPK,
+		Type:    core.ConstraintPK,
 		Columns: col,
 	}
 
@@ -156,7 +147,7 @@ func (stmt *CreateTableStmt) PK(col ...string) *CreateTableStmt {
 }
 
 // Index 添加索引
-func (stmt *CreateTableStmt) Index(typ Index, name string, col ...string) *CreateTableStmt {
+func (stmt *CreateTableStmt) Index(typ core.Index, name string, col ...string) *CreateTableStmt {
 	stmt.indexes = append(stmt.indexes, &indexColumn{
 		Name:    name,
 		Type:    typ,
@@ -170,7 +161,7 @@ func (stmt *CreateTableStmt) Index(typ Index, name string, col ...string) *Creat
 func (stmt *CreateTableStmt) Unique(name string, col ...string) *CreateTableStmt {
 	stmt.constraints = append(stmt.constraints, &constraintColumn{
 		Name:    name,
-		Type:    ConstraintUnique,
+		Type:    core.ConstraintUnique,
 		Columns: col,
 	})
 
@@ -181,7 +172,7 @@ func (stmt *CreateTableStmt) Unique(name string, col ...string) *CreateTableStmt
 func (stmt *CreateTableStmt) Check(name string, expr string) *CreateTableStmt {
 	stmt.constraints = append(stmt.constraints, &constraintColumn{
 		Name:    name,
-		Type:    ConstraintCheck,
+		Type:    core.ConstraintCheck,
 		Columns: []string{expr},
 	})
 
@@ -250,7 +241,7 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 		return nil, ErrColumnsIsEmpty
 	}
 
-	w := New("CREATE TABLE IF NOT EXISTS ").
+	w := core.NewBuilder("CREATE TABLE IF NOT EXISTS ").
 		QuoteKey(stmt.name).
 		WriteBytes('(')
 
@@ -289,12 +280,12 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 }
 
 // 创建标准的几种约束
-func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
+func (stmt *CreateTableStmt) createConstraints(buf *core.Builder) error {
 	for _, c := range stmt.constraints {
 		switch c.Type {
-		case ConstraintCheck:
+		case core.ConstraintCheck:
 			stmt.createCheckSQL(buf, c.Name, c.Columns[0])
-		case ConstraintUnique:
+		case core.ConstraintUnique:
 			stmt.createUniqueSQL(buf, c.Name, c.Columns...)
 		default:
 			return ErrUnknownConstraint
@@ -310,7 +301,7 @@ func (stmt *CreateTableStmt) createConstraints(buf *SQLBuilder) error {
 
 	// primary key
 	if stmt.pk != nil {
-		stmt.createPKSQL(buf, PKName(stmt.name), stmt.pk.Columns...)
+		stmt.createPKSQL(buf, core.PKName(stmt.name), stmt.pk.Columns...)
 		buf.WriteBytes(',')
 	}
 
@@ -345,7 +336,7 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 // create table 语句中 pk 约束的语句
 //
 // CONSTRAINT pk_name PRIMARY KEY (id,lastName)
-func (stmt *CreateTableStmt) createPKSQL(buf *SQLBuilder, name string, cols ...string) {
+func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, name string, cols ...string) {
 	buf.WriteString(" CONSTRAINT ").
 		QuoteKey(name).
 		WriteString(" PRIMARY KEY(")
@@ -359,7 +350,7 @@ func (stmt *CreateTableStmt) createPKSQL(buf *SQLBuilder, name string, cols ...s
 // create table 语句中的 unique 约束部分的语句。
 //
 // CONSTRAINT unique_name UNIQUE (id,lastName)
-func (stmt *CreateTableStmt) createUniqueSQL(buf *SQLBuilder, name string, cols ...string) {
+func (stmt *CreateTableStmt) createUniqueSQL(buf *core.Builder, name string, cols ...string) {
 	buf.WriteString(" CONSTRAINT ").
 		QuoteKey(name).
 		WriteString(" UNIQUE(")
@@ -370,7 +361,7 @@ func (stmt *CreateTableStmt) createUniqueSQL(buf *SQLBuilder, name string, cols 
 }
 
 // create table 语句中 fk 的约束部分的语句
-func (stmt *CreateTableStmt) createFKSQL(buf *SQLBuilder, fk *foreignKey) {
+func (stmt *CreateTableStmt) createFKSQL(buf *core.Builder, fk *foreignKey) {
 	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ").
 		QuoteKey(fk.Name)
@@ -395,7 +386,7 @@ func (stmt *CreateTableStmt) createFKSQL(buf *SQLBuilder, fk *foreignKey) {
 }
 
 // create table 语句中 check 约束部分的语句
-func (stmt *CreateTableStmt) createCheckSQL(buf *SQLBuilder, name, expr string) {
+func (stmt *CreateTableStmt) createCheckSQL(buf *core.Builder, name, expr string) {
 	// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 	buf.WriteString(" CONSTRAINT ").
 		QuoteKey(name).
@@ -417,7 +408,7 @@ type TruncateTableStmt struct {
 }
 
 // TruncateTable 生成清空表语句
-func TruncateTable(e Engine) *TruncateTableStmt {
+func TruncateTable(e core.Engine) *TruncateTableStmt {
 	stmt := &TruncateTableStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
@@ -455,7 +446,7 @@ type DropTableStmt struct {
 }
 
 // DropTable 声明一条删除表的语句
-func DropTable(e Engine) *DropTableStmt {
+func DropTable(e core.Engine) *DropTableStmt {
 	stmt := &DropTableStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
@@ -483,7 +474,7 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 	qs := make([]string, 0, len(stmt.tables))
 
 	for _, table := range stmt.tables {
-		buf := New("DROP TABLE IF EXISTS ").
+		buf := core.NewBuilder("DROP TABLE IF EXISTS ").
 			QuoteKey(table)
 
 		qs = append(qs, buf.String())

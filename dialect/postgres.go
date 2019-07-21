@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -27,7 +28,7 @@ var (
 )
 
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
-func Postgres() sqlbuilder.Dialect {
+func Postgres() core.Dialect {
 	if postgresInst == nil {
 		postgresInst = &postgres{
 			replacer: strings.NewReplacer("{", `"`, "}", `"`),
@@ -94,7 +95,7 @@ func (p *postgres) replace(query string) (string, error) {
 	return string(ret), nil
 }
 
-func (p *postgres) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
+func (p *postgres) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
 	return nil
 }
 
@@ -103,7 +104,7 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 }
 
 func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	builder := sqlbuilder.New("TRUNCATE TABLE ").
+	builder := core.NewBuilder("TRUNCATE TABLE ").
 		QuoteKey(stmt.TableName)
 
 	if stmt.AIColumnName != "" {
@@ -117,7 +118,7 @@ func (p *postgres) TransactionalDDL() bool {
 	return true
 }
 
-func (p *postgres) SQLType(col *sqlbuilder.Column) (string, error) {
+func (p *postgres) SQLType(col *core.Column) (string, error) {
 	if col == nil {
 		return "", errColIsNil
 	}
@@ -160,26 +161,26 @@ func (p *postgres) SQLType(col *sqlbuilder.Column) (string, error) {
 		}
 	case reflect.Struct:
 		switch col.GoType {
-		case sqlbuilder.RawBytesType:
+		case core.RawBytesType:
 			return buildPostgresType("BYTEA", col, 0), nil
-		case sqlbuilder.NullBoolType:
+		case core.NullBoolType:
 			return buildPostgresType("BOOLEAN", col, 0), nil
-		case sqlbuilder.NullFloat64Type:
+		case core.NullFloat64Type:
 			if len(col.Length) != 2 {
 				return "", errMissLength
 			}
 			return buildPostgresType("NUMERIC", col, 2), nil
-		case sqlbuilder.NullInt64Type:
+		case core.NullInt64Type:
 			if col.AI {
 				return buildPostgresType("BIGSERIAL", col, 0), nil
 			}
 			return buildPostgresType("BIGINT", col, 0), nil
-		case sqlbuilder.NullStringType:
+		case core.NullStringType:
 			if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
 				return buildPostgresType("TEXT", col, 0), nil
 			}
 			return buildPostgresType("VARCHAR", col, 1), nil
-		case sqlbuilder.TimeType:
+		case core.TimeType:
 			if len(col.Length) > 0 && (col.Length[0] < 0 || col.Length[0] > 6) {
 				return "", errTimeFractionalInvalid
 			}
@@ -191,8 +192,8 @@ func (p *postgres) SQLType(col *sqlbuilder.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildPostgresType(typ string, col *sqlbuilder.Column, l int) string {
-	w := sqlbuilder.New(typ)
+func buildPostgresType(typ string, col *core.Column, l int) string {
+	w := core.NewBuilder(typ)
 
 	switch {
 	case l == 1 && len(col.Length) > 0:

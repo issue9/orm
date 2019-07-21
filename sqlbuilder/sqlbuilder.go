@@ -5,17 +5,7 @@
 // Package sqlbuilder 提供一套通过字符串拼接来构成 SQL 语句的工具。
 package sqlbuilder
 
-import (
-	"bytes"
-	"errors"
-)
-
-// 作用于表名，列名等非关键字上的引号占位符。
-// 在 Dialect.SQL 中会自动替换成该数据相应的符号。
-const (
-	QuoteLeft  = '{'
-	QuoteRight = '}'
-)
+import "errors"
 
 var (
 	// ErrTableIsEmpty 未指定表名，任何 SQL 语句中，
@@ -51,83 +41,3 @@ var (
 	// ErrUnionColumnNotMatch 在 Union 中，各个 select 中的列长度不相同。
 	ErrUnionColumnNotMatch = errors.New("union 列长度不相同")
 )
-
-// SQLBuilder 对 bytes.Buffer 的一个简单封装。
-// 当 Write* 系列函数出错时，直接 panic。
-type SQLBuilder bytes.Buffer
-
-// New 声明一个新的 SQLBuilder 实例
-func New(str string) *SQLBuilder {
-	return (*SQLBuilder)(bytes.NewBufferString(str))
-}
-
-func (b *SQLBuilder) buffer() *bytes.Buffer {
-	return (*bytes.Buffer)(b)
-}
-
-// WriteString 写入一字符串
-func (b *SQLBuilder) WriteString(str string) *SQLBuilder {
-	if _, err := b.buffer().WriteString(str); err != nil {
-		panic(err)
-	}
-
-	return b
-}
-
-func (b *SQLBuilder) writeByte(c byte) {
-	if err := b.buffer().WriteByte(c); err != nil {
-		panic(err)
-	}
-}
-
-// WriteBytes 写入多个字符
-func (b *SQLBuilder) WriteBytes(c ...byte) *SQLBuilder {
-	for _, bb := range c {
-		b.writeByte(bb)
-	}
-	return b
-}
-
-// Quote 给 str 左右添加 l 和 r 两个字符
-func (b *SQLBuilder) Quote(str string, l, r byte) *SQLBuilder {
-	return b.WriteBytes(l).WriteString(str).WriteBytes(r)
-}
-
-// QuoteKey 给 str 左右添加 QuoteLeft 和 QuoteRight 两个字符
-func (b *SQLBuilder) QuoteKey(str string) *SQLBuilder {
-	return b.Quote(str, QuoteLeft, QuoteRight)
-}
-
-// Reset 重置内容
-func (b *SQLBuilder) Reset() *SQLBuilder {
-	b.buffer().Reset()
-	return b
-}
-
-// TruncateLast 去掉最后几个字符
-func (b *SQLBuilder) TruncateLast(n int) *SQLBuilder {
-	b.buffer().Truncate(b.Len() - n)
-
-	return b
-}
-
-// String 获取表示的字符串
-func (b *SQLBuilder) String() string {
-	return b.buffer().String()
-}
-
-// Bytes 获取表示的字符串
-func (b *SQLBuilder) Bytes() []byte {
-	return b.buffer().Bytes()
-}
-
-// Len 获取长度
-func (b *SQLBuilder) Len() int {
-	return b.buffer().Len()
-}
-
-// Append 追加加一个 SQLBuilder 的内容
-func (b *SQLBuilder) Append(v *SQLBuilder) *SQLBuilder {
-	b.buffer().WriteString(v.String())
-	return b
-}

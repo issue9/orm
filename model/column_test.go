@@ -10,13 +10,13 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v2/core"
 )
 
 func TestColumn_SetLen(t *testing.T) {
 	a := assert.New(t)
 	col := &Column{
-		Column: &sqlbuilder.Column{},
+		Column: &core.Column{},
 	}
 
 	a.NotError(col.setLen([]string{})).Empty(col.Length)
@@ -31,10 +31,10 @@ func TestColumn_SetLen(t *testing.T) {
 func TestColumn_IsZero(t *testing.T) {
 	a := assert.New(t)
 	col := &Column{
-		Column: &sqlbuilder.Column{},
+		Column: &core.Column{},
 	}
 
-	col.GoType = sqlbuilder.IntType
+	col.GoType = core.IntType
 	col.zero = reflect.Zero(col.GoType).Interface()
 	a.True(col.IsZero(reflect.ValueOf(int(0))))
 	a.False(col.IsZero(reflect.ValueOf(1)))
@@ -45,7 +45,7 @@ func TestColumn_IsZero(t *testing.T) {
 	a.True(col.IsZero(reflect.ValueOf([]byte(""))))
 	a.False(col.IsZero(reflect.ValueOf([]byte{'0'})))
 
-	col.GoType = sqlbuilder.RawBytesType
+	col.GoType = core.RawBytesType
 	col.zero = reflect.Zero(col.GoType).Interface()
 	a.True(col.IsZero(reflect.ValueOf([]byte{})))
 	a.True(col.IsZero(reflect.ValueOf([]byte(""))))
@@ -56,8 +56,8 @@ func TestColumn_checkLen(t *testing.T) {
 	a := assert.New(t)
 
 	col := &Column{
-		Column: &sqlbuilder.Column{
-			GoType: sqlbuilder.StringType,
+		Column: &core.Column{
+			GoType: core.StringType,
 			Length: []int{-1},
 		},
 	}
@@ -69,7 +69,7 @@ func TestColumn_checkLen(t *testing.T) {
 	col.Length[0] = -2
 	a.Error(col.checkLen())
 
-	col.GoType = sqlbuilder.IntType
+	col.GoType = core.IntType
 	col.Length[0] = -2
 	a.Error(col.checkLen())
 
@@ -84,7 +84,7 @@ func TestColumn_SetNullable(t *testing.T) {
 	a := assert.New(t)
 
 	col := &Column{
-		Column: &sqlbuilder.Column{},
+		Column: &core.Column{},
 	}
 
 	a.False(col.Nullable)

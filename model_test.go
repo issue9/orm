@@ -8,9 +8,9 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/conv"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/test"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // Group 带有自增 ID 的普通表结构
@@ -75,7 +75,7 @@ func (m *Account) Meta() string {
 }
 
 // table 表中是否存在 size 条记录，若不是，则触发 error
-func hasCount(e sqlbuilder.Engine, a *assert.Assertion, table string, size int) {
+func hasCount(e core.Engine, a *assert.Assertion, table string, size int) {
 	rows, err := e.Query("SELECT COUNT(*) as cnt FROM #" + table)
 	a.NotError(err).
 		NotNil(rows)

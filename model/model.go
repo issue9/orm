@@ -12,9 +12,9 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/tags"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
@@ -141,13 +141,13 @@ func (ms *Models) addModel(goType reflect.Type, m *Model) error {
 	}
 
 	if m.AI != nil {
-		if err := ms.addNames(sqlbuilder.AIName(m.Name)); err != nil {
+		if err := ms.addNames(core.AIName(m.Name)); err != nil {
 			return err
 		}
 	}
 
 	if len(m.PK) > 0 {
-		if err := ms.addNames(sqlbuilder.PKName(m.Name)); err != nil {
+		if err := ms.addNames(core.PKName(m.Name)); err != nil {
 			return err
 		}
 	}

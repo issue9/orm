@@ -5,10 +5,7 @@
 package sqlbuilder_test
 
 import (
-	"testing"
-
-	"github.com/issue9/assert"
-
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -28,19 +25,19 @@ func (u *user) Meta() string {
 func initDB(t *test.Test) {
 	creator := sqlbuilder.CreateTable(t.DB).
 		Table("users").
-		AutoIncrement("id", sqlbuilder.Int64Type).
-		Column("name", sqlbuilder.StringType, false, false, nil, 20).
-		Column("age", sqlbuilder.IntType, true, false, nil).
-		Column("version", sqlbuilder.Int64Type, false, true, 0).
+		AutoIncrement("id", core.Int64Type).
+		Column("name", core.StringType, false, false, nil, 20).
+		Column("age", core.IntType, true, false, nil).
+		Column("version", core.Int64Type, false, true, 0).
 		Unique("unique_users_id", "id")
 	err := creator.Exec()
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	creator.Reset().Table("info").
-		Column("uid", sqlbuilder.Int64Type, false, false, nil).
-		Column("tel", sqlbuilder.StringType, false, false, nil, 11).
-		Column("nickname", sqlbuilder.StringType, false, false, nil, 20).
-		Column("address", sqlbuilder.StringType, false, false, nil, 1024).
+		Column("uid", core.Int64Type, false, false, nil).
+		Column("tel", core.StringType, false, false, nil, 11).
+		Column("nickname", core.StringType, false, false, nil, 20).
+		Column("address", core.StringType, false, false, nil, 1024).
 		//Column("birthday", reflect.TypeOf(time.Time{}), false, true, time.Time{}).
 		PK("tel", "nickname").
 		ForeignKey("info_fk", "uid", "users", "id", "CASCADE", "CASCADE")
@@ -88,25 +85,4 @@ func clearDB(t *test.Test) {
 		Table("users").
 		Exec()
 	t.NotError(err)
-}
-
-func TestSQLBuilder(t *testing.T) {
-	a := assert.New(t)
-
-	b := sqlbuilder.New("")
-	b.WriteBytes('1')
-	b.WriteString("23")
-
-	a.Equal("123", b.String())
-	a.Equal(3, b.Len())
-
-	b.Reset()
-	a.Equal(b.String(), "")
-	a.Equal(b.Len(), 0)
-
-	b.WriteBytes('3').WriteString("21")
-	a.Equal(b.String(), "321")
-
-	b.TruncateLast(1)
-	a.Equal(b.String(), "32").Equal(2, b.Len())
 }

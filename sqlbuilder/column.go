@@ -4,18 +4,22 @@
 
 package sqlbuilder
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/issue9/orm/v2/core"
+)
 
 // AddColumnStmt 添加列
 type AddColumnStmt struct {
 	*ddlStmt
 
 	table  string
-	column *Column
+	column *core.Column
 }
 
 // AddColumn 声明一条添加列的语句
-func AddColumn(e Engine) *AddColumnStmt {
+func AddColumn(e core.Engine) *AddColumnStmt {
 	stmt := &AddColumnStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
@@ -54,7 +58,7 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 		return nil, err
 	}
 
-	buf := New("ALTER TABLE ").
+	buf := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.table).
 		WriteString(" ADD ").
 		QuoteKey(stmt.column.Name).
@@ -85,7 +89,7 @@ type DropColumnStmt struct {
 }
 
 // DropColumn 声明一条删除列的语句
-func DropColumn(e Engine) *DropColumnStmt {
+func DropColumn(e core.Engine) *DropColumnStmt {
 	stmt := &DropColumnStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
@@ -114,7 +118,7 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 		return hook.DropColumnStmtHook(stmt)
 	}
 
-	buf := New("ALTER TABLE ").
+	buf := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
 		WriteString(" DROP COLUMN ").
 		QuoteKey(stmt.ColumnName)

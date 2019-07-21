@@ -9,19 +9,10 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
-
-func TestPKName(t *testing.T) {
-	a := assert.New(t)
-	a.Equal("xx_pk", sqlbuilder.PKName("xx"))
-}
-
-func TestAIName(t *testing.T) {
-	a := assert.New(t)
-	a.Equal("xx_ai", sqlbuilder.AIName("xx"))
-}
 
 func TestConstraint(t *testing.T) {
 	a := assert.New(t)
@@ -105,7 +96,7 @@ func TestAddConstraintStmt_PK(t *testing.T) {
 
 		err = sqlbuilder.DropConstraint(t.DB).
 			Table("info").
-			Constraint(sqlbuilder.PKName("info")).
+			Constraint(core.PKName("info")).
 			Exec()
 		a.NotError(err)
 
@@ -143,16 +134,4 @@ func TestAddConstraintStmt_FK(t *testing.T) {
 			Exec()
 		t.NotError(err)
 	})
-}
-
-func TestConstraint_String(t *testing.T) {
-	a := assert.New(t)
-
-	a.NotEqual(sqlbuilder.ConstraintAI.String(), "<unknown>")
-	a.NotEqual(sqlbuilder.ConstraintFK.String(), "<unknown>")
-	a.NotEqual(sqlbuilder.ConstraintPK.String(), "<unknown>")
-	a.NotEqual(sqlbuilder.ConstraintUnique.String(), "<unknown>")
-	a.NotEqual(sqlbuilder.ConstraintCheck.String(), "<unknown>")
-	a.Equal(sqlbuilder.Constraint(-1).String(), "<unknown>")
-	a.Equal(sqlbuilder.Constraint(100).String(), "<unknown>")
 }

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v2/core"
 )
 
 var (
@@ -120,7 +120,7 @@ func replaceNamedArgs(query string, args []interface{}) string {
 // PrepareNamedArgs 对命名参数进行预处理
 func PrepareNamedArgs(query string) (string, map[string]int) {
 	orders := map[string]int{}
-	builder := sqlbuilder.New("")
+	builder := core.NewBuilder("")
 	start := -1
 	cnt := 0
 

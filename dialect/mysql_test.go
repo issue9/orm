@@ -10,6 +10,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/dialect"
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/internal/test"
@@ -115,7 +116,7 @@ func TestMysql_TruncateTableStmtHook(t *testing.T) {
 
 func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
-	builder := sqlbuilder.New("")
+	builder := core.NewBuilder("")
 	a.NotNil(builder)
 	var m = dialect.Mysql()
 
@@ -141,153 +142,153 @@ func TestMysql_SQLType(t *testing.T) {
 			err: true,
 		},
 		{ // col.GoType == nil
-			col: &sqlbuilder.Column{GoType: nil},
+			col: &core.Column{GoType: nil},
 			err: true,
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: sqlbuilder.IntType},
+			col:     &core.Column{GoType: core.IntType},
 			SQLType: "BIGINT NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType:  sqlbuilder.Int16Type,
+			col: &core.Column{
+				GoType:  core.Int16Type,
 				Default: 5,
 			},
 			SQLType: "mediumint NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType:     sqlbuilder.Int32Type,
+			col: &core.Column{
+				GoType:     core.Int32Type,
 				HasDefault: true,
 				Default:    5,
 			},
 			SQLType: "INT NOT NULL DEFAULT '5'",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: sqlbuilder.BoolType},
+			col:     &core.Column{GoType: core.BoolType},
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: sqlbuilder.TimeType},
+			col:     &core.Column{GoType: core.TimeType},
 			SQLType: "DATETIME NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.TimeType,
+			col: &core.Column{
+				GoType: core.TimeType,
 				Length: []int{-1},
 			},
 			err: true,
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.TimeType,
+			col: &core.Column{
+				GoType: core.TimeType,
 				Length: []int{7},
 			},
 			err: true,
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: sqlbuilder.Uint16Type},
+			col:     &core.Column{GoType: core.Uint16Type},
 			SQLType: "MEDIUMINT UNSIGNED NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: sqlbuilder.Int8Type},
+			col:     &core.Column{GoType: core.Int8Type},
 			SQLType: "SMALLINT NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: reflect.TypeOf([]byte{'a', 'b', 'c'})},
+			col:     &core.Column{GoType: reflect.TypeOf([]byte{'a', 'b', 'c'})},
 			SQLType: "BLOB NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.IntType,
+			col: &core.Column{
+				GoType: core.IntType,
 				Length: []int{5, 6},
 			},
 			SQLType: "BIGINT(5) NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.StringType,
+			col: &core.Column{
+				GoType: core.StringType,
 				Length: []int{5, 6},
 			},
 			SQLType: "VARCHAR(5) NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.StringType,
+			col: &core.Column{
+				GoType: core.StringType,
 				Length: []int{-1},
 			},
 			SQLType: "LONGTEXT NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.Float32Type,
+			col: &core.Column{
+				GoType: core.Float32Type,
 				Length: []int{5, 6},
 			},
 			SQLType: "DOUBLE(5,6) NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.Float64Type,
+			col: &core.Column{
+				GoType: core.Float64Type,
 				Length: []int{5},
 			},
 			err: true,
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.NullFloat64Type,
+			col: &core.Column{
+				GoType: core.NullFloat64Type,
 				Length: []int{5},
 			},
 			err: true,
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.NullFloat64Type,
+			col: &core.Column{
+				GoType: core.NullFloat64Type,
 				Length: []int{5, 7},
 			},
 			SQLType: "DOUBLE(5,7) NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.NullInt64Type,
+			col: &core.Column{
+				GoType: core.NullInt64Type,
 				Length: []int{5},
 			},
 			SQLType: "BIGINT(5) NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.NullStringType,
+			col: &core.Column{
+				GoType: core.NullStringType,
 				Length: []int{5},
 			},
 			SQLType: "VARCHAR(5) NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullStringType},
+			col:     &core.Column{GoType: core.NullStringType},
 			SQLType: "LONGTEXT NOT NULL",
 		},
 		{
-			col:     &sqlbuilder.Column{GoType: sqlbuilder.NullBoolType},
+			col:     &core.Column{GoType: core.NullBoolType},
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{ // sql.RawBytes 会被转换成 []byte
-			col:     &sqlbuilder.Column{GoType: sqlbuilder.RawBytesType},
+			col:     &core.Column{GoType: core.RawBytesType},
 			SQLType: "BLOB NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.Int64Type,
+			col: &core.Column{
+				GoType: core.Int64Type,
 				AI:     true,
 			},
 			SQLType: "BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{
-				GoType: sqlbuilder.Uint64Type,
+			col: &core.Column{
+				GoType: core.Uint64Type,
 				AI:     true,
 			},
 			SQLType: "BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT NOT NULL",
 		},
 		{
-			col: &sqlbuilder.Column{GoType: reflect.TypeOf(struct{}{})},
+			col: &core.Column{GoType: reflect.TypeOf(struct{}{})},
 			err: true,
 		},
 	}

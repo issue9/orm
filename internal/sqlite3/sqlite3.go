@@ -11,7 +11,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v2/core"
 )
 
 var (
@@ -38,19 +38,19 @@ type Table struct {
 // 在 sqlite 中，索引是在创建表之后，别外提交的。
 // 在修改表结构时，需要保存索引，方便之后重建。
 type Index struct {
-	Type sqlbuilder.Index
+	Type core.Index
 	SQL  string // 创建索引的语句
 }
 
 // Constraint 从 create table 语句解析出来的约束信息
 type Constraint struct {
-	Type sqlbuilder.Constraint
+	Type core.Constraint
 	SQL  string // 在 Create Table 中的语句
 }
 
 // CreateTableSQL 生成 create table 语句
 func (t Table) CreateTableSQL(name string) string {
-	builder := sqlbuilder.New("CREATE TABLE ").
+	builder := core.NewBuilder("CREATE TABLE ").
 		WriteString(name).
 		WriteBytes('(')
 
@@ -68,7 +68,7 @@ func (t Table) CreateTableSQL(name string) string {
 }
 
 // ParseCreateTable 从 sqlite_master 中获取 create table 并分析其内容
-func ParseCreateTable(table string, engine sqlbuilder.Engine) (*Table, error) {
+func ParseCreateTable(table string, engine core.Engine) (*Table, error) {
 	tbl := &Table{
 		Columns:     make(map[string]string, 10),
 		Constraints: make(map[string]*Constraint, 5),
@@ -87,7 +87,7 @@ func ParseCreateTable(table string, engine sqlbuilder.Engine) (*Table, error) {
 }
 
 // https://www.sqlite.org/draft/lang_createtable.html
-func parseCreateTable(table *Table, tableName string, engine sqlbuilder.Engine) error {
+func parseCreateTable(table *Table, tableName string, engine core.Engine) error {
 	rows, err := engine.Query(fmt.Sprintf(queryCreateTable, tableName))
 	if err != nil {
 		return err
@@ -125,13 +125,13 @@ func parseCreateTable(table *Table, tableName string, engine sqlbuilder.Engine) 
 			cont := &Constraint{SQL: line}
 			switch words[1] {
 			case "PRIMARY":
-				cont.Type = sqlbuilder.ConstraintPK
+				cont.Type = core.ConstraintPK
 			case "UNIQUE":
-				cont.Type = sqlbuilder.ConstraintUnique
+				cont.Type = core.ConstraintUnique
 			case "CHECK":
-				cont.Type = sqlbuilder.ConstraintCheck
+				cont.Type = core.ConstraintCheck
 			case "FOREIGN":
-				cont.Type = sqlbuilder.ConstraintFK
+				cont.Type = core.ConstraintFK
 			default:
 				return fmt.Errorf("未知的约束名：%s", line)
 			}
@@ -145,7 +145,7 @@ func parseCreateTable(table *Table, tableName string, engine sqlbuilder.Engine) 
 	return nil
 }
 
-func parseIndexes(table *Table, tableName string, engine sqlbuilder.Engine) error {
+func parseIndexes(table *Table, tableName string, engine core.Engine) error {
 	// 通过 sql IS NOT NULL 过滤掉自动生成的索引值
 	rows, err := engine.Query(fmt.Sprintf(queryIndex, tableName))
 	if err != nil {
@@ -164,7 +164,7 @@ func parseIndexes(table *Table, tableName string, engine sqlbuilder.Engine) erro
 		}
 		table.Indexes[name] = &Index{
 			SQL:  sql,
-			Type: sqlbuilder.IndexDefault,
+			Type: core.IndexDefault,
 		}
 	}
 

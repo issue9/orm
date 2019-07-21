@@ -2,62 +2,33 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlbuilder
+// Package core 核心功能
+package core
 
 import (
 	"context"
 	"database/sql"
-	"reflect"
-	"time"
-
-	"github.com/issue9/orm/v2/stmt"
 )
 
-// CreateTableStmt.Column 用到的数据类型。
-var (
-	BoolType    = reflect.TypeOf(true)
-	IntType     = reflect.TypeOf(int(1))
-	Int8Type    = reflect.TypeOf(int8(1))
-	Int16Type   = reflect.TypeOf(int16(1))
-	Int32Type   = reflect.TypeOf(int32(1))
-	Int64Type   = reflect.TypeOf(int64(1))
-	UintType    = reflect.TypeOf(uint(1))
-	Uint8Type   = reflect.TypeOf(uint8(1))
-	Uint16Type  = reflect.TypeOf(uint16(1))
-	Uint32Type  = reflect.TypeOf(uint32(1))
-	Uint64Type  = reflect.TypeOf(uint64(1))
-	Float32Type = reflect.TypeOf(float32(1))
-	Float64Type = reflect.TypeOf(float64(1))
-	StringType  = reflect.TypeOf("")
-
-	NullStringType  = reflect.TypeOf(sql.NullString{})
-	NullInt64Type   = reflect.TypeOf(sql.NullInt64{})
-	NullBoolType    = reflect.TypeOf(sql.NullBool{})
-	NullFloat64Type = reflect.TypeOf(sql.NullFloat64{})
-	RawBytesType    = reflect.TypeOf(sql.RawBytes{})
-	TimeType        = reflect.TypeOf(time.Time{})
-
-	//UintptrType=reflect.TypeOf(uintptr(1))
-	//Complex64Type=reflect.TypeOf(complex64(1,1))
-	//Complex128Type=reflect.TypeOf(complex128(1,1))
+const (
+	defaultAINameSuffix = "_ai"
+	defaultPKNameSuffix = "_pk"
 )
 
-// SQLer 定义 SQL 语句的基本接口
-type SQLer interface {
-	SQL() (query string, args []interface{}, err error)
-}
-
-// DDLSQLer SQL 中 DDL 语句的基本接口
+// PKName 生成主键约束的名称
 //
-// 大部分数据的 DDL 操作是有多条语句组成，比如 CREATE TABLE
-// 可能包含了额外的定义信息。
-type DDLSQLer interface {
-	DDLSQL() ([]string, error)
+// 各个数据库对主键约束的规定并不统一，mysql 会忽略约束名，
+// 为了统一，主键约束的名称统一由此函数生成，用户不能别外指定。
+func PKName(table string) string {
+	return table + defaultPKNameSuffix
 }
 
-// WhereStmter 带 Where 语句的 SQL
-type WhereStmter interface {
-	WhereStmt() *WhereStmt
+// AIName 生成 AI 约束名称
+//
+// 自增约束的实现，各个数据库并不相同，诸如 mysql 直接加在列信息上，
+// 而 postgres 会创建 sequence，需要指定 sequence 名称。
+func AIName(table string) string {
+	return table + defaultAINameSuffix
 }
 
 // Engine 数据库执行的基本接口。
@@ -78,9 +49,9 @@ type Engine interface {
 
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 
-	Prepare(query string) (*stmt.Stmt, error)
+	Prepare(query string) (*Stmt, error)
 
-	PrepareContext(ctx context.Context, query string) (*stmt.Stmt, error)
+	PrepareContext(ctx context.Context, query string) (*Stmt, error)
 }
 
 // Dialect 接口用于描述与数据库和驱动相关的一些语言特性。
@@ -132,7 +103,7 @@ type Dialect interface {
 	LastInsertIDSQL(table, col string) (sql string, append bool)
 
 	// 创建表时根据附加信息返回的部分 SQL 语句
-	CreateTableOptionsSQL(sql *SQLBuilder, meta map[string][]string) error
+	CreateTableOptionsSQL(sql *Builder, meta map[string][]string) error
 
 	// 对预编译的内容进行处理。
 	//

@@ -9,10 +9,10 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/internal/mysql"
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/internal/test"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 var mysqlCreateTable = []string{`CREATE TABLE fk_table(
@@ -68,13 +68,13 @@ func TestParseMysqlCreateTable(t *testing.T) {
 		sqltest.Equal(a, table.Columns["email"], "varchar(200) NOT NULL")
 		sqltest.Equal(a, table.Columns["password"], "varchar(128) NOT NULL")
 		t.Equal(len(table.Constraints), 6).
-			Equal(table.Constraints["u_user_xx1"], sqlbuilder.ConstraintUnique).
-			Equal(table.Constraints["u_user_email1"], sqlbuilder.ConstraintUnique).
-			Equal(table.Constraints["unique_id"], sqlbuilder.ConstraintUnique).
-			Equal(table.Constraints["xxx_fk"], sqlbuilder.ConstraintFK).
-			Equal(table.Constraints["xxx"], sqlbuilder.ConstraintCheck).
-			Equal(table.Constraints["users_pk"], sqlbuilder.ConstraintPK) // 主键约束名为固定值
+			Equal(table.Constraints["u_user_xx1"], core.ConstraintUnique).
+			Equal(table.Constraints["u_user_email1"], core.ConstraintUnique).
+			Equal(table.Constraints["unique_id"], core.ConstraintUnique).
+			Equal(table.Constraints["xxx_fk"], core.ConstraintFK).
+			Equal(table.Constraints["xxx"], core.ConstraintCheck).
+			Equal(table.Constraints["users_pk"], core.ConstraintPK) // 主键约束名为固定值
 		t.Equal(len(table.Indexes), 1).
-			Equal(table.Indexes["index_user_mobile"], sqlbuilder.IndexDefault)
+			Equal(table.Indexes["index_user_mobile"], core.IndexDefault)
 	}, "mysql")
 }

@@ -8,12 +8,12 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v2/core"
 )
 
 // Column 列结构
 type Column struct {
-	*sqlbuilder.Column
+	*core.Column
 
 	model  *Model
 	zero   interface{} // GoType 的零值
@@ -22,7 +22,7 @@ type Column struct {
 
 func (m *Model) newColumn(field reflect.StructField) *Column {
 	return &Column{
-		Column: &sqlbuilder.Column{
+		Column: &core.Column{
 			Name:   field.Name,
 			GoType: field.Type,
 		},

@@ -4,6 +4,8 @@
 
 package sqlbuilder
 
+import "github.com/issue9/orm/v2/core"
+
 // DeleteStmt 表示删除操作的 SQL 语句
 type DeleteStmt struct {
 	*execStmt
@@ -12,7 +14,7 @@ type DeleteStmt struct {
 }
 
 // Delete 声明一条删除语句
-func Delete(e Engine) *DeleteStmt {
+func Delete(e core.Engine) *DeleteStmt {
 	stmt := &DeleteStmt{}
 	stmt.execStmt = newExecStmt(e, stmt)
 	stmt.where = newWhere()
@@ -37,7 +39,7 @@ func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 
-	builder := New("DELETE FROM ").
+	builder := core.NewBuilder("DELETE FROM ").
 		QuoteKey(stmt.table).
 		WriteString(" WHERE ").
 		WriteString(query)

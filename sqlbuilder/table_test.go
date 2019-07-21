@@ -9,6 +9,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -27,11 +28,11 @@ func TestCreateTableStmt(t *testing.T) {
 	suite.ForEach(func(t *test.Test) {
 		stmt := sqlbuilder.CreateTable(t.DB).
 			Table(table).
-			AutoIncrement("id", sqlbuilder.IntType).
-			Column("age", sqlbuilder.IntType, false, false, nil).
-			Column("name", sqlbuilder.StringType, true, true, "", 100).
-			Column("address", sqlbuilder.StringType, false, false, nil, 100).
-			Index(sqlbuilder.IndexDefault, "index_index", "name", "address").
+			AutoIncrement("id", core.IntType).
+			Column("age", core.IntType, false, false, nil).
+			Column("name", core.StringType, true, true, "", 100).
+			Column("address", core.StringType, false, false, nil, 100).
+			Index(core.IndexDefault, "index_index", "name", "address").
 			Unique("u_age", "name", "address").
 			Check("age_gt_0", "age>0")
 		err := stmt.Exec()
@@ -40,13 +41,13 @@ func TestCreateTableStmt(t *testing.T) {
 		a.Panic(func() {
 			stmt.Reset().
 				Table("users").
-				AutoIncrement("id", sqlbuilder.IntType).
+				AutoIncrement("id", core.IntType).
 				PK("id")
 		})
 
 		// 约束名重和昨
 		err = stmt.Reset().Table("users").
-			Column("name", sqlbuilder.StringType, false, false, nil).
+			Column("name", core.StringType, false, false, nil).
 			Unique("c1", "name").
 			Check("c1", "name IS NOT NULL").
 			Exec()

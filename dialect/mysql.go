@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/issue9/orm/v2/core"
 	my "github.com/issue9/orm/v2/internal/mysql"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -38,7 +39,7 @@ var (
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql() sqlbuilder.Dialect {
+func Mysql() core.Dialect {
 	if mysqlInst == nil {
 		mysqlInst = &mysql{
 			replacer: strings.NewReplacer("{", "`", "}", "`"),
@@ -70,7 +71,7 @@ func (m *mysql) Prepare(query string) (string, map[string]int) {
 	return m.replacer.Replace(query), orders
 }
 
-func (m *mysql) CreateTableOptionsSQL(w *sqlbuilder.SQLBuilder, options map[string][]string) error {
+func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
 	if len(options[mysqlEngine]) == 1 {
 		w.WriteString(" ENGINE=")
 		w.WriteString(options[mysqlEngine][0])
@@ -105,17 +106,17 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 		return nil, fmt.Errorf("不存在的约束:%s", stmt.Name)
 	}
 
-	builder := sqlbuilder.New("ALTER TABLE ").
+	builder := core.NewBuilder("ALTER TABLE ").
 		WriteString(stmt.TableName).
 		WriteString(" DROP ")
 	switch constraintType {
-	case sqlbuilder.ConstraintCheck:
+	case core.ConstraintCheck:
 		builder.WriteString(" CHECK ").WriteString(stmt.Name)
-	case sqlbuilder.ConstraintFK:
+	case core.ConstraintFK:
 		builder.WriteString(" FOREIGN KEY ").WriteString(stmt.Name)
-	case sqlbuilder.ConstraintPK:
+	case core.ConstraintPK:
 		builder.WriteString(" PRIMARY KEY")
-	case sqlbuilder.ConstraintUnique:
+	case core.ConstraintUnique:
 		builder.WriteString(" INDEX ").WriteString(stmt.Name)
 	default:
 		panic(fmt.Sprintf("不存在的约束类型:%s", constraintType))
@@ -125,7 +126,7 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 }
 
 func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
-	builder := sqlbuilder.New("ALTER TABLE ").
+	builder := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
 		WriteString(" DROP INDEX ").
 		QuoteKey(stmt.IndexName)
@@ -134,7 +135,7 @@ func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, err
 }
 
 func (m *mysql) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	builder := sqlbuilder.New("TRUNCATE TABLE ").QuoteKey(stmt.TableName)
+	builder := core.NewBuilder("TRUNCATE TABLE ").QuoteKey(stmt.TableName)
 
 	return []string{builder.String()}, nil
 }
@@ -143,7 +144,7 @@ func (m *mysql) TransactionalDDL() bool {
 	return false
 }
 
-func (m *mysql) SQLType(col *sqlbuilder.Column) (string, error) {
+func (m *mysql) SQLType(col *core.Column) (string, error) {
 	if col == nil {
 		return "", errColIsNil
 	}
@@ -187,23 +188,23 @@ func (m *mysql) SQLType(col *sqlbuilder.Column) (string, error) {
 		}
 	case reflect.Struct:
 		switch col.GoType {
-		case sqlbuilder.RawBytesType:
+		case core.RawBytesType:
 			return buildMysqlType("BLOB", col, false, 0), nil
-		case sqlbuilder.NullBoolType:
+		case core.NullBoolType:
 			return buildMysqlType("BOOLEAN", col, false, 0), nil
-		case sqlbuilder.NullFloat64Type:
+		case core.NullFloat64Type:
 			if len(col.Length) != 2 {
 				return "", errMissLength
 			}
 			return buildMysqlType("DOUBLE", col, false, 2), nil
-		case sqlbuilder.NullInt64Type:
+		case core.NullInt64Type:
 			return buildMysqlType("BIGINT", col, false, 1), nil
-		case sqlbuilder.NullStringType:
+		case core.NullStringType:
 			if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
 				return buildMysqlType("LONGTEXT", col, false, 0), nil
 			}
 			return buildMysqlType("VARCHAR", col, false, 1), nil
-		case sqlbuilder.TimeType:
+		case core.TimeType:
 			if len(col.Length) > 0 && (col.Length[0] < 0 || col.Length[0] > 6) {
 				return "", errTimeFractionalInvalid
 			}
@@ -215,8 +216,8 @@ func (m *mysql) SQLType(col *sqlbuilder.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildMysqlType(typ string, col *sqlbuilder.Column, unsigned bool, l int) string {
-	w := sqlbuilder.New(typ)
+func buildMysqlType(typ string, col *core.Column, unsigned bool, l int) string {
+	w := core.NewBuilder(typ)
 
 	switch {
 	case l == 1 && len(col.Length) > 0:

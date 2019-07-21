@@ -7,18 +7,19 @@ package dialect_test
 import (
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 type sqltypeTester struct {
-	col     *sqlbuilder.Column
+	col     *core.Column
 	err     bool
 	SQLType string
 }
 
-func testSQLType(a *assert.Assertion, d sqlbuilder.Dialect, data []*sqltypeTester) {
+func testSQLType(a *assert.Assertion, d core.Dialect, data []*sqltypeTester) {
 	for _, item := range data {
 		typ, err := d.SQLType(item.col)
 		if item.err {
@@ -77,6 +78,6 @@ func testDialectDropConstraintStmtHook(t *test.Test) {
 
 	// pk
 	stmt.Reset()
-	err = stmt.Table("usr").Constraint(sqlbuilder.PKName("usr")).Exec()
+	err = stmt.Table("usr").Constraint(core.PKName("usr")).Exec()
 	t.NotError(err)
 }

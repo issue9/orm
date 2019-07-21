@@ -8,11 +8,24 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/issue9/orm/v2/stmt"
+	"github.com/issue9/orm/v2/core"
 )
 
+// SQLer 定义 SQL 语句的基本接口
+type SQLer interface {
+	SQL() (query string, args []interface{}, err error)
+}
+
+// DDLSQLer SQL 中 DDL 语句的基本接口
+//
+// 大部分数据的 DDL 操作是有多条语句组成，比如 CREATE TABLE
+// 可能包含了额外的定义信息。
+type DDLSQLer interface {
+	DDLSQL() ([]string, error)
+}
+
 type baseStmt struct {
-	engine Engine
+	engine core.Engine
 }
 
 type queryStmt struct {
@@ -30,7 +43,7 @@ type ddlStmt struct {
 	baseStmt
 }
 
-func newQueryStmt(e Engine, sql SQLer) *queryStmt {
+func newQueryStmt(e core.Engine, sql SQLer) *queryStmt {
 	return &queryStmt{
 		SQLer: sql,
 		baseStmt: baseStmt{
@@ -39,7 +52,7 @@ func newQueryStmt(e Engine, sql SQLer) *queryStmt {
 	}
 }
 
-func newExecStmt(e Engine, sql SQLer) *execStmt {
+func newExecStmt(e core.Engine, sql SQLer) *execStmt {
 	return &execStmt{
 		SQLer: sql,
 		baseStmt: baseStmt{
@@ -48,7 +61,7 @@ func newExecStmt(e Engine, sql SQLer) *execStmt {
 	}
 }
 
-func newDDLStmt(e Engine, sql DDLSQLer) *ddlStmt {
+func newDDLStmt(e core.Engine, sql DDLSQLer) *ddlStmt {
 	return &ddlStmt{
 		DDLSQLer: sql,
 		baseStmt: baseStmt{
@@ -57,11 +70,11 @@ func newDDLStmt(e Engine, sql DDLSQLer) *ddlStmt {
 	}
 }
 
-func (stmt *baseStmt) Dialect() Dialect {
+func (stmt *baseStmt) Dialect() core.Dialect {
 	return stmt.engine.Dialect()
 }
 
-func (stmt *baseStmt) Engine() Engine {
+func (stmt *baseStmt) Engine() core.Engine {
 	return stmt.engine
 }
 
@@ -97,11 +110,11 @@ func (stmt *execStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 	return stmt.Engine().ExecContext(ctx, query, args...)
 }
 
-func (stmt *execStmt) Prepare() (*stmt.Stmt, error) {
+func (stmt *execStmt) Prepare() (*core.Stmt, error) {
 	return stmt.PrepareContext(context.Background())
 }
 
-func (stmt *execStmt) PrepareContext(ctx context.Context) (*stmt.Stmt, error) {
+func (stmt *execStmt) PrepareContext(ctx context.Context) (*core.Stmt, error) {
 	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err
@@ -110,11 +123,11 @@ func (stmt *execStmt) PrepareContext(ctx context.Context) (*stmt.Stmt, error) {
 	return stmt.Engine().PrepareContext(ctx, query)
 }
 
-func (stmt *queryStmt) Prepare() (*stmt.Stmt, error) {
+func (stmt *queryStmt) Prepare() (*core.Stmt, error) {
 	return stmt.PrepareContext(context.Background())
 }
 
-func (stmt *queryStmt) PrepareContext(ctx context.Context) (*stmt.Stmt, error) {
+func (stmt *queryStmt) PrepareContext(ctx context.Context) (*core.Stmt, error) {
 	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err

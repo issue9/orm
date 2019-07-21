@@ -7,6 +7,8 @@ package sqlbuilder
 import (
 	"database/sql"
 	"sort"
+
+	"github.com/issue9/orm/v2/core"
 )
 
 // UpdateStmt 更新语句
@@ -29,7 +31,7 @@ type updateSet struct {
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
-func Update(e Engine) *UpdateStmt {
+func Update(e core.Engine) *UpdateStmt {
 	stmt := &UpdateStmt{values: []*updateSet{}}
 	stmt.execStmt = newExecStmt(e, stmt)
 	stmt.where = newWhere()
@@ -108,7 +110,7 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 
-	buf := New("UPDATE ")
+	buf := core.NewBuilder("UPDATE ")
 	buf.WriteString(stmt.table)
 	buf.WriteString(" SET ")
 
