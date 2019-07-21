@@ -31,7 +31,7 @@ func testSQLType(a *assert.Assertion, d sqlbuilder.Dialect, data []*sqltypeTeste
 }
 
 func testDialectVersionSQL(t *test.Test) {
-	rows, err := t.DB.DB.Query(t.DB.Dialect().VersionSQL())
+	rows, err := t.DB.Query(t.DB.Dialect().VersionSQL())
 	t.NotError(err).NotNil(rows)
 	defer func() {
 		t.NotError(rows.Close())
@@ -44,17 +44,16 @@ func testDialectVersionSQL(t *test.Test) {
 }
 
 func testDialectDropConstraintStmtHook(t *test.Test) {
-	db := t.DB.DB
-	d := t.DB.Dialect()
+	db := t.DB
 
 	// 不存在的约束，出错
-	stmt := sqlbuilder.DropConstraint(db, d).
+	stmt := sqlbuilder.DropConstraint(db).
 		Table("fk_table").
 		Constraint("id_great_zero")
 
 	t.Error(stmt.Exec())
 
-	err := sqlbuilder.AddConstraint(db, d).
+	err := sqlbuilder.AddConstraint(db).
 		Table("fk_table").
 		Check("id_great_zero", "id>0").
 		Exec()

@@ -62,11 +62,11 @@ type constraintColumn struct {
 // CreateTable 创建表的语句
 //
 // 执行创建表操作，可能包含了创建索引等多个语句，
-// 如果 e 是一个事务类型，且 d 是支持事务 DDL 的，
+// 如果 e 是一个事务类型，且 e.Dialect() 是支持事务 DDL 的，
 // 那么在执行时，会当作一个事务处理，否则为多个语句依次执行。
-func CreateTable(e Engine, d Dialect) *CreateTableStmt {
+func CreateTable(e Engine) *CreateTableStmt {
 	stmt := &CreateTableStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
 
@@ -255,7 +255,7 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 		WriteBytes('(')
 
 	for _, col := range stmt.columns {
-		typ, err := stmt.dialect.SQLType(col)
+		typ, err := stmt.Dialect().SQLType(col)
 		if err != nil {
 			return nil, err
 		}
@@ -271,7 +271,7 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 
 	w.TruncateLast(1).WriteBytes(')')
 
-	if err := stmt.dialect.CreateTableOptionsSQL(w, stmt.options); err != nil {
+	if err := stmt.Dialect().CreateTableOptionsSQL(w, stmt.options); err != nil {
 		return nil, err
 	}
 
@@ -325,7 +325,7 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 	}
 
 	sqls := make([]string, 0, len(stmt.indexes))
-	buf := CreateIndex(stmt.Engine(), stmt.Dialect())
+	buf := CreateIndex(stmt.Engine())
 	for _, index := range stmt.indexes {
 		buf.Reset()
 		buf.Table(stmt.name).
@@ -417,9 +417,9 @@ type TruncateTableStmt struct {
 }
 
 // TruncateTable 生成清空表语句
-func TruncateTable(e Engine, d Dialect) *TruncateTableStmt {
+func TruncateTable(e Engine) *TruncateTableStmt {
 	stmt := &TruncateTableStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
 
@@ -441,7 +441,7 @@ func (stmt *TruncateTableStmt) Table(t, aiColumn string) *TruncateTableStmt {
 
 // DDLSQL 获取 SQL 的语句及参数部分
 func (stmt *TruncateTableStmt) DDLSQL() ([]string, error) {
-	if hook, ok := stmt.dialect.(TruncateTableStmtHooker); ok {
+	if hook, ok := stmt.Dialect().(TruncateTableStmtHooker); ok {
 		return hook.TruncateTableStmtHook(stmt)
 	}
 
@@ -455,9 +455,9 @@ type DropTableStmt struct {
 }
 
 // DropTable 声明一条删除表的语句
-func DropTable(e Engine, d Dialect) *DropTableStmt {
+func DropTable(e Engine) *DropTableStmt {
 	stmt := &DropTableStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
 

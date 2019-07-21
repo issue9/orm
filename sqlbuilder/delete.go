@@ -12,9 +12,9 @@ type DeleteStmt struct {
 }
 
 // Delete 声明一条删除语句
-func Delete(e Engine, d Dialect) *DeleteStmt {
+func Delete(e Engine) *DeleteStmt {
 	stmt := &DeleteStmt{}
-	stmt.execStmt = newExecStmt(e, d, stmt)
+	stmt.execStmt = newExecStmt(e, stmt)
 	stmt.where = newWhere()
 
 	return stmt

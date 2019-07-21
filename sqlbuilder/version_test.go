@@ -20,7 +20,7 @@ func TestVersion(t *testing.T) {
 	defer s.Close()
 
 	s.ForEach(func(t *test.Test) {
-		ver, err := sqlbuilder.Version(t.DB.DB, t.DB.Dialect())
+		ver, err := sqlbuilder.Version(t.DB)
 		t.NotError(err).
 			NotEmpty(ver)
 	})

@@ -34,9 +34,9 @@ func (t Index) String() string {
 }
 
 // CreateIndex 声明一条 CreateIndexStmt 语句
-func CreateIndex(e Engine, d Dialect) *CreateIndexStmt {
+func CreateIndex(e Engine) *CreateIndexStmt {
 	stmt := &CreateIndexStmt{typ: IndexDefault}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 
 	return stmt
 }
@@ -122,9 +122,9 @@ type DropIndexStmt struct {
 }
 
 // DropIndex 声明一条 DropIndexStmt 语句
-func DropIndex(e Engine, d Dialect) *DropIndexStmt {
+func DropIndex(e Engine) *DropIndexStmt {
 	stmt := &DropIndexStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
 
@@ -150,7 +150,7 @@ func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
 		return nil, ErrColumnsIsEmpty
 	}
 
-	if hook, ok := stmt.dialect.(DropIndexStmtHooker); ok {
+	if hook, ok := stmt.Dialect().(DropIndexStmtHooker); ok {
 		return hook.DropIndexStmtHook(stmt)
 	}
 

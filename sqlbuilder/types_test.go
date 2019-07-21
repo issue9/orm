@@ -16,11 +16,6 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-var (
-	_ sqlbuilder.Engine = &sql.DB{}
-	_ sqlbuilder.Engine = &sql.Tx{}
-)
-
 func quoteColumns(stmt *sqlbuilder.SelectStmt, col ...string) {
 	for _, c := range col {
 		stmt.Column("{" + c + "}")
@@ -33,12 +28,10 @@ func TestTypes(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		e := t.DB.DB
-		d := t.DB.Dialect()
 		tableName := "test_type_read_write"
 		now := time.Now()
 
-		creator := sqlbuilder.CreateTable(e, d).
+		creator := sqlbuilder.CreateTable(t.DB).
 			Column("bool", sqlbuilder.BoolType, false, false, nil).
 			Column("int", sqlbuilder.IntType, false, false, nil).
 			Column("int8", sqlbuilder.Int8Type, false, false, nil).
@@ -62,7 +55,7 @@ func TestTypes(t *testing.T) {
 			Table(tableName)
 		t.NotError(creator.Exec())
 		defer func() {
-			t.NotError(sqlbuilder.DropTable(e, d).Table(tableName).Exec())
+			t.NotError(sqlbuilder.DropTable(t.DB).Table(tableName).Exec())
 		}()
 
 		cols := []string{
@@ -110,14 +103,14 @@ func TestTypes(t *testing.T) {
 			now,
 		}
 
-		r, err := sqlbuilder.Insert(e, d).
+		r, err := sqlbuilder.Insert(t.DB).
 			Table(tableName).
 			Columns(cols...).
 			Values(vals...).
 			Exec()
 		t.NotError(err).NotNil(r)
 
-		selStmt := sqlbuilder.Select(e, d).
+		selStmt := sqlbuilder.Select(t.DB).
 			From(tableName)
 		quoteColumns(selStmt, cols...)
 		rows, err := selStmt.Query()

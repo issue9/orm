@@ -47,9 +47,9 @@ type unionSelect struct {
 }
 
 // Select 声明一条 Select 语句
-func Select(e Engine, d Dialect) *SelectStmt {
+func Select(e Engine) *SelectStmt {
 	stmt := &SelectStmt{columns: make([]string, 0, 10)}
-	stmt.queryStmt = newQueryStmt(e, d, stmt)
+	stmt.queryStmt = newQueryStmt(e, stmt)
 	stmt.where = newWhere()
 
 	return stmt
@@ -358,7 +358,7 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 
 // Limit 生成 SQL 的 Limit 语句
 func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectStmt {
-	query, vals := stmt.dialect.LimitSQL(limit, offset...)
+	query, vals := stmt.Dialect().LimitSQL(limit, offset...)
 	stmt.limitQuery = query
 	stmt.limitVals = vals
 	return stmt

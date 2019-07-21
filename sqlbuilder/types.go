@@ -59,8 +59,11 @@ type WhereStmter interface {
 }
 
 // Engine 数据库执行的基本接口。
-// 是 sql.DB 与 sql.Tx 的共有接口。
+//
+// orm.DB 和 orm.Tx 应该实现此接口。
 type Engine interface {
+	Dialect() Dialect
+
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
@@ -78,7 +81,7 @@ type Engine interface {
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
 }
 
-// Dialect 接口用于描述与数据库相关的一些语言特性。
+// Dialect 接口用于描述与数据库和驱动相关的一些语言特性。
 //
 // 除了 Dialect，同时还提供了部分 *Hooker 的接口，用于自定义某一条语句的实现。
 // 一般情况下， 如果有多个数据是遵循 SQL 标准的，只有个别有例外，

@@ -59,7 +59,7 @@ func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		db := t.DB.DB
+		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
 			_, err := db.Exec(query)
@@ -67,7 +67,7 @@ func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 		}
 
 		// check 约束
-		err := sqlbuilder.AddConstraint(db, t.DB.Dialect()).
+		err := sqlbuilder.AddConstraint(db).
 			Table("fk_table").
 			Check("id_great_zero", "id>0").
 			Exec()
@@ -83,7 +83,7 @@ func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		db := t.DB.DB
+		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
 			_, err := db.Exec(query)
@@ -100,14 +100,14 @@ func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		db := t.DB.DB
+		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
 			_, err := db.Exec(query)
 			t.NotError(err)
 		}
 
-		err := sqlbuilder.DropColumn(db, t.DB.Dialect()).
+		err := sqlbuilder.DropColumn(db).
 			Table("usr").
 			Column("state").
 			Exec()
@@ -145,23 +145,27 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 
 func TestSqlite3_TruncateTableStmtHooker(t *testing.T) {
 	a := assert.New(t)
-	s := dialect.Sqlite3()
 
-	hook, ok := s.(sqlbuilder.TruncateTableStmtHooker)
-	a.True(ok).NotNil(hook)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	stmt := sqlbuilder.TruncateTable(nil, s).Table("tbl", "")
-	a.NotNil(stmt)
-	qs, err := hook.TruncateTableStmtHook(stmt)
-	a.NotError(err).Equal(1, len(qs))
-	sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
+	suite.ForEach(func(t *test.Test) {
+		hook, ok := t.DB.Dialect().(sqlbuilder.TruncateTableStmtHooker)
+		a.True(ok).NotNil(hook)
 
-	stmt = sqlbuilder.TruncateTable(nil, s).Table("tbl", "id")
-	a.NotNil(stmt)
-	qs, err = hook.TruncateTableStmtHook(stmt)
-	a.NotError(err).Equal(2, len(qs))
-	sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
-	sqltest.Equal(a, qs[1], "DELETE FROM SQLITE_SEQUENCE WHERE name='tbl'")
+		stmt := sqlbuilder.TruncateTable(t.DB).Table("tbl", "")
+		a.NotNil(stmt)
+		qs, err := hook.TruncateTableStmtHook(stmt)
+		a.NotError(err).Equal(1, len(qs))
+		sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
+
+		stmt = sqlbuilder.TruncateTable(t.DB).Table("tbl", "id")
+		a.NotNil(stmt)
+		qs, err = hook.TruncateTableStmtHook(stmt)
+		a.NotError(err).Equal(2, len(qs))
+		sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
+		sqltest.Equal(a, qs[1], "DELETE FROM SQLITE_SEQUENCE WHERE name='tbl'")
+	}, "sqlite3")
 }
 
 func TestSqlite3_SQLType(t *testing.T) {

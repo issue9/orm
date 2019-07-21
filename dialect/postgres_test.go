@@ -227,22 +227,26 @@ func TestPostgres_SQLType(t *testing.T) {
 
 func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
 	a := assert.New(t)
-	s := dialect.Postgres()
 
-	hook, ok := s.(sqlbuilder.TruncateTableStmtHooker)
-	a.True(ok).NotNil(hook)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	stmt := sqlbuilder.TruncateTable(nil, s).Table("tbl", "")
-	a.NotNil(stmt)
-	qs, err := hook.TruncateTableStmtHook(stmt)
-	a.NotError(err).Equal(1, len(qs))
-	sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl}`)
+	suite.ForEach(func(t *test.Test) {
+		hook, ok := t.DB.Dialect().(sqlbuilder.TruncateTableStmtHooker)
+		a.True(ok).NotNil(hook)
 
-	stmt = sqlbuilder.TruncateTable(nil, s).Table("tbl", "id")
-	a.NotNil(stmt)
-	qs, err = hook.TruncateTableStmtHook(stmt)
-	a.NotError(err).Equal(1, len(qs))
-	sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl} RESTART IDENTITY`)
+		stmt := sqlbuilder.TruncateTable(t.DB).Table("tbl", "")
+		a.NotNil(stmt)
+		qs, err := hook.TruncateTableStmtHook(stmt)
+		a.NotError(err).Equal(1, len(qs))
+		sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl}`)
+
+		stmt = sqlbuilder.TruncateTable(t.DB).Table("tbl", "id")
+		a.NotNil(stmt)
+		qs, err = hook.TruncateTableStmtHook(stmt)
+		a.NotError(err).Equal(1, len(qs))
+		sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl} RESTART IDENTITY`)
+	}, "postgres")
 }
 
 func TestPostgres_SQL(t *testing.T) {

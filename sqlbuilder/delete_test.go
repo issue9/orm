@@ -27,10 +27,7 @@ func TestDelete_Exec(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-
-		sql := sqlbuilder.Delete(db, dialect).
+		sql := sqlbuilder.Delete(t.DB).
 			Table("users").
 			Where("id=?", 1)
 		_, err := sql.Exec()

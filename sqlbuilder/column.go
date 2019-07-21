@@ -15,9 +15,9 @@ type AddColumnStmt struct {
 }
 
 // AddColumn 声明一条添加列的语句
-func AddColumn(e Engine, d Dialect) *AddColumnStmt {
+func AddColumn(e Engine) *AddColumnStmt {
 	stmt := &AddColumnStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
 
@@ -49,7 +49,7 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 		return nil, ErrColumnsIsEmpty
 	}
 
-	typ, err := stmt.dialect.SQLType(stmt.column)
+	typ, err := stmt.Dialect().SQLType(stmt.column)
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +85,9 @@ type DropColumnStmt struct {
 }
 
 // DropColumn 声明一条删除列的语句
-func DropColumn(e Engine, d Dialect) *DropColumnStmt {
+func DropColumn(e Engine) *DropColumnStmt {
 	stmt := &DropColumnStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
 
@@ -110,7 +110,7 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 		return nil, ErrTableIsEmpty
 	}
 
-	if hook, ok := stmt.dialect.(DropColumnStmtHooker); ok {
+	if hook, ok := stmt.Dialect().(DropColumnStmtHooker); ok {
 		return hook.DropColumnStmtHook(stmt)
 	}
 

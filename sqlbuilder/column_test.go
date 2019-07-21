@@ -27,16 +27,15 @@ func TestColumn(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
+		db := t.DB
 
-		addStmt := sqlbuilder.AddColumn(db, dialect)
+		addStmt := sqlbuilder.AddColumn(db)
 		err := addStmt.Table("users").
 			Column("col1", sqlbuilder.IntType, true, false, nil).
 			Exec()
 		a.NotError(err, "%s@%s", err, t.DriverName)
 
-		dropStmt := sqlbuilder.DropColumn(db, dialect)
+		dropStmt := sqlbuilder.DropColumn(db)
 		err = dropStmt.Table("users").
 			Column("col1").
 			Exec()

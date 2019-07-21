@@ -28,10 +28,7 @@ func TestSelect(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		d := t.DB.Dialect()
-
-		stmt := sqlbuilder.Select(db, d).Column("*").
+		stmt := sqlbuilder.Select(t.DB).Column("*").
 			From("users").
 			Where("id<?", 5).
 			Desc("id")
@@ -80,10 +77,8 @@ func TestSelectStmt_Join(t *testing.T) {
 	suite.ForEach(func(t *test.Test) {
 		initDB(t)
 		defer clearDB(t)
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
 
-		insert := sqlbuilder.Insert(db, dialect)
+		insert := sqlbuilder.Insert(t.DB)
 		r, err := insert.Table("info").
 			Columns("uid", "nickname", "tel", "address").
 			Values(1, "n1", "tel-1", "address-1").
@@ -91,7 +86,7 @@ func TestSelectStmt_Join(t *testing.T) {
 			Exec()
 		t.NotError(err).NotNil(r)
 
-		sel := sqlbuilder.Select(db, dialect)
+		sel := sqlbuilder.Select(t.DB)
 		rows, err := sel.Columns("i.nickname", "i.uid").
 			From("users", "u").
 			Where("uid=?", 1).
@@ -119,10 +114,7 @@ func TestSelectStmt_Group(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		e := t.DB.DB
-		d := t.DB.Dialect()
-
-		r, err := sqlbuilder.Update(e, d).
+		r, err := sqlbuilder.Update(t.DB).
 			Table("users").
 			Set("name", "2").
 			Where("id>?", 1).
@@ -130,7 +122,7 @@ func TestSelectStmt_Group(t *testing.T) {
 		a.NotError(err).NotNil(r)
 
 		var list []*user
-		cnt, err := sqlbuilder.Select(e, d).
+		cnt, err := sqlbuilder.Select(t.DB).
 			Columns("sum(age) as {age}", "name").
 			From("users").
 			Group("name").
@@ -145,23 +137,21 @@ func TestSelectStmt_Union(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		e := t.DB.DB
-		d := t.DB.Dialect()
 		initDB(t)
 		defer clearDB(t)
 
-		r, err := sqlbuilder.Insert(e, d).Columns("uid", "tel", "nickname", "address").
+		r, err := sqlbuilder.Insert(t.DB).Columns("uid", "tel", "nickname", "address").
 			Values(1, "1", "1", "1").
 			Values(2, "2", "2", "2").
 			Table("info").
 			Exec()
 		t.NotError(err).NotNil(r)
 
-		sel1 := sqlbuilder.Select(e, d).
+		sel1 := sqlbuilder.Select(t.DB).
 			Column("id").
 			From("users").
 			Where("id=?", 1)
-		sel2 := sqlbuilder.Select(e, d).
+		sel2 := sqlbuilder.Select(t.DB).
 			Column("uid").
 			From("info").
 			Where("uid=?", 1)
@@ -191,23 +181,21 @@ func TestSelectStmt_UnionAll(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		e := t.DB.DB
-		d := t.DB.Dialect()
 		initDB(t)
 		defer clearDB(t)
 
-		r, err := sqlbuilder.Insert(e, d).Columns("uid", "tel", "nickname", "address").
+		r, err := sqlbuilder.Insert(t.DB).Columns("uid", "tel", "nickname", "address").
 			Values(1, "1", "1", "1").
 			Values(2, "2", "2", "2").
 			Table("info").
 			Exec()
 		t.NotError(err).NotNil(r)
 
-		sel1 := sqlbuilder.Select(e, d).
+		sel1 := sqlbuilder.Select(t.DB).
 			Column("id").
 			From("users").
 			Where("id=?", 1)
-		sel2 := sqlbuilder.Select(e, d).
+		sel2 := sqlbuilder.Select(t.DB).
 			Column("uid").
 			From("info").
 			Where("uid=?", 1)

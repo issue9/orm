@@ -10,8 +10,7 @@ import (
 )
 
 type baseStmt struct {
-	dialect Dialect
-	engine  Engine
+	engine Engine
 }
 
 type queryStmt struct {
@@ -29,38 +28,35 @@ type ddlStmt struct {
 	baseStmt
 }
 
-func newQueryStmt(e Engine, d Dialect, sql SQLer) *queryStmt {
+func newQueryStmt(e Engine, sql SQLer) *queryStmt {
 	return &queryStmt{
 		SQLer: sql,
 		baseStmt: baseStmt{
-			engine:  e,
-			dialect: d,
+			engine: e,
 		},
 	}
 }
 
-func newExecStmt(e Engine, d Dialect, sql SQLer) *execStmt {
+func newExecStmt(e Engine, sql SQLer) *execStmt {
 	return &execStmt{
 		SQLer: sql,
 		baseStmt: baseStmt{
-			engine:  e,
-			dialect: d,
+			engine: e,
 		},
 	}
 }
 
-func newDDLStmt(e Engine, d Dialect, sql DDLSQLer) *ddlStmt {
+func newDDLStmt(e Engine, sql DDLSQLer) *ddlStmt {
 	return &ddlStmt{
 		DDLSQLer: sql,
 		baseStmt: baseStmt{
-			engine:  e,
-			dialect: d,
+			engine: e,
 		},
 	}
 }
 
 func (stmt *baseStmt) Dialect() Dialect {
-	return stmt.dialect
+	return stmt.engine.Dialect()
 }
 
 func (stmt *baseStmt) Engine() Engine {
@@ -102,11 +98,6 @@ func (stmt *execStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 		return nil, err
 	}
 
-	query, args, err = stmt.Dialect().SQL(query, args)
-	if err != nil {
-		return nil, err
-	}
-
 	return stmt.Engine().ExecContext(ctx, query, args...)
 }
 
@@ -115,12 +106,7 @@ func (stmt *execStmt) Prepare() (*sql.Stmt, error) {
 }
 
 func (stmt *execStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-
-	query, _, err = stmt.Dialect().SQL(query, args)
+	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err
 	}
@@ -133,12 +119,7 @@ func (stmt *queryStmt) Prepare() (*sql.Stmt, error) {
 }
 
 func (stmt *queryStmt) PrepareContext(ctx context.Context) (*sql.Stmt, error) {
-	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-
-	query, _, err = stmt.Dialect().SQL(query, args)
+	query, _, err := stmt.SQL()
 	if err != nil {
 		return nil, err
 	}
@@ -152,11 +133,6 @@ func (stmt queryStmt) Query() (*sql.Rows, error) {
 
 func (stmt *queryStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 	query, args, err := stmt.SQL()
-	if err != nil {
-		return nil, err
-	}
-
-	query, args, err = stmt.Dialect().SQL(query, args)
 	if err != nil {
 		return nil, err
 	}

@@ -15,8 +15,6 @@ import (
 )
 
 var (
-	quoteReplacer = strings.NewReplacer("`", "")
-
 	// 从 sqlite_master 中查询 SQL 语句的代码
 	//
 	// 其中 queryIndex 加上了针对 sql IS NOT NULL 的判断，
@@ -171,35 +169,4 @@ func parseIndexes(table *Table, tableName string, engine sqlbuilder.Engine) erro
 	}
 
 	return nil
-}
-
-func filterCreateTableSQL(sql string) []string {
-	sql = quoteReplacer.Replace(sql)
-	var deep, start int
-	var lines []string
-
-	for index, c := range sql {
-		switch c {
-		case ',':
-			if deep == 1 && index > start {
-				lines = append(lines, strings.TrimSpace(sql[start:index]))
-				start = index + 1 // 不包含 ( 本身
-			}
-		case '(':
-			deep++
-			if deep == 1 {
-				start = index + 1 // 不包含 ( 本身
-			}
-		case ')':
-			deep--
-			if deep == 0 { // 不需要 create table xx() 之后的内容
-				if start != index {
-					lines = append(lines, strings.TrimSpace(sql[start:index]))
-				}
-				break
-			}
-		} // end switch
-	} // end for
-
-	return lines
 }

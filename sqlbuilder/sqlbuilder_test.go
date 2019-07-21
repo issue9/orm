@@ -26,10 +26,7 @@ func (u *user) Meta() string {
 }
 
 func initDB(t *test.Test) {
-	db := t.DB.DB
-	dialect := t.DB.Dialect()
-
-	creator := sqlbuilder.CreateTable(db, dialect).
+	creator := sqlbuilder.CreateTable(t.DB).
 		Table("users").
 		AutoIncrement("id", sqlbuilder.Int64Type).
 		Column("name", sqlbuilder.StringType, false, false, nil, 20).
@@ -50,7 +47,7 @@ func initDB(t *test.Test) {
 	err = creator.Exec()
 	t.NotError(err)
 
-	sql := sqlbuilder.Insert(db, dialect).
+	sql := sqlbuilder.Insert(t.DB).
 		Columns("name", "age").
 		Table("users").
 		Values("1", 1).
@@ -60,7 +57,7 @@ func initDB(t *test.Test) {
 
 	stmt, err := sql.Prepare()
 	t.NotError(err, "%s@%s", err, t.DriverName).
-		NotNil(stmt, "not nil @s", t.DriverName)
+		NotNil(stmt, "not nil @%s", t.DriverName)
 
 	_, err = stmt.Exec("3", 3, "4", 4)
 	t.NotError(err, "%s@%s", err, t.DriverName)
@@ -86,7 +83,7 @@ func initDB(t *test.Test) {
 }
 
 func clearDB(t *test.Test) {
-	err := sqlbuilder.DropTable(t.DB.DB, t.DB.Dialect()).
+	err := sqlbuilder.DropTable(t.DB).
 		Table("info"). // 需要先删除 info，info 的外键依赖 users
 		Table("users").
 		Exec()

@@ -28,9 +28,6 @@ type AfterFetcher = fetch.AfterFetcher
 type Engine interface {
 	sqlbuilder.Engine
 
-	// 获取与之关联的 Dialect 接口。
-	Dialect() Dialect
-
 	// 理论上功能等同于以下两步操作：
 	//  rslt, err := engine.Insert(obj)
 	//  id, err := rslt.LastInsertId()
@@ -86,35 +83,35 @@ type SQL struct {
 
 // Delete 生成删除语句
 func (sql *SQL) Delete() *sqlbuilder.DeleteStmt {
-	return sqlbuilder.Delete(sql.engine, sql.engine.Dialect())
+	return sqlbuilder.Delete(sql.engine)
 }
 
 // Update 生成更新语句
 func (sql *SQL) Update() *sqlbuilder.UpdateStmt {
-	return sqlbuilder.Update(sql.engine, sql.engine.Dialect())
+	return sqlbuilder.Update(sql.engine)
 }
 
 // Insert 生成插入语句
 func (sql *SQL) Insert() *sqlbuilder.InsertStmt {
-	return sqlbuilder.Insert(sql.engine, sql.engine.Dialect())
+	return sqlbuilder.Insert(sql.engine)
 }
 
 // Select 生成插入语句
 func (sql *SQL) Select() *sqlbuilder.SelectStmt {
-	return sqlbuilder.Select(sql.engine, sql.engine.Dialect())
+	return sqlbuilder.Select(sql.engine)
 }
 
 // CreateIndex 生成创建索引的语句
 func (sql *SQL) CreateIndex() *sqlbuilder.CreateIndexStmt {
-	return sqlbuilder.CreateIndex(sql.engine, sql.engine.Dialect())
+	return sqlbuilder.CreateIndex(sql.engine)
 }
 
 // DropTable 生成删除表的语句
 func (sql *SQL) DropTable() *sqlbuilder.DropTableStmt {
-	return sqlbuilder.DropTable(sql.engine, sql.engine.Dialect())
+	return sqlbuilder.DropTable(sql.engine)
 }
 
 // TruncateTable 生成清空表的语句，同时重置 AI 计算
 func (sql *SQL) TruncateTable() *sqlbuilder.TruncateTableStmt {
-	return sqlbuilder.TruncateTable(sql.engine, sql.engine.Dialect())
+	return sqlbuilder.TruncateTable(sql.engine)
 }
