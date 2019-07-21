@@ -55,10 +55,6 @@ type Engine interface {
 }
 
 // Dialect 接口用于描述与数据库和驱动相关的一些语言特性。
-//
-// 除了 Dialect，同时还提供了部分 *Hooker 的接口，用于自定义某一条语句的实现。
-// 一般情况下， 如果有多个数据是遵循 SQL 标准的，只有个别有例外，
-// 那么该例外的 Dialect 实现，可以同时实现 Hooker 接口， 自定义该语句的实现。
 type Dialect interface {
 	// Dialect 的名称
 	//
@@ -112,7 +108,7 @@ type Dialect interface {
 	//  1. 将 sql 中的 @xx 替换成 ?
 	//  2. 将 sql 中的 @xx 在 sql 中的位置进行记录，并通过 orders 返回。
 	// query 为处理后的 SQL 语句；
-	// orders 为参数名在 query 中对应的位置。
+	// orders 为参数名在 query 中对应的位置，第一个位置为 0，依次增加。
 	Prepare(sql string) (query string, orders map[string]int, err error)
 
 	// 创建 AI 约束
