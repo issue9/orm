@@ -73,12 +73,6 @@ func (stmt *ddlStmt) ExecContext(ctx context.Context) error {
 		return err
 	}
 
-	for k, v := range qs {
-		if qs[k], _, err = stmt.Dialect().SQL(v, nil); err != nil {
-			return err
-		}
-	}
-
 	for _, query := range qs {
 		if _, err = stmt.Engine().ExecContext(ctx, query); err != nil {
 			return err
