@@ -110,6 +110,11 @@ func (stmt *execStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 	return stmt.Engine().ExecContext(ctx, query, args...)
 }
 
+// Prepare 预编译语句
+//
+// 预编译语句，参数最好采用 sql.NamedArg 类型。
+// 在生成语句时，参数顺序会发生变化，如果采用 ? 的形式，
+// 用户需要自己处理参数顺序问题，而 sql.NamedArg 没有这些问题。
 func (stmt *execStmt) Prepare() (*core.Stmt, error) {
 	return stmt.PrepareContext(context.Background())
 }
