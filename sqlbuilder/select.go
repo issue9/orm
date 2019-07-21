@@ -234,6 +234,11 @@ func (stmt *SelectStmt) Columns(cols ...string) *SelectStmt {
 	return stmt
 }
 
+// Select Columns 的别名
+func (stmt *SelectStmt) Select(cols ...string) *SelectStmt {
+	return stmt.Columns(cols...)
+}
+
 // From 指定表名
 //
 // table 为表名，如果需要指定别名，可以通过 alias 指定。
