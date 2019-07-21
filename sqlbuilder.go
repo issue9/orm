@@ -130,7 +130,7 @@ func create(e Engine, v interface{}) error {
 		return err
 	}
 
-	sb := sqlbuilder.CreateTable(e, e.Dialect())
+	sb := sqlbuilder.CreateTable(e)
 	sb.Table("#" + m.Name)
 	for _, col := range m.Columns {
 		if col.AI {

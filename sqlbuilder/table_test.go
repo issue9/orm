@@ -25,9 +25,7 @@ func TestCreateTableStmt(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-		stmt := sqlbuilder.CreateTable(db, dialect).
+		stmt := sqlbuilder.CreateTable(t.DB).
 			Table(table).
 			AutoIncrement("id", sqlbuilder.IntType).
 			Column("age", sqlbuilder.IntType, false, false, nil).
@@ -58,7 +56,7 @@ func TestCreateTableStmt(t *testing.T) {
 
 		a.Error(stmt.Reset().Table("users").Exec(), sqlbuilder.ErrColumnsIsEmpty)
 
-		insert := sqlbuilder.Insert(db, dialect).
+		insert := sqlbuilder.Insert(t.DB).
 			Table(table).
 			KeyValue("age", 1).
 			KeyValue("name", "name1").
@@ -73,13 +71,13 @@ func TestCreateTableStmt(t *testing.T) {
 		rslt, err = prepare.Exec(3, "name3", "address3")
 		a.NotError(err).NotNil(rslt)
 
-		cnt, err := sqlbuilder.Select(db, dialect).
+		cnt, err := sqlbuilder.Select(t.DB).
 			Count("count(*) as cnt").
 			From(table).
 			QueryInt("cnt")
 		a.NotError(err).Equal(cnt, 3)
 
-		err = sqlbuilder.DropTable(db, dialect).
+		err = sqlbuilder.DropTable(t.DB).
 			Table(table).
 			Exec()
 		a.NotError(err)
@@ -95,7 +93,7 @@ func TestTruncateTable(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		_, err := sqlbuilder.Insert(t.DB.DB, t.DB.Dialect()).
+		_, err := sqlbuilder.Insert(t.DB).
 			Table("info").
 			KeyValue("uid", 1).
 			KeyValue("tel", "18011112222").
@@ -104,7 +102,7 @@ func TestTruncateTable(t *testing.T) {
 			Exec()
 		a.NotError(err)
 
-		truncate := sqlbuilder.TruncateTable(t.DB.DB, t.DB.Dialect())
+		truncate := sqlbuilder.TruncateTable(t.DB)
 		err = truncate.Table("info", "").Exec()
 		t.NotError(err)
 
@@ -112,7 +110,7 @@ func TestTruncateTable(t *testing.T) {
 		err = truncate.Reset().Table("info", "").Exec()
 		t.NotError(err)
 
-		sel := sqlbuilder.Select(t.DB.DB, t.DB.Dialect()).
+		sel := sqlbuilder.Select(t.DB).
 			Count("count(*) as cnt").
 			From("info")
 		rows, err := sel.Query()
@@ -134,7 +132,7 @@ func TestDropTable(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		drop := sqlbuilder.DropTable(t.DB.DB, t.DB.Dialect())
+		drop := sqlbuilder.DropTable(t.DB)
 		a.Error(drop.Exec())
 
 		a.NotError(drop.Reset().Table("info").Exec())

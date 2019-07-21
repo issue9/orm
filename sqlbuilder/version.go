@@ -5,8 +5,8 @@
 package sqlbuilder
 
 // Version 查询数据库服务器的版本信息
-func Version(e Engine, d Dialect) (version string, err error) {
-	if err := e.QueryRow(d.VersionSQL()).Scan(&version); err != nil {
+func Version(e Engine) (version string, err error) {
+	if err := e.QueryRow(e.Dialect().VersionSQL()).Scan(&version); err != nil {
 		return "", err
 	}
 

@@ -59,7 +59,7 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		db := t.DB.DB
+		db := t.DB
 
 		for _, query := range mysqlCreateTable {
 			_, err := db.Exec(query)
@@ -80,29 +80,37 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 
 func TestMysql_DropIndexStmtHook(t *testing.T) {
 	a := assert.New(t)
-	my := dialect.Mysql()
 
-	stmt := sqlbuilder.DropIndex(nil, my).Table("tbl").Name("index_name")
-	a.NotNil(stmt)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	hook, ok := my.(sqlbuilder.DropIndexStmtHooker)
-	a.True(ok).NotNil(hook)
-	qs, err := hook.DropIndexStmtHook(stmt)
-	a.NotError(err).Equal(qs, []string{"ALTER TABLE {tbl} DROP INDEX {index_name}"})
+	suite.ForEach(func(t *test.Test) {
+		stmt := sqlbuilder.DropIndex(t.DB).Table("tbl").Name("index_name")
+		a.NotNil(stmt)
+
+		hook, ok := t.DB.Dialect().(sqlbuilder.DropIndexStmtHooker)
+		a.True(ok).NotNil(hook)
+		qs, err := hook.DropIndexStmtHook(stmt)
+		a.NotError(err).Equal(qs, []string{"ALTER TABLE {tbl} DROP INDEX {index_name}"})
+	}, "mysql")
 }
 
 func TestMysql_TruncateTableStmtHook(t *testing.T) {
 	a := assert.New(t)
-	my := dialect.Mysql()
 
-	// mysql 不需要 ai 的相关设置
-	stmt := sqlbuilder.TruncateTable(nil, my).Table("tbl", "")
-	a.NotNil(stmt)
+	suite := test.NewSuite(a)
+	defer suite.Close()
 
-	hook, ok := my.(sqlbuilder.TruncateTableStmtHooker)
-	a.True(ok).NotNil(hook)
-	qs, err := hook.TruncateTableStmtHook(stmt)
-	a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE {tbl}"})
+	suite.ForEach(func(t *test.Test) {
+		// mysql 不需要 ai 的相关设置
+		stmt := sqlbuilder.TruncateTable(t.DB).Table("tbl", "")
+		a.NotNil(stmt)
+
+		hook, ok := t.DB.Dialect().(sqlbuilder.TruncateTableStmtHooker)
+		a.True(ok).NotNil(hook)
+		qs, err := hook.TruncateTableStmtHook(stmt)
+		a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE {tbl}"})
+	}, "mysql")
 }
 
 func TestMysql_CreateTableOptions(t *testing.T) {

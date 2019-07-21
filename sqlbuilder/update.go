@@ -29,9 +29,9 @@ type updateSet struct {
 }
 
 // Update 声明一条 UPDATE 的 SQL 语句
-func Update(e Engine, d Dialect) *UpdateStmt {
+func Update(e Engine) *UpdateStmt {
 	stmt := &UpdateStmt{values: []*updateSet{}}
-	stmt.execStmt = newExecStmt(e, d, stmt)
+	stmt.execStmt = newExecStmt(e, stmt)
 	stmt.where = newWhere()
 
 	return stmt

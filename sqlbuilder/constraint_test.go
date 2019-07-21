@@ -33,17 +33,14 @@ func TestConstraint(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-
-		addStmt := sqlbuilder.AddConstraint(db, dialect)
+		addStmt := sqlbuilder.AddConstraint(t.DB)
 		err := addStmt.Table("users").
 			Unique("u_user_name", "name").
 			Exec()
 		t.NotError(err, "%s@%s", err, t.DriverName)
 
 		// 删除约束
-		dropStmt := sqlbuilder.DropConstraint(db, dialect).
+		dropStmt := sqlbuilder.DropConstraint(t.DB).
 			Table("users").
 			Constraint("u_user_name")
 		err = dropStmt.Exec()
@@ -76,16 +73,13 @@ func TestAddConstraintStmt_Check(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-
-		err := sqlbuilder.AddConstraint(db, dialect).
+		err := sqlbuilder.AddConstraint(t.DB).
 			Table("info").
 			Check("nick_not_null", "nickname IS NOT NULL").
 			Exec()
 		t.NotError(err)
 
-		err = sqlbuilder.DropConstraint(db, dialect).
+		err = sqlbuilder.DropConstraint(t.DB).
 			Table("info").
 			Constraint("nick_not_null").
 			Exec()
@@ -102,17 +96,14 @@ func TestAddConstraintStmt_PK(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-
 		// 已经存在主键，出错
-		addStmt := sqlbuilder.AddConstraint(db, dialect)
+		addStmt := sqlbuilder.AddConstraint(t.DB)
 		err := addStmt.Table("info").
 			PK("tel").
 			Exec()
 		t.Error(err)
 
-		err = sqlbuilder.DropConstraint(db, dialect).
+		err = sqlbuilder.DropConstraint(t.DB).
 			Table("info").
 			Constraint(sqlbuilder.PKName("info")).
 			Exec()
@@ -134,17 +125,14 @@ func TestAddConstraintStmt_FK(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-
 		// 已经存在主键，出错
-		addStmt := sqlbuilder.AddConstraint(db, dialect)
+		addStmt := sqlbuilder.AddConstraint(t.DB)
 		err := addStmt.Table("info").
 			FK("info_fk", "uid", "users", "id", "CASCADE", "CASCADE").
 			Exec()
 		t.Error(err)
 
-		err = sqlbuilder.DropConstraint(db, dialect).
+		err = sqlbuilder.DropConstraint(t.DB).
 			Table("info").
 			Constraint("info_fk").
 			Exec()

@@ -115,7 +115,7 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 
 		for i := 0; i < b.N; i++ {
 			_, err := sqlbuilder.
-				Update(t.DB, t.DB.Dialect()).Table("{#groups}").
+				Update(t.DB).Table("{#groups}").
 				Set("name", "n1").
 				Increase("created", 1).
 				Where("{id}=?", i+1).

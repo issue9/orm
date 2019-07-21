@@ -244,7 +244,7 @@ func (u *Upgrader) Do() error {
 }
 
 func (u *Upgrader) addColumns(e Engine) error {
-	sql := sqlbuilder.AddColumn(e, e.Dialect())
+	sql := sqlbuilder.AddColumn(e)
 
 	for _, col := range u.addCols {
 		sql.Reset()
@@ -261,7 +261,7 @@ func (u *Upgrader) addColumns(e Engine) error {
 }
 
 func (u *Upgrader) dropColumns(e Engine) error {
-	sql := sqlbuilder.DropColumn(e, e.Dialect())
+	sql := sqlbuilder.DropColumn(e)
 
 	for _, n := range u.dropCols {
 		sql.Reset()
@@ -277,7 +277,7 @@ func (u *Upgrader) dropColumns(e Engine) error {
 }
 
 func (u *Upgrader) dropConstraints(e Engine) error {
-	sql := sqlbuilder.DropConstraint(e, e.Dialect())
+	sql := sqlbuilder.DropConstraint(e)
 
 	for _, n := range u.dropCols {
 		sql.Reset()
@@ -293,7 +293,7 @@ func (u *Upgrader) dropConstraints(e Engine) error {
 }
 
 func (u *Upgrader) addConstraints(e Engine) error {
-	stmt := sqlbuilder.AddConstraint(e, e.Dialect())
+	stmt := sqlbuilder.AddConstraint(e)
 
 	for _, c := range u.addConts {
 		stmt.Reset()
@@ -359,7 +359,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 }
 
 func (u *Upgrader) addIndexes(e Engine) error {
-	stmt := sqlbuilder.CreateIndex(e, e.Dialect())
+	stmt := sqlbuilder.CreateIndex(e)
 
 	for _, index := range u.addIdxs {
 		stmt.Reset()
@@ -387,7 +387,7 @@ func (u *Upgrader) addIndexes(e Engine) error {
 }
 
 func (u *Upgrader) dropIndexes(e Engine) error {
-	stmt := sqlbuilder.DropIndex(e, e.Dialect())
+	stmt := sqlbuilder.DropIndex(e)
 
 	for _, index := range u.dropIdxs {
 		stmt.Reset()

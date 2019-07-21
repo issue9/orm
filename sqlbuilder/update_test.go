@@ -24,10 +24,7 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Test) {
-		db := t.DB.DB
-		d := t.DB.Dialect()
-
-		u := sqlbuilder.Update(db, d).
+		u := sqlbuilder.Update(t.DB).
 			Table("users").
 			Set("c1", "v1").
 			Set("c1", "v1")
@@ -45,17 +42,14 @@ func TestUpdate(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-
-		u := sqlbuilder.Update(db, dialect).Table("users")
+		u := sqlbuilder.Update(t.DB).Table("users")
 		t.NotNil(u)
 
 		u.Set("name", "name222").Where("id=?", 2)
 		_, err := u.Exec()
 		t.NotError(err)
 
-		sel := sqlbuilder.Select(db, dialect).
+		sel := sqlbuilder.Select(t.DB).
 			Column("name").
 			From("users").
 			Where("id=?", 2)
@@ -78,17 +72,14 @@ func TestUpdateStmt_Increase(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-
-		u := sqlbuilder.Update(db, dialect).
+		u := sqlbuilder.Update(t.DB).
 			Table("users").
 			Increase("age", 5).
 			Where("id=?", 1)
 		t.NotNil(u)
 		t.NotError(u.Exec())
 
-		sel := sqlbuilder.Select(db, dialect).
+		sel := sqlbuilder.Select(t.DB).
 			Column("age").
 			From("users").
 			Where("id=?", 1)
@@ -128,10 +119,8 @@ func TestUpdateStmt_OCC(t *testing.T) {
 	suite.ForEach(func(t *test.Test) {
 		initDB(t)
 		defer clearDB(t)
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
 
-		u := sqlbuilder.Update(db, dialect).
+		u := sqlbuilder.Update(t.DB).
 			Table("users").
 			Set("age", 100).
 			Where("id=?", 1).
@@ -139,7 +128,7 @@ func TestUpdateStmt_OCC(t *testing.T) {
 		r, err := u.Exec()
 		a.NotError(err).NotNil(r)
 
-		sel := sqlbuilder.Select(db, dialect).
+		sel := sqlbuilder.Select(t.DB).
 			Column("age").
 			From("users").
 			Where("id=?", 1)

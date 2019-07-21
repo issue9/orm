@@ -21,12 +21,12 @@ type InsertStmt struct {
 }
 
 // Insert 声明一条插入语句
-func Insert(e Engine, d Dialect) *InsertStmt {
+func Insert(e Engine) *InsertStmt {
 	stmt := &InsertStmt{
 		cols: make([]string, 0, 10),
 		args: make([][]interface{}, 0, 10),
 	}
-	stmt.execStmt = newExecStmt(e, d, stmt)
+	stmt.execStmt = newExecStmt(e, stmt)
 
 	return stmt
 }
@@ -35,7 +35,7 @@ func Insert(e Engine, d Dialect) *InsertStmt {
 //
 // 构建 insert into (...) select .... 语句
 func (stmt *SelectStmt) Insert() *InsertStmt {
-	insert := Insert(stmt.Engine(), stmt.Dialect())
+	insert := Insert(stmt.Engine())
 	return insert.Select(stmt)
 }
 
@@ -193,7 +193,7 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 		return 0, errors.New("多行插入语句，无法获取 LastInsertIDContext")
 	}
 
-	sql, append := stmt.dialect.LastInsertIDSQL(stmt.table, col)
+	sql, append := stmt.Dialect().LastInsertIDSQL(stmt.table, col)
 	if sql == "" {
 		rslt, err := stmt.ExecContext(ctx)
 		if err != nil {

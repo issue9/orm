@@ -184,7 +184,7 @@ func (s *sqlite3) buildSQLS(e sqlbuilder.Engine, table *s3.Table, tableName stri
 	tmpName := "temp_" + tableName + "_temp"
 	ret = append(ret, table.CreateTableSQL(tmpName))
 
-	sel := sqlbuilder.Select(e, s).From(tableName)
+	sel := sqlbuilder.Select(e).From(tableName)
 	for col := range table.Columns {
 		sel.Column(col)
 	}

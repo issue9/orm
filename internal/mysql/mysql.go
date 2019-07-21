@@ -13,8 +13,6 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-var quoteReplacer = strings.NewReplacer("`", "")
-
 // Table 表信息
 type Table struct {
 	Columns     map[string]string                // 列信息，名称=>类型

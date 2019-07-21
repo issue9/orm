@@ -24,10 +24,7 @@ func TestInsert(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
-
-		i := sqlbuilder.Insert(db, dialect).Table("users")
+		i := sqlbuilder.Insert(t.DB).Table("users")
 		a.NotNil(i)
 
 		i.Columns("id", "name").Values(10, "name10").Values(11, "name11")

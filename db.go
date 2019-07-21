@@ -67,7 +67,7 @@ func (db *DB) Close() error {
 // Version 数据库服务端的版本号
 func (db *DB) Version() (string, error) {
 	if db.version == "" {
-		ver, err := sqlbuilder.Version(db, db.Dialect())
+		ver, err := sqlbuilder.Version(db)
 		if err != nil {
 			return "", err
 		}

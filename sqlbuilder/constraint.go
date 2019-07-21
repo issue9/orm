@@ -60,9 +60,9 @@ type AddConstraintStmt struct {
 }
 
 // AddConstraint 声明添加约束的语句
-func AddConstraint(e Engine, d Dialect) *AddConstraintStmt {
+func AddConstraint(e Engine) *AddConstraintStmt {
 	stmt := &AddConstraintStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
 
@@ -150,7 +150,7 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		return nil, ErrConstraintIsEmpty
 	}
 
-	if hook, ok := stmt.dialect.(AddConstraintStmtHooker); ok {
+	if hook, ok := stmt.Dialect().(AddConstraintStmtHooker); ok {
 		return hook.AddConstraintStmtHook(stmt)
 	}
 
@@ -232,9 +232,9 @@ type DropConstraintStmt struct {
 }
 
 // DropConstraint 声明一条删除表约束的语句
-func DropConstraint(e Engine, d Dialect) *DropConstraintStmt {
+func DropConstraint(e Engine) *DropConstraintStmt {
 	stmt := &DropConstraintStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
 
@@ -264,7 +264,7 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 		return nil, ErrValueIsEmpty
 	}
 
-	if hook, ok := stmt.dialect.(DropConstraintStmtHooker); ok {
+	if hook, ok := stmt.Dialect().(DropConstraintStmtHooker); ok {
 		return hook.DropConstraintStmtHook(stmt)
 	}
 

@@ -35,10 +35,8 @@ func TestIndex(t *testing.T) {
 	suite.ForEach(func(t *test.Test) {
 		initDB(t)
 		defer clearDB(t)
-		db := t.DB.DB
-		dialect := t.DB.Dialect()
 
-		createStmt := sqlbuilder.CreateIndex(db, dialect).
+		createStmt := sqlbuilder.CreateIndex(t.DB).
 			Table("users").
 			Name("index_key").
 			Columns("id", "name")
@@ -62,7 +60,7 @@ func TestIndex(t *testing.T) {
 			Exec()
 		t.NotError(err)
 
-		dropStmt := sqlbuilder.DropIndex(db, dialect).
+		dropStmt := sqlbuilder.DropIndex(t.DB).
 			Table("users").
 			Name("index_key")
 		err = dropStmt.Exec()
