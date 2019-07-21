@@ -44,6 +44,14 @@ var sqlite3CreateTable = []string{`CREATE TABLE fk_table(
 	`create unique index index_user_unique_email_id on usr(email,id)`,
 }
 
+func clearSqlite3CreateTable(t *test.Test, db core.Engine) {
+	_, err := db.Exec("DROP TABLE `usr`")
+	t.NotError(err)
+
+	_, err = db.Exec("DROP TABLE `fk_table`")
+	t.NotError(err)
+}
+
 func TestSqlite3_VersionSQL(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
@@ -66,6 +74,8 @@ func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 			_, err := db.Exec(query)
 			t.NotError(err)
 		}
+
+		defer clearSqlite3CreateTable(t, db)
 
 		// check 约束
 		err := sqlbuilder.AddConstraint(db).
@@ -91,6 +101,8 @@ func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 			t.NotError(err)
 		}
 
+		defer clearSqlite3CreateTable(t, db)
+
 		testDialectDropConstraintStmtHook(t)
 	}, "sqlite3")
 }
@@ -107,6 +119,8 @@ func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 			_, err := db.Exec(query)
 			t.NotError(err)
 		}
+
+		defer clearSqlite3CreateTable(t, db)
 
 		err := sqlbuilder.DropColumn(db).
 			Table("usr").

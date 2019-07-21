@@ -72,6 +72,14 @@ func TestParseSqlite3CreateTable(t *testing.T) {
 			t.NotError(err)
 		}
 
+		defer func() {
+			_, err := db.Exec("DROP TABLE `usr`")
+			t.NotError(err)
+
+			_, err = db.Exec("DROP TABLE `fk_table`")
+			t.NotError(err)
+		}()
+
 		table, err := sqlite3.ParseCreateTable("usr", db)
 		t.NotError(err).NotNil(table)
 

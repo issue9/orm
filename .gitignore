@@ -11,7 +11,7 @@
 *.swp
 
 # 测试文件
-test.db
+orm_test.db
 
 # mac os x
 .DS_Store

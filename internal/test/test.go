@@ -28,7 +28,7 @@ var cases = []struct {
 }{
 	{
 		prefix:     "prefix_",
-		dsn:        "./orm_test.db",
+		dsn:        "./orm_test.db?_fk=true",
 		dialect:    dialect.Sqlite3(),
 		driverName: "sqlite3",
 	},
@@ -79,6 +79,8 @@ func NewSuite(a *assert.Assertion) *Suite {
 	return s
 }
 
+// Close 销毁测试用例，关闭数据库。
+// 如果是 sqlite3，还会删除数据库文件。
 func (s Suite) Close() {
 	for _, t := range s.tests {
 		t.NotError(t.DB.Close())
