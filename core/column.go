@@ -77,3 +77,11 @@ func (c *Column) IsZero(v reflect.Value) bool {
 
 	return false
 }
+
+// Clone 复制 Column
+func (c *Column) Clone() *Column {
+	cc := &Column{}
+	*cc = *c
+
+	return cc
+}

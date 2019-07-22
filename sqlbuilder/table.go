@@ -106,9 +106,6 @@ func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, nullable, 
 }
 
 // Columns 添加列
-//
-// name 列名
-// typ 包括了长度 PK 等所有信息，比如 INT NOT NULL PRIMARY KEY AUTO_INCREMENT
 func (stmt *CreateTableStmt) Columns(col ...*core.Column) *CreateTableStmt {
 	stmt.columns = append(stmt.columns, col...)
 

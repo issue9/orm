@@ -137,7 +137,7 @@ func create(e Engine, v interface{}) error {
 		if col.AI {
 			sb.AutoIncrement(col.Name, col.GoType)
 		} else {
-			sb.Column(col.Name, col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...)
+			sb.Columns(col.Clone())
 		}
 	}
 

@@ -29,3 +29,17 @@ func TestColumn_IsZero(t *testing.T) {
 	a.False(col.IsZero(reflect.ValueOf([]byte{'0'})))
 	a.False(col.IsZero(reflect.ValueOf(1)))
 }
+
+func TestColumn_Clone(t *testing.T) {
+	a := assert.New(t)
+
+	col := NewColumnFromGoType(IntType)
+	col.Nullable = true
+
+	cc := col.Clone()
+	a.Equal(cc, col)
+
+	col.Nullable = false
+	col.HasDefault = true
+	a.NotError(cc, col)
+}
