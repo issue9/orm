@@ -66,7 +66,10 @@ func (s *sqlite3) VersionSQL() string {
 }
 
 func (s *sqlite3) Prepare(query string) (string, map[string]int, error) {
-	query, orders := PrepareNamedArgs(query)
+	query, orders, err := PrepareNamedArgs(query)
+	if err != nil {
+		return "", nil, err
+	}
 	return s.replacer.Replace(query), orders, nil
 }
 

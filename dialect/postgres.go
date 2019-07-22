@@ -47,8 +47,12 @@ func (p *postgres) VersionSQL() string {
 }
 
 func (p *postgres) Prepare(query string) (string, map[string]int, error) {
-	query, orders := PrepareNamedArgs(query)
-	query, err := p.replace(query)
+	query, orders, err := PrepareNamedArgs(query)
+	if err != nil {
+		return "", nil, err
+	}
+
+	query, err = p.replace(query)
 	if err != nil {
 		return "", nil, err
 	}

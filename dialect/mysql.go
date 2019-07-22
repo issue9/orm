@@ -67,7 +67,10 @@ func (m *mysql) VersionSQL() string {
 }
 
 func (m *mysql) Prepare(query string) (string, map[string]int, error) {
-	query, orders := PrepareNamedArgs(query)
+	query, orders, err := PrepareNamedArgs(query)
+	if err != nil {
+		return "", nil, err
+	}
 	return m.replacer.Replace(query), orders, nil
 }
 

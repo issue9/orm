@@ -12,6 +12,15 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+// AfterFetcher 从数据库查询到数据之后，需要执行的操作。
+type AfterFetcher = fetch.AfterFetcher
+
+// Column 列结构
+type Column = core.Column
+
+// Dialect 数据库驱动特有的语言特性实现
+type Dialect = core.Dialect
+
 // BeforeUpdater 在更新之前调用的函数
 type BeforeUpdater interface {
 	BeforeUpdate() error
@@ -21,12 +30,6 @@ type BeforeUpdater interface {
 type BeforeInserter interface {
 	BeforeInsert() error
 }
-
-// AfterFetcher 从数据库查询到数据之后，需要执行的操作。
-type AfterFetcher = fetch.AfterFetcher
-
-// Column 列结构
-type Column = core.Column
 
 // Engine 是 DB 与 Tx 的共有接口。
 type Engine interface {
@@ -76,9 +79,6 @@ type Engine interface {
 
 	NewModel(v interface{}) (*Model, error)
 }
-
-// Dialect 数据库驱动特有的语言特性实现
-type Dialect = core.Dialect
 
 // SQL 用于生成 SQL 语句
 type SQL struct {

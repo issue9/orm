@@ -112,6 +112,7 @@ func TestPrepareNamedArgs(t *testing.T) {
 		input  string
 		query  string
 		orders map[string]int
+		err    bool
 	}{
 		{
 			input:  "select * from table",
@@ -138,11 +139,36 @@ func TestPrepareNamedArgs(t *testing.T) {
 			query:  "select * from table where {编号}=? and {name} like ?",
 			orders: map[string]int{"编号": 0, "name": 1},
 		},
+		{
+			input:  "INSERT INTO users({id},{name}) VALUES (@id,@name)",
+			query:  "INSERT INTO users({id},{name}) VALUES (?,?)",
+			orders: map[string]int{"id": 0, "name": 1},
+		},
+		{
+			input:  "INSERT INTO users({id},{name}) VALUES (?,?)",
+			query:  "INSERT INTO users({id},{name}) VALUES (?,?)",
+			orders: map[string]int{},
+		},
+		{ // 参数名相同
+			input: "INSERT INTO users({id},{name}) VALUES (@id,@id)",
+			err:   true,
+		},
+		{ // 同时两种参数
+			input: "INSERT INTO users({id},{name}) VALUES (@id,?)",
+			err:   true,
+		},
 	}
 
 	for _, item := range data {
-		q, o := PrepareNamedArgs(item.input)
-		a.Equal(o, item.orders)
+		q, o, err := PrepareNamedArgs(item.input)
+
+		if item.err {
+			a.Error(err).Nil(o).Empty(q)
+			continue
+		}
+
+		a.NotError(err).
+			Equal(o, item.orders)
 		sqltest.Equal(a, q, item.query)
 	}
 }

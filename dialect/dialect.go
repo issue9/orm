@@ -118,30 +118,51 @@ func replaceNamedArgs(query string, args []interface{}) string {
 }
 
 // PrepareNamedArgs 对命名参数进行预处理
-func PrepareNamedArgs(query string) (string, map[string]int) {
+func PrepareNamedArgs(query string) (string, map[string]int, error) {
 	orders := map[string]int{}
 	builder := core.NewBuilder("")
 	start := -1
 	cnt := 0
 
+	write := func(name string, val int) error {
+		builder.WriteString(" ? ")
+
+		if _, found := orders[name]; found {
+			return fmt.Errorf("存在相同的参数名：%s", name)
+		}
+		orders[name] = cnt
+		return nil
+	}
+
+	var qm bool // 是否存在 ?
 	for index, c := range query {
 		switch {
 		case c == '@':
 			start = index + 1
 		case start != -1 && !unicode.IsLetter(c):
-			builder.WriteString(" ? ")
-			orders[query[start:index]] = cnt
+			if err := write(query[start:index], cnt); err != nil {
+				return "", nil, err
+			}
+			builder.WriteRunes(c) // 当前的字符不能丢
 			cnt++
 			start = -1
 		case start == -1:
 			builder.WriteRunes(c)
+			if c == '?' {
+				qm = true
+			}
 		}
 	}
 
-	if start > -1 {
-		builder.WriteString(" ?")
-		orders[query[start:]] = cnt
+	if qm && len(orders) > 0 {
+		return "", nil, errors.New("命名参数与 ? 不能同时存在")
 	}
 
-	return builder.String(), orders
+	if start > -1 {
+		if err := write(query[start:], cnt); err != nil {
+			return "", nil, err
+		}
+	}
+
+	return builder.String(), orders, nil
 }

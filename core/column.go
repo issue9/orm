@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// CreateTableStmt.Column 用到的数据类型。
+// 基本的数据类型
 var (
 	BoolType    = reflect.TypeOf(true)
 	IntType     = reflect.TypeOf(int(1))
@@ -33,10 +33,6 @@ var (
 	NullFloat64Type = reflect.TypeOf(sql.NullFloat64{})
 	RawBytesType    = reflect.TypeOf(sql.RawBytes{})
 	TimeType        = reflect.TypeOf(time.Time{})
-
-	//UintptrType=reflect.TypeOf(uintptr(1))
-	//Complex64Type=reflect.TypeOf(complex64(1,1))
-	//Complex128Type=reflect.TypeOf(complex128(1,1))
 )
 
 // Column 列结构
