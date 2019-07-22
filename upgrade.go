@@ -28,6 +28,10 @@ type Upgrader struct {
 }
 
 // Upgrade 生成 Upgrader 对象
+//
+// Upgrader 提供了对现有的数据模型 v 与数据表之间的操作。
+// 删除操作需要保证已经存在于数据表；
+// 而添加操作需要保证已经存在于模型 v，又不存在于数据表。
 func (db *DB) Upgrade(v interface{}) (*Upgrader, error) {
 	m, err := db.NewModel(v)
 	if err != nil {
@@ -201,7 +205,7 @@ func (u *Upgrader) Do() error {
 		}
 	}
 
-	// 外键约束可能正好依赖被删除的列。
+	// 约束可能正好依赖被删除的列。
 	// 所以要在删除约束之后，再删除列信息。
 	if len(u.dropCols) > 0 {
 		if err := u.dropColumns(e); err != nil {

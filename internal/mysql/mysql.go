@@ -34,7 +34,7 @@ func ParseCreateTable(table string, engine core.Engine) (*Table, error) {
 	}()
 
 	if !rows.Next() {
-		return nil, errors.New("未找到 CREATE TABLE 数据")
+		return nil, fmt.Errorf("未找到任何与 %s 相关的 CREATE TABLE 数据", table)
 	}
 
 	var tableName, sql string

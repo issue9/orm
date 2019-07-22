@@ -99,7 +99,7 @@ func parseCreateTable(table *Table, tableName string, engine core.Engine) error 
 	}()
 
 	if !rows.Next() {
-		return errors.New("未找到任务 CREATE TABLE 数据")
+		return fmt.Errorf("未找到任何与 %s 相关的 CREATE TABLE 数据", tableName)
 	}
 
 	var sql string
