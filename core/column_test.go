@@ -13,22 +13,19 @@ import (
 
 func TestColumn_IsZero(t *testing.T) {
 	a := assert.New(t)
-	col := &Column{}
 
-	col.GoType = IntType
-	col.GoZero = reflect.Zero(col.GoType).Interface()
+	col := NewColumnFromGoType(IntType)
 	a.True(col.IsZero(reflect.ValueOf(int(0))))
 	a.False(col.IsZero(reflect.ValueOf(1)))
 
-	col.GoType = reflect.TypeOf([]byte{})
-	col.GoZero = reflect.Zero(col.GoType).Interface()
+	col = NewColumnFromGoType(reflect.TypeOf([]byte{}))
 	a.True(col.IsZero(reflect.ValueOf([]byte{})))
 	a.True(col.IsZero(reflect.ValueOf([]byte(""))))
 	a.False(col.IsZero(reflect.ValueOf([]byte{'0'})))
 
-	col.GoType = RawBytesType
-	col.GoZero = reflect.Zero(col.GoType).Interface()
+	col = NewColumnFromGoType(RawBytesType)
 	a.True(col.IsZero(reflect.ValueOf([]byte{})))
 	a.True(col.IsZero(reflect.ValueOf([]byte(""))))
 	a.False(col.IsZero(reflect.ValueOf([]byte{'0'})))
+	a.False(col.IsZero(reflect.ValueOf(1)))
 }

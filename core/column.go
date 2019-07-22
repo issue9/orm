@@ -50,18 +50,14 @@ type Column struct {
 
 	GoType reflect.Type // Go 语言中的数据类型
 	GoName string       // Go 中的字段名
-	GoZero interface{}  // Go 中的零值
+	goZero interface{}  // Go 中的零值
 }
 
-// NewColumnFromGo 从 Go 类型中生成 Column
-//
-// 默认情况下数据库中的字段名也采用 field.Name，暨与 GoName 值是相同的
-func NewColumnFromGo(field reflect.StructField) *Column {
+// NewColumnFromGoType 从 Go 类型中生成 Column，会初始化 goZero
+func NewColumnFromGoType(goType reflect.Type) *Column {
 	return &Column{
-		Name:   field.Name,
-		GoType: field.Type,
-		GoZero: reflect.Zero(field.Type).Interface(),
-		GoName: field.Name,
+		GoType: goType,
+		goZero: reflect.Zero(goType).Interface(),
 	}
 }
 
@@ -72,7 +68,7 @@ func (c *Column) IsZero(v reflect.Value) bool {
 	}
 
 	if c.GoType.Comparable() {
-		return c.GoZero == v.Interface()
+		return c.goZero == v.Interface()
 	}
 
 	if v.Kind() == reflect.Slice {

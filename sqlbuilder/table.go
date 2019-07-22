@@ -82,15 +82,15 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 }
 
 func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *core.Column {
-	return &core.Column{
-		Name:       name,
-		GoType:     goType,
-		AI:         ai,
-		Nullable:   nullable,
-		HasDefault: hasDefault,
-		Default:    def,
-		Length:     length,
-	}
+	col := core.NewColumnFromGoType(goType)
+	col.Name = name
+	col.AI = ai
+	col.Nullable = nullable
+	col.HasDefault = hasDefault
+	col.Default = def
+	col.Length = length
+
+	return col
 }
 
 // Column 添加列

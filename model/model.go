@@ -205,7 +205,7 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 			continue
 		}
 
-		col := core.NewColumnFromGo(field)
+		col := newColumn(field)
 		if err := m.parseColumn(col, tag); err != nil {
 			return err
 		}

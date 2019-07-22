@@ -11,6 +11,13 @@ import (
 	"github.com/issue9/orm/v2/core"
 )
 
+func newColumn(field reflect.StructField) *core.Column {
+	col := core.NewColumnFromGoType(field.Type)
+	col.Name = field.Name
+	col.GoName = field.Name
+	return col
+}
+
 // 检测长度是否合法，必须要  Column 初始化已经完成。
 func checkColumnLen(c *core.Column) error {
 	if c.GoType.Kind() == reflect.String {
