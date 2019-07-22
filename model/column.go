@@ -15,7 +15,6 @@ import (
 type Column struct {
 	*core.Column
 
-	model  *Model
 	zero   interface{} // GoType 的零值
 	GoName string      // 结构字段名
 }
@@ -27,7 +26,6 @@ func (m *Model) newColumn(field reflect.StructField) *Column {
 			GoType: field.Type,
 		},
 		zero:   reflect.Zero(field.Type).Interface(),
-		model:  m,
 		GoName: field.Name,
 	}
 }

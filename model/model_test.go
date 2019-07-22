@@ -260,7 +260,6 @@ func TestModel_setOCC(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
 	col := &Column{
-		model: m,
 		Column: &core.Column{
 			GoType: core.IntType,
 		},
@@ -308,7 +307,6 @@ func TestModel_setDefault(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
 	col := &Column{
-		model:  m,
 		Column: &core.Column{},
 	}
 
