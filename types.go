@@ -25,6 +25,9 @@ type BeforeInserter interface {
 // AfterFetcher 从数据库查询到数据之后，需要执行的操作。
 type AfterFetcher = fetch.AfterFetcher
 
+// Column 列结构
+type Column = core.Column
+
 // Engine 是 DB 与 Tx 的共有接口。
 type Engine interface {
 	core.Engine

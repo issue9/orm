@@ -25,8 +25,8 @@ type Metaer interface {
 
 // ForeignKey 外键
 type ForeignKey struct {
-	Name                     string  // 外键约束名
-	Column                   *Column // 关联的列
+	Name                     string       // 外键约束名
+	Column                   *core.Column // 关联的列
 	RefTableName, RefColName string
 	UpdateRule, DeleteRule   string
 }
@@ -34,19 +34,19 @@ type ForeignKey struct {
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
 	Name    string              // 表的名称
-	Columns []*Column           // 所有的列
-	OCC     *Column             // 乐观锁
+	Columns []*core.Column      // 所有的列
+	OCC     *core.Column        // 乐观锁
 	Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
 
 	// 索引内容
 	//
 	// 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
-	Indexes map[string][]*Column
+	Indexes map[string][]*core.Column
 
 	// 唯一约束
 	//
 	// 键名为约束名，键值为该约束关联的列
-	Uniques map[string][]*Column
+	Uniques map[string][]*core.Column
 
 	// Check 约束
 	//
@@ -54,8 +54,8 @@ type Model struct {
 	Checks map[string]string
 
 	FK []*ForeignKey
-	AI *Column
-	PK []*Column
+	AI *core.Column
+	PK []*core.Column
 }
 
 func propertyError(field, name, message string) error {
@@ -83,9 +83,9 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 	}
 
 	m := &Model{
-		Columns: make([]*Column, 0, rtype.NumField()),
-		Indexes: map[string][]*Column{},
-		Uniques: map[string][]*Column{},
+		Columns: make([]*core.Column, 0, rtype.NumField()),
+		Indexes: map[string][]*core.Column{},
+		Uniques: map[string][]*core.Column{},
 		Name:    rtype.Name(),
 		FK:      []*ForeignKey{},
 		Checks:  map[string]string{},
@@ -174,7 +174,7 @@ func (m *Model) sanitize() error {
 	}
 
 	for _, c := range m.Columns {
-		if err := c.checkLen(); err != nil {
+		if err := checkColumnLen(c); err != nil {
 			return err
 		}
 	}
@@ -205,7 +205,7 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 			continue
 		}
 
-		col := m.newColumn(field)
+		col := core.NewColumnFromGo(field)
 		if err := m.parseColumn(col, tag); err != nil {
 			return err
 		}
@@ -215,7 +215,7 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 }
 
 // 分析一个字段。
-func (m *Model) parseColumn(col *Column, tag string) (err error) {
+func (m *Model) parseColumn(col *core.Column, tag string) (err error) {
 	if len(tag) == 0 { // 没有附加的 struct tag，直接取得几个关键信息返回。
 		m.Columns = append(m.Columns, col)
 		return nil
@@ -236,11 +236,11 @@ func (m *Model) parseColumn(col *Column, tag string) (err error) {
 		case "unique":
 			err = m.setUnique(col, tag.Args)
 		case "nullable":
-			err = col.setNullable(tag.Args)
+			err = setColumnNullable(col, tag.Args)
 		case "ai":
 			err = m.setAI(col, tag.Args)
 		case "len":
-			err = col.setLen(tag.Args)
+			err = setColumnLen(col, tag.Args)
 		case "fk":
 			err = m.setFK(col, tag.Args)
 		case "default":
@@ -297,7 +297,7 @@ func (m *Model) parseMeta(tag string) error {
 }
 
 // occ(true) or occ
-func (m *Model) setOCC(c *Column, vals []string) error {
+func (m *Model) setOCC(c *core.Column, vals []string) error {
 	if c.AI || c.Nullable {
 		return propertyError(c.Name, "occ", "自增列和允许为空的列不能作为乐观锁列")
 	}
@@ -332,7 +332,7 @@ func (m *Model) setOCC(c *Column, vals []string) error {
 }
 
 // default(5)
-func (m *Model) setDefault(col *Column, vals []string) error {
+func (m *Model) setDefault(col *core.Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "default", "太多的值")
 	}
@@ -344,7 +344,7 @@ func (m *Model) setDefault(col *Column, vals []string) error {
 }
 
 // index(idx_name)
-func (m *Model) setIndex(col *Column, vals []string) error {
+func (m *Model) setIndex(col *core.Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "index", "太多的值")
 	}
@@ -355,7 +355,7 @@ func (m *Model) setIndex(col *Column, vals []string) error {
 }
 
 // pk
-func (m *Model) setPK(col *Column, vals []string) error {
+func (m *Model) setPK(col *core.Column, vals []string) error {
 	if len(m.PK) > 0 {
 		return propertyError(col.Name, "pk", "已经存在自增约束，不能再指定主键约束")
 	}
@@ -369,7 +369,7 @@ func (m *Model) setPK(col *Column, vals []string) error {
 }
 
 // unique(unique_name)
-func (m *Model) setUnique(col *Column, vals []string) error {
+func (m *Model) setUnique(col *core.Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
@@ -381,7 +381,7 @@ func (m *Model) setUnique(col *Column, vals []string) error {
 }
 
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
-func (m *Model) setFK(col *Column, vals []string) error {
+func (m *Model) setFK(col *core.Column, vals []string) error {
 	if len(vals) < 3 {
 		return propertyError(col.Name, "fk", "参数不够")
 	}
@@ -405,7 +405,7 @@ func (m *Model) setFK(col *Column, vals []string) error {
 }
 
 // ai
-func (m *Model) setAI(col *Column, vals []string) (err error) {
+func (m *Model) setAI(col *core.Column, vals []string) (err error) {
 	if len(vals) != 0 {
 		return propertyError(col.Name, "ai", "太多的值")
 	}
@@ -426,7 +426,7 @@ func (m *Model) setAI(col *Column, vals []string) (err error) {
 // FindColumn 查找指定名称的列
 //
 // 不存在该列则返回 nil
-func (m *Model) FindColumn(name string) *Column {
+func (m *Model) FindColumn(name string) *core.Column {
 	for _, col := range m.Columns {
 		if col.Name == name {
 			return col

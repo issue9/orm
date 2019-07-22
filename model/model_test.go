@@ -131,42 +131,32 @@ func TestModels_New(t *testing.T) {
 func TestModel_sanitize(t *testing.T) {
 	a := assert.New(t)
 
-	ai := &Column{
-		Column: &core.Column{
-			GoType: core.IntType,
-		},
+	ai := &core.Column{
+		GoType: core.IntType,
 	}
 
-	pk1 := &Column{
-		Column: &core.Column{
-			GoType: core.IntType,
-		},
+	pk1 := &core.Column{
+		GoType: core.IntType,
 	}
 
-	pk2 := &Column{
-		Column: &core.Column{
-			GoType: core.IntType,
-		},
+	pk2 := &core.Column{
+		GoType: core.IntType,
 	}
 
-	nullable := &Column{
-		Column: &core.Column{
-			GoType:   core.IntType,
-			Nullable: true,
-		},
+	nullable := &core.Column{
+		GoType:   core.IntType,
+		Nullable: true,
 	}
 
-	def := &Column{
-		Column: &core.Column{
-			GoType:     core.IntType,
-			HasDefault: true,
-			Default:    "1",
-		},
+	def := &core.Column{
+		GoType:     core.IntType,
+		HasDefault: true,
+		Default:    "1",
 	}
 
 	m := &Model{
 		Name:    "m1",
-		Columns: []*Column{ai, pk1, pk2, nullable, def},
+		Columns: []*core.Column{ai, pk1, pk2, nullable, def},
 		AI:      ai,
 	}
 
@@ -183,50 +173,44 @@ func TestModel_sanitize(t *testing.T) {
 
 	// 多列主键约束
 	m.AI = nil
-	m.PK = []*Column{pk1, pk2}
+	m.PK = []*core.Column{pk1, pk2}
 	a.NotError(m.sanitize())
 
 	// 多列主键约束，可以有 nullable 和 default
 	m.AI = nil
-	m.PK = []*Column{pk1, pk2, nullable, def}
+	m.PK = []*core.Column{pk1, pk2, nullable, def}
 	a.NotError(m.sanitize())
 
 	// 单列主键，可以是 nullable
 	m.AI = nil
-	m.PK = []*Column{nullable}
+	m.PK = []*core.Column{nullable}
 	a.NotError(m.sanitize())
 
 	// 单列主键，不能是 default
 	m.AI = nil
-	m.PK = []*Column{def}
+	m.PK = []*core.Column{def}
 	a.Error(m.sanitize())
 }
 
 func TestModel_parseColumn(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{
-		Columns: []*Column{},
+		Columns: []*core.Column{},
 	}
 
 	// 不存在 struct tag，则以 col.Name 作为键名
-	col := &Column{
-		Column: &core.Column{
-			Name: "xx",
-		},
+	col := &core.Column{
+		Name: "xx",
 	}
 	a.NotError(m.parseColumn(col, ""))
 	a.Equal(col.Name, "xx")
 
 	// name 值过多
-	col = &Column{
-		Column: &core.Column{},
-	}
+	col = &core.Column{}
 	a.Error(m.parseColumn(col, "name(m1,m2)"))
 
 	// 不存在的属性名称
-	col = &Column{
-		Column: &core.Column{},
-	}
+	col = &core.Column{}
 	a.Error(m.parseColumn(col, "not-exists-property(p1)"))
 }
 
@@ -259,10 +243,8 @@ func TestModel_parseMeta(t *testing.T) {
 func TestModel_setOCC(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
-	col := &Column{
-		Column: &core.Column{
-			GoType: core.IntType,
-		},
+	col := &core.Column{
+		GoType: core.IntType,
 	}
 
 	a.NotError(m.setOCC(col, nil))
@@ -306,9 +288,7 @@ func TestModel_setOCC(t *testing.T) {
 func TestModel_setDefault(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
-	col := &Column{
-		Column: &core.Column{},
-	}
+	col := &core.Column{}
 
 	// 未指定参数
 	a.Error(m.setDefault(col, nil))
@@ -321,7 +301,7 @@ func TestModel_setDefault(t *testing.T) {
 	a.True(col.HasDefault).Equal(col.Default, "1")
 
 	// 可以是主键的一部分
-	m.PK = []*Column{col, col}
+	m.PK = []*core.Column{col, col}
 	a.NotError(m.setDefault(col, []string{"1"}))
 	a.True(col.HasDefault).Equal(col.Default, "1")
 }
@@ -329,9 +309,7 @@ func TestModel_setDefault(t *testing.T) {
 func TestModel_setPK(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
-	col := &Column{
-		Column: &core.Column{},
-	}
+	col := &core.Column{}
 
 	// 过多的参数
 	a.Error(m.setPK(col, []string{"123"}))
@@ -341,11 +319,9 @@ func TestModel_setAI(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
 
-	col := &Column{
-		Column: &core.Column{
-			GoType:     core.StringType,
-			HasDefault: true,
-		},
+	col := &core.Column{
+		GoType:     core.StringType,
+		HasDefault: true,
 	}
 
 	// 太多的参数
