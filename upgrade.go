@@ -251,10 +251,13 @@ func (u *Upgrader) addColumns(e Engine) error {
 	sql := sqlbuilder.AddColumn(e)
 
 	for _, col := range u.addCols {
+		if !col.HasDefault && !col.Nullable {
+			return fmt.Errorf("新增列 %s 必须指定默认值或是 Nullable 属性", col.Name)
+		}
 		sql.Reset()
 
-		err := sql.Table(u.model.Name).
-			Column("{"+col.Name+"}", col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...).
+		err := sql.Table("#"+u.model.Name).
+			Column(col.Name, col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...).
 			Exec()
 		if err != nil {
 			return err
@@ -269,7 +272,7 @@ func (u *Upgrader) dropColumns(e Engine) error {
 
 	for _, n := range u.dropCols {
 		sql.Reset()
-		err := sql.Table(u.model.Name).
+		err := sql.Table("#" + u.model.Name).
 			Column(n).
 			Exec()
 		if err != nil {
@@ -283,9 +286,9 @@ func (u *Upgrader) dropColumns(e Engine) error {
 func (u *Upgrader) dropConstraints(e Engine) error {
 	sql := sqlbuilder.DropConstraint(e)
 
-	for _, n := range u.dropCols {
+	for _, n := range u.dropConts {
 		sql.Reset()
-		err := sql.Table(u.model.Name).
+		err := sql.Table("#" + u.model.Name).
 			Constraint(n).
 			Exec()
 		if err != nil {
@@ -299,9 +302,9 @@ func (u *Upgrader) dropConstraints(e Engine) error {
 func (u *Upgrader) addConstraints(e Engine) error {
 	stmt := sqlbuilder.AddConstraint(e)
 
+LOOP:
 	for _, c := range u.addConts {
-		stmt.Reset()
-		stmt.Table("{#" + u.model.Name + "}")
+		stmt.Reset().Table("#" + u.model.Name)
 
 		for _, fk := range u.model.FK {
 			if fk.Name != c {
@@ -312,7 +315,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 			if err := stmt.Exec(); err != nil {
 				return err
 			}
-			break
+			continue LOOP
 		}
 
 		for name, u := range u.model.Uniques {
@@ -322,7 +325,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 
 			cols := make([]string, 0, len(u))
 			for _, col := range u {
-				cols = append(cols, "{"+col.Name+"}")
+				cols = append(cols, col.Name)
 			}
 			stmt.Unique(name, cols...)
 
@@ -330,20 +333,20 @@ func (u *Upgrader) addConstraints(e Engine) error {
 				return err
 			}
 
-			break
+			continue LOOP
 		}
 
 		if u.model.PK != nil {
 			cols := make([]string, 0, len(u.model.PK))
 			for _, col := range u.model.PK {
-				cols = append(cols, "{"+col.Name+"}")
+				cols = append(cols, col.Name)
 			}
 			stmt.PK(cols...)
 
 			if err := stmt.Exec(); err != nil {
 				return err
 			}
-			break
+			continue LOOP
 		}
 
 		for name, expr := range u.model.Checks {
@@ -355,7 +358,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 			if err := stmt.Exec(); err != nil {
 				return err
 			}
-			break
+			continue LOOP
 		}
 	}
 
@@ -366,8 +369,7 @@ func (u *Upgrader) addIndexes(e Engine) error {
 	stmt := sqlbuilder.CreateIndex(e)
 
 	for _, index := range u.addIdxs {
-		stmt.Reset()
-		stmt.Table("{#" + u.model.Name + "}")
+		stmt.Reset().Table("#" + u.model.Name)
 
 		for name, cols := range u.model.Indexes {
 			if name != index {
@@ -376,7 +378,7 @@ func (u *Upgrader) addIndexes(e Engine) error {
 
 			cs := make([]string, 0, len(cols))
 			for _, c := range cols {
-				cs = append(cs, "{"+c.Name+"}")
+				cs = append(cs, c.Name)
 			}
 
 			stmt.Name(name)
@@ -394,9 +396,7 @@ func (u *Upgrader) dropIndexes(e Engine) error {
 	stmt := sqlbuilder.DropIndex(e)
 
 	for _, index := range u.dropIdxs {
-		stmt.Reset()
-		stmt.Table("{#" + u.model.Name + "}").
-			Name(index)
+		stmt.Reset().Table("#" + u.model.Name).Name(index)
 		if err := stmt.Exec(); err != nil {
 			return err
 		}

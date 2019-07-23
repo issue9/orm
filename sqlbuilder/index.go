@@ -84,11 +84,13 @@ func (stmt *CreateIndexStmt) DDLSQL() ([]string, error) {
 }
 
 // Reset 重置
-func (stmt *CreateIndexStmt) Reset() {
+func (stmt *CreateIndexStmt) Reset() *CreateIndexStmt {
 	stmt.table = ""
 	stmt.cols = stmt.cols[:0]
 	stmt.name = ""
 	stmt.typ = core.IndexDefault
+
+	return stmt
 }
 
 // DropIndexStmtHooker DropIndexStmt.DDLSQL 的勾子函数

@@ -162,7 +162,7 @@ func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([
 	}
 
 	if _, found := info.Constraints[stmt.Name]; !found {
-		return nil, fmt.Errorf("约束 %s 不存在", stmt.Name)
+		return nil, fmt.Errorf("不存在的约束:%s", stmt.Name)
 	}
 
 	delete(info.Constraints, stmt.Name)

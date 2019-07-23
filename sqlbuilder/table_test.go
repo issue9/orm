@@ -137,5 +137,8 @@ func TestDropTable(t *testing.T) {
 		a.Error(drop.Exec())
 
 		a.NotError(drop.Reset().Table("info").Exec())
+
+		// 删除不存在的表
+		a.NotError(drop.Reset().Table("not-exists").Exec())
 	})
 }
