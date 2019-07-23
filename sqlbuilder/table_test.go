@@ -25,7 +25,7 @@ func TestCreateTableStmt(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		stmt := sqlbuilder.CreateTable(t.DB).
 			Table(table).
 			AutoIncrement("id", core.IntType).
@@ -90,7 +90,7 @@ func TestTruncateTable(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -129,7 +129,7 @@ func TestDropTable(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 

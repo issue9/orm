@@ -17,7 +17,7 @@ func TestDB_LastInsertID(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&User{}))
 		defer func() {
 			t.NotError(t.DB.Drop(&User{}))
@@ -38,7 +38,7 @@ func TestDB_Update(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -80,7 +80,7 @@ func TestDB_Update_occ(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -133,7 +133,7 @@ func TestDB_Update_error(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -148,7 +148,7 @@ func TestDB_Delete(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -192,7 +192,7 @@ func TestDB_Count(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -224,7 +224,7 @@ func TestDB_Truncate(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -254,7 +254,7 @@ func TestDB_Drop(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -270,7 +270,7 @@ func TestDB_Version(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		v, err := t.DB.Version()
 		t.NotError(err).
 			NotEmpty(v)

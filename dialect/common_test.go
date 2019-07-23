@@ -35,7 +35,7 @@ func testSQLType(a *assert.Assertion, d core.Dialect, data []*sqltypeTester) {
 	}
 }
 
-func testDialectVersionSQL(t *test.Test) {
+func testDialectVersionSQL(t *test.Driver) {
 	rows, err := t.DB.Query(t.DB.Dialect().VersionSQL())
 	t.NotError(err).NotNil(rows)
 	defer func() {
@@ -48,7 +48,7 @@ func testDialectVersionSQL(t *test.Test) {
 	t.NotEmpty(ver)
 }
 
-func testDialectDropConstraintStmtHook(t *test.Test) {
+func testDialectDropConstraintStmtHook(t *test.Driver) {
 	db := t.DB
 
 	// 不存在的约束，出错
@@ -86,7 +86,7 @@ func testDialectDropConstraintStmtHook(t *test.Test) {
 	t.NotError(err)
 }
 
-func testTypes(t *test.Test) {
+func testTypes(t *test.Driver) {
 	tableName := "test_type_read_write"
 	now := time.Now()
 

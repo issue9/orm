@@ -50,7 +50,7 @@ func (u *FetchEmail) AfterFetch() error {
 }
 
 // 初始化一个 sql.DB，方便后面的测试用例使用。
-func initDB(t *test.Test) {
+func initDB(t *test.Driver) {
 	now := time.Now().Unix()
 
 	t.NotError(t.DB.MultCreate(&FetchUser{}, &Log{}))
@@ -77,7 +77,7 @@ func initDB(t *test.Test) {
 	t.NotError(tx.Commit())
 }
 
-func clearDB(t *test.Test) {
+func clearDB(t *test.Driver) {
 	t.NotError(t.DB.MultDrop(&FetchUser{}, &Log{}))
 }
 
@@ -86,7 +86,7 @@ func TestObject_strict(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -215,7 +215,7 @@ func TestObject_no_strict(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 		db := t.DB
@@ -353,7 +353,7 @@ func TestObjectNest(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -380,7 +380,7 @@ func TestObjectNotFound(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 

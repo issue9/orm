@@ -22,7 +22,7 @@ func (u *user) Meta() string {
 	return "name(users)"
 }
 
-func initDB(t *test.Test) {
+func initDB(t *test.Driver) {
 	creator := sqlbuilder.CreateTable(t.DB).
 		Table("users").
 		AutoIncrement("id", core.Int64Type).
@@ -79,7 +79,7 @@ func initDB(t *test.Test) {
 		Empty(id, "not empty @%s", t.DriverName)
 }
 
-func clearDB(t *test.Test) {
+func clearDB(t *test.Driver) {
 	err := sqlbuilder.DropTable(t.DB).
 		Table("info"). // 需要先删除 info，info 的外键依赖 users
 		Table("users").

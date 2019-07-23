@@ -18,7 +18,7 @@ func TestMap(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -87,7 +87,7 @@ func TestMapString(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 

@@ -44,7 +44,7 @@ func TestParseMysqlCreateTable(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		defer func() {
 			a.NotError(t.DB.Exec("DROP TABLE users"))
 			a.NotError(t.DB.Exec("DROP TABLE fk_table"))

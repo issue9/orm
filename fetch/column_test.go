@@ -18,7 +18,7 @@ func TestColumn(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 		db := t.DB
@@ -87,7 +87,7 @@ func TestColumnString(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 		db := t.DB

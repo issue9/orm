@@ -91,7 +91,7 @@ func hasCount(e core.Engine, a *assert.Assertion, table string, size int) {
 
 // 初始化测试数据，同时可当作 DB.Insert 的测试
 // 清空其它数据，初始化成原始的测试数据
-func initData(t *test.Test) {
+func initData(t *test.Driver) {
 	db := t.DB
 
 	err := db.Create(&Group{})
@@ -146,7 +146,7 @@ func initData(t *test.Test) {
 	t.Equal(a1.Username, "username1")
 }
 
-func clearData(t *test.Test) {
+func clearData(t *test.Driver) {
 	t.NotError(t.DB.MultDrop(&Admin{}, &Account{}))
 	t.NotError(t.DB.Drop(&Group{})) // admin 外键依赖 group
 	t.NotError(t.DB.Drop(&UserInfo{}))

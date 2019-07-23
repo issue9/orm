@@ -17,7 +17,7 @@ func TestTx_InsertMany(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		tx, err := t.DB.Begin()
 		a.NotError(err)
 		a.NotError(tx.Create(&UserInfo{}))
@@ -122,7 +122,7 @@ func TestTx_LastInsertID(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		a.NotError(t.DB.Create(&User{}))
 		defer func() {
 			a.NotError(t.DB.Drop(&User{}))
@@ -146,7 +146,7 @@ func TestTx_Insert(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&User{}))
 		defer func() {
 			t.NotError(t.DB.Drop(&User{}))
@@ -190,7 +190,7 @@ func TestTx_Update(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -226,7 +226,7 @@ func TestTx_MultDelete(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -264,7 +264,7 @@ func TestTx_Count(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -295,7 +295,7 @@ func TestTx_Truncate(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -325,7 +325,7 @@ func TestTX(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&User{}))
 		t.NotError(t.DB.Create(&UserInfo{}))
 		defer func() {

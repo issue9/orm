@@ -22,7 +22,7 @@ func TestPostgres_VersionSQL(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
 	}, "postgres")
 }
@@ -232,7 +232,7 @@ func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		hook, ok := t.DB.Dialect().(sqlbuilder.TruncateTableStmtHooker)
 		a.True(ok).NotNil(hook)
 
@@ -296,7 +296,7 @@ func TestPostgres_Types(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
 	}, "postgres")
 }

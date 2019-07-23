@@ -23,7 +23,7 @@ func TestInsert(t *testing.T) {
 	defer s.Close()
 	tableName := "users"
 
-	s.ForEach(func(t *test.Test) {
+	s.ForEach(func(t *test.Driver) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
 			AutoIncrement("id", core.Int64Type).
@@ -71,7 +71,7 @@ func TestInsert_NamedArgs(t *testing.T) {
 	defer s.Close()
 	tableName := "users"
 
-	s.ForEach(func(t *test.Test) {
+	s.ForEach(func(t *test.Driver) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
 			AutoIncrement("id", core.Int64Type).

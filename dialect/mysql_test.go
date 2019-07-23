@@ -49,7 +49,7 @@ func TestMysql_VersionSQL(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
 	}, "mysql")
 }
@@ -59,7 +59,7 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		db := t.DB
 
 		for _, query := range mysqlCreateTable {
@@ -85,7 +85,7 @@ func TestMysql_DropIndexStmtHook(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		stmt := sqlbuilder.DropIndex(t.DB).Table("tbl").Name("index_name")
 		a.NotNil(stmt)
 
@@ -102,7 +102,7 @@ func TestMysql_TruncateTableStmtHook(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		// mysql 不需要 ai 的相关设置
 		stmt := sqlbuilder.TruncateTable(t.DB).Table("tbl", "")
 		a.NotNil(stmt)
@@ -301,7 +301,7 @@ func TestMysql_Types(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
 	}, "mysql")
 }

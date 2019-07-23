@@ -44,7 +44,7 @@ var sqlite3CreateTable = []string{`CREATE TABLE fk_table(
 	`create unique index index_user_unique_email_id on usr(email,id)`,
 }
 
-func clearSqlite3CreateTable(t *test.Test, db core.Engine) {
+func clearSqlite3CreateTable(t *test.Driver, db core.Engine) {
 	_, err := db.Exec("DROP TABLE `usr`")
 	t.NotError(err)
 
@@ -57,7 +57,7 @@ func TestSqlite3_VersionSQL(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
 	}, "sqlite3")
 }
@@ -67,7 +67,7 @@ func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
@@ -93,7 +93,7 @@ func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
@@ -112,7 +112,7 @@ func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
@@ -164,7 +164,7 @@ func TestSqlite3_TruncateTableStmtHooker(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		hook, ok := t.DB.Dialect().(sqlbuilder.TruncateTableStmtHooker)
 		a.True(ok).NotNil(hook)
 
@@ -290,7 +290,7 @@ func TestSqlite3_Types(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
 	}, "sqlite3")
 }

@@ -24,7 +24,7 @@ func TestSelect(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -74,7 +74,7 @@ func TestSelectStmt_Join(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -110,7 +110,7 @@ func TestSelectStmt_Group(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -136,7 +136,7 @@ func TestSelectStmt_Union(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -180,7 +180,7 @@ func TestSelectStmt_UnionAll(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 

@@ -19,7 +19,7 @@ func TestVersion(t *testing.T) {
 	s := test.NewSuite(a)
 	defer s.Close()
 
-	s.ForEach(func(t *test.Test) {
+	s.ForEach(func(t *test.Driver) {
 		ver, err := sqlbuilder.Version(t.DB)
 		t.NotError(err).
 			NotEmpty(ver)

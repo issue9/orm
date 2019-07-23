@@ -71,7 +71,7 @@ func TestBeforeInsertUpdate(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		// create
 		t.NotError(t.DB.Create(&beforeObject1{}))
 		defer func() {
@@ -99,7 +99,7 @@ func TestBeforeInsertUpdate_Mult(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		// create
 		t.NotError(t.DB.MultCreate(&beforeObject1{}, &beforeObject2{}))
 		defer func() {

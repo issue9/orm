@@ -39,7 +39,7 @@ func TestUpgrader(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&u1{}))
 
 		defer func(n string) {

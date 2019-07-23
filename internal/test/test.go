@@ -48,8 +48,8 @@ var cases = []struct {
 	},
 }
 
-// Test 单个测试用例
-type Test struct {
+// Driver 单个测试用例
+type Driver struct {
 	*assert.Assertion
 	DB         *orm.DB
 	DriverName string
@@ -59,7 +59,7 @@ type Test struct {
 // Suite 测试用例管理
 type Suite struct {
 	a     *assert.Assertion
-	tests []*Test
+	tests []*Driver
 }
 
 // NewSuite 初始化测试内容
@@ -70,7 +70,7 @@ func NewSuite(a *assert.Assertion) *Suite {
 		db, err := orm.NewDB(c.driverName, c.dsn, c.prefix, c.dialect)
 		a.NotError(err).NotNil(db)
 
-		s.tests = append(s.tests, &Test{
+		s.tests = append(s.tests, &Driver{
 			Assertion:  a,
 			DB:         db,
 			DriverName: c.driverName,
@@ -100,7 +100,7 @@ func (s Suite) Close() {
 // ForEach 为每个数据库测试用例调用 f 进行测试
 //
 // driverName 为需要测试的驱动，如果为空表示测试全部
-func (s Suite) ForEach(f func(t *Test), driverName ...string) {
+func (s Suite) ForEach(f func(t *Driver), driverName ...string) {
 	if len(driverName) == 0 {
 		for _, test := range s.tests {
 			f(test)

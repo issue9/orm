@@ -64,7 +64,7 @@ func TestParseSqlite3CreateTable(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	suite.ForEach(func(t *test.Test) {
+	suite.ForEach(func(t *test.Driver) {
 		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
