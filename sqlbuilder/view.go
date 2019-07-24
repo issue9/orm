@@ -4,6 +4,8 @@
 
 package sqlbuilder
 
+import "github.com/issue9/orm/v2/core"
+
 // CreateViewStmt 创建视图的语句
 type CreateViewStmt struct {
 	*ddlStmt
@@ -21,16 +23,16 @@ type CreateViewStmtHooker interface {
 }
 
 // CreateView 创建视图
-func CreateView(e Engine, d Dialect) *CreateViewStmt {
+func CreateView(e core.Engine) *CreateViewStmt {
 	stmt := &CreateViewStmt{}
-	stmt.ddlStmt = newDDLStmt(e, d, stmt)
+	stmt.ddlStmt = newDDLStmt(e, stmt)
 
 	return stmt
 }
 
 // View 将当前查询语句转换为视图
 func (stmt *SelectStmt) View(name string) *CreateViewStmt {
-	return CreateView(stmt.Engine(), stmt.Dialect()).
+	return CreateView(stmt.Engine()).
 		From(stmt)
 }
 
@@ -106,7 +108,7 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 		return nil, err
 	}
 
-	builder := New("CREATE ")
+	builder := core.NewBuilder("CREATE ")
 
 	if stmt.IsReplace {
 		builder.WriteString(" OR REPLACE ")
@@ -130,4 +132,42 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 	builder.WriteString(selectQuery)
 
 	return []string{builder.String()}, nil
+}
+
+// DropViewStmt 删除视图
+type DropViewStmt struct {
+	*ddlStmt
+	name string
+}
+
+// DropView 创建视图
+func DropView(e core.Engine) *DropViewStmt {
+	stmt := &DropViewStmt{}
+	stmt.ddlStmt = newDDLStmt(e, stmt)
+
+	return stmt
+}
+
+// Name 指定需要删除的视图名称
+func (stmt *DropViewStmt) Name(name string) *DropViewStmt {
+	stmt.name = name
+	return stmt
+}
+
+// DDLSQL 返回删除视图的 SQL 语句
+func (stmt *DropViewStmt) DDLSQL() ([]string, error) {
+	if len(stmt.name) == 0 {
+		return nil, ErrTableIsEmpty
+	}
+
+	builder := core.NewBuilder("DROP VIEW IF EXISTS ").QuoteKey(stmt.name)
+
+	return []string{builder.String()}, nil
+}
+
+// Reset 重置对象
+func (stmt *DropViewStmt) Reset() *DropViewStmt {
+	stmt.name = ""
+
+	return stmt
 }
