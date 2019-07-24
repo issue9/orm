@@ -248,11 +248,16 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 		return nil, err
 	}
 
-	builder := core.NewBuilder("CREATE ")
+	ret := make([]string, 0, 2)
+	if stmt.IsReplace {
+		query, err := sqlbuilder.DropView(stmt.Engine()).Name(stmt.ViewName).DDLSQL()
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, query...)
+	}
 
-	/*if stmt.IsReplace {
-		builder.WriteString(" OR REPLACE ")
-	}*/
+	builder := core.NewBuilder("CREATE ")
 
 	if stmt.IsTemporary {
 		builder.WriteString(" TEMPORARY ")
@@ -269,9 +274,10 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 		builder.TruncateLast(1).WriteBytes(')')
 	}
 
-	builder.WriteString(selectQuery)
+	builder.WriteString(" AS ").WriteString(selectQuery)
+	ret = append(ret, builder.String())
 
-	return []string{builder.String()}, nil
+	return ret, nil
 }
 
 func (s *sqlite3) TransactionalDDL() bool {

@@ -159,7 +159,7 @@ func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, e
 	}
 
 	if stmt.IsTemporary {
-		builder.WriteString(" ALGORITHM=TEMPORARY ")
+		builder.WriteString(" ALGORITHM=TEMPTABLE ")
 	}
 
 	builder.WriteString(" VIEW ").QuoteKey(stmt.ViewName)
@@ -173,7 +173,7 @@ func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, e
 		builder.TruncateLast(1).WriteBytes(')')
 	}
 
-	builder.WriteString(selectQuery)
+	builder.WriteString(" AS ").WriteString(selectQuery)
 
 	return []string{builder.String()}, nil
 }
