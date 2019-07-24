@@ -256,7 +256,7 @@ func (u *Upgrader) addColumns(e Engine) error {
 		}
 		sql.Reset()
 
-		err := sql.Table("#"+u.model.Name).
+		err := sql.Table(u.model.FullName).
 			Column(col.Name, col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...).
 			Exec()
 		if err != nil {
@@ -272,7 +272,7 @@ func (u *Upgrader) dropColumns(e Engine) error {
 
 	for _, n := range u.dropCols {
 		sql.Reset()
-		err := sql.Table("#" + u.model.Name).
+		err := sql.Table(u.model.FullName).
 			Column(n).
 			Exec()
 		if err != nil {
@@ -288,7 +288,7 @@ func (u *Upgrader) dropConstraints(e Engine) error {
 
 	for _, n := range u.dropConts {
 		sql.Reset()
-		err := sql.Table("#" + u.model.Name).
+		err := sql.Table(u.model.FullName).
 			Constraint(n).
 			Exec()
 		if err != nil {
@@ -304,7 +304,7 @@ func (u *Upgrader) addConstraints(e Engine) error {
 
 LOOP:
 	for _, c := range u.addConts {
-		stmt.Reset().Table("#" + u.model.Name)
+		stmt.Reset().Table(u.model.FullName)
 
 		for _, fk := range u.model.FK {
 			if fk.Name != c {
@@ -369,7 +369,7 @@ func (u *Upgrader) addIndexes(e Engine) error {
 	stmt := sqlbuilder.CreateIndex(e)
 
 	for _, index := range u.addIdxs {
-		stmt.Reset().Table("#" + u.model.Name)
+		stmt.Reset().Table(u.model.FullName)
 
 		for name, cols := range u.model.Indexes {
 			if name != index {

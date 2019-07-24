@@ -33,7 +33,12 @@ type ForeignKey struct {
 
 // Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
-	Name    string              // 表的名称
+	// FullName 和 Name 都指表名
+	// 其中 FullName 带 # 前缀，可以在生成 SQL 语句时使用。
+	// 而 Name 则表示不带 # 前缀的表名，在普通情况下可以使用。
+	FullName string
+	Name     string
+
 	Columns []*core.Column      // 所有的列
 	OCC     *core.Column        // 乐观锁
 	Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
@@ -83,13 +88,14 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 	}
 
 	m := &Model{
-		Columns: make([]*core.Column, 0, rtype.NumField()),
-		Indexes: map[string][]*core.Column{},
-		Uniques: map[string][]*core.Column{},
-		Name:    rtype.Name(),
-		FK:      []*ForeignKey{},
-		Checks:  map[string]string{},
-		Meta:    map[string][]string{},
+		FullName: "#" + rtype.Name(),
+		Name:     rtype.Name(),
+		Columns:  make([]*core.Column, 0, rtype.NumField()),
+		Indexes:  map[string][]*core.Column{},
+		Uniques:  map[string][]*core.Column{},
+		FK:       []*ForeignKey{},
+		Checks:   map[string]string{},
+		Meta:     map[string][]string{},
 	}
 
 	if err := m.parseColumns(rval); err != nil {
@@ -277,6 +283,7 @@ func (m *Model) parseMeta(tag string) error {
 			}
 
 			m.Name = v.Args[0]
+			m.FullName = "#" + m.Name
 		case "check":
 			if len(v.Args) != 2 {
 				return propertyError("Metaer", "check", "参数个数不正确")
