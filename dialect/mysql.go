@@ -152,7 +152,7 @@ func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, e
 		return nil, err
 	}
 
-	builder := sqlbuilder.New("CREATE ")
+	builder := core.NewBuilder("CREATE ")
 
 	if stmt.IsReplace {
 		builder.WriteString(" OR REPLACE ")

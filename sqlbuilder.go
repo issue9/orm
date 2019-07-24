@@ -183,7 +183,6 @@ func create(e Engine, v interface{}) error {
 
 func createView(e Engine, m *model.Model) error {
 	// TODO
-
 	return nil
 }
 

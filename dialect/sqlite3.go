@@ -248,7 +248,7 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 		return nil, err
 	}
 
-	builder := sqlbuilder.New("CREATE ")
+	builder := core.NewBuilder("CREATE ")
 
 	/*if stmt.IsReplace {
 		builder.WriteString(" OR REPLACE ")

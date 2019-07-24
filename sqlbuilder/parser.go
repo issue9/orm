@@ -6,38 +6,64 @@ package sqlbuilder
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
 	"strings"
 	"unicode"
+
+	"github.com/issue9/orm/v2/core"
 )
 
 var quoteReplacer = strings.NewReplacer("{", "", "}", "")
 
-// 将 ？替换成参数的实际值
-func fillArgs(sql SQLer) (string, error) {
-	query, args, err := sql.SQL()
-	if err != nil {
-		return "", err
+// 将参数替换成实际的值
+func fillArgs(query string, args []interface{}) (string, error) {
+	// 获取所有命名参数列表
+	named := make(map[string]interface{}, len(args))
+	for _, arg := range args {
+		if n, ok := arg.(sql.NamedArg); ok {
+			named[n.Name] = n.Value
+		}
 	}
 
-	var builder strings.Builder
+	w := func(builder *core.Builder, name string) error {
+		v, found := named[name]
+		if !found {
+			return fmt.Errorf("不存在该名称的参数:%s", name)
+		}
+		builder.Quote(fmt.Sprint(v), '\'', '\'')
+		return nil
+	}
+
+	builder := core.NewBuilder("")
 	var index int
-	for _, r := range query {
-		switch r {
-		case '?':
-			_, err := builder.WriteString("'" + fmt.Sprint(args[index]) + "'")
-			if err != nil {
+	start := -1
+	for i, c := range query {
+		switch {
+		case c == '@':
+			start = i + 1
+		case start != -1 && !unicode.IsLetter(c):
+			if err := w(builder, query[start:i]); err != nil {
 				return "", err
 			}
+			builder.WriteRunes(c) // 当前的字符不能丢
+			start = -1
 			index++
-		default:
-			if _, err := builder.WriteRune(r); err != nil {
-				return "", err
+		case start == -1:
+			if c == '?' {
+				builder.Quote(fmt.Sprint(args[index]), '\'', '\'')
+				index++
+			} else {
+				builder.WriteRunes(c)
 			}
 		}
 	}
 
-	// bug(caixw) 需要处理 sql.Named 类型的参数
+	if start > -1 {
+		if err := w(builder, query[start:]); err != nil {
+			return "", err
+		}
+	}
 
 	return builder.String(), nil
 }

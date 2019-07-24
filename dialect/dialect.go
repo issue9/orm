@@ -134,7 +134,7 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 		return nil
 	}
 
-	var qm bool // 是否存在 ?
+	var qm bool // 是否存在问号
 	for index, c := range query {
 		switch {
 		case c == '@':

@@ -6,12 +6,79 @@ package sqlbuilder
 
 import (
 	"bufio"
+	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/orm/v2/internal/sqltest"
 )
 
 var _ bufio.SplitFunc = splitWithAS
+
+func TestFillArgs(t *testing.T) {
+	a := assert.New(t)
+
+	var data = []*struct {
+		query  string
+		args   []interface{}
+		output string
+		err    bool
+	}{
+		{
+			query:  "select * from tbl",
+			args:   []interface{}{},
+			output: "select * from tbl",
+		},
+		{
+			query:  "select * from tbl where id=?",
+			args:   []interface{}{1},
+			output: "select * from tbl where id='1'",
+		},
+		{
+			query:  "select * from tbl where id=? and name=?",
+			args:   []interface{}{1, "n"},
+			output: "select * from tbl where id='1' and name='n'",
+		},
+		{
+			query:  "select * from tbl where id=? and name=@name",
+			args:   []interface{}{1, sql.Named("name", "n")},
+			output: "select * from tbl where id='1' and name='n'",
+		},
+		{
+			query:  "select * from tbl where id=? and name=@name and age>?",
+			args:   []interface{}{1, sql.Named("name", "n"), 18},
+			output: "select * from tbl where id='1' and name='n' and age>'18'",
+		},
+		{ // 类型不匹配
+			query: "select * from tbl where id=? and name=@name",
+			args:  []interface{}{1, "n"},
+			err:   true,
+		},
+		{ // 类型不匹配
+			query: "select * from tbl where id=? and name=@name and age>@age",
+			args:  []interface{}{1, "n", sql.Named("age", 18)},
+			err:   true,
+		},
+		{ // 名称不存在
+			query: "select * from tbl where id=? and name=@name",
+			args:  []interface{}{1, sql.Named("not-exists", "n")},
+			err:   true,
+		},
+	}
+
+	for index, item := range data {
+		output, err := fillArgs(item.query, item.args)
+		if item.err {
+			a.Error(err, "%s@%d", err, index).
+				Empty(output)
+			continue
+		}
+
+		a.NotError(err, "%s@%d", err, index)
+		sqltest.Equal(a, output, item.output)
+	}
+}
 
 func TestGetColumnName(t *testing.T) {
 	a := assert.New(t)
