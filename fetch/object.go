@@ -127,8 +127,8 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 				return err
 			}
 
-			for subname, val := range items {
-				(*ret)[name+"."+subname] = val
+			for subName, val := range items {
+				(*ret)[name+"."+subName] = val
 			}
 		} else if _, found := (*ret)[name]; found {
 			return fmt.Errorf("已存在相同名字的字段 %s", name)

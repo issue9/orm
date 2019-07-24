@@ -16,53 +16,53 @@ type testData struct { // 测试数据结构
 }
 
 var tests = []*testData{
-	&testData{
+	{
 		tag: "name,abc;name2,;;name3,n1,n2;name3(n3,n4)",
 		data: []*Tag{
-			&Tag{
+			{
 				Name: "name",
 				Args: []string{"abc"},
 			},
-			&Tag{
+			{
 				Name: "name2",
 				Args: []string{},
 			},
-			&Tag{
+			{
 				Name: "name3",
 				Args: []string{"n1", "n2"},
 			},
-			&Tag{
+			{
 				Name: "name3",
 				Args: []string{"n3", "n4"},
 			},
 		},
 	},
-	&testData{
+	{
 		tag: "name(abc);name2,;;name3(n1,n2);name3(n3,n4)",
 		data: []*Tag{
-			&Tag{
+			{
 				Name: "name",
 				Args: []string{"abc"},
 			},
-			&Tag{
+			{
 				Name: "name2",
 				Args: []string{},
 			},
-			&Tag{
+			{
 				Name: "name3",
 				Args: []string{"n1", "n2"},
 			},
-			&Tag{
+			{
 				Name: "name3",
 				Args: []string{"n3", "n4"},
 			},
 		},
 	},
-	&testData{
+	{
 		tag:  "",
 		data: nil,
 	},
-	&testData{
+	{
 		tag:  "",
 		data: []*Tag{},
 	},

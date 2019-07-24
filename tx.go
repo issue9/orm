@@ -185,12 +185,12 @@ func (tx *Tx) InsertMany(v interface{}, max int) error {
 		if j > rval.Len() {
 			j = rval.Len()
 		}
-		sql, err := buildInsertManySQL(tx, rval.Slice(i, j))
+		query, err := buildInsertManySQL(tx, rval.Slice(i, j))
 		if err != nil {
 			return err
 		}
 
-		if _, err = sql.Exec(); err != nil {
+		if _, err = query.Exec(); err != nil {
 			return err
 		}
 	}
