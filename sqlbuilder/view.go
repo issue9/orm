@@ -122,12 +122,12 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 		builder.WriteString(" TEMPORARY ")
 	}
 
-	builder.WriteString(" VIEW ").Quote(stmt.ViewName, stmt.l, stmt.r)
+	builder.WriteString(" VIEW ").QuoteKey(stmt.ViewName)
 
 	if len(stmt.Columns) > 0 {
 		builder.WriteBytes('(')
 		for _, col := range stmt.Columns {
-			builder.Quote(col, stmt.l, stmt.r).
+			builder.QuoteKey(col).
 				WriteBytes(',')
 		}
 		builder.TruncateLast(1).WriteBytes(')')

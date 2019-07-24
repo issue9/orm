@@ -258,19 +258,13 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 		builder.WriteString(" TEMPORARY ")
 	}
 
-	l, r := m.QuoteTuple()
-
-	builder.WriteString(" VIEW ").
-		WriteBytes(l).
-		WriteString(stmt.ViewName).
-		WriteBytes(r)
+	builder.WriteString(" VIEW ").QuoteKey(stmt.ViewName)
 
 	if len(stmt.Columns) > 0 {
 		builder.WriteBytes('(')
 		for _, col := range stmt.Columns {
-			builder.WriteBytes(l).
-				WriteString(col).
-				WriteBytes(r, ',')
+			builder.QuoteKey(col).
+				WriteBytes(',')
 		}
 		builder.TruncateLast(1).WriteBytes(')')
 	}
