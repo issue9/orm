@@ -11,6 +11,7 @@ import (
 
 	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // User 带自增和一个唯一约束
@@ -49,18 +50,33 @@ type obj struct {
 	ID int `orm:"name(id);ai"`
 }
 
-// fun
+// Meta 指定表属性
 func (m obj) Meta() string {
 	return `name(objs)`
 }
 
+type viewObject struct {
+	ID       int    `orm:"name(id);ai"`
+	Username string `orm:"name(username)"`
+}
+
+func (v *viewObject) Meta() string {
+	return "name(view_objects)"
+}
+
+func (v *viewObject) ViewAs(e core.Engine) *sqlbuilder.SelectStmt {
+	return sqlbuilder.Select(e).Columns("id", "username").From("User").Where("id>?", 10)
+}
+
 func TestModels_New(t *testing.T) {
 	a := assert.New(t)
-	ms := NewModels()
+	ms := NewModels(nil)
 	a.NotNil(ms)
 
 	m, err := ms.New(&Admin{})
 	a.NotError(err).NotNil(m)
+	a.Equal(m.Type, Table).
+		Nil(m.ViewAs)
 
 	// cols
 	idCol := m.FindColumn("id") // 指定名称为小写
@@ -126,6 +142,12 @@ func TestModels_New(t *testing.T) {
 	// 无效的 New
 	m, err = ms.New(123)
 	a.ErrorType(err, fetch.ErrInvalidKind).Nil(m)
+
+	// view
+	m, err = ms.New(&viewObject{})
+	a.NotError(err).NotNil(m)
+	a.Equal(m.Type, View).
+		NotNil(m.ViewAs)
 }
 
 func TestModel_sanitize(t *testing.T) {
@@ -233,11 +255,7 @@ func TestModel_parseMeta(t *testing.T) {
 	a.NotError(m.parseMeta("check(ck,id>0 AND id<10)"))
 
 	// check 与已有 check 名称相同
-	//a.Error(m.parseMeta("check(ck,id>0)"))
-
-	// check 与其它约束名相同
-	//m.Constraints = map[string]ConType{"fk": Fk}
-	//a.Error(m.parseMeta("check(fk,id>0)"))
+	a.Error(m.parseMeta("check(ck,id>0)"))
 }
 
 func TestModel_setOCC(t *testing.T) {

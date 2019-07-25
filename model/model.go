@@ -15,22 +15,8 @@ import (
 	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/tags"
+	"github.com/issue9/orm/v2/sqlbuilder"
 )
-
-// Type 表示数据模型的类别
-type Type int8
-
-// 定义了数据模型的类型，目前可以是表和视图
-const (
-	Table Type = iota
-	View
-)
-
-// Metaer 用于指定一个表级别的元数据。如表名，存储引擎等：
-//  "name(tbl_name);mysql_engine(myISAM);mysql_charset(utf8)"
-type Metaer interface {
-	Meta() string
-}
 
 // ForeignKey 外键
 type ForeignKey struct {
@@ -48,8 +34,10 @@ type Model struct {
 	FullName string
 	Name     string
 
+	ViewAs *sqlbuilder.SelectStmt
+
 	Type    Type
-	Columns []*core.Column      // 所有的列
+	Columns []*core.Column
 	OCC     *core.Column        // 乐观锁
 	Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
 
@@ -116,6 +104,11 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 		if err := m.parseMeta(meta.Meta()); err != nil {
 			return nil, err
 		}
+	}
+
+	if view, ok := obj.(Viewer); ok {
+		m.Type = View
+		m.ViewAs = view.ViewAs(ms.engine)
 	}
 
 	if err := m.sanitize(); err != nil {
@@ -305,11 +298,6 @@ func (m *Model) parseMeta(tag string) error {
 
 			name := strings.ToLower(v.Args[0])
 			m.Checks[name] = v.Args[1]
-		case "view":
-			if len(v.Args) > 0 {
-				return propertyError("Metaer", "view", "不需要参数")
-			}
-			m.Type = View
 		default:
 			m.Meta[v.Name] = v.Args
 		}

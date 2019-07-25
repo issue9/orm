@@ -149,9 +149,8 @@ check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一
 Model.Meta 中，各个数据库的自定义属性以其名称开头，比如 mysql 的 charset 属性，
 可以使用 mysql_charset。
 
-同时还包含了以下三种通用的属性信息：
+同时还包含了以下几种通用的属性信息：
 - name(val): 指定模型的名称，比如表名，或是视图名称；
-- view: 没有参数，表示该模型是个视图，在创建时会创建视图；
 - check(expr): 指定 check 约束内容。
 
 

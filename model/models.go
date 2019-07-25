@@ -8,6 +8,8 @@ import (
 	"errors"
 	"reflect"
 	"sync"
+
+	"github.com/issue9/orm/v2/core"
 )
 
 // ErrDuplicateName 诸如 postgres 等数据库，
@@ -19,16 +21,18 @@ var ErrDuplicateName = errors.New("重复的约束名")
 
 // Models 数据模型管理
 type Models struct {
+	engine core.Engine
 	locker sync.Mutex
 	items  map[reflect.Type]*Model
 	names  map[string]struct{}
 }
 
 // NewModels 声明 Models 变量
-func NewModels() *Models {
+func NewModels(e core.Engine) *Models {
 	return &Models{
-		items: map[reflect.Type]*Model{},
-		names: map[string]struct{}{},
+		engine: e,
+		items:  map[reflect.Type]*Model{},
+		names:  map[string]struct{}{},
 	}
 }
 

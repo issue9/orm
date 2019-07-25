@@ -65,7 +65,7 @@ func TestSetColumnNullable(t *testing.T) {
 	a.Error(setColumnNullable(col, []string{"1", "2"}))
 	a.Error(setColumnNullable(col, []string{"T1"}))
 
-	ms := NewModels()
+	ms := NewModels(nil)
 	a.NotNil(ms)
 
 	// 将 AI 设置为 nullable

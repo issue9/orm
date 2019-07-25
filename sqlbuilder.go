@@ -182,8 +182,13 @@ func create(e Engine, v interface{}) error {
 }
 
 func createView(e Engine, m *model.Model) error {
-	// TODO
-	return nil
+	stmt := sqlbuilder.CreateView(e).Name(m.FullName)
+
+	for _, col := range m.Columns {
+		stmt.Column(col.Name)
+	}
+
+	return stmt.From(m.ViewAs).Exec()
 }
 
 func truncate(e Engine, v interface{}) error {

@@ -13,7 +13,7 @@ import (
 func TestModels(t *testing.T) {
 	a := assert.New(t)
 
-	ms := NewModels()
+	ms := NewModels(nil)
 	a.NotNil(ms)
 
 	m, err := ms.New(&User{})
@@ -39,7 +39,7 @@ func TestModels(t *testing.T) {
 
 func TestModels_addNames(t *testing.T) {
 	a := assert.New(t)
-	ms := NewModels()
+	ms := NewModels(nil)
 	a.NotNil(ms)
 
 	a.Equal(0, len(ms.names))
