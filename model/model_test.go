@@ -180,28 +180,24 @@ func TestModels_New(t *testing.T) {
 func TestModel_sanitize(t *testing.T) {
 	a := assert.New(t)
 
-	ai := &core.Column{
-		GoType: core.IntType,
-	}
+	ai, err := core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(ai)
+	ai.AI = true
 
-	pk1 := &core.Column{
-		GoType: core.IntType,
-	}
+	pk1, err := core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(pk1)
 
-	pk2 := &core.Column{
-		GoType: core.IntType,
-	}
+	pk2, err := core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(pk2)
 
-	nullable := &core.Column{
-		GoType:   core.IntType,
-		Nullable: true,
-	}
+	nullable, err := core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(nullable)
+	nullable.Nullable = true
 
-	def := &core.Column{
-		GoType:     core.IntType,
-		HasDefault: true,
-		Default:    "1",
-	}
+	def, err := core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(def)
+	def.HasDefault = true
+	def.Default = 1
 
 	m := &Model{
 		Name:    "m1",
@@ -211,34 +207,27 @@ func TestModel_sanitize(t *testing.T) {
 
 	a.NotError(m.sanitize())
 
-	// AI 不能是 nullable
-	m.PK = nil
-	m.AI = nullable
-	a.Error(m.sanitize())
-
-	// AI 不能是 HasDefault=true
-	m.AI = def
-	a.Error(m.sanitize())
-
 	// 多列主键约束
-	m.AI = nil
 	m.PK = []*core.Column{pk1, pk2}
 	a.NotError(m.sanitize())
 
 	// 多列主键约束，可以有 nullable 和 default
-	m.AI = nil
 	m.PK = []*core.Column{pk1, pk2, nullable, def}
 	a.NotError(m.sanitize())
 
 	// 单列主键，可以是 nullable
-	m.AI = nil
 	m.PK = []*core.Column{nullable}
 	a.NotError(m.sanitize())
+
+	m.AI = ai
+	m.AI.Nullable = true
+	a.Error(m.sanitize())
 
 	// 单列主键，不能是 default
 	m.AI = nil
 	m.PK = []*core.Column{def}
 	a.Error(m.sanitize())
+
 }
 
 func TestModel_parseColumn(t *testing.T) {

@@ -7,6 +7,7 @@ package core
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"reflect"
 	"time"
 )
@@ -95,4 +96,33 @@ func (c *Column) Clone() *Column {
 	*cc = *c
 
 	return cc
+}
+
+// Check 检测 Column 内容是否合法。
+func (c *Column) Check() error {
+	if c.AI && c.HasDefault {
+		return c.err("default", "ai 列不能指定默主值")
+	}
+
+	if c.AI && c.Nullable {
+		return c.err("nullable", "ai 列不能为 NULL")
+	}
+
+	if c.GoType == StringType || c.GoType == NullStringType {
+		if len(c.Length) > 0 && (c.Length[0] < -1 || c.Length[0] == 0) {
+			return c.err("len", "必须大于 0 或是等于 -1")
+		}
+	} else {
+		for _, v := range c.Length {
+			if v < 0 {
+				return c.err("len", "不能小于 0")
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *Column) err(field, message string) error {
+	return fmt.Errorf("%s 的 %s 属性发生以下错误: %s", c.Name, field, message)
 }

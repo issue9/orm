@@ -171,22 +171,12 @@ func (ms *Models) addModel(goType reflect.Type, m *Model) error {
 //
 // 必须要在 Model 初始化完成之后调用。
 func (m *Model) sanitize() error {
-	if m.AI != nil {
-		if m.AI.Nullable {
-			return propertyError(m.AI.Name, "nullable", "不能与自增列并存")
-		}
-
-		if m.AI.HasDefault {
-			return propertyError(m.AI.Name, "default", "不能与自增列并存")
-		}
-	}
-
 	if len(m.PK) == 1 && m.PK[0].HasDefault {
 		return propertyError(m.PK[0].Name, "default", "不能为单一主键")
 	}
 
 	for _, c := range m.Columns {
-		if err := checkColumnLen(c); err != nil {
+		if err := c.Check(); err != nil {
 			return err
 		}
 	}

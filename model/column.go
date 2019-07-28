@@ -22,23 +22,6 @@ func newColumn(field reflect.StructField) (*core.Column, error) {
 	return col, nil
 }
 
-// 检测长度是否合法，必须要  Column 初始化已经完成。
-func checkColumnLen(c *core.Column) error {
-	if c.GoType.Kind() == reflect.String {
-		if len(c.Length) > 0 && (c.Length[0] < -1 || c.Length[0] == 0) {
-			return propertyError(c.Name, "len", "必须大于 0 或是等于 -1")
-		}
-	} else {
-		for _, v := range c.Length {
-			if v < 0 {
-				return propertyError(c.Name, "len", "不能小于 0")
-			}
-		}
-	}
-
-	return nil
-}
-
 // 从参数中获取 Column 的 len1 和 len2 变量。
 // len(len1,len2)
 func setColumnLen(c *core.Column, vals []string) (err error) {

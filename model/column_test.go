@@ -25,32 +25,6 @@ func TestSetColumnLen(t *testing.T) {
 	a.Error(setColumnLen(col, []string{"one", "one"}))
 }
 
-func TestCheckColumnLen(t *testing.T) {
-	a := assert.New(t)
-
-	col := &core.Column{
-		GoType: core.StringType,
-		Length: []int{-1},
-	}
-	a.NotError(checkColumnLen(col))
-
-	col.Length[0] = 0
-	a.Error(checkColumnLen(col))
-
-	col.Length[0] = -2
-	a.Error(checkColumnLen(col))
-
-	col.GoType = core.IntType
-	col.Length[0] = -2
-	a.Error(checkColumnLen(col))
-
-	col.Length[0] = -1
-	a.Error(checkColumnLen(col))
-
-	col.Length[0] = 0
-	a.NotError(checkColumnLen(col))
-}
-
 func TestSetColumnNullable(t *testing.T) {
 	a := assert.New(t)
 

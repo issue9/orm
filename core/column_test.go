@@ -50,3 +50,39 @@ func TestColumn_Clone(t *testing.T) {
 	col.HasDefault = true
 	a.NotError(cc, col)
 }
+
+func TestColumn_Check(t *testing.T) {
+	a := assert.New(t)
+
+	col, err := NewColumnFromGoType(StringType)
+	a.NotError(err).NotNil(col)
+	col.Length = []int{-1}
+
+	a.NotError(col.Check())
+
+	col.Length[0] = 0
+	a.Error(col.Check())
+
+	col.Length[0] = -2
+	a.Error(col.Check())
+
+	col, err = NewColumnFromGoType(IntType)
+	a.NotError(err).NotNil(col)
+	col.Length = []int{-2}
+	a.Error(col.Check())
+
+	col.Length[0] = -1
+	a.Error(col.Check())
+
+	col.Length[0] = 0
+	a.NotError(col.Check())
+
+	col.AI = true
+	col.HasDefault = true
+	a.Error(col.Check())
+
+	col.AI = true
+	col.HasDefault = false
+	col.Nullable = true
+	a.Error(col.Check())
+}

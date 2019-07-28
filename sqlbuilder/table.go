@@ -250,6 +250,12 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 		return nil, ErrColumnsIsEmpty
 	}
 
+	for _, col := range stmt.columns {
+		if err := col.Check(); err != nil {
+			return nil, err
+		}
+	}
+
 	w := core.NewBuilder("CREATE TABLE IF NOT EXISTS ").
 		QuoteKey(stmt.name).
 		WriteBytes('(')

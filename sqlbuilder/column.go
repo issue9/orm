@@ -56,6 +56,10 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 		return nil, ErrColumnsIsEmpty
 	}
 
+	if err := stmt.column.Check(); err != nil {
+		return nil, err
+	}
+
 	typ, err := stmt.Dialect().SQLType(stmt.column)
 	if err != nil {
 		return nil, err
