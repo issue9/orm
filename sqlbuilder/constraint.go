@@ -36,6 +36,7 @@ func AddConstraint(e core.Engine) *AddConstraintStmt {
 
 // Reset 重置内容
 func (stmt *AddConstraintStmt) Reset() *AddConstraintStmt {
+	stmt.baseStmt.Reset()
 	stmt.TableName = ""
 	stmt.Name = ""
 	stmt.Type = core.ConstraintNone
@@ -52,7 +53,7 @@ func (stmt *AddConstraintStmt) Table(t string) *AddConstraintStmt {
 // Unique 指定唯一约束
 func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraintStmt {
 	if stmt.Type != core.ConstraintNone {
-		panic(ErrConstraintType)
+		stmt.err = ErrConstraintType
 	}
 
 	stmt.Type = core.ConstraintUnique
@@ -65,7 +66,7 @@ func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraint
 // PK 指定主键约束
 func (stmt *AddConstraintStmt) PK(col ...string) *AddConstraintStmt {
 	if stmt.Type != core.ConstraintNone {
-		panic(ErrConstraintType)
+		stmt.err = ErrConstraintType
 	}
 
 	stmt.Type = core.ConstraintPK
@@ -77,7 +78,7 @@ func (stmt *AddConstraintStmt) PK(col ...string) *AddConstraintStmt {
 // Check Check 约束
 func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
 	if stmt.Type != core.ConstraintNone {
-		panic(ErrConstraintType)
+		stmt.err = ErrConstraintType
 	}
 
 	stmt.Type = core.ConstraintCheck
@@ -90,7 +91,7 @@ func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
 // FK 外键约束
 func (stmt *AddConstraintStmt) FK(name, col, refTable, refColumn, updateRule, deleteRule string) *AddConstraintStmt {
 	if stmt.Type != core.ConstraintNone {
-		panic(ErrConstraintType)
+		stmt.err = ErrConstraintType
 	}
 
 	stmt.Type = core.ConstraintFK
@@ -102,6 +103,10 @@ func (stmt *AddConstraintStmt) FK(name, col, refTable, refColumn, updateRule, de
 
 // DDLSQL 生成 SQL 语句
 func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if stmt.TableName == "" {
 		return nil, ErrTableIsEmpty
 	}
@@ -166,7 +171,11 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		return nil, ErrUnknownConstraint
 	}
 
-	return []string{builder.String()}, nil
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 // DropConstraintStmtHooker DropConstraintStmt.DDLSQL 的钩子函数
@@ -207,6 +216,10 @@ func (stmt *DropConstraintStmt) Constraint(name string) *DropConstraintStmt {
 
 // DDLSQL 获取 SQL 语句以及对应的参数
 func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if stmt.TableName == "" {
 		return nil, ErrTableIsEmpty
 	}
@@ -219,15 +232,21 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 		return hook.DropConstraintStmtHook(stmt)
 	}
 
-	buf := core.NewBuilder("ALTER TABLE ").
+	builder := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
 		WriteString(" DROP CONSTRAINT ").
 		QuoteKey(stmt.Name)
-	return []string{buf.String()}, nil
+
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 // Reset 重置
 func (stmt *DropConstraintStmt) Reset() *DropConstraintStmt {
+	stmt.baseStmt.Reset()
 	stmt.TableName = ""
 	stmt.Name = ""
 	return stmt

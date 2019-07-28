@@ -13,52 +13,58 @@ const (
 	QuoteRight = '}'
 )
 
-// Builder 对 bytes.Buffer 的一个简单封装。
-// 当 Write* 系列函数出错时，直接 panic。
-type Builder bytes.Buffer
-
-// NewBuilder 声明一个新的 Builder 实例
-func NewBuilder(str string) *Builder {
-	return (*Builder)(bytes.NewBufferString(str))
+// Builder 用于构建 SQL 语句
+//
+// 出错时，错误信息会缓存，并在 String 和 Bytes 时返回，
+// 或是通过 Err() 查看是否存在错误。
+type Builder struct {
+	buffer *bytes.Buffer
+	err    error
 }
 
-func (b *Builder) buffer() *bytes.Buffer {
-	return (*bytes.Buffer)(b)
+// NewBuilder 声明一个新的 Builder 实例
+func NewBuilder(str ...string) *Builder {
+	b := &Builder{
+		buffer: new(bytes.Buffer),
+	}
+
+	for _, s := range str {
+		b.WriteString(s)
+	}
+
+	return b
 }
 
 // WriteString 写入一字符串
 func (b *Builder) WriteString(str string) *Builder {
-	if _, err := b.buffer().WriteString(str); err != nil {
-		panic(err)
+	if b.err != nil {
+		return b
 	}
 
+	_, b.err = b.buffer.WriteString(str)
 	return b
-}
-
-func (b *Builder) writeByte(c byte) {
-	if err := b.buffer().WriteByte(c); err != nil {
-		panic(err)
-	}
 }
 
 // WriteBytes 写入多个字符
 func (b *Builder) WriteBytes(c ...byte) *Builder {
-	for _, bb := range c {
-		b.writeByte(bb)
+	for _, cc := range c {
+		if b.err != nil {
+			return b
+		}
+
+		b.err = b.buffer.WriteByte(cc)
 	}
 	return b
-}
-
-func (b *Builder) writeRune(r rune) {
-	if _, err := b.buffer().WriteRune(r); err != nil {
-		panic(err)
-	}
 }
 
 // WriteRunes 写入多个字符
 func (b *Builder) WriteRunes(r ...rune) *Builder {
 	for _, rr := range r {
-		b.writeRune(rr)
+		if b.err != nil {
+			return b
+		}
+
+		_, b.err = b.buffer.WriteRune(rr)
 	}
 	return b
 }
@@ -73,36 +79,58 @@ func (b *Builder) QuoteKey(str string) *Builder {
 	return b.Quote(str, QuoteLeft, QuoteRight)
 }
 
-// Reset 重置内容
+// Reset 重置内容，同时也会将 err 设置为 nil
 func (b *Builder) Reset() *Builder {
-	b.buffer().Reset()
+	b.buffer.Reset()
+	b.err = nil
 	return b
 }
 
 // TruncateLast 去掉最后几个字符
 func (b *Builder) TruncateLast(n int) *Builder {
-	b.buffer().Truncate(b.Len() - n)
+	b.buffer.Truncate(b.Len() - n)
 
 	return b
 }
 
+// Err 返回错误内容
+func (b *Builder) Err() error {
+	return b.err
+}
+
 // String 获取表示的字符串
-func (b *Builder) String() string {
-	return b.buffer().String()
+func (b *Builder) String() (string, error) {
+	if b.err != nil {
+		return "", b.Err()
+	}
+	return b.buffer.String(), nil
 }
 
 // Bytes 获取表示的字符串
-func (b *Builder) Bytes() []byte {
-	return b.buffer().Bytes()
+func (b *Builder) Bytes() ([]byte, error) {
+	if b.err != nil {
+		return nil, b.Err()
+	}
+	return b.buffer.Bytes(), nil
 }
 
 // Len 获取长度
 func (b *Builder) Len() int {
-	return b.buffer().Len()
+	return b.buffer.Len()
 }
 
 // Append 追加加一个 Builder 的内容
 func (b *Builder) Append(v *Builder) *Builder {
-	b.buffer().WriteString(v.String())
+	if b.err != nil {
+		return b
+	}
+
+	str, err := v.String()
+	if err == nil {
+		b.buffer.WriteString(str)
+		return b
+	}
+	b.err = err
+
 	return b
 }

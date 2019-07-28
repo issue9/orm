@@ -66,6 +66,8 @@ func (stmt *SelectStmt) Distinct() *SelectStmt {
 
 // Reset 重置语句
 func (stmt *SelectStmt) Reset() *SelectStmt {
+	stmt.baseStmt.Reset()
+
 	stmt.tableExpr = ""
 	stmt.where.Reset()
 	stmt.columns = stmt.columns[:0]
@@ -97,6 +99,10 @@ func (stmt *SelectStmt) Reset() *SelectStmt {
 
 // SQL 获取 SQL 语句及对应的参数
 func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
+	if stmt.err != nil {
+		return "", nil, stmt.Err()
+	}
+
 	if stmt.tableExpr == "" {
 		return "", nil, ErrTableIsEmpty
 	}
@@ -166,7 +172,11 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		builder.WriteString(" FOR UPDATE")
 	}
 
-	return builder.String(), args, nil
+	query, err := builder.String()
+	if err != nil {
+		return "", nil, err
+	}
+	return query, args, nil
 }
 
 func (stmt *SelectStmt) buildUnions(builder *core.Builder) (args []interface{}, err error) {
@@ -244,23 +254,24 @@ func (stmt *SelectStmt) Select(cols ...string) *SelectStmt {
 // table 为表名，如果需要指定别名，可以通过 alias 指定。
 func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 	if stmt.tableExpr != "" {
-		panic("不能重复指定表名")
+		stmt.err = errors.New("不能重复指定表名")
+		return stmt
 	}
 
 	builder := core.NewBuilder("").QuoteKey(table)
 
 	switch len(alias) {
 	case 0:
-		stmt.tableExpr = builder.String()
+		stmt.tableExpr, stmt.err = builder.String()
 	case 1:
 		if alias[0] == "" {
 			break
 		}
 
 		builder.WriteString(" AS ").QuoteKey(alias[0])
-		stmt.tableExpr = builder.String()
+		stmt.tableExpr, stmt.err = builder.String()
 	default:
-		panic("过多的 alias 参数")
+		stmt.err = errors.New("过多的 alias 参数")
 	}
 
 	return stmt
@@ -355,7 +366,7 @@ func (stmt *SelectStmt) ForUpdate() *SelectStmt {
 //  table.col
 // table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
-	stmt.group = core.NewBuilder(" GROUP BY ").
+	stmt.group, stmt.err = core.NewBuilder(" GROUP BY ").
 		WriteString(col).
 		WriteBytes(' ').
 		String()

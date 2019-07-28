@@ -65,7 +65,7 @@ func fillArgs(query string, args []interface{}) (string, error) {
 		}
 	}
 
-	return builder.String(), nil
+	return builder.String()
 }
 
 // 从表达式中获取列的名称。

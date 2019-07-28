@@ -100,7 +100,7 @@ func (p *postgres) replace(query string) (string, error) {
 		}
 	}
 
-	return build.String(), nil
+	return build.String()
 }
 
 func (p *postgres) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
@@ -119,7 +119,11 @@ func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]
 		builder.WriteString(" RESTART IDENTITY")
 	}
 
-	return []string{builder.String()}, nil
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 func (p *postgres) TransactionalDDL() bool {
@@ -226,7 +230,7 @@ func (p *postgres) buildType(typ string, col *core.Column, l int) (string, error
 		w.WriteString(" DEFAULT ").WriteString(v)
 	}
 
-	return w.String(), nil
+	return w.String()
 }
 
 func (p *postgres) SQLFormat(v interface{}, length ...int) (f string, err error) {

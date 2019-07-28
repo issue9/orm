@@ -148,9 +148,13 @@ func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]s
 		return nil, fmt.Errorf("已经存在相同的约束名：%s", stmt.Name)
 	}
 
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
 	info.Constraints[stmt.Name] = &s3.Constraint{
 		Type: stmt.Type,
-		SQL:  builder.String(),
+		SQL:  query,
 	}
 
 	return s.buildSQLS(stmt.Engine(), info, stmt.TableName)
@@ -192,9 +196,13 @@ func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string,
 
 func (s *sqlite3) buildSQLS(e core.Engine, table *s3.Table, tableName string) ([]string, error) {
 	ret := make([]string, 0, len(table.Indexes)+1)
-
 	tmpName := "temp_" + tableName + "_temp"
-	ret = append(ret, table.CreateTableSQL(tmpName))
+
+	query, err := table.CreateTableSQL(tmpName)
+	if err != nil {
+		return nil, err
+	}
+	ret = append(ret, query)
 
 	sel := sqlbuilder.Select(e).From(tableName)
 	for col := range table.Columns {
@@ -228,16 +236,24 @@ func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]s
 	builder := core.NewBuilder("DELETE FROM ").
 		QuoteKey(stmt.TableName)
 
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+
 	if stmt.AIColumnName == "" {
-		return []string{builder.String()}, nil
+		return []string{query}, nil
 	}
 
 	ret := make([]string, 2)
-	ret[0] = builder.String()
+	ret[0] = query
 
-	ret[1] = builder.Reset().WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name=").
+	ret[1], err = builder.Reset().WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name=").
 		Quote(stmt.TableName, '\'', '\'').
 		String()
+	if err != nil {
+		return nil, err
+	}
 
 	return ret, nil
 }
@@ -274,8 +290,13 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 		builder.TruncateLast(1).WriteBytes(')')
 	}
 
-	builder.WriteString(" AS ").WriteString(selectQuery)
-	ret = append(ret, builder.String())
+	query, err := builder.WriteString(" AS ").
+		WriteString(selectQuery).
+		String()
+	if err != nil {
+		return nil, err
+	}
+	ret = append(ret, query)
 
 	return ret, nil
 }
@@ -349,7 +370,7 @@ func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 		w.WriteString(" DEFAULT ").WriteString(v)
 	}
 
-	return w.String(), nil
+	return w.String()
 }
 
 func (s *sqlite3) SQLFormat(v interface{}, length ...int) (f string, err error) {

@@ -140,10 +140,6 @@ func TestWhereStmt_In(t *testing.T) {
 	a := assert.New(t)
 	w := newWhere()
 
-	a.Panic(func() {
-		w.OrIn("col1")
-	})
-
 	w.OrIn("col1", 1, 2, 3)
 	query, args, err := w.SQL()
 	a.NotError(err).

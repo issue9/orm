@@ -54,6 +54,10 @@ func (stmt *CreateIndexStmt) Columns(col ...string) *CreateIndexStmt {
 
 // DDLSQL 生成 SQL 语句
 func (stmt *CreateIndexStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if stmt.table == "" {
 		return nil, ErrTableIsEmpty
 	}
@@ -80,11 +84,16 @@ func (stmt *CreateIndexStmt) DDLSQL() ([]string, error) {
 	}
 	builder.TruncateLast(1).WriteBytes(')')
 
-	return []string{builder.String()}, nil
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 // Reset 重置
 func (stmt *CreateIndexStmt) Reset() *CreateIndexStmt {
+	stmt.baseStmt.Reset()
 	stmt.table = ""
 	stmt.cols = stmt.cols[:0]
 	stmt.name = ""
@@ -126,6 +135,10 @@ func (stmt *DropIndexStmt) Name(col string) *DropIndexStmt {
 
 // DDLSQL 生成 SQL 语句
 func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if stmt.TableName == "" {
 		return nil, ErrTableIsEmpty
 	}
@@ -138,13 +151,18 @@ func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
 		return hook.DropIndexStmtHook(stmt)
 	}
 
-	b := core.NewBuilder("DROP INDEX ").QuoteKey(stmt.IndexName)
-
-	return []string{b.String()}, nil
+	query, err := core.NewBuilder("DROP INDEX ").
+		QuoteKey(stmt.IndexName).
+		String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 // Reset 重置
 func (stmt *DropIndexStmt) Reset() *DropIndexStmt {
+	stmt.baseStmt.Reset()
 	stmt.TableName = ""
 	stmt.IndexName = ""
 	return stmt

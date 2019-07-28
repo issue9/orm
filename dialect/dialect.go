@@ -164,5 +164,9 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 		}
 	}
 
-	return builder.String(), orders, nil
+	q, err := builder.String()
+	if err != nil {
+		return "", nil, err
+	}
+	return q, orders, nil
 }

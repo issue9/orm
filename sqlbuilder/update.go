@@ -94,6 +94,8 @@ func (stmt *UpdateStmt) WhereStmt() *WhereStmt {
 
 // Reset 重置语句
 func (stmt *UpdateStmt) Reset() *UpdateStmt {
+	stmt.baseStmt.Reset()
+
 	stmt.table = ""
 	stmt.where.Reset()
 	stmt.values = stmt.values[:0]
@@ -106,6 +108,10 @@ func (stmt *UpdateStmt) Reset() *UpdateStmt {
 
 // SQL 获取 SQL 语句以及对应的参数
 func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
+	if stmt.err != nil {
+		return "", nil, stmt.Err()
+	}
+
 	if err := stmt.checkErrors(); err != nil {
 		return "", nil, err
 	}
@@ -143,7 +149,11 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 		args = append(args, wa...)
 	}
 
-	return buf.String(), args, nil
+	query, err := buf.String()
+	if err != nil {
+		return "", nil, err
+	}
+	return query, args, nil
 }
 
 func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {

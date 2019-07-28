@@ -39,6 +39,7 @@ func (stmt *SelectStmt) View(name string) *CreateViewStmt {
 
 // Reset 重置对象
 func (stmt *CreateViewStmt) Reset() *CreateViewStmt {
+	stmt.baseStmt.Reset()
 	stmt.ViewName = ""
 	stmt.selectStmt = nil
 	stmt.Columns = stmt.Columns[:0]
@@ -96,6 +97,10 @@ func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
 
 // DDLSQL 返回创建视图的 SQL 语句
 func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if stmt.ViewName == "" {
 		return nil, ErrTableIsEmpty
 	}
@@ -130,9 +135,14 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 		builder.TruncateLast(1).WriteBytes(')')
 	}
 
-	builder.WriteString(" AS ").WriteString(selectQuery)
+	query, err := builder.WriteString(" AS ").
+		WriteString(selectQuery).
+		String()
+	if err != nil {
+		return nil, err
+	}
 
-	return []string{builder.String()}, nil
+	return []string{query}, nil
 }
 
 // DropViewStmt 删除视图
@@ -161,13 +171,19 @@ func (stmt *DropViewStmt) DDLSQL() ([]string, error) {
 		return nil, ErrTableIsEmpty
 	}
 
-	builder := core.NewBuilder("DROP VIEW IF EXISTS ").QuoteKey(stmt.name)
+	query, err := core.NewBuilder("DROP VIEW IF EXISTS ").
+		QuoteKey(stmt.name).
+		String()
+	if err != nil {
+		return nil, err
+	}
 
-	return []string{builder.String()}, nil
+	return []string{query}, nil
 }
 
 // Reset 重置对象
 func (stmt *DropViewStmt) Reset() *DropViewStmt {
+	stmt.baseStmt.Reset()
 	stmt.name = ""
 
 	return stmt

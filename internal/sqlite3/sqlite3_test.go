@@ -54,7 +54,8 @@ func TestTable_CreateTableSQL(t *testing.T) {
 		},
 	}
 
-	query := tbl.CreateTableSQL("test")
+	query, err := tbl.CreateTableSQL("test")
+	a.NotError(err)
 	sqltest.Equal(a, query, `create table test( id integer not null,constraint users_pk primary key(id))`)
 }
 

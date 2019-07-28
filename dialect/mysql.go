@@ -128,7 +128,11 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 		panic(fmt.Sprintf("不存在的约束类型:%s", constraintType))
 	}
 
-	return []string{builder.String()}, nil
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
@@ -137,13 +141,21 @@ func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, err
 		WriteString(" DROP INDEX ").
 		QuoteKey(stmt.IndexName)
 
-	return []string{builder.String()}, nil
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 func (m *mysql) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
 	builder := core.NewBuilder("TRUNCATE TABLE ").QuoteKey(stmt.TableName)
 
-	return []string{builder.String()}, nil
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, error) {
@@ -175,7 +187,11 @@ func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, e
 
 	builder.WriteString(" AS ").WriteString(selectQuery)
 
-	return []string{builder.String()}, nil
+	query, err := builder.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 func (m *mysql) TransactionalDDL() bool {
@@ -288,7 +304,7 @@ func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (s
 		w.WriteString(" DEFAULT ").WriteString(v)
 	}
 
-	return w.String(), nil
+	return w.String()
 }
 
 func (m *mysql) SQLFormat(v interface{}, length ...int) (f string, err error) {

@@ -48,6 +48,10 @@ func (stmt *AddColumnStmt) Column(name string, goType reflect.Type, nullable, ha
 
 // DDLSQL 获取 SQL 语句以及对应的参数
 func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if stmt.table == "" {
 		return nil, ErrTableIsEmpty
 	}
@@ -72,11 +76,16 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 		WriteBytes(' ').
 		WriteString(typ)
 
-	return []string{buf.String()}, nil
+	query, err := buf.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 // Reset 重置
 func (stmt *AddColumnStmt) Reset() *AddColumnStmt {
+	stmt.baseStmt.Reset()
 	stmt.table = ""
 	stmt.column = nil
 	return stmt
@@ -110,6 +119,7 @@ func (stmt *DropColumnStmt) Table(table string) *DropColumnStmt {
 }
 
 // Column 指定需要删除的列
+// 重复指定，会覆盖之前的。
 func (stmt *DropColumnStmt) Column(col string) *DropColumnStmt {
 	stmt.ColumnName = col
 	return stmt
@@ -117,6 +127,10 @@ func (stmt *DropColumnStmt) Column(col string) *DropColumnStmt {
 
 // DDLSQL 获取 SQL 语句以及对应的参数
 func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if stmt.TableName == "" {
 		return nil, ErrTableIsEmpty
 	}
@@ -129,11 +143,17 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 		QuoteKey(stmt.TableName).
 		WriteString(" DROP COLUMN ").
 		QuoteKey(stmt.ColumnName)
-	return []string{buf.String()}, nil
+
+	query, err := buf.String()
+	if err != nil {
+		return nil, err
+	}
+	return []string{query}, nil
 }
 
 // Reset 重置
 func (stmt *DropColumnStmt) Reset() *DropColumnStmt {
+	stmt.baseStmt.Reset()
 	stmt.TableName = ""
 	stmt.ColumnName = ""
 	return stmt

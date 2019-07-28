@@ -49,7 +49,7 @@ type Constraint struct {
 }
 
 // CreateTableSQL 生成 create table 语句
-func (t Table) CreateTableSQL(name string) string {
+func (t Table) CreateTableSQL(name string) (string, error) {
 	builder := core.NewBuilder("CREATE TABLE ").
 		WriteString(name).
 		WriteBytes('(')

@@ -30,6 +30,10 @@ func (stmt *DeleteStmt) Table(table string) *DeleteStmt {
 
 // SQL 获取 SQL 语句，以及其参数对应的具体值
 func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
+	if stmt.err != nil {
+		return "", nil, stmt.Err()
+	}
+
 	if stmt.table == "" {
 		return "", nil, ErrTableIsEmpty
 	}
@@ -39,16 +43,20 @@ func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 
-	builder := core.NewBuilder("DELETE FROM ").
+	q, err := core.NewBuilder("DELETE FROM ").
 		QuoteKey(stmt.table).
 		WriteString(" WHERE ").
-		WriteString(query)
-
-	return builder.String(), args, nil
+		WriteString(query).
+		String()
+	if err != nil {
+		return "", nil, err
+	}
+	return q, args, nil
 }
 
 // Reset 重置语句
 func (stmt *DeleteStmt) Reset() *DeleteStmt {
+	stmt.baseStmt.Reset()
 	stmt.table = ""
 	stmt.where.Reset()
 	return stmt

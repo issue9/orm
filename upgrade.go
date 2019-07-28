@@ -69,7 +69,7 @@ func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 	for _, n := range name {
 		col := u.model.FindColumn(n)
 		if col == nil {
-			panic(fmt.Sprintf("列名 %s 不存在", n))
+			u.err = fmt.Errorf("列名 %s 不存在", n)
 		}
 
 		u.addCols = append(u.addCols, col)

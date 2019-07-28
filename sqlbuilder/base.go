@@ -29,6 +29,7 @@ type DDLSQLer interface {
 
 type baseStmt struct {
 	engine core.Engine
+	err    error
 }
 
 type queryStmt struct {
@@ -79,6 +80,14 @@ func (stmt *baseStmt) Dialect() core.Dialect {
 
 func (stmt *baseStmt) Engine() core.Engine {
 	return stmt.engine
+}
+
+func (stmt *baseStmt) Err() error {
+	return stmt.err
+}
+
+func (stmt *baseStmt) Reset() {
+	stmt.err = nil
 }
 
 func (stmt ddlStmt) Exec() error {

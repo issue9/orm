@@ -151,7 +151,9 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 		"sqlite3_rowid": {"false"},
 	}))
 	a.True(builder.Len() > 0)
-	sqltest.Equal(a, builder.String(), "without rowid")
+	query, err := builder.String()
+	a.NotError(err)
+	sqltest.Equal(a, query, "without rowid")
 
 	builder.Reset()
 	a.Error(s.CreateTableOptionsSQL(builder, map[string][]string{

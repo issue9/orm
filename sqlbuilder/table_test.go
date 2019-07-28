@@ -38,12 +38,13 @@ func TestCreateTableStmt(t *testing.T) {
 		err := stmt.Exec()
 		a.NotError(err)
 
-		a.Panic(func() {
-			stmt.Reset().
-				Table("users").
-				AutoIncrement("id", core.IntType).
-				PK("id")
-		})
+		// AI 和 PK 同时指定为 ID
+		err = stmt.Reset().
+			Table("users").
+			AutoIncrement("id", core.IntType).
+			PK("id").
+			Err()
+		t.Error(err)
 
 		// 约束名重和昨
 		err = stmt.Reset().Table("users").

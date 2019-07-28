@@ -132,7 +132,9 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 		"mysql_charset": {"utf8"},
 	}))
 	a.True(builder.Len() > 0)
-	sqltest.Equal(a, builder.String(), "engine=innodb character set=utf8")
+	query, err := builder.String()
+	a.NotError(err)
+	sqltest.Equal(a, query, "engine=innodb character set=utf8")
 }
 
 func TestMysql_SQLType(t *testing.T) {

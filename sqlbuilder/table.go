@@ -5,6 +5,7 @@
 package sqlbuilder
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -63,6 +64,7 @@ func CreateTable(e core.Engine) *CreateTableStmt {
 
 // Reset 重置内容
 func (stmt *CreateTableStmt) Reset() *CreateTableStmt {
+	stmt.baseStmt.Reset()
 	stmt.name = ""
 	stmt.columns = stmt.columns[:0]
 	stmt.indexes = stmt.indexes[:0]
@@ -106,10 +108,8 @@ func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, 
 // def 默认值；
 // length 表示长度信息。
 func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
-	col, err := newColumn(name, goType, false, nullable, hasDefault, def, length...)
-	if err != nil {
-		panic(err)
-	}
+	var col *core.Column
+	col, stmt.err = newColumn(name, goType, false, nullable, hasDefault, def, length...)
 	return stmt.Columns(col)
 }
 
@@ -131,20 +131,17 @@ func (stmt *CreateTableStmt) AutoIncrement(col string, goType reflect.Type) *Cre
 		Columns: []string{col},
 	}
 
-	c, err := newColumn(col, goType, true, false, false, nil)
-	if err != nil {
-		panic(err)
-	}
+	var c *core.Column
+	c, stmt.err = newColumn(col, goType, true, false, false, nil)
 	return stmt.Columns(c)
 }
 
 // PK 指定主键约束
 //
-// 如果多次指定主键信息，则会 panic
 // 自境会自动转换为主键
 func (stmt *CreateTableStmt) PK(col ...string) *CreateTableStmt {
 	if stmt.pk != nil || stmt.ai != nil {
-		panic("主键或是自增列已经存在")
+		stmt.err = errors.New("主键或是自增列已经存在")
 	}
 
 	stmt.pk = &constraintColumn{
@@ -238,6 +235,10 @@ func (stmt CreateTableStmt) checkNames() error {
 
 // DDLSQL 获取 SQL 的语句及参数部分
 func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if err := stmt.checkNames(); err != nil {
 		return nil, err
 	}
@@ -281,7 +282,11 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 		return nil, err
 	}
 
-	sqls := []string{w.String()}
+	q, err := w.String()
+	if err != nil {
+		return nil, err
+	}
+	sqls := []string{q}
 
 	indexes, err := createIndexSQL(stmt)
 	if err != nil {
@@ -429,6 +434,7 @@ func TruncateTable(e core.Engine) *TruncateTableStmt {
 
 // Reset 重置内容
 func (stmt *TruncateTableStmt) Reset() *TruncateTableStmt {
+	stmt.baseStmt.Reset()
 	stmt.TableName = ""
 	stmt.AIColumnName = ""
 	return stmt
@@ -480,6 +486,10 @@ func (stmt *DropTableStmt) Table(table ...string) *DropTableStmt {
 
 // DDLSQL 获取 SQL 语句以及对应的参数
 func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if len(stmt.tables) == 0 {
 		return nil, ErrTableIsEmpty
 	}
@@ -487,10 +497,14 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 	qs := make([]string, 0, len(stmt.tables))
 
 	for _, table := range stmt.tables {
-		buf := core.NewBuilder("DROP TABLE IF EXISTS ").
-			QuoteKey(table)
+		q, err := core.NewBuilder("DROP TABLE IF EXISTS ").
+			QuoteKey(table).
+			String()
+		if err != nil {
+			return nil, err
+		}
 
-		qs = append(qs, buf.String())
+		qs = append(qs, q)
 	}
 	return qs, nil
 }

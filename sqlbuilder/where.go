@@ -41,7 +41,11 @@ func (stmt *WhereStmt) Reset() {
 // SQL 生成 SQL 语句和对应的参数返回
 func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 	cnt := 0
-	for _, c := range stmt.builder.Bytes() {
+	bs, err := stmt.builder.Bytes()
+	if err != nil {
+		return "", nil, err
+	}
+	for _, c := range bs {
 		if c == '?' || c == '@' {
 			cnt++
 		}
@@ -63,7 +67,11 @@ func (stmt *WhereStmt) SQL() (string, []interface{}, error) {
 		}
 	}
 
-	return stmt.builder.String(), stmt.args, nil
+	query, err := stmt.builder.String()
+	if err != nil {
+		return "", nil, err
+	}
+	return query, stmt.args, nil
 }
 
 func (stmt *WhereStmt) buildGroup(and bool, g *WhereStmt) error {
@@ -227,7 +235,7 @@ func (stmt *WhereStmt) OrNotIn(col string, v ...interface{}) *WhereStmt {
 
 func (stmt *WhereStmt) in(and, not bool, col string, v ...interface{}) *WhereStmt {
 	if len(v) == 0 {
-		panic("参数 v 不能为空")
+		return stmt
 	}
 
 	stmt.writeAnd(and)

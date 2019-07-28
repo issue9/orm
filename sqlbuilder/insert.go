@@ -60,7 +60,7 @@ func (stmt *InsertStmt) Table(table string) *InsertStmt {
 // 当通过 Values() 指定多行数据时，再使用 KeyValue 会出错
 func (stmt *InsertStmt) KeyValue(col string, val interface{}) *InsertStmt {
 	if len(stmt.args) > 1 {
-		panic("多列模式，不能调用 KeyValue 函数")
+		stmt.err = errors.New("多列模式，不能调用 KeyValue 函数")
 	}
 
 	if len(stmt.args) == 0 {
@@ -89,6 +89,7 @@ func (stmt *InsertStmt) Values(vals ...interface{}) *InsertStmt {
 
 // Reset 重置语句
 func (stmt *InsertStmt) Reset() *InsertStmt {
+	stmt.baseStmt.Reset()
 	stmt.table = ""
 	stmt.cols = stmt.cols[:0]
 	stmt.args = stmt.args[:0]
@@ -98,6 +99,10 @@ func (stmt *InsertStmt) Reset() *InsertStmt {
 
 // SQL 获取 SQL 的语句及参数部分
 func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
+	if stmt.err != nil {
+		return "", nil, stmt.Err()
+	}
+
 	if stmt.table == "" {
 		return "", nil, ErrTableIsEmpty
 	}
@@ -149,7 +154,11 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	}
 	builder.TruncateLast(1)
 
-	return builder.String(), args, nil
+	query, err := builder.String()
+	if err != nil {
+		return "", nil, err
+	}
+	return query, args, nil
 }
 
 func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []interface{}, error) {
@@ -172,9 +181,11 @@ func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []interface{}
 		return "", nil, err
 	}
 
-	builder.WriteString(query)
-
-	return builder.String(), args, nil
+	q, err := builder.WriteString(query).String()
+	if err != nil {
+		return "", nil, err
+	}
+	return q, args, nil
 }
 
 // LastInsertID 执行 SQL 语句
