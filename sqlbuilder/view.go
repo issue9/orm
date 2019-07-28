@@ -83,11 +83,7 @@ func (stmt *CreateViewStmt) SelectQuery() (string, error) {
 		return "", ErrValueIsEmpty
 	}
 
-	query, args, err := stmt.selectStmt.SQL()
-	if err != nil {
-		return "", err
-	}
-	return fillArgs(query, args)
+	return stmt.selectStmt.CombineSQL()
 }
 
 // From 指定 Select 语句

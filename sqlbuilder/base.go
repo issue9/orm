@@ -13,6 +13,9 @@ import (
 
 // SQLer 定义 SQL 语句的基本接口
 type SQLer interface {
+	// 将当前实例转换成 SQL 语句返回
+	//
+	// query 表示 SQL 语句，而 args 表示语句各个参数占位符对应的参数值。
 	SQL() (query string, args []interface{}, err error)
 }
 
@@ -97,6 +100,17 @@ func (stmt *ddlStmt) ExecContext(ctx context.Context) error {
 	return nil
 }
 
+// CombineSQL 将 SQLer.SQL 中返回的参数替换掉 query 中的占位符，
+// 形成一条完整的查询语句。
+func (stmt *execStmt) CombineSQL() (query string, err error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return "", err
+	}
+
+	return fillArgs(query, args)
+}
+
 func (stmt *execStmt) Exec() (sql.Result, error) {
 	return stmt.ExecContext(context.Background())
 }
@@ -130,6 +144,17 @@ func (stmt *execStmt) PrepareContext(ctx context.Context) (*core.Stmt, error) {
 
 func (stmt *queryStmt) Prepare() (*core.Stmt, error) {
 	return stmt.PrepareContext(context.Background())
+}
+
+// CombineSQL 将 SQLer.SQL 中返回的参数替换掉 query 中的占位符，
+// 形成一条完整的查询语句。
+func (stmt *queryStmt) CombineSQL() (query string, err error) {
+	query, args, err := stmt.SQL()
+	if err != nil {
+		return "", err
+	}
+
+	return fillArgs(query, args)
 }
 
 func (stmt *queryStmt) PrepareContext(ctx context.Context) (*core.Stmt, error) {
