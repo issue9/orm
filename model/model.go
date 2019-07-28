@@ -345,6 +345,7 @@ func (m *Model) setDefault(col *core.Column, vals []string) error {
 	}
 
 	col.HasDefault = true
+	// TODO 转换成目标值
 	col.Default = vals[0]
 
 	return nil

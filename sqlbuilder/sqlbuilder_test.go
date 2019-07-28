@@ -5,6 +5,8 @@
 package sqlbuilder_test
 
 import (
+	"time"
+
 	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
@@ -38,7 +40,7 @@ func initDB(t *test.Driver) {
 		Column("tel", core.StringType, false, false, nil, 11).
 		Column("nickname", core.StringType, false, false, nil, 20).
 		Column("address", core.StringType, false, false, nil, 1024).
-		//Column("birthday", reflect.TypeOf(time.Time{}), false, true, time.Time{}).
+		Column("birthday", core.TimeType, false, true, time.Time{}).
 		PK("tel", "nickname").
 		ForeignKey("info_fk", "uid", "users", "id", "CASCADE", "CASCADE")
 	err = creator.Exec()

@@ -110,7 +110,7 @@ func testTypes(t *test.Driver) {
 		Column("null_bool", core.NullBoolType, false, false, nil).
 		Column("null_float64", core.NullFloat64Type, false, false, nil, 5, 3).
 		Column("raw_bytes", core.RawBytesType, false, false, nil).
-		Column("time", core.TimeType, false, false, nil, 0).
+		Column("time", core.TimeType, false, false, nil).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -241,4 +241,36 @@ func quoteColumns(stmt *sqlbuilder.SelectStmt, col ...string) {
 	for _, c := range col {
 		stmt.Column("{" + c + "}")
 	}
+}
+
+func testTypesDefault(t *test.Driver) {
+	tableName := "test_type_read_write"
+	creator := sqlbuilder.CreateTable(t.DB).
+		Column("bool", core.BoolType, false, true, false).
+		Column("int", core.IntType, false, true, -1).
+		Column("int8", core.Int8Type, false, true, -8).
+		Column("int16", core.Int16Type, false, true, 0).
+		Column("int32", core.Int32Type, false, true, 32).
+		Column("int64", core.Int64Type, false, true, -64).
+		Column("uint", core.UintType, false, true, 0).
+		Column("uint8", core.Uint8Type, false, true, 8).
+		Column("uint16", core.Uint16Type, false, true, 16).
+		Column("uint32", core.Uint32Type, false, true, 32).
+		Column("uint64", core.Uint64Type, false, true, 64).
+		Column("float32", core.Float32Type, false, true, -3.2, 5, 3).
+		Column("float64", core.Float64Type, false, true, 6.654321, 15, 7).
+		Column("string", core.StringType, false, true, "str", 100).
+		Column("null_string", core.NullStringType, false, true, "null_str", 100).
+		Column("null_int64", core.NullInt64Type, true, true, sql.NullInt64{Int64: 64, Valid: false}).
+		Column("null_bool", core.NullBoolType, false, true, sql.NullBool{Bool: true, Valid: true}).
+		Column("null_float64", core.NullFloat64Type, true, true, nil, 5, 3).
+		Column("raw_bytes", core.RawBytesType, true, false, nil).
+		Column("time", core.TimeType, false, true, time.Now()).
+		Table(tableName)
+	t.NotError(creator.Exec())
+	defer func() {
+		t.NotError(sqlbuilder.DropTable(t.DB).Table(tableName).Exec())
+	}()
+
+	// TODO 插入一条空数据，然后读取
 }

@@ -5,11 +5,13 @@
 package dialect
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/issue9/orm/v2/core"
 	s3 "github.com/issue9/orm/v2/internal/sqlite3"
@@ -231,10 +233,9 @@ func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]s
 
 	ret := make([]string, 2)
 	ret[0] = builder.String()
-	builder.Reset()
-	ret[1] = builder.WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name='").
-		WriteString(stmt.TableName).
-		WriteBytes('\'').
+
+	ret[1] = builder.Reset().WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name=").
+		Quote(stmt.TableName, '\'', '\'').
 		String()
 
 	return ret, nil
@@ -256,32 +257,32 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		return buildSqlite3Type("INTEGER", col), nil
+		return s.buildType("INTEGER", col)
 	case reflect.String:
-		return buildSqlite3Type("TEXT", col), nil
+		return s.buildType("TEXT", col)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return buildSqlite3Type("INTEGER", col), nil
+		return s.buildType("INTEGER", col)
 	case reflect.Float32, reflect.Float64:
-		return buildSqlite3Type("REAL", col), nil
+		return s.buildType("REAL", col)
 	case reflect.Array, reflect.Slice:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return buildSqlite3Type("BLOB", col), nil
+			return s.buildType("BLOB", col)
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case core.RawBytesType:
-			return buildSqlite3Type("BLOB", col), nil
+			return s.buildType("BLOB", col)
 		case core.NullBoolType:
-			return buildSqlite3Type("INTEGER", col), nil
+			return s.buildType("INTEGER", col)
 		case core.NullFloat64Type:
-			return buildSqlite3Type("REAL", col), nil
+			return s.buildType("REAL", col)
 		case core.NullInt64Type:
-			return buildSqlite3Type("INTEGER", col), nil
+			return s.buildType("INTEGER", col)
 		case core.NullStringType:
-			return buildSqlite3Type("TEXT", col), nil
+			return s.buildType("TEXT", col)
 		case core.TimeType:
-			return buildSqlite3Type("TIMESTAMP", col), nil
+			return s.buildType("TIMESTAMP", col)
 		}
 	}
 
@@ -289,7 +290,7 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildSqlite3Type(typ string, col *core.Column) string {
+func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 	w := core.NewBuilder(typ)
 
 	if col.AI {
@@ -301,10 +302,49 @@ func buildSqlite3Type(typ string, col *core.Column) string {
 	}
 
 	if col.HasDefault {
-		w.WriteString(" DEFAULT '").
-			WriteString(fmt.Sprint(col.Default)).
-			WriteBytes('\'')
+		v, err := s.SQLFormat(col.Default)
+		if err != nil {
+			return "", err
+		}
+
+		w.WriteString(" DEFAULT ").WriteString(v)
 	}
 
-	return w.String()
+	return w.String(), nil
+}
+
+func (s *sqlite3) SQLFormat(v interface{}, length ...int) (string, error) {
+	if v == nil {
+		return "NULL", nil
+	}
+
+	switch vv := v.(type) {
+	case string:
+		return "'" + vv + "'", nil
+	case sql.NullBool:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		v = vv.Bool
+	case sql.NullInt64:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		v = vv.Int64
+	case sql.NullFloat64:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		v = vv.Float64
+	case sql.NullString:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		return "'" + vv.String + "'", nil
+	case time.Time: // timestamp
+		// TODO 判断 length
+		return "'" + vv.Format("2006-01-02 15:04:05") + "'", nil
+	}
+
+	return fmt.Sprint(v), nil
 }

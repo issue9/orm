@@ -5,11 +5,13 @@
 package dialect
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/issue9/orm/v2/core"
 	my "github.com/issue9/orm/v2/internal/mysql"
@@ -158,60 +160,60 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		return buildMysqlType("BOOLEAN", col, false, 0), nil
+		return m.buildType("BOOLEAN", col, false, 0)
 	case reflect.Int8:
-		return buildMysqlType("SMALLINT", col, false, 1), nil
+		return m.buildType("SMALLINT", col, false, 1)
 	case reflect.Int16:
-		return buildMysqlType("MEDIUMINT", col, false, 1), nil
+		return m.buildType("MEDIUMINT", col, false, 1)
 	case reflect.Int32:
-		return buildMysqlType("INT", col, false, 1), nil
+		return m.buildType("INT", col, false, 1)
 	case reflect.Int64, reflect.Int: // reflect.Int 大小未知，都当作是 BIGINT 处理
-		return buildMysqlType("BIGINT", col, false, 1), nil
+		return m.buildType("BIGINT", col, false, 1)
 	case reflect.Uint8:
-		return buildMysqlType("SMALLINT", col, true, 1), nil
+		return m.buildType("SMALLINT", col, true, 1)
 	case reflect.Uint16:
-		return buildMysqlType("MEDIUMINT", col, true, 1), nil
+		return m.buildType("MEDIUMINT", col, true, 1)
 	case reflect.Uint32:
-		return buildMysqlType("INT", col, true, 1), nil
+		return m.buildType("INT", col, true, 1)
 	case reflect.Uint64, reflect.Uint, reflect.Uintptr:
-		return buildMysqlType("BIGINT", col, true, 1), nil
+		return m.buildType("BIGINT", col, true, 1)
 	case reflect.Float32, reflect.Float64:
 		if len(col.Length) != 2 {
 			return "", errMissLength
 		}
-		return buildMysqlType("DOUBLE", col, false, 2), nil
+		return m.buildType("DOUBLE", col, false, 2)
 	case reflect.String:
 		if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
-			return buildMysqlType("LONGTEXT", col, false, 0), nil
+			return m.buildType("LONGTEXT", col, false, 0)
 		}
-		return buildMysqlType("VARCHAR", col, false, 1), nil
+		return m.buildType("VARCHAR", col, false, 1)
 	case reflect.Slice, reflect.Array:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return buildMysqlType("BLOB", col, false, 0), nil
+			return m.buildType("BLOB", col, false, 0)
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case core.RawBytesType:
-			return buildMysqlType("BLOB", col, false, 0), nil
+			return m.buildType("BLOB", col, false, 0)
 		case core.NullBoolType:
-			return buildMysqlType("BOOLEAN", col, false, 0), nil
+			return m.buildType("BOOLEAN", col, false, 0)
 		case core.NullFloat64Type:
 			if len(col.Length) != 2 {
 				return "", errMissLength
 			}
-			return buildMysqlType("DOUBLE", col, false, 2), nil
+			return m.buildType("DOUBLE", col, false, 2)
 		case core.NullInt64Type:
-			return buildMysqlType("BIGINT", col, false, 1), nil
+			return m.buildType("BIGINT", col, false, 1)
 		case core.NullStringType:
 			if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
-				return buildMysqlType("LONGTEXT", col, false, 0), nil
+				return m.buildType("LONGTEXT", col, false, 0)
 			}
-			return buildMysqlType("VARCHAR", col, false, 1), nil
+			return m.buildType("VARCHAR", col, false, 1)
 		case core.TimeType:
 			if len(col.Length) > 0 && (col.Length[0] < 0 || col.Length[0] > 6) {
 				return "", errTimeFractionalInvalid
 			}
-			return buildMysqlType("DATETIME", col, false, 0), nil
+			return m.buildType("DATETIME", col, false, 0)
 		}
 	}
 
@@ -219,7 +221,7 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildMysqlType(typ string, col *core.Column, unsigned bool, l int) string {
+func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (string, error) {
 	w := core.NewBuilder(typ)
 
 	switch {
@@ -246,10 +248,75 @@ func buildMysqlType(typ string, col *core.Column, unsigned bool, l int) string {
 	}
 
 	if col.HasDefault {
-		w.WriteString(" DEFAULT '").
-			WriteString(fmt.Sprint(col.Default)).
-			WriteBytes('\'')
+		v, err := m.SQLFormat(col.Default, col.Length...)
+		if err != nil {
+			return "", err
+		}
+		w.WriteString(" DEFAULT ").WriteString(v)
 	}
 
-	return w.String()
+	return w.String(), nil
+}
+
+func (m *mysql) SQLFormat(v interface{}, length ...int) (string, error) {
+	if v == nil {
+		return "NULL", nil
+	}
+
+	switch vv := v.(type) {
+	case bool:
+		if vv {
+			return "1", nil
+		}
+		return "0", nil
+	case string:
+		return "'" + vv + "'", nil
+	case sql.NullBool:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		if vv.Bool == true {
+			return "1", nil
+		}
+		return "0", nil
+	case sql.NullInt64:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		v = vv.Int64
+	case sql.NullFloat64:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		v = vv.Float64
+	case sql.NullString:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		return "'" + vv.String + "'", nil
+	case time.Time: // datetime
+		if len(length) == 0 {
+			return "'" + vv.Format(mysqlDatetimeLayouts[0]) + "'", nil
+		}
+		if len(length) > 1 {
+			return "", errTimeFractionalInvalid
+		}
+
+		if length[0] < 0 || length[0] > 6 {
+			return "", errTimeFractionalInvalid
+		}
+		return "'" + vv.Format(mysqlDatetimeLayouts[length[0]]) + "'", nil
+	}
+
+	return fmt.Sprint(v), nil
+}
+
+var mysqlDatetimeLayouts = []string{
+	"2006-01-02 15:04:05",
+	"2006-01-02 15:04:05.9",
+	"2006-01-02 15:04:05.99",
+	"2006-01-02 15:04:05.999",
+	"2006-01-02 15:04:05.9999",
+	"2006-01-02 15:04:05.99999",
+	"2006-01-02 15:04:05.999999",
 }

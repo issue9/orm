@@ -70,7 +70,7 @@ func TestPostgres_SQLType(t *testing.T) {
 				HasDefault: true,
 				Default:    1,
 			},
-			SQLType: "SMALLINT NOT NULL DEFAULT '1'",
+			SQLType: "SMALLINT NOT NULL DEFAULT 1",
 		},
 
 		{
@@ -298,5 +298,15 @@ func TestPostgres_Types(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
+	}, "postgres")
+}
+
+func TestPostgres_TypesDefault(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		testTypesDefault(t)
 	}, "postgres")
 }

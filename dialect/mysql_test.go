@@ -162,7 +162,7 @@ func TestMysql_SQLType(t *testing.T) {
 				HasDefault: true,
 				Default:    5,
 			},
-			SQLType: "INT NOT NULL DEFAULT '5'",
+			SQLType: "INT NOT NULL DEFAULT 5",
 		},
 		{
 			col:     &core.Column{GoType: core.BoolType},
@@ -303,5 +303,15 @@ func TestMysql_Types(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
+	}, "mysql")
+}
+
+func TestMysql_TypesDefault(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		testTypesDefault(t)
 	}, "mysql")
 }

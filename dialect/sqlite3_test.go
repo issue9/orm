@@ -294,3 +294,13 @@ func TestSqlite3_Types(t *testing.T) {
 		testTypes(t)
 	}, "sqlite3")
 }
+
+func TestSqlite3_TypesDefault(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		testTypesDefault(t)
+	}, "sqlite3")
+}

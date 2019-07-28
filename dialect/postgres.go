@@ -5,11 +5,13 @@
 package dialect
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/sqlbuilder"
@@ -135,62 +137,62 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 
 	switch col.GoType.Kind() {
 	case reflect.Bool:
-		return buildPostgresType("BOOLEAN", col, 0), nil
+		return p.buildType("BOOLEAN", col, 0)
 	case reflect.Int8, reflect.Int16, reflect.Uint8, reflect.Uint16:
 		if col.AI {
-			return buildPostgresType("SERIAL", col, 0), nil
+			return p.buildType("SERIAL", col, 0)
 		}
-		return buildPostgresType("SMALLINT", col, 0), nil
+		return p.buildType("SMALLINT", col, 0)
 	case reflect.Int32, reflect.Uint32:
 		if col.AI {
-			return buildPostgresType("SERIAL", col, 0), nil
+			return p.buildType("SERIAL", col, 0)
 		}
-		return buildPostgresType("INT", col, 0), nil
+		return p.buildType("INT", col, 0)
 	case reflect.Int64, reflect.Int, reflect.Uint64, reflect.Uint:
 		if col.AI {
-			return buildPostgresType("BIGSERIAL", col, 0), nil
+			return p.buildType("BIGSERIAL", col, 0)
 		}
-		return buildPostgresType("BIGINT", col, 0), nil
+		return p.buildType("BIGINT", col, 0)
 	case reflect.Float32, reflect.Float64:
 		if len(col.Length) != 2 {
 			return "", errMissLength
 		}
-		return buildPostgresType("NUMERIC", col, 2), nil
+		return p.buildType("NUMERIC", col, 2)
 	case reflect.String:
 		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
-			return buildPostgresType("TEXT", col, 0), nil
+			return p.buildType("TEXT", col, 0)
 		}
-		return buildPostgresType("VARCHAR", col, 1), nil
+		return p.buildType("VARCHAR", col, 1)
 	case reflect.Slice, reflect.Array:
 		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return buildPostgresType("BYTEA", col, 0), nil
+			return p.buildType("BYTEA", col, 0)
 		}
 	case reflect.Struct:
 		switch col.GoType {
 		case core.RawBytesType:
-			return buildPostgresType("BYTEA", col, 0), nil
+			return p.buildType("BYTEA", col, 0)
 		case core.NullBoolType:
-			return buildPostgresType("BOOLEAN", col, 0), nil
+			return p.buildType("BOOLEAN", col, 0)
 		case core.NullFloat64Type:
 			if len(col.Length) != 2 {
 				return "", errMissLength
 			}
-			return buildPostgresType("NUMERIC", col, 2), nil
+			return p.buildType("NUMERIC", col, 2)
 		case core.NullInt64Type:
 			if col.AI {
-				return buildPostgresType("BIGSERIAL", col, 0), nil
+				return p.buildType("BIGSERIAL", col, 0)
 			}
-			return buildPostgresType("BIGINT", col, 0), nil
+			return p.buildType("BIGINT", col, 0)
 		case core.NullStringType:
 			if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
-				return buildPostgresType("TEXT", col, 0), nil
+				return p.buildType("TEXT", col, 0)
 			}
-			return buildPostgresType("VARCHAR", col, 1), nil
+			return p.buildType("VARCHAR", col, 1)
 		case core.TimeType:
 			if len(col.Length) > 0 && (col.Length[0] < 0 || col.Length[0] > 6) {
 				return "", errTimeFractionalInvalid
 			}
-			return buildPostgresType("TIMESTAMP", col, 1), nil
+			return p.buildType("TIMESTAMP", col, 1)
 		}
 	}
 
@@ -198,7 +200,7 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 }
 
 // l 表示需要取的长度数量
-func buildPostgresType(typ string, col *core.Column, l int) string {
+func (p *postgres) buildType(typ string, col *core.Column, l int) (string, error) {
 	w := core.NewBuilder(typ)
 
 	switch {
@@ -217,10 +219,67 @@ func buildPostgresType(typ string, col *core.Column, l int) string {
 	}
 
 	if col.HasDefault {
-		w.WriteString(" DEFAULT '").
-			WriteString(fmt.Sprint(col.Default)).
-			WriteBytes('\'')
+		v, err := p.SQLFormat(col.Default, col.Length...)
+		if err != nil {
+			return "", err
+		}
+		w.WriteString(" DEFAULT ").WriteString(v)
 	}
 
-	return w.String()
+	return w.String(), nil
+}
+
+func (p *postgres) SQLFormat(v interface{}, length ...int) (string, error) {
+	if v == nil {
+		return "NULL", nil
+	}
+
+	switch vv := v.(type) {
+	case string:
+		return "'" + vv + "'", nil
+	case sql.NullBool:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		v = vv.Bool
+	case sql.NullInt64:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		v = vv.Int64
+	case sql.NullFloat64:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		v = vv.Float64
+	case sql.NullString:
+		if !vv.Valid {
+			return "NULL", nil
+		}
+		return "'" + vv.String + "'", nil
+	case time.Time: // timestamp
+		if len(length) == 0 {
+			return "'" + vv.Format(postgresDatetimeLayouts[0]) + "'", nil
+		}
+		if len(length) > 1 {
+			return "", errTimeFractionalInvalid
+		}
+
+		if length[0] < 0 || length[0] > 6 {
+			return "", errTimeFractionalInvalid
+		}
+		return "'" + vv.Format(postgresDatetimeLayouts[length[0]]) + "'", nil
+	}
+
+	return fmt.Sprint(v), nil
+}
+
+var postgresDatetimeLayouts = []string{
+	"2006-01-02 15:04:05Z07:00",
+	"2006-01-02 15:04:05.9Z07:00",
+	"2006-01-02 15:04:05.99Z07:00",
+	"2006-01-02 15:04:05.999Z07:00",
+	"2006-01-02 15:04:05.9999Z07:00",
+	"2006-01-02 15:04:05.99999Z07:00",
+	"2006-01-02 15:04:05.999999Z07:00",
 }
