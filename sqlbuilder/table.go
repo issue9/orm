@@ -81,8 +81,12 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	return stmt
 }
 
-func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *core.Column {
-	col := core.NewColumnFromGoType(goType)
+func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) (*core.Column, error) {
+	col, err := core.NewColumnFromGoType(goType)
+	if err != nil {
+		return nil, err
+	}
+
 	col.Name = name
 	col.AI = ai
 	col.Nullable = nullable
@@ -90,7 +94,7 @@ func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, 
 	col.Default = def
 	col.Length = length
 
-	return col
+	return col, nil
 }
 
 // Column 添加列
@@ -102,7 +106,11 @@ func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, 
 // def 默认值；
 // length 表示长度信息。
 func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
-	return stmt.Columns(newColumn(name, goType, false, nullable, hasDefault, def, length...))
+	col, err := newColumn(name, goType, false, nullable, hasDefault, def, length...)
+	if err != nil {
+		panic(err)
+	}
+	return stmt.Columns(col)
 }
 
 // Columns 添加列
@@ -123,7 +131,11 @@ func (stmt *CreateTableStmt) AutoIncrement(col string, goType reflect.Type) *Cre
 		Columns: []string{col},
 	}
 
-	return stmt.Columns(newColumn(col, goType, true, false, false, nil))
+	c, err := newColumn(col, goType, true, false, false, nil)
+	if err != nil {
+		panic(err)
+	}
+	return stmt.Columns(c)
 }
 
 // PK 指定主键约束
@@ -301,8 +313,6 @@ func (stmt *CreateTableStmt) createConstraints(buf *core.Builder) error {
 		stmt.createPKSQL(buf, core.PKName(stmt.name), stmt.pk.Columns...)
 		buf.WriteBytes(',')
 	}
-
-	// TODO 部分数据库，需要独立创建 AI 约束，比如 Oracle
 
 	return nil
 }

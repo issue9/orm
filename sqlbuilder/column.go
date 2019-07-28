@@ -36,7 +36,10 @@ func (stmt *AddColumnStmt) Table(table string) *AddColumnStmt {
 //
 // 参数信息可参考 CreateTableStmt.Column
 func (stmt *AddColumnStmt) Column(name string, goType reflect.Type, nullable, hasDefault bool, def interface{}, length ...int) *AddColumnStmt {
-	col := newColumn(name, goType, false, nullable, hasDefault, def, length...)
+	col, err := newColumn(name, goType, false, nullable, hasDefault, def, length...)
+	if err != nil {
+		panic(err)
+	}
 
 	stmt.column = col
 

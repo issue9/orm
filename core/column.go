@@ -6,9 +6,16 @@ package core
 
 import (
 	"database/sql"
+	"errors"
 	"reflect"
 	"time"
 )
+
+// ErrInvalidColumnType 无效的列类型
+//
+// 作为列类型，该数据类型必须是可序列化的。
+// 像 reflect.Func 和 reflect.Chan 等都将返回该错误。
+var ErrInvalidColumnType = errors.New("无效的列类型")
 
 // 基本的数据类型
 var (
@@ -50,11 +57,19 @@ type Column struct {
 }
 
 // NewColumnFromGoType 从 Go 类型中生成 Column，会初始化 goZero
-func NewColumnFromGoType(goType reflect.Type) *Column {
+func NewColumnFromGoType(goType reflect.Type) (*Column, error) {
+	for goType.Kind() == reflect.Ptr {
+		goType = goType.Elem()
+	}
+
+	if goType.Kind() == reflect.Chan || goType.Kind() == reflect.Func {
+		return nil, ErrInvalidColumnType
+	}
+
 	return &Column{
 		GoType: goType,
 		goZero: reflect.Zero(goType).Interface(),
-	}
+	}, nil
 }
 
 // IsZero 是否为零值

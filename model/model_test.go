@@ -306,7 +306,8 @@ func TestModel_setOCC(t *testing.T) {
 func TestModel_setDefault(t *testing.T) {
 	a := assert.New(t)
 	m := &Model{}
-	col := &core.Column{}
+	col, err := core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(col)
 
 	// 未指定参数
 	a.Error(m.setDefault(col, nil))

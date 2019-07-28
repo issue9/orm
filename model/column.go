@@ -11,11 +11,15 @@ import (
 	"github.com/issue9/orm/v2/core"
 )
 
-func newColumn(field reflect.StructField) *core.Column {
-	col := core.NewColumnFromGoType(field.Type)
+func newColumn(field reflect.StructField) (*core.Column, error) {
+	col, err := core.NewColumnFromGoType(field.Type)
+	if err != nil {
+		return nil, err
+	}
+
 	col.Name = field.Name
 	col.GoName = field.Name
-	return col
+	return col, nil
 }
 
 // 检测长度是否合法，必须要  Column 初始化已经完成。
