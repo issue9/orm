@@ -71,8 +71,8 @@ type Dialect interface {
 	// 参数 length 表示部分需要固定长度的数据格式，比如浮点数，
 	// 或是时间格式也需要精度。
 	//
-	// SQLFormat 主要需要处理内置类型的数据，如果已经实现了
-	// driver.Valuer 接口的，应该采该接口中返回的值，以便统一。
+	// SQLFormat 应该优先调用 driver.Valuer 获取其原始类型的值，
+	// 再作进一步的转换。
 	SQLFormat(v interface{}, length ...int) (string, error)
 
 	// 是否允许在事务中执行 DDL
@@ -121,7 +121,4 @@ type Dialect interface {
 	// query 为处理后的 SQL 语句；
 	// orders 为参数名在 query 中对应的位置，第一个位置为 0，依次增加。
 	Prepare(sql string) (query string, orders map[string]int, err error)
-
-	// 创建 AI 约束
-	//CreateConstraintAI(name,col string)(string,error)
 }

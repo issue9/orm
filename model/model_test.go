@@ -5,7 +5,11 @@
 package model
 
 import (
+	"errors"
+	"reflect"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/issue9/assert"
 
@@ -13,6 +17,29 @@ import (
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
+
+type last struct {
+	IP      string
+	Created int64
+}
+
+var _ DefaultParser = &last{}
+
+func (l *last) ParseDefault(v string) error {
+	vals := strings.Split(v, ",")
+	if len(vals) != 2 {
+		return errors.New("无效的值格式")
+	}
+
+	cc, err := time.Parse(time.RFC3339, vals[1])
+	if err != nil {
+		return err
+	}
+
+	l.IP = vals[0]
+	l.Created = cc.Unix()
+	return nil
+}
 
 // User 带自增和一个唯一约束
 type User struct {
@@ -317,12 +344,40 @@ func TestModel_setDefault(t *testing.T) {
 
 	// 正常
 	a.NotError(m.setDefault(col, []string{"1"}))
-	a.True(col.HasDefault).Equal(col.Default, "1")
+	a.True(col.HasDefault).
+		Equal(col.Default, 1)
 
 	// 可以是主键的一部分
 	m.PK = []*core.Column{col, col}
 	a.NotError(m.setDefault(col, []string{"1"}))
-	a.True(col.HasDefault).Equal(col.Default, "1")
+	a.True(col.HasDefault).
+		Equal(col.Default, 1)
+
+	col, err = core.NewColumnFromGoType(reflect.TypeOf(&last{}))
+	a.NotError(err).NotNil(col)
+
+	// 格式不正确
+	a.Error(m.setDefault(col, []string{"1"}))
+
+	// 格式正确
+	now := "2019-07-29T00:38:59+08:00"
+	tt, err := time.Parse(time.RFC3339, now)
+	a.NotError(err).NotEmpty(tt)
+	a.NotError(m.setDefault(col, []string{"192.168.1.1," + now}))
+	a.Equal(col.Default, &last{
+		IP:      "192.168.1.1",
+		Created: tt.Unix(),
+	})
+
+	col, err = core.NewColumnFromGoType(reflect.TypeOf(time.Time{}))
+	a.NotError(err).NotNil(col)
+
+	// 格式不正确
+	a.Error(m.setDefault(col, []string{"1"}))
+
+	// 格式正确
+	a.NotError(m.setDefault(col, []string{now}))
+	a.Equal(col.Default, tt)
 }
 
 func TestModel_setPK(t *testing.T) {

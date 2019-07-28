@@ -9,6 +9,19 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
+// DefaultParser 提供了 ParseDefault 函数
+//
+// 在 struct tag 中可以通过 default 指定默认值，
+// 该值的表示可能与数据库中的表示不尽相同，
+// 所以自定义的数据类型，需要实现该接口，以便能正确转换成该类型的值。
+//
+// 如果用户不提供该接口实现，那么默认情况下，
+// 系统会采用 github.com/issue9/conv.Value() 函数作默认转换。
+type DefaultParser interface {
+	// 将默认值从字符串解析成 t 类型的值。
+	ParseDefault(v string) error
+}
+
 // Viewer 如果是视图模型，需要实现此接口
 type Viewer interface {
 	// 返回视图所需的 Select 语句实例。

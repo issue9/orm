@@ -10,7 +10,10 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
+
+	"github.com/issue9/conv"
 
 	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
@@ -214,7 +217,11 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 			continue
 		}
 
-		col := newColumn(field)
+		col, err := newColumn(field)
+		if err != nil {
+			return err
+		}
+
 		if err := m.parseColumn(col, tag); err != nil {
 			return err
 		}
@@ -346,10 +353,36 @@ func (m *Model) setDefault(col *core.Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "default", "太多的值")
 	}
-
 	col.HasDefault = true
-	// TODO 转换成目标值
-	col.Default = vals[0]
+
+	rval := reflect.New(col.GoType)
+	v := rval.Interface()
+	if p, ok := v.(DefaultParser); ok {
+		if err := p.ParseDefault(vals[0]); err != nil {
+			return err
+		}
+
+		col.Default = v
+		return nil
+	}
+
+	switch col.GoType {
+	case core.TimeType:
+		v, err := time.Parse(time.RFC3339, vals[0])
+		if err != nil {
+			return err
+		}
+		col.Default = v
+	default:
+		for rval.Kind() == reflect.Ptr {
+			rval = rval.Elem()
+		}
+
+		if err := conv.Value(vals[0], rval); err != nil {
+			return err
+		}
+		col.Default = rval.Interface()
+	}
 
 	return nil
 }
