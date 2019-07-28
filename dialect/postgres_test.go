@@ -5,6 +5,7 @@
 package dialect_test
 
 import (
+	"database/sql"
 	"reflect"
 	"testing"
 
@@ -224,6 +225,104 @@ func TestPostgres_SQLType(t *testing.T) {
 	}
 
 	testSQLType(a, dialect.Postgres(), data)
+}
+
+func TestPostgres_SQLFormat(t *testing.T) {
+	a := assert.New(t)
+
+	var data = []*struct {
+		v      interface{}
+		l      []int
+		format string
+		err    bool
+	}{
+		{
+			v:      1,
+			format: "1",
+		},
+		{
+			v:      int8(1),
+			format: "1",
+		},
+
+		// Bool
+		{
+			v:      true,
+			format: "true",
+		},
+		{
+			v:      false,
+			format: "false",
+		},
+
+		// NullBool
+		{
+			v:      sql.NullBool{Valid: true, Bool: true},
+			format: "true",
+		},
+		{
+			v:      sql.NullBool{Valid: true, Bool: false},
+			format: "false",
+		},
+		{
+			v:      sql.NullBool{Valid: false, Bool: true},
+			format: "NULL",
+		},
+
+		// NullInt64
+		{
+			v:      sql.NullInt64{Valid: true, Int64: 64},
+			format: "64",
+		},
+		{
+			v:      sql.NullInt64{Valid: true, Int64: -1},
+			format: "-1",
+		},
+		{
+			v:      sql.NullInt64{Valid: false, Int64: 64},
+			format: "NULL",
+		},
+
+		// NullFloat64
+		{
+			v:      sql.NullFloat64{Valid: true, Float64: 6.4},
+			format: "6.4",
+		},
+		{
+			v:      sql.NullFloat64{Valid: true, Float64: -1.64},
+			format: "-1.64",
+		},
+		{
+			v:      sql.NullFloat64{Valid: false, Float64: 6.4},
+			format: "NULL",
+		},
+
+		// NullString
+		{
+			v:      sql.NullString{Valid: true, String: "str"},
+			format: "'str'",
+		},
+		{
+			v:      sql.NullString{Valid: true, String: ""},
+			format: "''",
+		},
+		{
+			v:      sql.NullString{Valid: false, String: "str"},
+			format: "NULL",
+		},
+	}
+
+	m := dialect.Postgres()
+	for index, item := range data {
+		f, err := m.SQLFormat(item.v, item.l...)
+		if item.err {
+			a.Error(err, "not error @%d", index).
+				Empty(f)
+		} else {
+			a.NotError(err, "%v @%d", err, index).
+				Equal(f, item.format, "not equal @%d,v1:%s,v2:%s", index, f, item.format)
+		}
+	}
 }
 
 func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
