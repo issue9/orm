@@ -5,7 +5,7 @@
 package dialect
 
 import (
-	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"reflect"
@@ -313,7 +313,14 @@ func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 	return w.String(), nil
 }
 
-func (s *sqlite3) SQLFormat(v interface{}, length ...int) (string, error) {
+func (s *sqlite3) SQLFormat(v interface{}, length ...int) (f string, err error) {
+	if vv, ok := v.(driver.Valuer); ok {
+		v, err = vv.Value()
+		if err != nil {
+			return "", err
+		}
+	}
+
 	if v == nil {
 		return "NULL", nil
 	}
@@ -321,26 +328,6 @@ func (s *sqlite3) SQLFormat(v interface{}, length ...int) (string, error) {
 	switch vv := v.(type) {
 	case string:
 		return "'" + vv + "'", nil
-	case sql.NullBool:
-		if !vv.Valid {
-			return "NULL", nil
-		}
-		v = vv.Bool
-	case sql.NullInt64:
-		if !vv.Valid {
-			return "NULL", nil
-		}
-		v = vv.Int64
-	case sql.NullFloat64:
-		if !vv.Valid {
-			return "NULL", nil
-		}
-		v = vv.Float64
-	case sql.NullString:
-		if !vv.Valid {
-			return "NULL", nil
-		}
-		return "'" + vv.String + "'", nil
 	case time.Time: // timestamp
 		// TODO 判断 length
 		return "'" + vv.Format("2006-01-02 15:04:05") + "'", nil

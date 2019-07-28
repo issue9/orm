@@ -5,7 +5,7 @@
 package dialect
 
 import (
-	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"reflect"
@@ -258,7 +258,14 @@ func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (s
 	return w.String(), nil
 }
 
-func (m *mysql) SQLFormat(v interface{}, length ...int) (string, error) {
+func (m *mysql) SQLFormat(v interface{}, length ...int) (f string, err error) {
+	if vv, ok := v.(driver.Valuer); ok {
+		v, err = vv.Value()
+		if err != nil {
+			return "", err
+		}
+	}
+
 	if v == nil {
 		return "NULL", nil
 	}
@@ -271,29 +278,6 @@ func (m *mysql) SQLFormat(v interface{}, length ...int) (string, error) {
 		return "0", nil
 	case string:
 		return "'" + vv + "'", nil
-	case sql.NullBool:
-		if !vv.Valid {
-			return "NULL", nil
-		}
-		if vv.Bool == true {
-			return "1", nil
-		}
-		return "0", nil
-	case sql.NullInt64:
-		if !vv.Valid {
-			return "NULL", nil
-		}
-		v = vv.Int64
-	case sql.NullFloat64:
-		if !vv.Valid {
-			return "NULL", nil
-		}
-		v = vv.Float64
-	case sql.NullString:
-		if !vv.Valid {
-			return "NULL", nil
-		}
-		return "'" + vv.String + "'", nil
 	case time.Time: // datetime
 		if len(length) == 0 {
 			return "'" + vv.Format(mysqlDatetimeLayouts[0]) + "'", nil

@@ -70,6 +70,9 @@ type Dialect interface {
 	//
 	// 参数 length 表示部分需要固定长度的数据格式，比如浮点数，
 	// 或是时间格式也需要精度。
+	//
+	// SQLFormat 主要需要处理内置类型的数据，如果已经实现了
+	// driver.Valuer 接口的，应该采该接口中返回的值，以便统一。
 	SQLFormat(v interface{}, length ...int) (string, error)
 
 	// 是否允许在事务中执行 DDL
