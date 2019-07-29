@@ -97,6 +97,11 @@ func (stmt *InsertStmt) Reset() *InsertStmt {
 	return stmt
 }
 
+// InsertDefaultValueHooker 插入值全部为默认值时的钩子处理函数
+type InsertDefaultValueHooker interface {
+	InsertDefaultValueHook(tableName string) (string, []interface{}, error)
+}
+
 // SQL 获取 SQL 的语句及参数部分
 func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	if stmt.err != nil {
@@ -107,24 +112,29 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	if len(stmt.cols) == 0 && (stmt.selectStmt == nil || len(stmt.selectStmt.columns) == 0) {
+	/*if len(stmt.cols) == 0 && (stmt.selectStmt == nil || len(stmt.selectStmt.columns) == 0) {
 		return "", nil, ErrColumnsIsEmpty
 	}
 
 	if len(stmt.args) == 0 && stmt.selectStmt == nil {
 		return "", nil, ErrValueIsEmpty
 	}
-
-	for _, vals := range stmt.args {
-		if len(vals) != len(stmt.cols) {
-			return "", nil, ErrArgsNotMatch
-		}
-	}
+	*/
 
 	builder := core.NewBuilder("INSERT INTO ").WriteString(stmt.table)
 
 	if stmt.selectStmt != nil {
 		return stmt.fromSelect(builder)
+	}
+
+	if len(stmt.cols) == 0 && len(stmt.args) == 0 {
+		return stmt.insertDefault(builder)
+	}
+
+	for _, vals := range stmt.args {
+		if len(vals) != len(stmt.cols) {
+			return "", nil, ErrArgsNotMatch
+		}
 	}
 
 	builder.WriteBytes('(')
@@ -159,6 +169,19 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 	return query, args, nil
+}
+
+func (stmt *InsertStmt) insertDefault(builder *core.Builder) (string, []interface{}, error) {
+	if hook, ok := stmt.Dialect().(InsertDefaultValueHooker); ok {
+		return hook.InsertDefaultValueHook(stmt.table)
+	}
+
+	query, err := builder.WriteString(" DEFAULT VALUES").String()
+	if err != nil {
+		return "", nil, err
+	}
+
+	return query, nil, nil
 }
 
 func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []interface{}, error) {

@@ -35,6 +35,7 @@ var (
 	_ sqlbuilder.DropIndexStmtHooker      = &mysql{}
 	_ sqlbuilder.DropConstraintStmtHooker = &mysql{}
 	_ sqlbuilder.CreateViewStmtHooker     = &mysql{}
+	_ sqlbuilder.InsertDefaultValueHooker = &mysql{}
 )
 
 // Mysql 返回一个适配 mysql 的 Dialect 接口
@@ -192,6 +193,18 @@ func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, e
 		return nil, err
 	}
 	return []string{query}, nil
+}
+
+func (m *mysql) InsertDefaultValueHook(table string) (string, []interface{}, error) {
+	query, err := core.NewBuilder("INSERT INTO").
+		QuoteKey(table).
+		WriteString("() VALUES ()").
+		String()
+
+	if err != nil {
+		return "", nil, err
+	}
+	return query, nil, nil
 }
 
 func (m *mysql) TransactionalDDL() bool {

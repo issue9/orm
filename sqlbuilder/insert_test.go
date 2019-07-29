@@ -27,7 +27,7 @@ func TestInsert(t *testing.T) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
 			AutoIncrement("id", core.Int64Type).
-			Column("name", core.StringType, false, false, nil, 20).
+			Column("name", core.StringType, false, true, "def-name", 20).
 			Exec()
 		a.NotError(err)
 		defer func() {
@@ -55,13 +55,13 @@ func TestInsert(t *testing.T) {
 		_, err = i.Exec()
 		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
 
-		i.Reset().Table(tableName).Columns("id", "name")
-		_, err = i.Exec()
-		a.ErrorType(err, sqlbuilder.ErrValueIsEmpty)
-
 		i.Reset().Table(tableName).Columns("id", "name").Values("100")
 		_, err = i.Exec()
 		a.ErrorType(err, sqlbuilder.ErrArgsNotMatch)
+
+		// default value
+		_, err = i.Reset().Table(tableName).Exec()
+		a.NotError(err)
 	})
 }
 
