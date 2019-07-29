@@ -245,6 +245,8 @@ func quoteColumns(stmt *sqlbuilder.SelectStmt, col ...string) {
 
 func testTypesDefault(t *test.Driver) {
 	tableName := "test_type_read_write"
+	now := time.Now()
+
 	creator := sqlbuilder.CreateTable(t.DB).
 		Column("bool", core.BoolType, false, true, false).
 		Column("int", core.IntType, false, true, -1).
@@ -265,12 +267,94 @@ func testTypesDefault(t *test.Driver) {
 		Column("null_bool", core.NullBoolType, false, true, sql.NullBool{Bool: true, Valid: true}).
 		Column("null_float64", core.NullFloat64Type, true, true, nil, 5, 3).
 		Column("raw_bytes", core.RawBytesType, true, false, nil).
-		Column("time", core.TimeType, false, true, time.Now()).
+		Column("time", core.TimeType, false, true, now).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
 		t.NotError(sqlbuilder.DropTable(t.DB).Table(tableName).Exec())
 	}()
 
-	// TODO 插入一条空数据，然后读取
+	cols := []string{
+		"bool",
+		"int",
+		"int8",
+		"int16",
+		"int32",
+		"int64",
+		"uint",
+		"uint8",
+		"uint16",
+		"uint32",
+		"uint64",
+		"float32",
+		"float64",
+		"string",
+		"null_string",
+		"null_int64",
+		"null_bool",
+		"null_float64",
+		"raw_bytes",
+		"time",
+	}
+	r, err := sqlbuilder.Insert(t.DB).
+		Table(tableName).
+		Exec()
+	t.NotError(err).NotNil(r)
+
+	selStmt := sqlbuilder.Select(t.DB).
+		From(tableName)
+	quoteColumns(selStmt, cols...)
+	rows, err := selStmt.Query()
+	t.NotError(err).NotNil(rows)
+	defer func() {
+		t.NotError(rows.Close())
+	}()
+
+	t.True(rows.Next())
+	var (
+		Bool       bool
+		Int        int
+		Int8       int8
+		Int16      int16
+		Int32      int32
+		Int64      int64
+		Uint       uint
+		Uint8      uint8
+		Uint16     uint16
+		Uint32     uint32
+		Uint64     uint64
+		F32        float32
+		F64        float64
+		String     string
+		NullString sql.NullString
+		NullInt64  sql.NullInt64
+		NullBool   sql.NullBool
+		NullF64    sql.NullFloat64
+		RawBytes   sql.RawBytes
+		Time       time.Time
+	)
+	err = rows.Scan(&Bool, &Int, &Int8, &Int16, &Int32, &Int64,
+		&Uint, &Uint8, &Uint16, &Uint32, &Uint64,
+		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time)
+	t.NotError(err)
+	t.False(Bool).
+		Equal(Int, -1).
+		Equal(Int8, -8).
+		Equal(Int16, 0).
+		Equal(Int32, 32).
+		Equal(Int64, -64).
+		Equal(Uint, 0).
+		Equal(Uint8, 8).
+		Equal(Uint16, 16).
+		Equal(Uint32, 32).
+		Equal(Uint64, 64).
+		Equal(F32, float32(-3.2)).
+		Equal(F64, 6.654321).
+		Equal(String, "str").
+		True(NullString.Valid).Equal(NullString.String, "null_str").
+		False(NullInt64.Valid).
+		True(NullBool.Valid).True(NullBool.Bool).
+		False(NullF64.Valid).
+		Nil(RawBytes).
+		Equal(Time.Unix(), now.Unix())
 }
