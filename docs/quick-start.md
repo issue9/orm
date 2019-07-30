@@ -1,10 +1,41 @@
 ### 安装
 
-```shell
-go get github.com/issue9/orm
+在项目的 go.mod 中引用项目即可，当前版本为 v2：
+```go.mod
+require (
+    github.com/issue9/orm/v2 v2.x.x
+)
+
+go 1.11
 ```
 
-或是通过 go.mod 指定，推荐采用 go.mod 的方式自动安装。
+
+### 数据库
+
+目前支持以下数据库以及驱动:
+ 1. sqlite3:  github.com/mattn/go-sqlite3
+ 1. mysql:    github.com/go-sql-driver/mysql
+ 1. postgres: github.com/lib/pq
+
+在初始化时，需要用到什么数据库，只需要引入该驱动即可，
+不需要全部引入。
+
+```go
+import (
+    "github.com/issue9/orm/v2"
+    "github.com/issue9/orm/v2/dialect"
+
+    _ "github.com/mattn/go-sql-driver/mysql"
+)
+```
+
+之后就可以直接使用 orm.New 初始化实例。
+
+或者在已经初始化 sql.DB 的情况下，直接使用 sql.DB
+实例初始化：
+```
+db, err := orm.NewDBWithStdDB(db, "table_prefix_", dialect.Mysql())
+```
 
 
 ### 快速开始
@@ -29,7 +60,7 @@ func (u *User) Meta() string {
 }
 
 func main() {
-    db,err := orm.New("sqlite3", "./test.db", "test_", dialect.Sqlite3())
+    db, err := orm.NewDB("sqlite3", "./test.db", "test_", dialect.Sqlite3())
     if err !=nil {
         panic(err)
     }
@@ -62,5 +93,4 @@ func main() {
     db.Drop(&User{})
 }
 ```
-
 

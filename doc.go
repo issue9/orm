@@ -63,7 +63,8 @@
 //
 // 目前支持以下的 struct tag：
 //
-//  name(fieldName): 将当前的字段映射到数据表中的 fieldName 字段。
+//  name(fieldName): 指定当前字段在数据表中的名称，如果未指定，
+//  则和字段名相同。只有可导出的字段才有效果。
 //
 //  len(l1, l2): 指定字段的长度。比如 mysql 中的int(5),varchar(255),double(1,2),
 //  不支持该特性的数据，将会忽略该标签的内容，比如 sqlite3。
@@ -71,8 +72,7 @@
 //  想使用类似于 TEXT 等不定长的形式表达。
 //  如果是日期类型，则第一个可选参数表示日期精度。
 //
-//  nullable(true|false): 相当于定义表结构时的 NULL，建议尽量少用该属性，
-//  若非用不可的话，与之对应的 Go 属性必须声明为 NullString 之类的结构。
+//  nullable(true|false): 相当于定义表结构时的 NULL。
 //
 //  pk: 主键，支持联合主键，给多个字段加上 pk 的 struct tag 即可。
 //

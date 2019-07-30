@@ -1,7 +1,7 @@
 orm
 [![Build Status](https://travis-ci.org/issue9/orm.svg?branch=master)](https://travis-ci.org/issue9/orm)
 [![Go version](https://img.shields.io/badge/Go-1.10-brightgreen.svg?style=flat)](https://golang.org)
-[![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/mux)
+[![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/orm)
 [![codecov](https://codecov.io/gh/issue9/orm/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/orm)
 [![GoDoc](https://godoc.org/github.com/issue9/orm?status.svg)](https://godoc.org/github.com/issue9/orm)
 ======
@@ -76,7 +76,8 @@ func(u *User) Meta() string {
 
 ##### name(fieldName): 
 
-将当前的字段映射到数据表中的 fieldName 字段。
+指定当前字段在数据表中的名称，如果未指定，则和字段名相同。
+只有可导出的字段才有效果。
 
 ##### len(l1, l2): 
 
@@ -89,8 +90,7 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 ##### nullable(true|false):
 
-相当于定义表结构时的 NULL，建议尽量少用该属性，
-若非用不可的话，与之对应的 Go 属性必须声明为 NullString之类的结构。
+相当于定义表结构时的 NULL。
 
 ##### pk:
 
