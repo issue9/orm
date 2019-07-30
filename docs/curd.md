@@ -12,18 +12,33 @@ DB 和 Tx 对象都提供了一套基于数据模型的基本操作，
 
 ```go
 type User struct {
-    ID   int64  `orm:"name(id);ai"`
-    Name string `orm:"name(name);len(20);index(i_user_name)"`
-    Age  int    `orm:"name(age)"`
+    ID       int64  `orm:"name(id);ai"`
+    Name     string `orm:"name(name);len(20);index(i_user_name)"`
+    Age      int    `orm:"name(age)"`
+    Username string `orm:"name(username);unique(u_unique_username)"`
 }
 ```
 
 ### TransactionalDDL
 
 `core.Dialect.TransactionalDDL()` 指定了当前数据是否支持在事务中执行 DDL 语句。
-像 `db.Create()` 可能存在执行多条语句，比如带索引的，在创建完表之后，还得创建索引。
-如果不支持 TransactionalDDL 的，那么这些语句会分开执行，中断出错了，也没法回滚，
-而支持 TransactionalDDL 的，这些步骤只出错，可以回滚至最初的样子。 
+
+
+像 `db.Create()` 可能存在执行多条语句，比如：
+```sql
+CREATE TABLE users (
+    id INT NOT NULL,
+    name VARCHAR(20) NOT NULL,
+);
+CREATE INDEX i_user_index ON users (name);
+```
+两条 create 才组成一个完整的创建表的操作。
+
+
+如果不支持 TransactionalDDL 的，那么这些语句会分开执行，中断出错了，也没法回滚；
+而支持 TransactionalDDL 的，这些步骤只出错，都会被撤消。
+
+所在以 TransactionalDDL 值不同的数据库中，执行某些操作，其行为可能会有稍微的差别。
 
 
 ### create
@@ -77,8 +92,14 @@ id, err := db.LastInsertID(&User{
 result, err := db.Update(&User{
     ID:   1,
     Name: "test",
+    Age:  0, // 零值，不会更新到数据库
+})
+
+result, err := db.Update(&User{
+    ID:   1,
+    Name: "test",
     Age:  0,
-}, "age")
+}, "age") // 指定了 age 必须更新，即使是零值
 ```
 
 update 会根据当前传递对象的非零值字段中查找 AI、PK 和唯一约束，
@@ -97,6 +118,21 @@ delete 和 update 一样，通过唯一查询条件确定需要删除的列，�
 ```go
 // 删除 ID 为 1 的行。
 result, err := db.Delete(&User{ID: 1})
+
+// 删除 username 值为 example 的行
+result, err = db.Delete(&User{Usrname: "example"})
+
+
+// 同时指这了 AI 和唯一约束，则优先 AI 作查询。
+result, err = db.Delete(&User{
+    ID: 1,
+    Usrname: "example",
+})
+
+// 返回错误，查询条件必须要有表达唯一性。
+result, err = db.Delete(&User{
+    Age: 18,
+})
 ```
 
 

@@ -96,13 +96,16 @@ check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一
 
 #### Metaer
 
-在 Go 不能将 struct tag 作用于结构体，所以为了指定一些表级别的属性，
-只能通过接口的形式，在接口方法中返回一段类似于 struct tag 的字符串，
-以达到相同的目的。
+通过 Metaer 接口可以指定一些表级别的属性值。
+属性值通过 Meta() 返回值获取，其格式与 struct tag 定义的是相同的：
+```
+name(v1);name2(v1,v2)
+```
 
 在 Metaer 每种数据库可以指定一些自定义的属性，这些属性都将会被保存到
-Model.Meta 中，各个数据库的自定义属性以其名称开头，比如 mysql 的 charset 属性，
-可以使用 mysql_charset。
+Model.Meta 中，各个数据库的自定义属性以其名称（与 `core.Dialect.Name()` 相同）开头，
+比如 mysql 的 charset 属性，可以使用 mysql_charset，但是具体表达的意义由
+Dialect 实现者自己解析。
 
 同时还包含了以下几种通用的属性信息：
 - name(val): 指定模型的名称，比如表名，或是视图名称；
