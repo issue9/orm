@@ -104,3 +104,42 @@ drop := sqlbuilder.DropTable(db).
 
 
 ### Delete
+
+
+### Update
+
+
+### Where
+
+Where 作为 Delete、Select 和 Update 的共有部分，提供了很多预定义的操作，
+所有的操作都包含了 And 和 Or 两个操作。
+比如 `AndIn()` 和 `OrIn()`、`AndBetween()` 和 `OrBetween()` 都是成对出现。
+
+
+```go
+Where("id>?", 1).
+    And("id>? AND name LIKE ?", 1, "%name").
+    AndIn("id", []interface{}{1, 2, 3}). // IN
+    OrBetween("id", 1, 2).               // BETWEEN
+    AndLike("id", "%xx").                // LIKE
+    AndIsNull("name").                   // IS NULL
+    OrIsNotNull("name")                  // IS NOT NULL
+```
+生成 SQL 语句为：
+```sql
+WHERE id>? AND id>? AND name LIKE ? AND id IN(?,?,?) OR id BETWEEN 1 AND 2 AND id LIKE ? AND name IS NULL OR name IS NOT NULL
+```
+
+子查询条件
+```go
+Where("id>?", 1).
+    AndGroup().
+    AndBetween("id", 1, 2).
+    EndGroup().
+    OrIsNull("id")
+```
+
+生成的 SQL 语句为：
+```sql
+WHERE id>? AND (id BETWEEN ? AND ?) OR id IS NULL
+```
