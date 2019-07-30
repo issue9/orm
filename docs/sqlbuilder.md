@@ -14,4 +14,7 @@ list := make([]*User, 0, 10)
 stmt.QueryObject(false, &list)
 ```
 
+### 命名参数
+
+
 ### CreateTable

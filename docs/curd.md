@@ -1,3 +1,12 @@
+DB 和 Tx 对象都提供了一套基于数据模型的基本操作，
+功能上比较单一，如果需要复杂的 SQL 操作，则需要使用 sqlbuilder
+下的内容。
+
+像 Update、Delete 和 Select 等操作，需要指定查询条件的，
+在 DB 和 Tx 中会从当前提交的对象中查找可用的查询条件。
+可用的查询条件是指 AI、PK 和唯一约束中，所有值都不为零值的那一个约束。
+所以 Update、Delete 和 Select 操作都是单一对象。
+
 
 以下展示了 CRUD 的一些基本操作。假设操作对象为以下结构：
 
@@ -8,6 +17,13 @@ type User struct {
     Age  int    `orm:"name(age)"`
 }
 ```
+
+### TransactionalDDL
+
+`core.Dialect.TransactionalDDL()` 指定了当前数据是否支持在事务中执行 DDL 语句。
+像 `db.Create()` 可能存在执行多条语句，比如带索引的，在创建完表之后，还得创建索引。
+如果不支持 TransactionalDDL 的，那么这些语句会分开执行，中断出错了，也没法回滚，
+而支持 TransactionalDDL 的，这些步骤只出错，可以回滚至最初的样子。 
 
 
 ### create
@@ -42,14 +58,17 @@ result, err := db.Insert(&User{
 #### lastInsertID
 
 ```go
+// id 为当前插入数据的自增 ID
 id, err := db.LastInsertID(&User{
     Name: "name",
 })
 ```
-如果需要 insert last id 的值，建议采用 `InsertLastID` 方法获取，
+如果需要获得 Last Insert ID 的值，建议采用 `LastInsertID` 方法获取，
 而不是通过 `sql.Result.LastInsertID`，部分数据库（比如 postgres）
 无法通过 `sql.Result.LastInertID` 获取 ID，但是 `db.LastInsertID`
 会处理这种情况。
+
+* 必须要有自增列，否则会出错 *
 
 
 ### update
@@ -66,7 +85,7 @@ update 会根据当前传递对象的非零值字段中查找 AI、PK 和唯一�
 只要找到了就符根据这些约束作为查询条件，其它值作为更新内容进行更新。
 
 默认情况下，零值不会被更新，这在大对象中，会节省不少操作。
-当然如果需要更新零值到数据库，则需要在 `Update()` 的第二个参中指定。
+当然如果需要更新零值到数据库，则需要在 `Update()` 的第二个参中指定列名。
 
 如果需要更新 AI、PK 和唯一约束本身的内容，可以通过 sqlbuilder
 进行一些高级的操作。
@@ -76,12 +95,34 @@ update 会根据当前传递对象的非零值字段中查找 AI、PK 和唯一�
 
 delete 和 update 一样，通过唯一查询条件确定需要删除的列，并执行删除操作。
 ```go
+// 删除 ID 为 1 的行。
 result, err := db.Delete(&User{ID: 1})
 ```
 
 
+### truncate
+
+truncate 会清空表内容，同时将该的自增计数重置为从 1 开始。
+```go
+err :=db.Truncate(&User{})
+```
 
 ### select
 
+```go
+// 查找 ID 为 1 的 User 数据。会将 u 的其它字段填上。
+u := &User{ID: 1}
+err := db.Select(u)
+```
 
 ### count
+
+count 用于统计符合指定条件的所有数据。所有非零值都参与计算，
+以 `AND` 作为各个查询条件的连接。
+```go
+// 相当于 SELECT count(*) FROM users WHERE name='name' AND age=18
+count, err := db.Count(&User{
+    Name: "name",
+    Age: 18,
+})
+```
