@@ -1,5 +1,6 @@
 
-### 定义
+每一个数据模型都可以定义为 Go 结构体。当通过 DB 实例第一次接触到该对象时
+（比如 `Insert`、`Create` 等），会生成模型数据。
 
 ```go
 type User struct {
@@ -14,9 +15,6 @@ func(u *User) Meta() string {
     return `name(users);mysql_charset(utf8);check(id_great_zero,id>0)`
 }
 ```
-
-每一个数据模型都可以定义为 Go 结构体。当通过 DB 实例第一次接触到该对象时
-（比如 Insert、Create 等），会生成模型数据。
 
 结构体中的字段与数据表中列的关联通过名为 orm 的 struct tag 进行设置。
 struct tag 中的格式为 `key(val);key(v1,v2)`。
@@ -133,7 +131,7 @@ DefaultParser 用于自定义类型的数据作为列时，如果需要指定默
 // Last 用户最后一次访问信息
 type Last struct {
     IP      string    `orm:"name(ip);len(50)"`
-    Created time.Time `orm:"name(creator)"
+    Created time.Time `orm:"name(creator)"`
 }
 
 func(l *Last) ParseDefault(v string) (err error) {
@@ -170,3 +168,41 @@ func(l *Last) Scan(v interface{}) error {
     return json.Unmarshal([]byte(str), l)
 }
 ```
+
+
+#### BeforeUpdater/BefoerInserter/AfterFetcher
+
+分别用于在更新和插入数据之前和从数据库获取数据之后被执行的方法。
+一般用于特定内容的生成，比如：
+
+```go
+type User struct {
+    Created  time.Time `orm:"name(created)"`  // 创建时间
+    Modified time.Time `orm:"name(modified)"` // 修改时间
+    Avatar   string    `orm:"name(avatar);len(1024)"`
+}
+
+// 每次插入数据，都将 created 和 modified 设置为当前时间
+func(u *User) BeforeInsert() error {
+    u.Created = time.Now()
+    u.Modified = u.Created
+    return nil
+}
+
+// 每次更新前，都修改 modified 的值为当前时间
+func(u *User) BeforeUpdate() error {
+    u.Modified = time.Now()
+    return nil
+}
+
+// 如果不存在头像信息，则给定一个默认图片地址
+func(u *User) AfterFetch() error {
+    if u.Avatar == "" {
+        u.Avatar = "/assets/default-avatar.png"
+    }
+
+    return nil
+}
+
+```
+

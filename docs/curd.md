@@ -84,3 +84,4 @@ result, err := db.Delete(&User{ID: 1})
 ### select
 
 
+### count
