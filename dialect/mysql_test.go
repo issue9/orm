@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/issue9/assert"
 
@@ -140,7 +141,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
 
-	var data = []*sqltypeTester{
+	var data = []*sqlTypeTester{
 		{ // col == nil
 			err: true,
 		},
@@ -301,13 +302,9 @@ func TestMysql_SQLType(t *testing.T) {
 
 func TestMysql_SQLFormat(t *testing.T) {
 	a := assert.New(t)
+	now := time.Now().In(time.UTC)
 
-	var data = []*struct {
-		v      interface{}
-		l      []int
-		format string
-		err    bool
-	}{
+	var data = []*sqlFormatTester{
 		{
 			v:      1,
 			format: "1",
@@ -382,19 +379,35 @@ func TestMysql_SQLFormat(t *testing.T) {
 			v:      sql.NullString{Valid: false, String: "str"},
 			format: "NULL",
 		},
+
+		// time
+		{ // 长度错误
+			v:   now,
+			l:   []int{1, 2},
+			err: true,
+		},
+		{ // 长度错误
+			v:   now,
+			l:   []int{600},
+			err: true,
+		},
+		{
+			v:      now,
+			format: "'" + now.Format("2006-01-02 15:04:05") + "'",
+		},
+		{
+			v:      now,
+			l:      []int{1},
+			format: "'" + now.Format("2006-01-02 15:04:05.9") + "'",
+		},
+		{
+			v:      now,
+			l:      []int{3},
+			format: "'" + now.Format("2006-01-02 15:04:05.999") + "'",
+		},
 	}
 
-	m := dialect.Mysql()
-	for index, item := range data {
-		f, err := m.SQLFormat(item.v, item.l...)
-		if item.err {
-			a.Error(err, "not error @%d", index).
-				Empty(f)
-		} else {
-			a.NotError(err, "%v @%d", err, index).
-				Equal(f, item.format, "not equal @%d,v1:%s,v2:%s", index, f, item.format)
-		}
-	}
+	testSQLFormat(a, dialect.Mysql(), data)
 }
 
 func TestMysql_Types(t *testing.T) {

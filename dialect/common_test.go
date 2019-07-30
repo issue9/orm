@@ -17,21 +17,41 @@ import (
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
-type sqltypeTester struct {
+type sqlFormatTester struct {
+	v      interface{} // 格式化的值
+	l      []int       // 长度值
+	format string      // 格式化之后的值
+	err    bool        // 是否有错误
+}
+
+type sqlTypeTester struct {
 	col     *core.Column
 	err     bool
 	SQLType string
 }
 
-func testSQLType(a *assert.Assertion, d core.Dialect, data []*sqltypeTester) {
-	for _, item := range data {
+func testSQLType(a *assert.Assertion, d core.Dialect, data []*sqlTypeTester) {
+	for index, item := range data {
 		typ, err := d.SQLType(item.col)
 		if item.err {
-			a.Error(err)
+			a.Error(err, "not error @%d", index)
 		} else {
-			a.NotError(err)
+			a.NotError(err, "%v @%d", err, index)
+			sqltest.Equal(a, typ, item.SQLType)
 		}
-		sqltest.Equal(a, typ, item.SQLType)
+	}
+}
+
+func testSQLFormat(a *assert.Assertion, d core.Dialect, data []*sqlFormatTester) {
+	for index, item := range data {
+		f, err := d.SQLFormat(item.v, item.l...)
+		if item.err {
+			a.Error(err, "not error @%d", index).
+				Empty(f)
+		} else {
+			a.NotError(err, "%v @%d", err, index).
+				Equal(f, item.format, "not equal @%d,v1:%s,v2:%s", index, f, item.format)
+		}
 	}
 }
 
