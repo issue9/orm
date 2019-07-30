@@ -259,6 +259,7 @@ func (p *postgres) SQLFormat(v interface{}, length ...int) (f string, err error)
 		if length[0] < 0 || length[0] > 6 {
 			return "", errTimeFractionalInvalid
 		}
+		// layout 中带了时区信息
 		return "'" + vv.Format(postgresDatetimeLayouts[length[0]]) + "'", nil
 	}
 

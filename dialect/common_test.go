@@ -38,6 +38,7 @@ func testSQLType(a *assert.Assertion, d core.Dialect, data []*sqltypeTester) {
 func testDialectVersionSQL(t *test.Driver) {
 	rows, err := t.DB.Query(t.DB.Dialect().VersionSQL())
 	t.NotError(err).NotNil(rows)
+
 	defer func() {
 		t.NotError(rows.Close())
 	}()

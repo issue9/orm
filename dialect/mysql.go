@@ -351,7 +351,7 @@ func (m *mysql) SQLFormat(v interface{}, length ...int) (f string, err error) {
 		if length[0] < 0 || length[0] > 6 {
 			return "", errTimeFractionalInvalid
 		}
-		return "'" + vv.Format(mysqlDatetimeLayouts[length[0]]) + "'", nil
+		return "'" + vv.In(time.UTC).Format(mysqlDatetimeLayouts[length[0]]) + "'", nil
 	}
 
 	return fmt.Sprint(v), nil

@@ -38,22 +38,22 @@ func TestDB_InsertDefaultValues(t *testing.T) {
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
-	type user struct {
+	type defvalues struct {
 		Name string `orm:"name(name);nullable"`
 		Age  int    `orm:"name(age);default(-1)"`
 	}
 
 	suite.ForEach(func(d *test.Driver) {
-		d.NotError(d.DB.Create(&user{}))
+		d.NotError(d.DB.Create(&defvalues{}))
 		defer func() {
-			d.NotError(d.DB.Drop(&user{}))
+			d.NotError(d.DB.Drop(&defvalues{}))
 		}()
 
-		a.NotError(d.DB.Insert(&user{}))
-		hasCount(d.DB, a, "user", 1)
+		a.NotError(d.DB.Insert(&defvalues{}))
+		hasCount(d.DB, a, "defvalues", 1)
 
-		a.NotError(d.DB.Insert(&user{}))
-		hasCount(d.DB, a, "user", 2)
+		a.NotError(d.DB.Insert(&defvalues{}))
+		hasCount(d.DB, a, "defvalues", 2)
 	})
 }
 

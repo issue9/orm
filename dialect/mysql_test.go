@@ -70,10 +70,10 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 
 		defer func() {
 			_, err := db.Exec("DROP TABLE `usr`")
-			a.NotError(err)
+			t.NotError(err)
 
 			_, err = db.Exec("DROP TABLE `fk_table`")
-			a.NotError(err)
+			t.NotError(err)
 		}()
 
 		testDialectDropConstraintStmtHook(t)

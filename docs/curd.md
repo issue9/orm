@@ -83,7 +83,7 @@ id, err := db.LastInsertID(&User{
 无法通过 `sql.Result.LastInertID` 获取 ID，但是 `db.LastInsertID`
 会处理这种情况。
 
-** 必须要有自增列，否则会出错！
+必须要有自增列，否则会出错！
 
 
 ### update
