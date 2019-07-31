@@ -26,7 +26,7 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 	state SMALLINT(6) NOT NULL,
 	username VARCHAR(50) NOT NULL,
 	mobile VARCHAR(18) NOT NULL,
-	email VARCHAR(200) NOT NULL,
+	email VARCHAR(50) NOT NULL,
 	password VARCHAR(128) NOT NULL,
 	PRIMARY KEY (id,username),
 	UNIQUE KEY u_user_xx1 (mobile,username),
@@ -67,7 +67,7 @@ func TestParseMysqlCreateTable(t *testing.T) {
 		sqltest.Equal(a, table.Columns["state"], "smallint(6) NOT NULL")
 		sqltest.Equal(a, table.Columns["username"], "varchar(50) NOT NULL")
 		sqltest.Equal(a, table.Columns["mobile"], "varchar(18) NOT NULL")
-		sqltest.Equal(a, table.Columns["email"], "varchar(200) NOT NULL")
+		sqltest.Equal(a, table.Columns["email"], "varchar(50) NOT NULL")
 		sqltest.Equal(a, table.Columns["password"], "varchar(128) NOT NULL")
 		t.Equal(len(table.Constraints), 6).
 			Equal(table.Constraints["u_user_xx1"], core.ConstraintUnique).

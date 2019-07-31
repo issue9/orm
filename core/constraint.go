@@ -17,6 +17,9 @@ const (
 )
 
 // 约束类型
+//
+// 以下定义了一些常用的约束类型，但是并不是所有的数据都支持这些约束类型，
+// 比如 mysql<8.0.16 和 mariadb<10.2.1 不支持 check 约束。
 const (
 	ConstraintNone   Constraint = iota
 	ConstraintUnique            // 唯一约束
