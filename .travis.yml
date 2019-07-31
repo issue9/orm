@@ -23,15 +23,10 @@ addons:
     pakcages:
       - mysql
       - postgres
-  chocolatey:
-    packages:
-      - mysql
-      - postgres
-
 
 before_install:
   - mysql -e 'CREATE DATABASE orm_test;'
-  - psql -c 'create database orm_test;' -U postgres
+  - psql -c 'CREATE DATABASE orm_test;' -U postgres
 
 script: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
