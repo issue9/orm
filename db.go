@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"strings"
 
 	"github.com/issue9/orm/v2/core"
@@ -24,6 +25,8 @@ type DB struct {
 	sql         *SQL
 	models      *model.Models
 	version     string
+
+	sqlLogger *log.Logger
 }
 
 // NewDB 声明一个新的 DB 实例。
@@ -49,6 +52,15 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 	inst.sql = &SQL{engine: inst}
 
 	return inst, nil
+}
+
+// Debug 指定调输出调试内容通道
+//
+// 如果 l 不为 nil，则每次 SQL 调用都会输出 SQL 语句，
+// 预编译的语句，仅在预编译时输出；
+// 如果为 nil，则不输出任何中 SQL 语句。
+func (db *DB) Debug(l *log.Logger) {
+	db.sqlLogger = l
 }
 
 // Dialect 返回对应的 Dialect 接口实例。
@@ -85,10 +97,17 @@ func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 	return db.QueryRowContext(context.Background(), query, args...)
 }
 
+func (db *DB) printDebug(query string) {
+	if db.sqlLogger != nil {
+		db.sqlLogger.Println(query)
+	}
+}
+
 // QueryRowContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
 //
 // 如果生成语句出错，则会 panic
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	db.printDebug(query)
 	query = db.replacer.Replace(query)
 	query, args, err := db.dialect.SQL(query, args)
 	if err != nil {
@@ -105,6 +124,7 @@ func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 
 // QueryContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
 func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	db.printDebug(query)
 	query = db.replacer.Replace(query)
 	query, args, err := db.dialect.SQL(query, args)
 	if err != nil {
@@ -121,6 +141,7 @@ func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 
 // ExecContext 执行 SQL 语句。
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	db.printDebug(query)
 	query = db.replacer.Replace(query)
 	query, args, err := db.dialect.SQL(query, args)
 	if err != nil {
@@ -137,6 +158,7 @@ func (db *DB) Prepare(query string) (*core.Stmt, error) {
 
 // PrepareContext 预编译查询语句。
 func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
+	db.printDebug(query)
 	query = db.replacer.Replace(query)
 	query, orders, err := db.Dialect().Prepare(query)
 	if err != nil {

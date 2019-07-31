@@ -101,3 +101,17 @@ my, err := orm.NewDBWithStdDB(db, "table_prefix_", dialect.Mysql())
 
 后续代码中可以同时使用 my 和 sqlite 两个实例操纵不同的数据库数据。
 
+
+### 调试
+
+系统提供了 `DB.Debug(l log.Logger)` 用于调试，调用时，如果指定了非空参数，
+那么在下次 SQL 调用时，会将 SQL 输出到 l 指定的日志上；如果指定了空值，
+则表示关闭调试输出。
+
+```go
+l := log.New(os.Stdout, "[SQL]", 0)
+db.Debug(l)
+db.Query("select * from #users") // 输出到日志
+db.Debug(nil)
+db.Query("select * from #groups") // 不会输出到日志
+```

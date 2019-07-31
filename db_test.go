@@ -5,6 +5,9 @@
 package orm_test
 
 import (
+	"bytes"
+	"log"
+	"strings"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -298,5 +301,24 @@ func TestDB_Version(t *testing.T) {
 		v, err := t.DB.Version()
 		t.NotError(err).
 			NotEmpty(v)
+	})
+}
+
+func TestDB_Debug(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		buf := new(bytes.Buffer)
+		l := log.New(buf, "[SQL]", 0)
+
+		t.DB.Debug(l)
+		t.DB.Query("select 1+1")
+		t.DB.Debug(nil)
+		t.DB.Query("select 2+2")
+
+		t.True(strings.Contains(buf.String(), "select 1+1")).
+			False(strings.Contains(buf.String(), "select 2+2"))
 	})
 }

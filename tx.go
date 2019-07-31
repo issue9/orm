@@ -57,6 +57,7 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 
 // QueryContext 执行一条查询语句。
 func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
 	query, args, err := tx.Dialect().SQL(query, args)
 	if err != nil {
@@ -77,6 +78,7 @@ func (tx *Tx) QueryRow(query string, args ...interface{}) *sql.Row {
 //
 // 如果生成语句出错，则会 panic
 func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
 	query, args, err := tx.Dialect().SQL(query, args)
 	if err != nil {
@@ -93,6 +95,7 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 
 // ExecContext 执行一条 SQL 语句。
 func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
 	query, args, err := tx.Dialect().SQL(query, args)
 	if err != nil {
@@ -109,6 +112,7 @@ func (tx *Tx) Prepare(query string) (*core.Stmt, error) {
 
 // PrepareContext 将一条 SQL 语句进行预编译。
 func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
+	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
 	query, orders, err := tx.Dialect().Prepare(query)
 	if err != nil {
