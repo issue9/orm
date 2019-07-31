@@ -21,7 +21,8 @@ addons:
   homebrew:
     update: true
     pakcages:
-      - mysql
+      - mysql-server
+      - mysql-client
       - postgres
 
 before_install:
