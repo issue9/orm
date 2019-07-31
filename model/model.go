@@ -153,13 +153,13 @@ func (ms *Models) addModel(goType reflect.Type, m *Model) error {
 	}
 
 	if m.AI != nil {
-		if err := ms.addNames(core.AIName(m.Name)); err != nil {
+		if err := ms.addNames(core.AIName(m.FullName)); err != nil {
 			return err
 		}
 	}
 
 	if len(m.PK) > 0 {
-		if err := ms.addNames(core.PKName(m.Name)); err != nil {
+		if err := ms.addNames(core.PKName(m.FullName)); err != nil {
 			return err
 		}
 	}

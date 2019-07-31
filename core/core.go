@@ -18,7 +18,9 @@ const (
 // PKName 生成主键约束的名称
 //
 // 各个数据库对主键约束的规定并不统一，mysql 会忽略约束名，
-// 为了统一，主键约束的名称统一由此函数生成，用户不能别外指定。
+// 为了统一，主键约束的名称统一由此函数生成，用户不能另外指定。
+//
+// 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
 func PKName(table string) string {
 	return table + defaultPKNameSuffix
 }
@@ -27,6 +29,8 @@ func PKName(table string) string {
 //
 // 自增约束的实现，各个数据库并不相同，诸如 mysql 直接加在列信息上，
 // 而 postgres 会创建 sequence，需要指定 sequence 名称。
+//
+// 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
 func AIName(table string) string {
 	return table + defaultAINameSuffix
 }
