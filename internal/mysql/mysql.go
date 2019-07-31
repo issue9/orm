@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/issue9/orm/v2/core"
 )
@@ -72,10 +73,10 @@ func parseMysqlCreateTable(tableName string, lines []string) (*Table, error) {
 		case "PRIMARY": // 主键约束，没有约束名
 			table.Constraints[core.PKName(tableName)] = core.ConstraintPK
 		case "UNIQUE":
-			words := strings.Fields(line)
+			words := fields(line)
 			table.Constraints[words[1]] = core.ConstraintUnique
 		case "CONSTRAINT": // check 或是 fk 约束
-			words := strings.Fields(line)
+			words := fields(line)
 			switch strings.ToUpper(words[1]) {
 			case "FOREIGN":
 				table.Constraints[words[0]] = core.ConstraintFK
@@ -90,6 +91,12 @@ func parseMysqlCreateTable(tableName string, lines []string) (*Table, error) {
 	}
 
 	return table, nil
+}
+
+func fields(line string) []string {
+	return strings.FieldsFunc(line, func(r rune) bool {
+		return unicode.IsSpace(r) || r == '(' || r == ')'
+	})
 }
 
 func filterCreateTableSQL(sql string) []string {

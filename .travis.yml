@@ -20,7 +20,7 @@ go:
 addons:
   homebrew:
     update: true
-    pakcages:
+    packages:
       - mysql-server
       - mysql-client
       - postgres
