@@ -17,6 +17,18 @@ go:
   - 1.12.x
   - 1.11.x
 
+addons:
+  homebrew:
+    update: true
+    pakcages:
+      - mysql
+      - postgres
+  chocolatey:
+    packages:
+      - mysql
+      - postgres
+
+
 before_install:
   - mysql -e 'CREATE DATABASE orm_test;'
   - psql -c 'create database orm_test;' -U postgres
