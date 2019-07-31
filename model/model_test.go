@@ -103,7 +103,7 @@ func TestModels_New(t *testing.T) {
 	m, err := ms.New(&Admin{})
 	a.NotError(err).NotNil(m)
 	a.Equal(m.Type, Table).
-		Nil(m.ViewAs)
+		Empty(m.ViewAs)
 
 	// cols
 	idCol := m.FindColumn("id") // 指定名称为小写

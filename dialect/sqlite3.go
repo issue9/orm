@@ -259,11 +259,6 @@ func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]s
 }
 
 func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, error) {
-	selectQuery, err := stmt.SelectQuery()
-	if err != nil {
-		return nil, err
-	}
-
 	ret := make([]string, 0, 2)
 	if stmt.IsReplace {
 		query, err := sqlbuilder.DropView(stmt.Engine()).Name(stmt.ViewName).DDLSQL()
@@ -291,7 +286,7 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 	}
 
 	query, err := builder.WriteString(" AS ").
-		WriteString(selectQuery).
+		WriteString(stmt.SelectQuery).
 		String()
 	if err != nil {
 		return nil, err

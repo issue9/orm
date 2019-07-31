@@ -58,10 +58,10 @@ type Engine interface {
 	PrepareContext(ctx context.Context, query string) (*Stmt, error)
 }
 
-// Dialect 接口用于描述与数据库和驱动相关的一些语言特性。
+// Dialect 接口用于描述与数据库和驱动相关的一些特性。
 //
 // Dialect 的实现者除了要实现 Dialect 之外，
-// 还需要根据数据库的支持情况实现 sqlbuilder 下的部分 *Hooker 接口，
+// 还需要根据数据库的支持情况实现 sqlbuilder 下的部分 *Hooker 接口。
 type Dialect interface {
 	// Dialect 的名称
 	//

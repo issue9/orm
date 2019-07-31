@@ -10,7 +10,7 @@ import "github.com/issue9/orm/v2/core"
 type CreateViewStmt struct {
 	*ddlStmt
 
-	selectStmt  *SelectStmt
+	SelectQuery string
 	ViewName    string
 	Columns     []string
 	IsTemporary bool
@@ -41,7 +41,7 @@ func (stmt *SelectStmt) View(name string) *CreateViewStmt {
 func (stmt *CreateViewStmt) Reset() *CreateViewStmt {
 	stmt.baseStmt.Reset()
 	stmt.ViewName = ""
-	stmt.selectStmt = nil
+	stmt.SelectQuery = ""
 	stmt.Columns = stmt.Columns[:0]
 	stmt.IsTemporary = false
 	stmt.IsReplace = false
@@ -78,20 +78,15 @@ func (stmt *CreateViewStmt) Replace() *CreateViewStmt {
 	return stmt
 }
 
-// SelectQuery 获取 SELECT 的查询内容内容
-func (stmt *CreateViewStmt) SelectQuery() (string, error) {
-	if stmt.selectStmt == nil {
-		return "", ErrValueIsEmpty
+// From 指定 Select 语句
+func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
+	query, err := sel.CombineSQL()
+	if err != nil {
+		stmt.err = err
+		return stmt
 	}
 
-	return stmt.selectStmt.CombineSQL()
-}
-
-// From 指定 Select 语句
-//
-// 在调用 DDLSQL 之前，可以继续修改 sel 的内容。
-func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
-	stmt.selectStmt = sel
+	stmt.SelectQuery = query
 	return stmt
 }
 
@@ -107,11 +102,6 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 
 	if hook, ok := stmt.Dialect().(CreateViewStmtHooker); ok {
 		return hook.CreateViewStmtHook(stmt)
-	}
-
-	selectQuery, err := stmt.SelectQuery()
-	if err != nil {
-		return nil, err
 	}
 
 	builder := core.NewBuilder("CREATE ")
@@ -136,7 +126,7 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 	}
 
 	query, err := builder.WriteString(" AS ").
-		WriteString(selectQuery).
+		WriteString(stmt.SelectQuery).
 		String()
 	if err != nil {
 		return nil, err

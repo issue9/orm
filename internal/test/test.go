@@ -13,7 +13,7 @@ import (
 	"github.com/issue9/orm/v2"
 	"github.com/issue9/orm/v2/dialect"
 
-	// 供其它包测试用，直接在此引用数据库包会更文件
+	// 测试入口，数据库也在此初始化
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"

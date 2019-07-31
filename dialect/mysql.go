@@ -160,11 +160,6 @@ func (m *mysql) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]str
 }
 
 func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, error) {
-	selectQuery, err := stmt.SelectQuery()
-	if err != nil {
-		return nil, err
-	}
-
 	builder := core.NewBuilder("CREATE ")
 
 	if stmt.IsReplace {
@@ -186,7 +181,7 @@ func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, e
 		builder.TruncateLast(1).WriteBytes(')')
 	}
 
-	builder.WriteString(" AS ").WriteString(selectQuery)
+	builder.WriteString(" AS ").WriteString(stmt.SelectQuery)
 
 	query, err := builder.String()
 	if err != nil {

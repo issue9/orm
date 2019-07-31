@@ -18,7 +18,6 @@ import (
 	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/tags"
-	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
 // ForeignKey 外键
@@ -29,7 +28,7 @@ type ForeignKey struct {
 	UpdateRule, DeleteRule   string
 }
 
-// Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
+// Model 表示一个数据库的表或视图模型。数据结构从字段和字段的 struct tag 中分析得出。
 type Model struct {
 	// FullName 和 Name 都指表名
 	// 其中 FullName 带 # 前缀，可以在生成 SQL 语句时使用。
@@ -37,7 +36,9 @@ type Model struct {
 	FullName string
 	Name     string
 
-	ViewAs *sqlbuilder.SelectStmt
+	// 如果当前模型是视图，那么此值表示的是视图的 select 语句，
+	// 其它类型下，ViewAs 不启作用。
+	ViewAs string
 
 	Type    Type
 	Columns []*core.Column
@@ -111,7 +112,11 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 
 	if view, ok := obj.(Viewer); ok {
 		m.Type = View
-		m.ViewAs = view.ViewAs(ms.engine)
+		sql, err := view.ViewAs(ms.engine).CombineSQL()
+		if err != nil {
+			return nil, err
+		}
+		m.ViewAs = sql
 	}
 
 	if err := m.sanitize(); err != nil {

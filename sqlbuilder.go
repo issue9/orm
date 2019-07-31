@@ -187,8 +187,8 @@ func createView(e Engine, m *model.Model) error {
 	for _, col := range m.Columns {
 		stmt.Column(col.Name)
 	}
-
-	return stmt.From(m.ViewAs).Exec()
+	stmt.SelectQuery = m.ViewAs
+	return stmt.Exec()
 }
 
 func truncate(e Engine, v interface{}) error {
