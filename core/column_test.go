@@ -44,11 +44,8 @@ func TestColumn_Clone(t *testing.T) {
 	col.Nullable = true
 
 	cc := col.Clone()
-	a.Equal(cc, col)
-
-	col.Nullable = false
-	col.HasDefault = true
-	a.NotError(cc, col)
+	a.Equal(cc, col)  // 值相同
+	a.True(cc != col) // 但不是同一个实例
 }
 
 func TestColumn_Check(t *testing.T) {

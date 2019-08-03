@@ -46,6 +46,6 @@ func TestModels_addNames(t *testing.T) {
 	a.NotError(ms.addNames("n1", "n2"))
 	a.Equal(2, len(ms.names))
 
-	a.ErrorType(ms.addNames("n1", "n2"), ErrDuplicateName)
+	a.Error(ms.addNames("n1", "n2"))
 	a.Equal(2, len(ms.names))
 }

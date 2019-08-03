@@ -5,6 +5,7 @@
 package orm
 
 import (
+	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/model"
 )
 
@@ -14,10 +15,10 @@ type (
 	Metaer = model.Metaer
 
 	// Model 表示一个数据库的表模型。数据结构从字段和字段的 struct tag 中分析得出。
-	Model = model.Model
+	Model = core.Model
 
 	// ForeignKey 外键
-	ForeignKey = model.ForeignKey
+	ForeignKey = core.ForeignKey
 )
 
 // NewModel 从一个 obj 声明一个 Model 实例。

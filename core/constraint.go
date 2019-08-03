@@ -4,6 +4,8 @@
 
 package core
 
+import "fmt"
+
 // Index 索引的类型
 type Index int8
 
@@ -55,4 +57,9 @@ func (t Constraint) String() string {
 	default:
 		return "<unknown>"
 	}
+}
+
+// ErrConstraintExists 返回约束名已经存在的错误
+func ErrConstraintExists(c string) error {
+	return fmt.Errorf("约束 %s 已经存在", c)
 }

@@ -98,24 +98,30 @@ func (c *Column) Clone() *Column {
 	return cc
 }
 
+// SetDefault 为列设置默认值
+func (c *Column) SetDefault(v interface{}) {
+	c.HasDefault = true
+	c.Default = v
+}
+
 // Check 检测 Column 内容是否合法。
 func (c *Column) Check() error {
 	if c.AI && c.HasDefault {
-		return c.err("default", "ai 列不能指定默主值")
+		return fmt.Errorf("AutoIncrement 列 %s 不能同时包含默认值", c.Name)
 	}
 
 	if c.AI && c.Nullable {
-		return c.err("nullable", "ai 列不能为 NULL")
+		return fmt.Errorf("AutoIncrement 列 %s 不能同时带 NULL 约束", c.Name)
 	}
 
 	if c.GoType == StringType || c.GoType == NullStringType {
 		if len(c.Length) > 0 && (c.Length[0] < -1 || c.Length[0] == 0) {
-			return c.err("len", "必须大于 0 或是等于 -1")
+			return fmt.Errorf("列 %s 的长度只能是 -1 或是 >0", c.Name)
 		}
 	} else {
 		for _, v := range c.Length {
 			if v < 0 {
-				return c.err("len", "不能小于 0")
+				return fmt.Errorf("列 %s 的长度只能是不能小于 0", c.Name)
 			}
 		}
 	}
@@ -123,6 +129,32 @@ func (c *Column) Check() error {
 	return nil
 }
 
-func (c *Column) err(field, message string) error {
-	return fmt.Errorf("%s 的 %s 属性发生以下错误: %s", c.Name, field, message)
+// FindColumn 查找指定名称的列
+//
+// 不存在该列则返回 nil
+func (m *Model) FindColumn(name string) *Column {
+	for _, col := range m.Columns {
+		if col.Name == name {
+			return col
+		}
+	}
+	return nil
+}
+
+func errColumnNotFound(col string) error {
+	return fmt.Errorf("列 %s 未找到", col)
+}
+
+func errColumnExists(col string) error {
+	return fmt.Errorf("列 %s 已经存在", col)
+}
+
+func (m *Model) columnExists(col *Column) bool {
+	for _, c := range m.Columns {
+		if c == col {
+			return true
+		}
+	}
+
+	return false
 }

@@ -91,8 +91,12 @@ func (v *viewObject) Meta() string {
 	return "name(view_objects)"
 }
 
-func (v *viewObject) ViewAs(e core.Engine) *sqlbuilder.SelectStmt {
-	return sqlbuilder.Select(e).Columns("id", "username").From("User").Where("id>?", 10)
+func (v *viewObject) ViewAs(e core.Engine) (string, error) {
+	return sqlbuilder.Select(e).
+		Columns("id", "username").
+		From("User").
+		Where("id>?", 10).
+		CombineSQL()
 }
 
 func TestModels_New(t *testing.T) {
@@ -102,7 +106,7 @@ func TestModels_New(t *testing.T) {
 
 	m, err := ms.New(&Admin{})
 	a.NotError(err).NotNil(m)
-	a.Equal(m.Type, Table).
+	a.Equal(m.Type, core.Table).
 		Empty(m.ViewAs)
 
 	// cols
@@ -124,16 +128,15 @@ func TestModels_New(t *testing.T) {
 	a.True(found).Equal(usernameCol, index[0])
 
 	// ai
-	a.Equal(m.AI, idCol).
-		Empty(m.PK) // 有自增，则主键为空
+	a.Equal(m.AutoIncrement, idCol).
+		Empty(m.PrimaryKey) // 有自增，则主键为空
 
 	// unique_name
 	unique, found := m.Uniques["unique_admin_username"]
 	a.True(found).Equal(unique[0], usernameCol)
 
-	fk := m.FK[0]
+	fk := m.ForeignKeys["fk_admin_name"]
 	a.True(found).
-		Equal(fk.Name, "fk_admin_name").
 		Equal(fk.Column, groupCol).
 		Equal(fk.RefTableName, "#groups").
 		Equal(fk.RefColName, "id").
@@ -173,7 +176,7 @@ func TestModels_New(t *testing.T) {
 	// view
 	m, err = ms.New(&viewObject{})
 	a.NotError(err).NotNil(m)
-	a.Equal(m.Type, View).
+	a.Equal(m.Type, core.View).
 		NotNil(m.ViewAs)
 }
 
@@ -199,40 +202,40 @@ func TestModel_sanitize(t *testing.T) {
 	def.HasDefault = true
 	def.Default = 1
 
-	m := &Model{
-		Name:    "m1",
-		Columns: []*core.Column{ai, pk1, pk2, nullable, def},
-		AI:      ai,
+	m := &core.Model{
+		Columns:       []*core.Column{ai, pk1, pk2, nullable, def},
+		AutoIncrement: ai,
 	}
+	m.SetName("m1")
 
-	a.NotError(m.sanitize())
+	a.NotError(m.Sanitize())
 
 	// 多列主键约束
-	m.PK = []*core.Column{pk1, pk2}
-	a.NotError(m.sanitize())
+	m.PrimaryKey = []*core.Column{pk1, pk2}
+	a.NotError(m.Sanitize())
 
 	// 多列主键约束，可以有 nullable 和 default
-	m.PK = []*core.Column{pk1, pk2, nullable, def}
-	a.NotError(m.sanitize())
+	m.PrimaryKey = []*core.Column{pk1, pk2, nullable, def}
+	a.NotError(m.Sanitize())
 
 	// 单列主键，可以是 nullable
-	m.PK = []*core.Column{nullable}
-	a.NotError(m.sanitize())
+	m.PrimaryKey = []*core.Column{nullable}
+	a.NotError(m.Sanitize())
 
-	m.AI = ai
-	m.AI.Nullable = true
-	a.Error(m.sanitize())
+	m.AutoIncrement = ai
+	m.AutoIncrement.Nullable = true
+	a.Error(m.Sanitize())
 
 	// 单列主键，不能是 default
-	m.AI = nil
-	m.PK = []*core.Column{def}
-	a.Error(m.sanitize())
+	m.AutoIncrement = nil
+	m.PrimaryKey = []*core.Column{def}
+	a.Error(m.Sanitize())
 
 }
 
 func TestModel_parseColumn(t *testing.T) {
 	a := assert.New(t)
-	m := &Model{
+	m := &core.Model{
 		Columns: []*core.Column{},
 	}
 
@@ -240,105 +243,109 @@ func TestModel_parseColumn(t *testing.T) {
 	col := &core.Column{
 		Name: "xx",
 	}
-	a.NotError(m.parseColumn(col, ""))
+	a.NotError(parseColumn(m, col, ""))
 	a.Equal(col.Name, "xx")
 
 	// name 值过多
 	col = &core.Column{}
-	a.Error(m.parseColumn(col, "name(m1,m2)"))
+	a.Error(parseColumn(m, col, "name(m1,m2)"))
 
 	// 不存在的属性名称
 	col = &core.Column{}
-	a.Error(m.parseColumn(col, "not-exists-property(p1)"))
+	a.Error(parseColumn(m, col, "not-exists-property(p1)"))
 }
 
 func TestModel_parseMeta(t *testing.T) {
 	a := assert.New(t)
-	m := &Model{
+	m := &core.Model{
 		Checks: map[string]string{},
 	}
 
 	// 空值不算错误
-	a.NotError(m.parseMeta(""))
+	a.NotError(parseMeta(m, ""))
 
 	// name 属性过多
-	a.Error(m.parseMeta("name(m1,m2)"))
+	a.Error(parseMeta(m, "name(m1,m2)"))
 
 	// check 属性过多或是过少
-	a.Error(m.parseMeta("check(ck,id>0 AND id<10,error)"))
+	a.Error(parseMeta(m, "check(ck,id>0 AND id<10,error)"))
 
 	// check 添加成功
-	a.NotError(m.parseMeta("check(ck,id>0 AND id<10)"))
+	a.NotError(parseMeta(m, "check(ck,id>0 AND id<10)"))
 
 	// check 与已有 check 名称相同
-	a.Error(m.parseMeta("check(ck,id>0)"))
+	a.Error(parseMeta(m, "check(ck,id>0)"))
 }
 
 func TestModel_setOCC(t *testing.T) {
 	a := assert.New(t)
-	m := &Model{}
-	col := &core.Column{
-		GoType: core.IntType,
-	}
+	m := core.NewModel(core.Table, "m1", 10)
 
-	a.NotError(m.setOCC(col, nil))
+	col, err := core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(col)
+	a.NotError(m.AddColumn(col))
+
+	a.NotError(setOCC(m, col, nil))
 	a.Equal(col, m.OCC)
 
 	// m.OCC 已经存在
-	a.Error(m.setOCC(col, nil))
+	a.Error(setOCC(m, col, nil))
 
 	// occ(true)
 	m.OCC = nil
-	a.NotError(m.setOCC(col, []string{"true"}))
+	a.NotError(setOCC(m, col, []string{"true"}))
 
 	// 太多的值，occ(true,123)
 	m.OCC = nil
-	a.Error(m.setOCC(col, []string{"true", "123"}))
+	a.Error(setOCC(m, col, []string{"true", "123"}))
 
 	// 无法转换的值，occ("xx123")
 	m.OCC = nil
-	a.Error(m.setOCC(col, []string{"xx123"}))
+	a.Error(setOCC(m, col, []string{"xx123"}))
 
 	// 已经是 AI
 	m.OCC = nil
-	a.NotError(m.setAI(col, nil))
-	a.Error(m.setOCC(col, []string{"true"}))
+	col.AI = true
+	a.NotError(setAI(m, col, nil))
+	a.Error(setOCC(m, col, []string{"true"}))
 
 	// 列有 nullable 属性
 	m.OCC = nil
-	m.AI = nil
+	m.AutoIncrement = nil
 	col.AI = false
 	col.Nullable = true
-	a.Error(m.setOCC(col, []string{"true"}))
+	a.Error(setOCC(m, col, []string{"true"}))
 
 	// 列属性不为数值型
 	m.OCC = nil
-	m.AI = nil
+	m.AutoIncrement = nil
 	col.Nullable = false
 	col.GoType = core.StringType
-	a.Error(m.setOCC(col, []string{"true"}))
+	a.Error(setOCC(m, col, []string{"true"}))
 }
 
 func TestModel_setDefault(t *testing.T) {
 	a := assert.New(t)
-	m := &Model{}
+	m := core.NewModel(core.Table, "m1", 10)
+
 	col, err := core.NewColumnFromGoType(core.IntType)
 	a.NotError(err).NotNil(col)
+	a.NotError(m.AddColumn(col))
 
 	// 未指定参数
-	a.Error(m.setDefault(col, nil))
+	a.Error(setDefault(col, nil))
 
 	// 过多的参数
-	a.Error(m.setDefault(col, []string{"1", "2"}))
+	a.Error(setDefault(col, []string{"1", "2"}))
 
 	// 正常
-	a.NotError(m.setDefault(col, []string{"1"}))
+	a.NotError(setDefault(col, []string{"1"}))
 	a.True(col.HasDefault).
 		Equal(col.Default, 1)
 
 	// 可以是主键的一部分
-	m.PK = []*core.Column{col, col}
-	a.NotError(m.setDefault(col, []string{"1"}))
+	m.PrimaryKey = []*core.Column{col, col}
+	a.NotError(setDefault(col, []string{"1"}))
 	a.True(col.HasDefault).
 		Equal(col.Default, 1)
 
@@ -346,13 +353,13 @@ func TestModel_setDefault(t *testing.T) {
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
-	a.Error(m.setDefault(col, []string{"1"}))
+	a.Error(setDefault(col, []string{"1"}))
 
 	// 格式正确
 	now := "2019-07-29T00:38:59+08:00"
 	tt, err := time.Parse(time.RFC3339, now)
 	a.NotError(err).NotEmpty(tt)
-	a.NotError(m.setDefault(col, []string{"192.168.1.1," + now}))
+	a.NotError(setDefault(col, []string{"192.168.1.1," + now}))
 	a.Equal(col.Default, &last{
 		IP:      "192.168.1.1",
 		Created: tt.Unix(),
@@ -362,38 +369,40 @@ func TestModel_setDefault(t *testing.T) {
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
-	a.Error(m.setDefault(col, []string{"1"}))
+	a.Error(setDefault(col, []string{"1"}))
 
 	// 格式正确
-	a.NotError(m.setDefault(col, []string{now}))
+	a.NotError(setDefault(col, []string{now}))
 	a.Equal(col.Default, tt)
 }
 
 func TestModel_setPK(t *testing.T) {
 	a := assert.New(t)
-	m := &Model{}
+	m := &core.Model{}
 	col := &core.Column{}
 
 	// 过多的参数
-	a.Error(m.setPK(col, []string{"123"}))
+	a.Error(setPK(m, col, []string{"123"}))
 }
 
 func TestModel_setAI(t *testing.T) {
 	a := assert.New(t)
-	m := &Model{}
+	m := core.NewModel(core.Table, "m1", 10)
+	a.NotNil(m)
 
-	col := &core.Column{
-		GoType:     core.StringType,
-		HasDefault: true,
-	}
+	col, err := core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(col)
 
 	// 太多的参数
-	a.Error(m.setAI(col, []string{"true", "false"}))
+	a.Error(setAI(m, col, []string{"true", "false"}))
 
 	// 列类型只能是整数型
-	col.GoType = core.Float32Type
-	a.Error(m.setAI(col, nil))
+	col, err = core.NewColumnFromGoType(core.Float32Type)
+	a.NotError(err).NotNil(col)
+	a.Error(setAI(m, col, nil))
 
-	col.GoType = core.IntType
-	a.NotError(m.setAI(col, nil))
+	col, err = core.NewColumnFromGoType(core.IntType)
+	a.NotError(err).NotNil(col)
+	m.AddColumn(col)
+	a.NotError(setAI(m, col, nil))
 }

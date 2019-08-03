@@ -306,12 +306,12 @@ LOOP:
 	for _, c := range u.addConts {
 		stmt.Reset().Table(u.model.FullName)
 
-		for _, fk := range u.model.FK {
-			if fk.Name != c {
+		for name, fk := range u.model.ForeignKeys {
+			if name != c {
 				continue
 			}
 
-			stmt.FK(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+			stmt.FK(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 			if err := stmt.Exec(); err != nil {
 				return err
 			}
@@ -336,9 +336,9 @@ LOOP:
 			continue LOOP
 		}
 
-		if u.model.PK != nil {
-			cols := make([]string, 0, len(u.model.PK))
-			for _, col := range u.model.PK {
+		if u.model.PrimaryKey != nil {
+			cols := make([]string, 0, len(u.model.PrimaryKey))
+			for _, col := range u.model.PrimaryKey {
 				cols = append(cols, col.Name)
 			}
 			stmt.PK(cols...)

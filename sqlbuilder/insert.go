@@ -258,10 +258,6 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 	sql = query + sql
 	args = as
 
-	sql, args, err = stmt.Dialect().SQL(sql, args)
-	if err != nil {
-		return 0, err
-	}
 	err = stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id)
 	return
 }

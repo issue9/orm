@@ -210,7 +210,7 @@ func TestDB_Delete(t *testing.T) {
 		t.NotError(err)
 		a1 := &Admin{Email: "email1"}
 		t.NotError(t.DB.Select(a1))
-		t.Equal(a1.ID, 2) // a1.ID为一个自增列,不会在delete中被重置
+		t.Equal(a1.ID, 2) // a1.ID 为一个自增列,不会在 delete 中被重置
 	})
 }
 

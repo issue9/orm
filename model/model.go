@@ -10,60 +10,12 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
-
-	"github.com/issue9/conv"
 
 	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/fetch"
 	"github.com/issue9/orm/v2/internal/tags"
 )
-
-// ForeignKey 外键
-type ForeignKey struct {
-	Name                     string       // 外键约束名
-	Column                   *core.Column // 关联的列
-	RefTableName, RefColName string
-	UpdateRule, DeleteRule   string
-}
-
-// Model 表示一个数据库的表或视图模型。数据结构从字段和字段的 struct tag 中分析得出。
-type Model struct {
-	// FullName 和 Name 都指表名
-	// 其中 FullName 带 # 前缀，可以在生成 SQL 语句时使用。
-	// 而 Name 则表示不带 # 前缀的表名，在普通情况下可以使用。
-	FullName string
-	Name     string
-
-	// 如果当前模型是视图，那么此值表示的是视图的 select 语句，
-	// 其它类型下，ViewAs 不启作用。
-	ViewAs string
-
-	Type    Type
-	Columns []*core.Column
-	OCC     *core.Column        // 乐观锁
-	Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
-
-	// 索引内容
-	//
-	// 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
-	Indexes map[string][]*core.Column
-
-	// 唯一约束
-	//
-	// 键名为约束名，键值为该约束关联的列
-	Uniques map[string][]*core.Column
-
-	// Check 约束
-	//
-	// 键名为约束名，键值为约束表达式
-	Checks map[string]string
-
-	FK []*ForeignKey
-	AI *core.Column
-	PK []*core.Column
-}
 
 func propertyError(field, name, message string) error {
 	return fmt.Errorf("%s 的 %s 属性发生以下错误: %s", field, name, message)
@@ -71,7 +23,7 @@ func propertyError(field, name, message string) error {
 
 // New 从一个 obj 声明一个 Model 实例。
 // obj 可以是一个 struct 实例或是指针。
-func (ms *Models) New(obj interface{}) (*Model, error) {
+func (ms *Models) New(obj interface{}) (*core.Model, error) {
 	rval := reflect.ValueOf(obj)
 	for rval.Kind() == reflect.Ptr {
 		rval = rval.Elem()
@@ -89,37 +41,28 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 		return m, nil
 	}
 
-	m := &Model{
-		FullName: "#" + rtype.Name(),
-		Name:     rtype.Name(),
-		Columns:  make([]*core.Column, 0, rtype.NumField()),
-		Indexes:  map[string][]*core.Column{},
-		Uniques:  map[string][]*core.Column{},
-		FK:       []*ForeignKey{},
-		Checks:   map[string]string{},
-		Meta:     map[string][]string{},
-	}
+	m := core.NewModel(core.Table, rtype.Name(), rtype.NumField())
 
-	if err := m.parseColumns(rval); err != nil {
+	if err := parseColumns(m, rval); err != nil {
 		return nil, err
 	}
 
 	if meta, ok := obj.(Metaer); ok {
-		if err := m.parseMeta(meta.Meta()); err != nil {
+		if err := parseMeta(m, meta.Meta()); err != nil {
 			return nil, err
 		}
 	}
 
 	if view, ok := obj.(Viewer); ok {
-		m.Type = View
-		sql, err := view.ViewAs(ms.engine).CombineSQL()
+		m.Type = core.View
+		sql, err := view.ViewAs(ms.engine)
 		if err != nil {
 			return nil, err
 		}
 		m.ViewAs = sql
 	}
 
-	if err := m.sanitize(); err != nil {
+	if err := m.Sanitize(); err != nil {
 		return nil, err
 	}
 
@@ -130,7 +73,7 @@ func (ms *Models) New(obj interface{}) (*Model, error) {
 	return m, nil
 }
 
-func (ms *Models) addModel(goType reflect.Type, m *Model) error {
+func (ms *Models) addModel(goType reflect.Type, m *core.Model) error {
 	ms.items[goType] = m
 
 	for name := range m.Indexes {
@@ -151,37 +94,20 @@ func (ms *Models) addModel(goType reflect.Type, m *Model) error {
 		}
 	}
 
-	for _, fk := range m.FK {
-		if err := ms.addNames(fk.Name); err != nil {
+	for name := range m.ForeignKeys {
+		if err := ms.addNames(name); err != nil {
 			return err
 		}
 	}
 
-	if m.AI != nil {
-		if err := ms.addNames(core.AIName(m.FullName)); err != nil {
+	if m.AutoIncrement != nil {
+		if err := ms.addNames(m.AIName()); err != nil {
 			return err
 		}
 	}
 
-	if len(m.PK) > 0 {
-		if err := ms.addNames(core.PKName(m.FullName)); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// 对整个对象做一次修正和检测，查看是否合法
-//
-// 必须要在 Model 初始化完成之后调用。
-func (m *Model) sanitize() error {
-	if len(m.PK) == 1 && m.PK[0].HasDefault {
-		return propertyError(m.PK[0].Name, "default", "不能为单一主键")
-	}
-
-	for _, c := range m.Columns {
-		if err := c.Check(); err != nil {
+	if len(m.PrimaryKey) > 0 {
+		if err := ms.addNames(m.PKName()); err != nil {
 			return err
 		}
 	}
@@ -190,14 +116,14 @@ func (m *Model) sanitize() error {
 }
 
 // 将 rval 中的结构解析到 m 中。支持匿名字段
-func (m *Model) parseColumns(rval reflect.Value) error {
+func parseColumns(m *core.Model, rval reflect.Value) error {
 	rtype := rval.Type()
 	num := rtype.NumField()
 	for i := 0; i < num; i++ {
 		field := rtype.Field(i)
 
 		if field.Anonymous {
-			if err := m.parseColumns(rval.Field(i)); err != nil {
+			if err := parseColumns(m, rval.Field(i)); err != nil {
 				return err
 			}
 			continue
@@ -217,7 +143,7 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 			return err
 		}
 
-		if err := m.parseColumn(col, tag); err != nil {
+		if err := parseColumn(m, col, tag); err != nil {
 			return err
 		}
 	}
@@ -226,9 +152,12 @@ func (m *Model) parseColumns(rval reflect.Value) error {
 }
 
 // 分析一个字段。
-func (m *Model) parseColumn(col *core.Column, tag string) (err error) {
+func parseColumn(m *core.Model, col *core.Column, tag string) (err error) {
+	if err = m.AddColumn(col); err != nil {
+		return err
+	}
+
 	if len(tag) == 0 { // 没有附加的 struct tag，直接取得几个关键信息返回。
-		m.Columns = append(m.Columns, col)
 		return nil
 	}
 
@@ -241,23 +170,23 @@ func (m *Model) parseColumn(col *core.Column, tag string) (err error) {
 			}
 			col.Name = tag.Args[0]
 		case "index":
-			err = m.setIndex(col, tag.Args)
+			err = setIndex(m, col, tag.Args)
 		case "pk":
-			err = m.setPK(col, tag.Args)
+			err = setPK(m, col, tag.Args)
 		case "unique":
-			err = m.setUnique(col, tag.Args)
+			err = setUnique(m, col, tag.Args)
 		case "nullable":
 			err = setColumnNullable(col, tag.Args)
 		case "ai":
-			err = m.setAI(col, tag.Args)
+			err = setAI(m, col, tag.Args)
 		case "len":
 			err = setColumnLen(col, tag.Args)
 		case "fk":
-			err = m.setFK(col, tag.Args)
+			err = setFK(m, col, tag.Args)
 		case "default":
-			err = m.setDefault(col, tag.Args)
+			err = setDefault(col, tag.Args)
 		case "occ":
-			err = m.setOCC(col, tag.Args)
+			err = setOCC(m, col, tag.Args)
 		default:
 			err = propertyError(col.Name, tag.Name, "未知的属性")
 		}
@@ -267,14 +196,11 @@ func (m *Model) parseColumn(col *core.Column, tag string) (err error) {
 		}
 	}
 
-	// col.Name 可能在上面的 for 循环中被更改，所以要在最后再添加到 m.Cols 中
-	m.Columns = append(m.Columns, col)
-
 	return nil
 }
 
 // 分析 meta 接口数据。
-func (m *Model) parseMeta(tag string) error {
+func parseMeta(m *core.Model, tag string) error {
 	ts := tags.Parse(tag)
 	if len(ts) == 0 {
 		return nil
@@ -287,8 +213,7 @@ func (m *Model) parseMeta(tag string) error {
 				return propertyError("Metaer", "name", "太多的值")
 			}
 
-			m.Name = v.Args[0]
-			m.FullName = "#" + m.Name
+			m.SetName(v.Args[0])
 		case "check":
 			if len(v.Args) != 2 {
 				return propertyError("Metaer", "check", "参数个数不正确")
@@ -298,8 +223,9 @@ func (m *Model) parseMeta(tag string) error {
 				return propertyError("Metaer", "check", "已经存在相同名称的 check 约束")
 			}
 
-			name := strings.ToLower(v.Args[0])
-			m.Checks[name] = v.Args[1]
+			if err := m.NewCheck(strings.ToLower(v.Args[0]), v.Args[1]); err != nil {
+				return err
+			}
 		default:
 			m.Meta[v.Name] = v.Args
 		}
@@ -309,32 +235,18 @@ func (m *Model) parseMeta(tag string) error {
 }
 
 // occ(true) or occ
-func (m *Model) setOCC(c *core.Column, vals []string) error {
-	if c.AI || c.Nullable {
-		return propertyError(c.Name, "occ", "自增列和允许为空的列不能作为乐观锁列")
-	}
-
-	if m.OCC != nil {
-		return propertyError(c.Name, "occ", "已经指定了一个乐观锁")
-	}
-
-	switch c.GoType.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-	default:
-		return propertyError(c.Name, "occ", "值只能是数值")
-	}
+func setOCC(m *core.Model, c *core.Column, vals []string) error {
 
 	switch len(vals) {
 	case 0:
-		m.OCC = c
+		return m.SetOCC(c)
 	case 1:
 		val, err := strconv.ParseBool(vals[0])
 		if err != nil {
 			return err
 		}
 		if val {
-			m.OCC = c
+			return m.SetOCC(c)
 		}
 	default:
 		return propertyError(c.Name, "occ", "指定了太多的值")
@@ -343,133 +255,53 @@ func (m *Model) setOCC(c *core.Column, vals []string) error {
 	return nil
 }
 
-// default(5)
-func (m *Model) setDefault(col *core.Column, vals []string) error {
-	if len(vals) != 1 {
-		return propertyError(col.Name, "default", "太多的值")
-	}
-	col.HasDefault = true
-
-	rval := reflect.New(col.GoType)
-	v := rval.Interface()
-	if p, ok := v.(DefaultParser); ok {
-		if err := p.ParseDefault(vals[0]); err != nil {
-			return err
-		}
-
-		col.Default = v
-		return nil
-	}
-
-	switch col.GoType {
-	case core.TimeType:
-		v, err := time.Parse(time.RFC3339, vals[0])
-		if err != nil {
-			return err
-		}
-		col.Default = v
-	default:
-		for rval.Kind() == reflect.Ptr {
-			rval = rval.Elem()
-		}
-
-		if err := conv.Value(vals[0], rval); err != nil {
-			return err
-		}
-		col.Default = rval.Interface()
-	}
-
-	return nil
-}
-
 // index(idx_name)
-func (m *Model) setIndex(col *core.Column, vals []string) error {
+func setIndex(m *core.Model, col *core.Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "index", "太多的值")
 	}
 
 	name := strings.ToLower(vals[0])
-	m.Indexes[name] = append(m.Indexes[name], col)
-	return nil
+	return m.AddIndex(core.IndexDefault, name, col)
 }
 
 // pk
-func (m *Model) setPK(col *core.Column, vals []string) error {
-	if len(m.PK) > 0 {
-		return propertyError(col.Name, "pk", "已经存在自增约束，不能再指定主键约束")
-	}
-
+func setPK(m *core.Model, col *core.Column, vals []string) error {
 	if len(vals) != 0 {
 		return propertyError(col.Name, "pk", "太多的值")
 	}
 
-	m.PK = append(m.PK, col)
-	return nil
+	return m.AddPrimaryKey(col)
 }
 
 // unique(unique_name)
-func (m *Model) setUnique(col *core.Column, vals []string) error {
+func setUnique(m *core.Model, col *core.Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
 
 	name := strings.ToLower(vals[0])
-	m.Uniques[name] = append(m.Uniques[name], col)
-
-	return nil
+	return m.AddUnique(name, col)
 }
 
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
-func (m *Model) setFK(col *core.Column, vals []string) error {
+func setFK(m *core.Model, col *core.Column, vals []string) error {
 	if len(vals) < 3 {
 		return propertyError(col.Name, "fk", "参数不够")
 	}
 
-	fkInst := &ForeignKey{
-		Name:         strings.ToLower(vals[0]),
+	fk := &core.ForeignKey{
 		Column:       col,
 		RefTableName: vals[1],
 		RefColName:   vals[2],
 	}
 
 	if len(vals) > 3 { // 存在 updateRule
-		fkInst.UpdateRule = vals[3]
+		fk.UpdateRule = vals[3]
 	}
 	if len(vals) > 4 { // 存在 deleteRule
-		fkInst.DeleteRule = vals[4]
+		fk.DeleteRule = vals[4]
 	}
 
-	m.FK = append(m.FK, fkInst)
-	return nil
-}
-
-// ai
-func (m *Model) setAI(col *core.Column, vals []string) (err error) {
-	if len(vals) != 0 {
-		return propertyError(col.Name, "ai", "太多的值")
-	}
-
-	switch col.GoType.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-	default:
-		return propertyError(col.Name, "ai", "类型只能是数值")
-	}
-
-	m.AI = col
-	col.AI = true
-
-	return nil
-}
-
-// FindColumn 查找指定名称的列
-//
-// 不存在该列则返回 nil
-func (m *Model) FindColumn(name string) *core.Column {
-	for _, col := range m.Columns {
-		if col.Name == name {
-			return col
-		}
-	}
-	return nil
+	return m.NewForeignKey(strings.ToLower(vals[0]), fk)
 }

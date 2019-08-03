@@ -11,7 +11,6 @@ import (
 	"reflect"
 
 	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/model"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
 
@@ -56,19 +55,17 @@ func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 		return len(keys) > 0 // 如果 keys 中有数据，表示已经采集成功，否则表示 cols 的长度为 0
 	}
 
-	if m.AI != nil && getKV(m.AI) {
+	if m.AutoIncrement != nil && getKV(m.AutoIncrement) {
 		goto RET
 	}
 
-	if m.PK != nil && getKV(m.PK...) {
+	if len(m.PrimaryKey) > 0 && getKV(m.PrimaryKey...) {
 		goto RET
 	}
 
-	if m.Uniques != nil {
-		for _, cols := range m.Uniques {
-			if getKV(cols...) {
-				break
-			}
+	for _, cols := range m.Uniques {
+		if getKV(cols...) {
+			break
 		}
 	}
 
@@ -132,7 +129,7 @@ func create(e Engine, v interface{}) error {
 		return err
 	}
 
-	if m.Type == model.View {
+	if m.Type == core.View {
 		return createView(e, m)
 	}
 
@@ -166,13 +163,13 @@ func create(e Engine, v interface{}) error {
 		sb.Check(name, expr)
 	}
 
-	for _, fk := range m.FK {
-		sb.ForeignKey(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+	for name, fk := range m.ForeignKeys {
+		sb.ForeignKey(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 	}
 
-	if m.AI == nil && len(m.PK) > 0 {
-		cols := make([]string, 0, len(m.PK))
-		for _, col := range m.PK {
+	if m.AutoIncrement == nil && len(m.PrimaryKey) > 0 {
+		cols := make([]string, 0, len(m.PrimaryKey))
+		for _, col := range m.PrimaryKey {
 			cols = append(cols, col.Name)
 		}
 		sb.PK(cols...)
@@ -181,7 +178,7 @@ func create(e Engine, v interface{}) error {
 	return sb.Exec()
 }
 
-func createView(e Engine, m *model.Model) error {
+func createView(e Engine, m *core.Model) error {
 	stmt := sqlbuilder.CreateView(e).Name(m.FullName)
 
 	for _, col := range m.Columns {
@@ -198,8 +195,8 @@ func truncate(e Engine, v interface{}) error {
 	}
 
 	stmt := e.SQL().TruncateTable()
-	if m.AI != nil {
-		stmt.Table(m.FullName, m.AI.Name)
+	if m.AutoIncrement != nil {
+		stmt.Table(m.FullName, m.AutoIncrement.Name)
 	} else {
 		stmt.Table(m.FullName, "")
 	}
@@ -223,7 +220,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	if m.AI == nil {
+	if m.AutoIncrement == nil {
 		return 0, ErrNeedAutoIncrementColumn
 	}
 
@@ -248,7 +245,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		stmt.KeyValue(col.Name, field.Interface())
 	}
 
-	return stmt.LastInsertID(m.Name, m.AI.Name)
+	return stmt.LastInsertID(m.Name, m.AutoIncrement.Name)
 }
 
 func insert(e Engine, v interface{}) (sql.Result, error) {

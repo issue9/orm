@@ -138,7 +138,7 @@ func (stmt *CreateTableStmt) AutoIncrement(col string, goType reflect.Type) *Cre
 
 // PK 指定主键约束
 //
-// 自境会自动转换为主键
+// 自增会自动转换为主键
 func (stmt *CreateTableStmt) PK(col ...string) *CreateTableStmt {
 	if stmt.pk != nil || stmt.ai != nil {
 		stmt.err = errors.New("主键或是自增列已经存在")
