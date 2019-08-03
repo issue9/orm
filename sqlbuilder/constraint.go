@@ -52,8 +52,13 @@ func (stmt *AddConstraintStmt) Table(t string) *AddConstraintStmt {
 
 // Unique 指定唯一约束
 func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraintStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	if stmt.Type != core.ConstraintNone {
 		stmt.err = ErrConstraintType
+		return stmt
 	}
 
 	stmt.Type = core.ConstraintUnique
@@ -65,8 +70,13 @@ func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraint
 
 // PK 指定主键约束
 func (stmt *AddConstraintStmt) PK(col ...string) *AddConstraintStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	if stmt.Type != core.ConstraintNone {
 		stmt.err = ErrConstraintType
+		return stmt
 	}
 
 	stmt.Type = core.ConstraintPK
@@ -77,8 +87,13 @@ func (stmt *AddConstraintStmt) PK(col ...string) *AddConstraintStmt {
 
 // Check Check 约束
 func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	if stmt.Type != core.ConstraintNone {
 		stmt.err = ErrConstraintType
+		return stmt
 	}
 
 	stmt.Type = core.ConstraintCheck
@@ -90,8 +105,13 @@ func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
 
 // FK 外键约束
 func (stmt *AddConstraintStmt) FK(name, col, refTable, refColumn, updateRule, deleteRule string) *AddConstraintStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	if stmt.Type != core.ConstraintNone {
 		stmt.err = ErrConstraintType
+		return stmt
 	}
 
 	stmt.Type = core.ConstraintFK

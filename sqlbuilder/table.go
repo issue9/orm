@@ -383,6 +383,10 @@ func (stmt *TruncateTableStmt) Table(t, aiColumn string) *TruncateTableStmt {
 
 // DDLSQL 获取 SQL 的语句及参数部分
 func (stmt *TruncateTableStmt) DDLSQL() ([]string, error) {
+	if stmt.err != nil {
+		return nil, stmt.Err()
+	}
+
 	if hook, ok := stmt.Dialect().(TruncateTableStmtHooker); ok {
 		return hook.TruncateTableStmtHook(stmt)
 	}

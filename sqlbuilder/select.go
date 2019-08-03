@@ -244,15 +244,14 @@ func (stmt *SelectStmt) Columns(cols ...string) *SelectStmt {
 	return stmt
 }
 
-// Select Columns 的别名
-func (stmt *SelectStmt) Select(cols ...string) *SelectStmt {
-	return stmt.Columns(cols...)
-}
-
 // From 指定表名
 //
 // table 为表名，如果需要指定别名，可以通过 alias 指定。
 func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	if stmt.tableExpr != "" {
 		stmt.err = errors.New("不能重复指定表名")
 		return stmt
@@ -366,6 +365,10 @@ func (stmt *SelectStmt) ForUpdate() *SelectStmt {
 //  table.col
 // table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	stmt.group, stmt.err = core.NewBuilder(" GROUP BY ").
 		WriteString(col).
 		WriteBytes(' ').

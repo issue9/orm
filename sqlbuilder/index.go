@@ -43,6 +43,10 @@ func (stmt *CreateIndexStmt) Type(t core.Index) *CreateIndexStmt {
 
 // Columns 列名
 func (stmt *CreateIndexStmt) Columns(col ...string) *CreateIndexStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	if stmt.cols == nil {
 		stmt.cols = col
 		return stmt

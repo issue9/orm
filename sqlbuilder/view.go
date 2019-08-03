@@ -80,6 +80,10 @@ func (stmt *CreateViewStmt) Replace() *CreateViewStmt {
 
 // From 指定 Select 语句
 func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	query, err := sel.CombineSQL()
 	if err != nil {
 		stmt.err = err

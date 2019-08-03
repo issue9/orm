@@ -112,15 +112,6 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	/*if len(stmt.cols) == 0 && (stmt.selectStmt == nil || len(stmt.selectStmt.columns) == 0) {
-		return "", nil, ErrColumnsIsEmpty
-	}
-
-	if len(stmt.args) == 0 && stmt.selectStmt == nil {
-		return "", nil, ErrValueIsEmpty
-	}
-	*/
-
 	builder := core.NewBuilder("INSERT INTO ").WriteString(stmt.table)
 
 	if stmt.selectStmt != nil {
