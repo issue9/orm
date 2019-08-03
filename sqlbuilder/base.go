@@ -29,7 +29,13 @@ type DDLSQLer interface {
 
 type baseStmt struct {
 	engine core.Engine
-	err    error
+
+	// err 用于保存在生成语句中的错误信息
+	//
+	// 一旦有错误生成，那么后续的调用需要保证该 err 值不会被覆盖，
+	// 即所有可能改变 err 的方法中，都要先判断 err 是否为空，
+	// 如果不为空，则应该立即退出函数。
+	err error
 }
 
 type queryStmt struct {
