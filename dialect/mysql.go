@@ -58,7 +58,7 @@ func (m *mysql) Name() string {
 }
 
 func (m *mysql) SQL(query string, args []interface{}) (string, []interface{}, error) {
-	query = replaceNamedArgs(query, args)
+	query = ReplaceNamedArgs(query, args)
 	return m.replacer.Replace(query), args, nil
 }
 
@@ -99,7 +99,7 @@ func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]stri
 }
 
 func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
-	return mysqlLimitSQL(limit, offset...)
+	return MysqlLimitSQL(limit, offset...)
 }
 
 func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {

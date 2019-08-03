@@ -68,7 +68,7 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 
 // 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
 func (p *postgres) SQL(query string, args []interface{}) (string, []interface{}, error) {
-	query = replaceNamedArgs(query, args)
+	query = ReplaceNamedArgs(query, args)
 	query, err := p.replace(query)
 	if err != nil {
 		return "", nil, err
@@ -108,7 +108,7 @@ func (p *postgres) CreateTableOptionsSQL(w *core.Builder, options map[string][]s
 }
 
 func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
-	return mysqlLimitSQL(limit, offset...)
+	return MysqlLimitSQL(limit, offset...)
 }
 
 func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {

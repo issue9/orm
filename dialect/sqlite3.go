@@ -56,7 +56,7 @@ func (s *sqlite3) Name() string {
 }
 
 func (s *sqlite3) SQL(query string, args []interface{}) (string, []interface{}, error) {
-	query = replaceNamedArgs(query, args)
+	query = ReplaceNamedArgs(query, args)
 	return s.replacer.Replace(query), args, nil
 }
 
@@ -94,7 +94,7 @@ func (s *sqlite3) CreateTableOptionsSQL(w *core.Builder, options map[string][]st
 }
 
 func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
-	return mysqlLimitSQL(limit, offset...)
+	return MysqlLimitSQL(limit, offset...)
 }
 
 // https://www.sqlite.org/lang_altertable.html
