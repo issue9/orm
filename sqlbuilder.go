@@ -111,7 +111,7 @@ func count(e Engine, v interface{}) (int64, error) {
 		return 0, err
 	}
 
-	stmt := e.SQL().Select().Count("count(*) as cnt").From(m.FullName)
+	stmt := e.SQL().Select().Count("count(*) as cnt").From(m.Name)
 	if err = countWhere(stmt, m, rval); err != nil {
 		return 0, err
 	}
@@ -134,7 +134,7 @@ func create(e Engine, v interface{}) error {
 	}
 
 	sb := sqlbuilder.CreateTable(e)
-	sb.Table(m.FullName)
+	sb.Table(m.Name)
 	for _, col := range m.Columns {
 		if col.AI {
 			sb.AutoIncrement(col.Name, col.GoType)
@@ -179,7 +179,7 @@ func create(e Engine, v interface{}) error {
 }
 
 func createView(e Engine, m *core.Model) error {
-	stmt := sqlbuilder.CreateView(e).Name(m.FullName)
+	stmt := sqlbuilder.CreateView(e).Name(m.Name)
 
 	for _, col := range m.Columns {
 		stmt.Column(col.Name)
@@ -196,9 +196,9 @@ func truncate(e Engine, v interface{}) error {
 
 	stmt := e.SQL().TruncateTable()
 	if m.AutoIncrement != nil {
-		stmt.Table(m.FullName, m.AutoIncrement.Name)
+		stmt.Table(m.Name, m.AutoIncrement.Name)
 	} else {
-		stmt.Table(m.FullName, "")
+		stmt.Table(m.Name, "")
 	}
 
 	return stmt.Exec()
@@ -211,7 +211,7 @@ func drop(e Engine, v interface{}) error {
 		return err
 	}
 
-	return e.SQL().DropTable().Table(m.FullName).Exec()
+	return e.SQL().DropTable().Table(m.Name).Exec()
 }
 
 func lastInsertID(e Engine, v interface{}) (int64, error) {
@@ -230,7 +230,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		}
 	}
 
-	stmt := e.SQL().Insert().Table(m.FullName)
+	stmt := e.SQL().Insert().Table(m.Name)
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -260,7 +260,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		}
 	}
 
-	stmt := e.SQL().Insert().Table(m.FullName)
+	stmt := e.SQL().Insert().Table(m.Name)
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -290,7 +290,7 @@ func find(e Engine, v interface{}) error {
 
 	stmt := e.SQL().Select().
 		Column("*").
-		From(m.FullName)
+		From(m.Name)
 	if err = where(stmt, m, rval); err != nil {
 		return err
 	}
@@ -314,7 +314,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 
 	stmt := tx.SQL().Select().
 		Column("*").
-		From(m.FullName).
+		From(m.Name).
 		ForUpdate()
 	if err = where(stmt, m, rval); err != nil {
 		return err
@@ -341,7 +341,7 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 		}
 	}
 
-	stmt := e.SQL().Update().Table(m.FullName)
+	stmt := e.SQL().Update().Table(m.Name)
 	var occValue interface{}
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
@@ -385,7 +385,7 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	stmt := e.SQL().Delete().Table(m.FullName)
+	stmt := e.SQL().Delete().Table(m.Name)
 	if err = where(stmt, m, rval); err != nil {
 		return nil, err
 	}
@@ -418,7 +418,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 
 		if i == 0 { // 第一个元素，需要从中获取列信息。
 			firstType = irval.Type()
-			query.Table(m.FullName)
+			query.Table(m.Name)
 
 			for _, col := range m.Columns {
 				field := irval.FieldByName(col.GoName)

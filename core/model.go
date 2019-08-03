@@ -55,11 +55,10 @@ const (
 
 // Model 表示一个数据库的表或视图模型
 type Model struct {
-	// FullName 和 Name 都指表名
-	// 其中 FullName 带 # 前缀，可以在生成 SQL 语句时使用。
-	// 而 Name 则表示不带 # 前缀的表名，在普通情况下可以使用。
-	FullName string
-	Name     string
+	// 模型的名称，可以以 # 符号开头，表示该表名带有一个表名前缀。
+	// 在生成 SQL 语句时，该符号会被转换成 Engine.TablePrefix()
+	// 返回的值。
+	Name string
 
 	// 如果当前模型是视图，那么此值表示的是视图的 select 语句，
 	// 其它类型下，ViewAs 不启作用。
@@ -104,18 +103,17 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 
 // AIName 当前模型中自增列的名称
 func (m *Model) AIName() string {
-	return AIName(m.FullName)
+	return AIName(m.Name)
 }
 
 // PKName 当前模型中主键约束的名称
 func (m *Model) PKName() string {
-	return PKName(m.FullName)
+	return PKName(m.Name)
 }
 
 // SetName 设置名称
 func (m *Model) SetName(name string) {
 	m.Name = name
-	m.FullName = "#" + name
 }
 
 // AddColumns 添加新列
@@ -161,7 +159,7 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 	}
 
 	if m.AutoIncrement != nil && m.AutoIncrement != col {
-		return ErrConstraintExists(AIName(m.FullName))
+		return ErrConstraintExists(m.AIName())
 	}
 
 	if len(m.PrimaryKey) > 0 {
@@ -302,11 +300,11 @@ func (m *Model) checkNames() error {
 	names := make([]string, 0, l)
 
 	if m.AutoIncrement != nil {
-		names = append(names, AIName(m.FullName))
+		names = append(names, m.AIName())
 	}
 
 	if m.PrimaryKey != nil {
-		names = append(names, PKName(m.FullName))
+		names = append(names, m.PKName())
 	}
 
 	for name := range m.Indexes {

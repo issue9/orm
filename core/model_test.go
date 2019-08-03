@@ -27,10 +27,10 @@ func TestNewModel(t *testing.T) {
 
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
-	a.Equal(m.FullName, "#m1")
+	a.Equal(m.Name, "m1")
 
-	a.Equal(m.AIName(), "#m1_ai")
-	a.Equal(m.PKName(), "#m1_pk")
+	a.Equal(m.AIName(), "m1_ai")
+	a.Equal(m.PKName(), "m1_pk")
 }
 
 func TestModel_AddColumns(t *testing.T) {

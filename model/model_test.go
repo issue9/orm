@@ -153,20 +153,20 @@ func TestModels_New(t *testing.T) {
 	})
 
 	// Meta返回的name属性
-	a.Equal(m.Name, "administrators")
+	a.Equal(m.Name, "#administrators")
 
 	// 多层指针下的 Receive
 	o := obj{}
 	m, err = ms.New(o)
 	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "objs")
+	a.Equal(m.Name, "#objs")
 	m, err = ms.New(&o)
 	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "objs")
+	a.Equal(m.Name, "#objs")
 	oo := &o
 	m, err = ms.New(&oo)
 	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "objs")
+	a.Equal(m.Name, "#objs")
 
 	// 无效的 New
 	m, err = ms.New(123)

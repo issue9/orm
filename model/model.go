@@ -41,7 +41,7 @@ func (ms *Models) New(obj interface{}) (*core.Model, error) {
 		return m, nil
 	}
 
-	m := core.NewModel(core.Table, rtype.Name(), rtype.NumField())
+	m := core.NewModel(core.Table, "#"+rtype.Name(), rtype.NumField())
 
 	if err := parseColumns(m, rval); err != nil {
 		return nil, err
@@ -213,7 +213,7 @@ func parseMeta(m *core.Model, tag string) error {
 				return propertyError("Metaer", "name", "太多的值")
 			}
 
-			m.SetName(v.Args[0])
+			m.SetName("#" + v.Args[0]) // 所有 model 生成的表都带 #
 		case "check":
 			if len(v.Args) != 2 {
 				return propertyError("Metaer", "check", "参数个数不正确")
