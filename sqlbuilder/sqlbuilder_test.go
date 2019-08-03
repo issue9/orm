@@ -5,6 +5,8 @@
 package sqlbuilder_test
 
 import (
+	"log"
+	"os"
 	"time"
 
 	"github.com/issue9/orm/v2/core"
@@ -28,19 +30,21 @@ func initDB(t *test.Driver) {
 	creator := sqlbuilder.CreateTable(t.DB).
 		Table("users").
 		AutoIncrement("id", core.Int64Type).
-		Column("name", core.StringType, false, false, nil, 20).
-		Column("age", core.IntType, true, false, nil).
-		Column("version", core.Int64Type, false, true, 0).
+		Column("name", core.StringType, false, false, false, nil, 20).
+		Column("age", core.IntType, false, true, false, nil).
+		Column("version", core.Int64Type, false, false, true, 0).
 		Unique("unique_users_id", "id")
+	t.DB.Debug(log.New(os.Stdout, "[SQL]", 0))
 	err := creator.Exec()
+	t.DB.Debug(nil)
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	creator.Reset().Table("info").
-		Column("uid", core.Int64Type, false, false, nil).
-		Column("tel", core.StringType, false, false, nil, 11).
-		Column("nickname", core.StringType, false, false, nil, 20).
-		Column("address", core.StringType, false, false, nil, 1024).
-		Column("birthday", core.TimeType, false, true, time.Time{}).
+		Column("uid", core.Int64Type, false, false, false, nil).
+		Column("tel", core.StringType, false, false, false, nil, 11).
+		Column("nickname", core.StringType, false, false, false, nil, 20).
+		Column("address", core.StringType, false, false, false, nil, 1024).
+		Column("birthday", core.TimeType, false, false, true, time.Time{}).
 		PK("tel", "nickname").
 		ForeignKey("info_fk", "uid", "users", "id", "CASCADE", "CASCADE")
 	err = creator.Exec()

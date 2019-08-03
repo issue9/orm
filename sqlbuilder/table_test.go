@@ -29,9 +29,9 @@ func TestCreateTableStmt(t *testing.T) {
 		stmt := sqlbuilder.CreateTable(t.DB).
 			Table(table).
 			AutoIncrement("id", core.IntType).
-			Column("age", core.IntType, false, false, nil).
-			Column("name", core.StringType, true, true, "", 100).
-			Column("address", core.StringType, false, false, nil, 100).
+			Column("age", core.IntType, false, false, false, nil).
+			Column("name", core.StringType, false, true, true, "", 100).
+			Column("address", core.StringType, false, false, false, nil, 100).
 			Index(core.IndexDefault, "index_index", "name", "address").
 			Unique("u_age", "name", "address").
 			Check("age_gt_0", "age>0")
@@ -48,7 +48,7 @@ func TestCreateTableStmt(t *testing.T) {
 
 		// 约束名重和昨
 		err = stmt.Reset().Table("users").
-			Column("name", core.StringType, false, false, nil).
+			Column("name", core.StringType, false, false, false, nil).
 			Unique("c1", "name").
 			Check("c1", "name IS NOT NULL").
 			Exec()

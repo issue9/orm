@@ -5,10 +5,7 @@
 package sqlbuilder
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
-	"sort"
 
 	"github.com/issue9/orm/v2/core"
 )
@@ -16,39 +13,7 @@ import (
 // CreateTableStmt 创建表的语句
 type CreateTableStmt struct {
 	*ddlStmt
-
-	name    string
-	columns []*core.Column
-	indexes []*indexColumn
-
-	// 约束
-	constraints []*constraintColumn
-	foreignKeys []*foreignKey
-	ai, pk      *constraintColumn
-
-	// 一些附加的信息
-	//
-	// 比如可以指定创建表时的编码等，各个数据库各不相同。
-	options map[string][]string
-}
-
-type foreignKey struct {
-	Name                     string // 约束名
-	Column                   string // 列名
-	RefTableName, RefColName string
-	UpdateRule, DeleteRule   string
-}
-
-type indexColumn struct {
-	Name    string
-	Type    core.Index
-	Columns []string
-}
-
-type constraintColumn struct {
-	Name    string
-	Type    core.Constraint
-	Columns []string
+	model *core.Model
 }
 
 // CreateTable 创建表的语句
@@ -57,7 +22,9 @@ type constraintColumn struct {
 // 如果 e 是一个事务类型，且 e.Dialect() 是支持事务 DDL 的，
 // 那么在执行时，会当作一个事务处理，否则为多个语句依次执行。
 func CreateTable(e core.Engine) *CreateTableStmt {
-	stmt := &CreateTableStmt{}
+	stmt := &CreateTableStmt{
+		model: core.NewModel(core.Table, "", 10),
+	}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
 	return stmt
 }
@@ -65,21 +32,13 @@ func CreateTable(e core.Engine) *CreateTableStmt {
 // Reset 重置内容
 func (stmt *CreateTableStmt) Reset() *CreateTableStmt {
 	stmt.baseStmt.Reset()
-	stmt.name = ""
-	stmt.columns = stmt.columns[:0]
-	stmt.indexes = stmt.indexes[:0]
-	stmt.options = map[string][]string{}
-	stmt.foreignKeys = stmt.foreignKeys[:0]
-	stmt.constraints = stmt.constraints[:0]
-	stmt.pk = nil
-	stmt.ai = nil
-
+	stmt.model.Reset()
 	return stmt
 }
 
 // Table 指定表名
 func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
-	stmt.name = t
+	stmt.model.SetName(t)
 	return stmt
 }
 
@@ -103,93 +62,111 @@ func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, 
 //
 // name 列的名称；
 // goType Go 中的类型，该类型会被转换成相应的数据库类型；
+// ai 是否自增列；
 // nullable 表示该列是否可以为 NULL；
 // hasDefault 表示是否拥有默认值，如果为 true，则 v 同时会被当作默认值；
 // def 默认值；
 // length 表示长度信息。
-func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
+func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
+	if stmt.err != nil {
+		return stmt
+	}
+
 	var col *core.Column
-	col, stmt.err = newColumn(name, goType, false, nullable, hasDefault, def, length...)
+	col, stmt.err = newColumn(name, goType, ai, nullable, hasDefault, def, length...)
 	return stmt.Columns(col)
 }
 
 // Columns 添加列
 func (stmt *CreateTableStmt) Columns(col ...*core.Column) *CreateTableStmt {
-	stmt.columns = append(stmt.columns, col...)
+	if stmt.err != nil {
+		return stmt
+	}
 
+	stmt.err = stmt.model.AddColumns(col...)
 	return stmt
 }
 
-// AutoIncrement 指定自增列，自增列必定是主键。
-// 如果指定了自增，则主键必定不启作用。
+// AutoIncrement 指定自增列
+//
+// 自增列必定是主键。如果指定了自增，则主键必定不启作用。
+// 功能与 Column() 中将 ai 设置 true 是一样的。
 //
 // col 列名；
 // goType 对应的 Go 类型。
 func (stmt *CreateTableStmt) AutoIncrement(col string, goType reflect.Type) *CreateTableStmt {
-	stmt.ai = &constraintColumn{
-		Type:    core.ConstraintAI,
-		Columns: []string{col},
-	}
-
-	var c *core.Column
-	c, stmt.err = newColumn(col, goType, true, false, false, nil)
-	return stmt.Columns(c)
+	return stmt.Column(col, goType, true, false, false, nil)
 }
 
 // PK 指定主键约束
 //
 // 自增会自动转换为主键
 func (stmt *CreateTableStmt) PK(col ...string) *CreateTableStmt {
-	if stmt.pk != nil || stmt.ai != nil {
-		stmt.err = errors.New("主键或是自增列已经存在")
+	if stmt.err != nil {
+		return stmt
 	}
 
-	stmt.pk = &constraintColumn{
-		Type:    core.ConstraintPK,
-		Columns: col,
-	}
+	for _, c := range col {
+		if stmt.err != nil {
+			return stmt
+		}
 
+		stmt.err = stmt.model.AddPrimaryKey(stmt.model.FindColumn(c))
+	}
 	return stmt
 }
 
 // Index 添加索引
 func (stmt *CreateTableStmt) Index(typ core.Index, name string, col ...string) *CreateTableStmt {
-	stmt.indexes = append(stmt.indexes, &indexColumn{
-		Name:    name,
-		Type:    typ,
-		Columns: col,
-	})
+	if stmt.err != nil {
+		return stmt
+	}
 
+	for _, c := range col {
+		if stmt.err != nil {
+			return stmt
+		}
+
+		stmt.err = stmt.model.AddIndex(typ, name, stmt.model.FindColumn(c))
+	}
 	return stmt
 }
 
 // Unique 添加唯一约束
 func (stmt *CreateTableStmt) Unique(name string, col ...string) *CreateTableStmt {
-	stmt.constraints = append(stmt.constraints, &constraintColumn{
-		Name:    name,
-		Type:    core.ConstraintUnique,
-		Columns: col,
-	})
+	if stmt.err != nil {
+		return stmt
+	}
+
+	for _, c := range col {
+		if stmt.err != nil {
+			return stmt
+		}
+
+		stmt.err = stmt.model.AddUnique(name, stmt.model.FindColumn(c))
+	}
 
 	return stmt
 }
 
 // Check check 约束
 func (stmt *CreateTableStmt) Check(name string, expr string) *CreateTableStmt {
-	stmt.constraints = append(stmt.constraints, &constraintColumn{
-		Name:    name,
-		Type:    core.ConstraintCheck,
-		Columns: []string{expr},
-	})
+	if stmt.err != nil {
+		return stmt
+	}
 
+	stmt.err = stmt.model.NewCheck(name, expr)
 	return stmt
 }
 
 // ForeignKey 指定外键
 func (stmt *CreateTableStmt) ForeignKey(name, col, refTable, refCol, updateRule, deleteRule string) *CreateTableStmt {
-	stmt.foreignKeys = append(stmt.foreignKeys, &foreignKey{
-		Name:         name,
-		Column:       col,
+	if stmt.err != nil {
+		return stmt
+	}
+
+	stmt.err = stmt.model.NewForeignKey(name, &core.ForeignKey{
+		Column:       stmt.model.FindColumn(col),
 		RefTableName: refTable,
 		RefColName:   refCol,
 		UpdateRule:   updateRule,
@@ -199,69 +176,25 @@ func (stmt *CreateTableStmt) ForeignKey(name, col, refTable, refCol, updateRule,
 	return stmt
 }
 
-func (stmt CreateTableStmt) checkNames() error {
-	names := make([]string, 0, 2+len(stmt.indexes)+len(stmt.constraints)+len(stmt.foreignKeys))
-
-	if stmt.ai != nil {
-		names = append(names, stmt.ai.Name)
-	}
-
-	if stmt.pk != nil {
-		names = append(names, stmt.pk.Name)
-	}
-
-	for _, index := range stmt.indexes {
-		names = append(names, index.Name)
-	}
-
-	for _, constraint := range stmt.constraints {
-		names = append(names, constraint.Name)
-	}
-
-	for _, fk := range stmt.foreignKeys {
-		names = append(names, fk.Name)
-	}
-
-	sort.Strings(names)
-
-	for i := 1; i < len(names); i++ {
-		if names[i] == names[i-1] {
-			return fmt.Errorf("存在相同的约束名 %s", names[i])
-		}
-	}
-
-	return nil
-}
-
 // DDLSQL 获取 SQL 的语句及参数部分
 func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	if stmt.err != nil {
 		return nil, stmt.Err()
 	}
 
-	if err := stmt.checkNames(); err != nil {
+	if err := stmt.model.Sanitize(); err != nil {
 		return nil, err
 	}
 
-	if stmt.name == "" {
-		return nil, ErrTableIsEmpty
-	}
-
-	if len(stmt.columns) == 0 {
+	if len(stmt.model.Columns) == 0 {
 		return nil, ErrColumnsIsEmpty
 	}
 
-	for _, col := range stmt.columns {
-		if err := col.Check(); err != nil {
-			return nil, err
-		}
-	}
-
 	w := core.NewBuilder("CREATE TABLE IF NOT EXISTS ").
-		QuoteKey(stmt.name).
+		QuoteKey(stmt.model.Name).
 		WriteBytes('(')
 
-	for _, col := range stmt.columns {
+	for _, col := range stmt.model.Columns {
 		typ, err := stmt.Dialect().SQLType(col)
 		if err != nil {
 			return nil, err
@@ -275,10 +208,9 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	if err := stmt.createConstraints(w); err != nil {
 		return nil, err
 	}
-
 	w.TruncateLast(1).WriteBytes(')')
 
-	if err := stmt.Dialect().CreateTableOptionsSQL(w, stmt.options); err != nil {
+	if err := stmt.Dialect().CreateTableOptionsSQL(w, stmt.model.Meta); err != nil {
 		return nil, err
 	}
 
@@ -301,27 +233,25 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 
 // 创建标准的几种约束
 func (stmt *CreateTableStmt) createConstraints(buf *core.Builder) error {
-	for _, c := range stmt.constraints {
-		switch c.Type {
-		case core.ConstraintCheck:
-			stmt.createCheckSQL(buf, c.Name, c.Columns[0])
-		case core.ConstraintUnique:
-			stmt.createUniqueSQL(buf, c.Name, c.Columns...)
-		default:
-			return ErrUnknownConstraint
-		}
+	for name, expr := range stmt.model.Checks {
+		stmt.createCheckSQL(buf, name, expr)
+		buf.WriteBytes(',')
+	}
+
+	for name, cols := range stmt.model.Uniques {
+		stmt.createUniqueSQL(buf, name, cols...)
 		buf.WriteBytes(',')
 	}
 
 	// foreign  key
-	for _, fk := range stmt.foreignKeys {
-		stmt.createFKSQL(buf, fk)
+	for name, fk := range stmt.model.ForeignKeys {
+		stmt.createFKSQL(buf, name, fk)
 		buf.WriteBytes(',')
 	}
 
 	// primary key
-	if stmt.pk != nil {
-		stmt.createPKSQL(buf, core.PKName(stmt.name), stmt.pk.Columns...)
+	if len(stmt.model.PrimaryKey) > 0 {
+		stmt.createPKSQL(buf, stmt.model.PKName(), stmt.model.PrimaryKey...)
 		buf.WriteBytes(',')
 	}
 
@@ -329,17 +259,19 @@ func (stmt *CreateTableStmt) createConstraints(buf *core.Builder) error {
 }
 
 func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
-	if len(stmt.indexes) == 0 {
+	if len(stmt.model.Indexes) == 0 {
 		return nil, nil
 	}
 
-	sqls := make([]string, 0, len(stmt.indexes))
+	sqls := make([]string, 0, len(stmt.model.Indexes))
 	buf := CreateIndex(stmt.Engine())
-	for _, index := range stmt.indexes {
+	for name, index := range stmt.model.Indexes {
 		buf.Reset()
-		buf.Table(stmt.name).
-			Name(index.Name).
-			Columns(index.Columns...)
+		buf.Table(stmt.model.Name).
+			Name(name)
+		for _, col := range index {
+			buf.Columns(col.Name)
+		}
 
 		query, err := buf.DDLSQL()
 		if err != nil {
@@ -354,13 +286,13 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 // create table 语句中 pk 约束的语句
 //
 // CONSTRAINT pk_name PRIMARY KEY (id,lastName)
-func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, name string, cols ...string) {
+func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, name string, cols ...*core.Column) {
 	buf.WriteString(" CONSTRAINT ").
 		QuoteKey(name).
 		WriteString(" PRIMARY KEY(")
 
 	for _, col := range cols {
-		buf.QuoteKey(col).WriteBytes(',')
+		buf.QuoteKey(col.Name).WriteBytes(',')
 	}
 	buf.TruncateLast(1).WriteBytes(')')
 }
@@ -368,24 +300,24 @@ func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, name string, cols ..
 // create table 语句中的 unique 约束部分的语句。
 //
 // CONSTRAINT unique_name UNIQUE (id,lastName)
-func (stmt *CreateTableStmt) createUniqueSQL(buf *core.Builder, name string, cols ...string) {
+func (stmt *CreateTableStmt) createUniqueSQL(buf *core.Builder, name string, cols ...*core.Column) {
 	buf.WriteString(" CONSTRAINT ").
 		QuoteKey(name).
 		WriteString(" UNIQUE(")
 	for _, col := range cols {
-		buf.QuoteKey(col).WriteBytes(',')
+		buf.QuoteKey(col.Name).WriteBytes(',')
 	}
 	buf.TruncateLast(1).WriteBytes(')')
 }
 
 // create table 语句中 fk 的约束部分的语句
-func (stmt *CreateTableStmt) createFKSQL(buf *core.Builder, fk *foreignKey) {
+func (stmt *CreateTableStmt) createFKSQL(buf *core.Builder, name string, fk *core.ForeignKey) {
 	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WriteString(" CONSTRAINT ").
-		QuoteKey(fk.Name)
+		QuoteKey(name)
 
 	buf.WriteString(" FOREIGN KEY (").
-		QuoteKey(fk.Column)
+		QuoteKey(fk.Column.Name)
 
 	buf.WriteString(") REFERENCES ").
 		QuoteKey(fk.RefTableName)

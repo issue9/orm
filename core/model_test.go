@@ -10,18 +10,6 @@ import (
 	"github.com/issue9/assert"
 )
 
-func (m *Model) reset() {
-	m.Type = Table
-	m.Columns = m.Columns[:0]
-	m.Indexes = map[string][]*Column{}
-	m.Uniques = map[string][]*Column{}
-	m.ForeignKeys = map[string]*ForeignKey{}
-	m.PrimaryKey = []*Column{}
-	m.Checks = map[string]string{}
-	m.Meta = map[string][]string{}
-	m.AutoIncrement = nil
-}
-
 func TestNewModel(t *testing.T) {
 	a := assert.New(t)
 
@@ -52,7 +40,7 @@ func TestModel_AddColumns(t *testing.T) {
 	a.Error(m.AddColumns(ai, col))
 
 	// 正常
-	m.reset()
+	m.Reset()
 	col.Name = "col"
 	a.NotError(m.AddColumns(ai, col))
 }
@@ -84,7 +72,7 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.Error(m.SetAutoIncrement(ai2))
 
 	// 类型错误
-	m.reset()
+	m.Reset()
 	ai2, err = NewColumnFromGoType(StringType)
 	a.NotError(err).NotNil(ai2)
 	ai2.Name = "ai2"
@@ -92,13 +80,13 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.ErrorType(m.SetAutoIncrement(ai2), ErrColumnTypeError)
 
 	// 存在主键
-	m.reset()
+	m.Reset()
 	a.NotError(m.AddColumns(ai2))
 	a.NotError(m.AddPrimaryKey(ai2)) // 主键
 	a.ErrorType(m.SetAutoIncrement(ai), ErrAutoIncrementPrimaryKeyConflict)
 
 	// ai 不存在
-	m.reset()
+	m.Reset()
 	a.Error(m.SetAutoIncrement(ai))
 }
 
@@ -120,11 +108,11 @@ func TestModel_AddPrimaryKey(t *testing.T) {
 	a.Error(m.AddPrimaryKey(pk))
 
 	// 列不存在
-	m.reset()
+	m.Reset()
 	a.Error(m.AddPrimaryKey(pk))
 
 	// 正常添加
-	m.reset()
+	m.Reset()
 	a.NotError(m.AddColumns(pk))
 	a.NotError(m.AddPrimaryKey(pk))
 
@@ -294,7 +282,7 @@ func TestModel_Sanitize(t *testing.T) {
 	a.NotError(m.AddPrimaryKey(pk2))
 	a.NotError(m.Sanitize())
 
-	m.reset()
+	m.Reset()
 	a.NotError(m.AddColumn(ai))
 	a.NotError(m.AddColumns(nullable, def))
 	a.NotError(m.AddIndex(IndexDefault, "index_0", nullable))

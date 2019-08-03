@@ -27,7 +27,7 @@ func TestInsert(t *testing.T) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
 			AutoIncrement("id", core.Int64Type).
-			Column("name", core.StringType, false, true, "def-name", 20).
+			Column("name", core.StringType, false, false, true, "def-name", 20).
 			Exec()
 		a.NotError(err)
 		defer func() {
@@ -75,7 +75,7 @@ func TestInsert_NamedArgs(t *testing.T) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
 			AutoIncrement("id", core.Int64Type).
-			Column("name", core.StringType, false, false, nil, 20).
+			Column("name", core.StringType, false, false, false, nil, 20).
 			Exec()
 		a.NotError(err)
 		defer func() {

@@ -101,6 +101,19 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 	return m
 }
 
+// Reset 清空模型内容
+func (m *Model) Reset() {
+	m.Type = Table
+	m.Columns = m.Columns[:0]
+	m.Indexes = map[string][]*Column{}
+	m.Uniques = map[string][]*Column{}
+	m.ForeignKeys = map[string]*ForeignKey{}
+	m.PrimaryKey = []*Column{}
+	m.Checks = map[string]string{}
+	m.Meta = map[string][]string{}
+	m.AutoIncrement = nil
+}
+
 // AIName 当前模型中自增列的名称
 func (m *Model) AIName() string {
 	return AIName(m.Name)
@@ -275,6 +288,10 @@ func (m *Model) NewForeignKey(name string, fk *ForeignKey) error {
 //
 // 必须要在 Model 初始化完成之后调用。
 func (m *Model) Sanitize() error {
+	if m.Name == "" {
+		return errors.New("缺少模型名称")
+	}
+
 	if len(m.PrimaryKey) == 1 {
 		pk := m.PrimaryKey[0]
 		if pk.HasDefault || pk.Nullable {

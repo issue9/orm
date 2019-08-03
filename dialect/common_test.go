@@ -112,26 +112,26 @@ func testTypes(t *test.Driver) {
 	now := time.Now()
 
 	creator := sqlbuilder.CreateTable(t.DB).
-		Column("bool", core.BoolType, false, false, nil).
-		Column("int", core.IntType, false, false, nil).
-		Column("int8", core.Int8Type, false, false, nil).
-		Column("int16", core.Int16Type, false, false, nil).
-		Column("int32", core.Int32Type, false, false, nil).
-		Column("int64", core.Int64Type, false, false, nil).
-		Column("uint", core.UintType, false, false, nil).
-		Column("uint8", core.Uint8Type, false, false, nil).
-		Column("uint16", core.Uint16Type, false, false, nil).
-		Column("uint32", core.Uint32Type, false, false, nil).
-		Column("uint64", core.Uint64Type, false, false, nil).
-		Column("float32", core.Float32Type, false, false, nil, 5, 3).
-		Column("float64", core.Float64Type, false, false, nil, 5, 3).
-		Column("string", core.StringType, false, false, nil, 100).
-		Column("null_string", core.NullStringType, false, false, nil, 100).
-		Column("null_int64", core.NullInt64Type, false, false, nil).
-		Column("null_bool", core.NullBoolType, false, false, nil).
-		Column("null_float64", core.NullFloat64Type, false, false, nil, 5, 3).
-		Column("raw_bytes", core.RawBytesType, false, false, nil).
-		Column("time", core.TimeType, false, false, nil).
+		Column("bool", core.BoolType, false, false, false, nil).
+		Column("int", core.IntType, false, false, false, nil).
+		Column("int8", core.Int8Type, false, false, false, nil).
+		Column("int16", core.Int16Type, false, false, false, nil).
+		Column("int32", core.Int32Type, false, false, false, nil).
+		Column("int64", core.Int64Type, false, false, false, nil).
+		Column("uint", core.UintType, false, false, false, nil).
+		Column("uint8", core.Uint8Type, false, false, false, nil).
+		Column("uint16", core.Uint16Type, false, false, false, nil).
+		Column("uint32", core.Uint32Type, false, false, false, nil).
+		Column("uint64", core.Uint64Type, false, false, false, nil).
+		Column("float32", core.Float32Type, false, false, false, nil, 5, 3).
+		Column("float64", core.Float64Type, false, false, false, nil, 5, 3).
+		Column("string", core.StringType, false, false, false, nil, 100).
+		Column("null_string", core.NullStringType, false, false, false, nil, 100).
+		Column("null_int64", core.NullInt64Type, false, false, false, nil).
+		Column("null_bool", core.NullBoolType, false, false, false, nil).
+		Column("null_float64", core.NullFloat64Type, false, false, false, nil, 5, 3).
+		Column("raw_bytes", core.RawBytesType, false, false, false, nil).
+		Column("time", core.TimeType, false, false, false, nil).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -269,26 +269,26 @@ func testTypesDefault(t *test.Driver) {
 	now := time.Now()
 
 	creator := sqlbuilder.CreateTable(t.DB).
-		Column("bool", core.BoolType, false, true, false).
-		Column("int", core.IntType, false, true, -1).
-		Column("int8", core.Int8Type, false, true, -8).
-		Column("int16", core.Int16Type, false, true, 0).
-		Column("int32", core.Int32Type, false, true, 32).
-		Column("int64", core.Int64Type, false, true, -64).
-		Column("uint", core.UintType, false, true, 0).
-		Column("uint8", core.Uint8Type, false, true, 8).
-		Column("uint16", core.Uint16Type, false, true, 16).
-		Column("uint32", core.Uint32Type, false, true, 32).
-		Column("uint64", core.Uint64Type, false, true, 64).
-		Column("float32", core.Float32Type, false, true, -3.2, 5, 3).
-		Column("float64", core.Float64Type, false, true, 6.654321, 15, 7).
-		Column("string", core.StringType, false, true, "str", 100).
-		Column("null_string", core.NullStringType, false, true, "null_str", 100).
-		Column("null_int64", core.NullInt64Type, true, true, sql.NullInt64{Int64: 64, Valid: false}).
-		Column("null_bool", core.NullBoolType, false, true, sql.NullBool{Bool: true, Valid: true}).
-		Column("null_float64", core.NullFloat64Type, true, true, nil, 5, 3).
-		Column("raw_bytes", core.RawBytesType, true, false, nil).
-		Column("time", core.TimeType, false, true, now).
+		Column("bool", core.BoolType, false, false, true, false).
+		Column("int", core.IntType, false, false, true, -1).
+		Column("int8", core.Int8Type, false, false, true, -8).
+		Column("int16", core.Int16Type, false, false, true, 0).
+		Column("int32", core.Int32Type, false, false, true, 32).
+		Column("int64", core.Int64Type, false, false, true, -64).
+		Column("uint", core.UintType, false, false, true, 0).
+		Column("uint8", core.Uint8Type, false, false, true, 8).
+		Column("uint16", core.Uint16Type, false, false, true, 16).
+		Column("uint32", core.Uint32Type, false, false, true, 32).
+		Column("uint64", core.Uint64Type, false, false, true, 64).
+		Column("float32", core.Float32Type, false, false, true, -3.2, 5, 3).
+		Column("float64", core.Float64Type, false, false, true, 6.654321, 15, 7).
+		Column("string", core.StringType, false, false, true, "str", 100).
+		Column("null_string", core.NullStringType, false, false, true, "null_str", 100).
+		Column("null_int64", core.NullInt64Type, false, true, true, sql.NullInt64{Int64: 64, Valid: false}).
+		Column("null_bool", core.NullBoolType, false, false, true, sql.NullBool{Bool: true, Valid: true}).
+		Column("null_float64", core.NullFloat64Type, false, true, true, nil, 5, 3).
+		Column("raw_bytes", core.RawBytesType, false, true, false, nil).
+		Column("time", core.TimeType, false, false, true, now).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
