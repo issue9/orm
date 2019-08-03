@@ -236,7 +236,6 @@ func parseMeta(m *core.Model, tag string) error {
 
 // occ(true) or occ
 func setOCC(m *core.Model, c *core.Column, vals []string) error {
-
 	switch len(vals) {
 	case 0:
 		return m.SetOCC(c)
