@@ -50,6 +50,11 @@ func (db *DB) begin(tx *sql.Tx) (*Tx, error) {
 	return inst, nil
 }
 
+// TablePrefix 返回表名前缀内容内容
+func (tx *Tx) TablePrefix() string {
+	return tx.db.tablePrefix
+}
+
 // Query 执行一条查询语句。
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	return tx.QueryContext(context.Background(), query, args...)

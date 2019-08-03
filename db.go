@@ -54,6 +54,11 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 	return inst, nil
 }
 
+// TablePrefix 返回表名前缀内容内容
+func (db *DB) TablePrefix() string {
+	return db.tablePrefix
+}
+
 // Debug 指定调输出调试内容通道
 //
 // 如果 l 不为 nil，则每次 SQL 调用都会输出 SQL 语句，
