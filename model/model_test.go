@@ -6,7 +6,6 @@ package model
 
 import (
 	"errors"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -180,59 +179,6 @@ func TestModels_New(t *testing.T) {
 		NotNil(m.ViewAs)
 }
 
-func TestModel_sanitize(t *testing.T) {
-	a := assert.New(t)
-
-	ai, err := core.NewColumnFromGoType(core.IntType)
-	a.NotError(err).NotNil(ai)
-	ai.AI = true
-
-	pk1, err := core.NewColumnFromGoType(core.IntType)
-	a.NotError(err).NotNil(pk1)
-
-	pk2, err := core.NewColumnFromGoType(core.IntType)
-	a.NotError(err).NotNil(pk2)
-
-	nullable, err := core.NewColumnFromGoType(core.IntType)
-	a.NotError(err).NotNil(nullable)
-	nullable.Nullable = true
-
-	def, err := core.NewColumnFromGoType(core.IntType)
-	a.NotError(err).NotNil(def)
-	def.HasDefault = true
-	def.Default = 1
-
-	m := &core.Model{
-		Columns:       []*core.Column{ai, pk1, pk2, nullable, def},
-		AutoIncrement: ai,
-	}
-	m.SetName("m1")
-
-	a.NotError(m.Sanitize())
-
-	// 多列主键约束
-	m.PrimaryKey = []*core.Column{pk1, pk2}
-	a.NotError(m.Sanitize())
-
-	// 多列主键约束，可以有 nullable 和 default
-	m.PrimaryKey = []*core.Column{pk1, pk2, nullable, def}
-	a.NotError(m.Sanitize())
-
-	// 单列主键，可以是 nullable
-	m.PrimaryKey = []*core.Column{nullable}
-	a.NotError(m.Sanitize())
-
-	m.AutoIncrement = ai
-	m.AutoIncrement.Nullable = true
-	a.Error(m.Sanitize())
-
-	// 单列主键，不能是 default
-	m.AutoIncrement = nil
-	m.PrimaryKey = []*core.Column{def}
-	a.Error(m.Sanitize())
-
-}
-
 func TestModel_parseColumn(t *testing.T) {
 	a := assert.New(t)
 	m := &core.Model{
@@ -283,6 +229,7 @@ func TestModel_setOCC(t *testing.T) {
 
 	col, err := core.NewColumnFromGoType(core.IntType)
 	a.NotError(err).NotNil(col)
+	col.Name = "occ"
 	a.NotError(m.AddColumn(col))
 
 	a.NotError(setOCC(m, col, nil))
@@ -302,84 +249,14 @@ func TestModel_setOCC(t *testing.T) {
 	// 无法转换的值，occ("xx123")
 	m.OCC = nil
 	a.Error(setOCC(m, col, []string{"xx123"}))
-
-	// 已经是 AI
-	m.OCC = nil
-	col.AI = true
-	a.NotError(setAI(m, col, nil))
-	a.Error(setOCC(m, col, []string{"true"}))
-
-	// 列有 nullable 属性
-	m.OCC = nil
-	m.AutoIncrement = nil
-	col.AI = false
-	col.Nullable = true
-	a.Error(setOCC(m, col, []string{"true"}))
-
-	// 列属性不为数值型
-	m.OCC = nil
-	m.AutoIncrement = nil
-	col.Nullable = false
-	col.GoType = core.StringType
-	a.Error(setOCC(m, col, []string{"true"}))
-}
-
-func TestModel_setDefault(t *testing.T) {
-	a := assert.New(t)
-	m := core.NewModel(core.Table, "m1", 10)
-
-	col, err := core.NewColumnFromGoType(core.IntType)
-	a.NotError(err).NotNil(col)
-	a.NotError(m.AddColumn(col))
-
-	// 未指定参数
-	a.Error(setDefault(col, nil))
-
-	// 过多的参数
-	a.Error(setDefault(col, []string{"1", "2"}))
-
-	// 正常
-	a.NotError(setDefault(col, []string{"1"}))
-	a.True(col.HasDefault).
-		Equal(col.Default, 1)
-
-	// 可以是主键的一部分
-	m.PrimaryKey = []*core.Column{col, col}
-	a.NotError(setDefault(col, []string{"1"}))
-	a.True(col.HasDefault).
-		Equal(col.Default, 1)
-
-	col, err = core.NewColumnFromGoType(reflect.TypeOf(&last{}))
-	a.NotError(err).NotNil(col)
-
-	// 格式不正确
-	a.Error(setDefault(col, []string{"1"}))
-
-	// 格式正确
-	now := "2019-07-29T00:38:59+08:00"
-	tt, err := time.Parse(time.RFC3339, now)
-	a.NotError(err).NotEmpty(tt)
-	a.NotError(setDefault(col, []string{"192.168.1.1," + now}))
-	a.Equal(col.Default, &last{
-		IP:      "192.168.1.1",
-		Created: tt.Unix(),
-	})
-
-	col, err = core.NewColumnFromGoType(reflect.TypeOf(time.Time{}))
-	a.NotError(err).NotNil(col)
-
-	// 格式不正确
-	a.Error(setDefault(col, []string{"1"}))
-
-	// 格式正确
-	a.NotError(setDefault(col, []string{now}))
-	a.Equal(col.Default, tt)
 }
 
 func TestModel_setPK(t *testing.T) {
 	a := assert.New(t)
-	m := &core.Model{}
-	col := &core.Column{}
+	m := core.NewModel(core.Table, "m1", 10)
+	a.NotNil(m)
+	col, err := core.NewColumnFromGoType(core.Int8Type)
+	a.NotError(err).NotNil(col)
 
 	// 过多的参数
 	a.Error(setPK(m, col, []string{"123"}))
@@ -403,6 +280,7 @@ func TestModel_setAI(t *testing.T) {
 
 	col, err = core.NewColumnFromGoType(core.IntType)
 	a.NotError(err).NotNil(col)
-	m.AddColumn(col)
+	col.Name = "ai"
+	a.NotError(m.AddColumn(col))
 	a.NotError(setAI(m, col, nil))
 }
