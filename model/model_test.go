@@ -238,17 +238,9 @@ func TestModel_setOCC(t *testing.T) {
 	// m.OCC 已经存在
 	a.Error(setOCC(m, col, nil))
 
-	// occ(true)
+	// 太多的值，occ(true)
 	m.OCC = nil
-	a.NotError(setOCC(m, col, []string{"true"}))
-
-	// 太多的值，occ(true,123)
-	m.OCC = nil
-	a.Error(setOCC(m, col, []string{"true", "123"}))
-
-	// 无法转换的值，occ("xx123")
-	m.OCC = nil
-	a.Error(setOCC(m, col, []string{"xx123"}))
+	a.Error(setOCC(m, col, []string{"true"}))
 }
 
 func TestModel_setPK(t *testing.T) {

@@ -34,10 +34,8 @@ func TestSetColumnNullable(t *testing.T) {
 
 	a.False(col.Nullable)
 	a.NotError(setColumnNullable(col, []string{})).True(col.Nullable)
-	a.NotError(setColumnNullable(col, []string{"false"})).False(col.Nullable)
-	a.NotError(setColumnNullable(col, []string{"T"})).True(col.Nullable)
-	a.NotError(setColumnNullable(col, []string{"0"})).False(col.Nullable)
-
+	a.Error(setColumnNullable(col, []string{"false"})).
+		True(col.Nullable)
 	a.Error(setColumnNullable(col, []string{"1", "2"}))
 	a.Error(setColumnNullable(col, []string{"T1"}))
 

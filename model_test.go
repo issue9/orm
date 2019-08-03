@@ -66,7 +66,7 @@ func (m *Admin) Meta() string {
 type Account struct {
 	UID     int64 `orm:"name(uid);pk"`
 	Account int64 `orm:"name(account)"`
-	Version int64 `orm:"name(version);occ(true);default(0)"`
+	Version int64 `orm:"name(version);occ;default(0)"`
 }
 
 // Meta 指定表属性

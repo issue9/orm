@@ -8,7 +8,6 @@ package model
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"unicode"
 
@@ -234,24 +233,13 @@ func parseMeta(m *core.Model, tag string) error {
 	return nil
 }
 
-// occ(true) or occ
+// occ
 func setOCC(m *core.Model, c *core.Column, vals []string) error {
-	switch len(vals) {
-	case 0:
-		return m.SetOCC(c)
-	case 1:
-		val, err := strconv.ParseBool(vals[0])
-		if err != nil {
-			return err
-		}
-		if val {
-			return m.SetOCC(c)
-		}
-	default:
+	if len(vals) > 0 {
 		return propertyError(c.Name, "occ", "指定了太多的值")
 	}
 
-	return nil
+	return m.SetOCC(c)
 }
 
 // index(idx_name)

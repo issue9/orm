@@ -50,24 +50,17 @@ func setColumnLen(c *core.Column, vals []string) (err error) {
 	return nil
 }
 
-// 从 vals 中分析，得出 Column.Nullable 的值。
-// nullable; or nullable(true);
+// nullable
 func setColumnNullable(c *core.Column, vals []string) (err error) {
+	if len(vals) > 0 {
+		return propertyError(c.Name, "nullable", "指定了太多的值")
+	}
+
 	if c.AI {
 		return propertyError(c.Name, "nullable", "自增列不能设置此值")
 	}
 
-	switch len(vals) {
-	case 0:
-		c.Nullable = true
-	case 1:
-		if c.Nullable, err = strconv.ParseBool(vals[0]); err != nil {
-			return err
-		}
-	default:
-		return propertyError(c.Name, "nullable", "过多的参数值")
-	}
-
+	c.Nullable = true
 	return nil
 }
 
