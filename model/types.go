@@ -4,9 +4,7 @@
 
 package model
 
-import (
-	"github.com/issue9/orm/v2/core"
-)
+import "github.com/issue9/orm/v2/core"
 
 // DefaultParser 提供了 ParseDefault 函数
 //
@@ -26,9 +24,6 @@ type Viewer interface {
 	// 返回视图所需的 Select 语句。
 	ViewAs(e core.Engine) (string, error)
 }
-
-// Type 表示数据模型的类别
-type Type = core.ModelType
 
 // Metaer 用于指定数据模型的元数据。
 //

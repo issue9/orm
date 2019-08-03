@@ -67,7 +67,7 @@ type Engine interface {
 type Dialect interface {
 	// Dialect 的名称
 	//
-	// 自定义，不需要与 DriverName 相同。
+	// 可以直接采用驱动的 DriverName 值，方便简单。
 	Name() string
 
 	// 将列转换成数据支持的类型表达式
