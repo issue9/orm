@@ -136,7 +136,7 @@ func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]s
 			builder.WriteString(" ON DELETE ").WriteString(stmt.Data[4])
 		}
 	default:
-		return nil, fmt.Errorf("未知的约束类型：%s", stmt.Type)
+		return nil, fmt.Errorf("未知的约束类型：%d", stmt.Type)
 	}
 
 	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())

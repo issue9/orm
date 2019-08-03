@@ -126,7 +126,7 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 	case core.ConstraintUnique:
 		builder.WriteString(" INDEX ").WriteString(stmt.Name)
 	default:
-		panic(fmt.Sprintf("不存在的约束类型:%s", constraintType))
+		panic(fmt.Sprintf("不存在的约束类型:%d", constraintType))
 	}
 
 	query, err := builder.String()

@@ -31,34 +31,6 @@ const (
 	ConstraintAI                // 自增
 )
 
-func (t Index) String() string {
-	switch t {
-	case IndexDefault:
-		return "INDEX"
-	case IndexUnique:
-		return "UNIQUE INDEX"
-	default:
-		return "<unknown>"
-	}
-}
-
-func (t Constraint) String() string {
-	switch t {
-	case ConstraintUnique:
-		return "UNIQUE"
-	case ConstraintFK:
-		return "FOREIGN KEY"
-	case ConstraintPK:
-		return "PRIMARY KEY"
-	case ConstraintCheck:
-		return "CHECK"
-	case ConstraintAI:
-		return "AUTO INCREMENT"
-	default:
-		return "<unknown>"
-	}
-}
-
 // ErrConstraintExists 返回约束名已经存在的错误
 func ErrConstraintExists(c string) error {
 	return fmt.Errorf("约束 %s 已经存在", c)
