@@ -228,7 +228,7 @@ func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
 
 // Constraint 指定需要删除的约束名
 //
-// NOTE: 如果需要删除主键，请使用 PKName 产生主键名称
+// NOTE: 如果需要删除主键，请使用 core.PKName 产生主键名称
 func (stmt *DropConstraintStmt) Constraint(name string) *DropConstraintStmt {
 	stmt.Name = name
 	return stmt

@@ -5,8 +5,6 @@
 package sqlbuilder_test
 
 import (
-	"log"
-	"os"
 	"time"
 
 	"github.com/issue9/orm/v2/core"
@@ -34,9 +32,7 @@ func initDB(t *test.Driver) {
 		Column("age", core.IntType, false, true, false, nil).
 		Column("version", core.Int64Type, false, false, true, 0).
 		Unique("unique_users_id", "id")
-	t.DB.Debug(log.New(os.Stdout, "[SQL]", 0))
 	err := creator.Exec()
-	t.DB.Debug(nil)
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	creator.Reset().Table("info").

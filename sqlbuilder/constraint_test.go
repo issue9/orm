@@ -55,7 +55,7 @@ func TestConstraint(t *testing.T) {
 	})
 }
 
-func TestAddConstraintStmt_Check(t *testing.T) {
+func TestConstraint_Check(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
 	defer suite.Close()
@@ -78,7 +78,7 @@ func TestAddConstraintStmt_Check(t *testing.T) {
 	})
 }
 
-func TestAddConstraintStmt_PK(t *testing.T) {
+func TestConstraint_PK(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
 	defer suite.Close()
@@ -105,9 +105,43 @@ func TestAddConstraintStmt_PK(t *testing.T) {
 			Exec()
 		t.NotError(err)
 	})
+
+	// 表名带 #
+	suite.ForEach(func(t *test.Driver) {
+		err := sqlbuilder.CreateTable(t.DB).
+			Table("#info").
+			Column("uid", core.Int64Type, false, false, false, nil).
+			Column("tel", core.StringType, false, false, false, nil, 11).
+			PK("tel", "uid").
+			Exec()
+		t.NotError(err)
+
+		defer func() {
+			err := sqlbuilder.DropTable(t.DB).Table("#info").Exec()
+			t.NotError(err)
+		}()
+
+		// 已经存在主键，出错
+		addStmt := sqlbuilder.AddConstraint(t.DB)
+		err = addStmt.Table("#info").
+			PK("tel").
+			Exec()
+		t.Error(err)
+
+		err = sqlbuilder.DropConstraint(t.DB).
+			Table("#info").
+			Constraint(core.PKName("#info")).
+			Exec()
+		a.NotError(err)
+
+		err = addStmt.Reset().Table("#info").
+			PK("tel", "uid").
+			Exec()
+		t.NotError(err)
+	})
 }
 
-func TestAddConstraintStmt_FK(t *testing.T) {
+func TestConstraint_FK(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
 	defer suite.Close()

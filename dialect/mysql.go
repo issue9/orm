@@ -108,9 +108,10 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 		return nil, err
 	}
 
-	constraintType, found := info.Constraints[stmt.Name]
+	name := strings.Replace(stmt.Name, "#", stmt.Engine().TablePrefix(), 1)
+	constraintType, found := info.Constraints[name]
 	if !found { // 不存在，也返回错误，统一与其它数据的行为
-		return nil, fmt.Errorf("不存在的约束:%s", stmt.Name)
+		return nil, fmt.Errorf("不存在的约束:%s", name)
 	}
 
 	builder := core.NewBuilder("ALTER TABLE ").
