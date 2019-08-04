@@ -72,46 +72,40 @@ func (ms *Models) New(obj interface{}) (*core.Model, error) {
 	return m, nil
 }
 
-func (ms *Models) addModel(goType reflect.Type, m *core.Model) error {
+func (ms *Models) addModel(goType reflect.Type, m *core.Model) (err error) {
 	ms.items[goType] = m
 
-	for name := range m.Indexes {
-		if err := ms.addNames(name); err != nil {
-			return err
+	w := func(name string) {
+		if err == nil {
+			err = ms.addNames(name)
 		}
+	}
+
+	for name := range m.Indexes {
+		w(name)
 	}
 
 	for name := range m.Uniques {
-		if err := ms.addNames(name); err != nil {
-			return err
-		}
+		w(name)
 	}
 
 	for name := range m.Checks {
-		if err := ms.addNames(name); err != nil {
-			return err
-		}
+		w(name)
 	}
 
 	for name := range m.ForeignKeys {
-		if err := ms.addNames(name); err != nil {
-			return err
-		}
+		w(name)
 	}
 
 	if m.AutoIncrement != nil {
-		if err := ms.addNames(m.AIName()); err != nil {
-			return err
-		}
+		w(m.AIName())
 	}
 
 	if len(m.PrimaryKey) > 0 {
-		if err := ms.addNames(m.PKName()); err != nil {
-			return err
-		}
+		w(m.PKName())
 	}
 
-	return nil
+	return
 }
 
 // 将 rval 中的结构解析到 m 中。支持匿名字段
@@ -156,10 +150,6 @@ func parseColumn(m *core.Model, col *core.Column, tag string) (err error) {
 		return err
 	}
 
-	if len(tag) == 0 { // 没有附加的 struct tag，直接取得几个关键信息返回。
-		return nil
-	}
-
 	ts := tags.Parse(tag)
 	for _, tag := range ts {
 		switch tag.Name {
@@ -201,10 +191,6 @@ func parseColumn(m *core.Model, col *core.Column, tag string) (err error) {
 // 分析 meta 接口数据。
 func parseMeta(m *core.Model, tag string) error {
 	ts := tags.Parse(tag)
-	if len(ts) == 0 {
-		return nil
-	}
-
 	for _, v := range ts {
 		switch v.Name {
 		case "name":
@@ -216,10 +202,6 @@ func parseMeta(m *core.Model, tag string) error {
 		case "check":
 			if len(v.Args) != 2 {
 				return propertyError("Metaer", "check", "参数个数不正确")
-			}
-
-			if _, found := m.Checks[v.Args[0]]; found {
-				return propertyError("Metaer", "check", "已经存在相同名称的 check 约束")
 			}
 
 			if err := m.NewCheck(strings.ToLower(v.Args[0]), v.Args[1]); err != nil {
@@ -238,7 +220,6 @@ func setOCC(m *core.Model, c *core.Column, vals []string) error {
 	if len(vals) > 0 {
 		return propertyError(c.Name, "occ", "指定了太多的值")
 	}
-
 	return m.SetOCC(c)
 }
 
@@ -247,9 +228,7 @@ func setIndex(m *core.Model, col *core.Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "index", "太多的值")
 	}
-
-	name := strings.ToLower(vals[0])
-	return m.AddIndex(core.IndexDefault, name, col)
+	return m.AddIndex(core.IndexDefault, strings.ToLower(vals[0]), col)
 }
 
 // pk
@@ -257,7 +236,6 @@ func setPK(m *core.Model, col *core.Column, vals []string) error {
 	if len(vals) != 0 {
 		return propertyError(col.Name, "pk", "太多的值")
 	}
-
 	return m.AddPrimaryKey(col)
 }
 
@@ -266,15 +244,13 @@ func setUnique(m *core.Model, col *core.Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
-
-	name := strings.ToLower(vals[0])
-	return m.AddUnique(name, col)
+	return m.AddUnique(strings.ToLower(vals[0]), col)
 }
 
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
 func setFK(m *core.Model, col *core.Column, vals []string) error {
-	if len(vals) < 3 {
-		return propertyError(col.Name, "fk", "参数不够")
+	if len(vals) < 3 || len(vals) > 5 {
+		return propertyError(col.Name, "fk", "参数数量不正确")
 	}
 
 	fk := &core.ForeignKey{

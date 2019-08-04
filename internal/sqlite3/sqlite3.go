@@ -28,7 +28,7 @@ var (
 //
 // 方便 dialect 从表信息中重新构建表内容。
 type Table struct {
-	Columns     map[string]string // 列信息，名称 => 类型
+	Columns     map[string]string // 列信息，名称 => SQL 语句
 	Constraints map[string]*Constraint
 	Indexes     map[string]*Index
 }

@@ -37,14 +37,12 @@ func (ms *Models) Clear() {
 	ms.names = map[string]struct{}{}
 }
 
-func (ms *Models) addNames(name ...string) error {
-	for _, n := range name {
-		if _, found := ms.names[n]; found {
-			return core.ErrConstraintExists(n)
-		}
-
-		ms.names[n] = struct{}{}
+func (ms *Models) addNames(name string) error {
+	if _, found := ms.names[name]; found {
+		return core.ErrConstraintExists(name)
 	}
+
+	ms.names[name] = struct{}{}
 
 	return nil
 }
