@@ -604,3 +604,10 @@ func (stmt *SelectStmt) AndGroup() *WhereStmt {
 func (stmt *SelectStmt) OrGroup() *WhereStmt {
 	return stmt.where.OrGroup()
 }
+
+// Select 生成 select 语句
+func (stmt *WhereStmt) Select(e core.Engine) *SelectStmt {
+	sel := Select(e)
+	sel.where = stmt
+	return sel
+}

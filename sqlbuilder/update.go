@@ -334,3 +334,10 @@ func (stmt *UpdateStmt) AndGroup() *WhereStmt {
 func (stmt *UpdateStmt) OrGroup() *WhereStmt {
 	return stmt.where.OrGroup()
 }
+
+// Update 更新指定条件内容
+func (stmt *WhereStmt) Update(e core.Engine) *UpdateStmt {
+	upd := Update(e)
+	upd.where = stmt
+	return upd
+}

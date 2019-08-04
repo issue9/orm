@@ -189,3 +189,10 @@ func (stmt *DeleteStmt) AndGroup() *WhereStmt {
 func (stmt *DeleteStmt) OrGroup() *WhereStmt {
 	return stmt.where.OrGroup()
 }
+
+// Delete 删除指定条件的内容
+func (stmt *WhereStmt) Delete(e core.Engine) *DeleteStmt {
+	del := Delete(e)
+	del.where = stmt
+	return del
+}
