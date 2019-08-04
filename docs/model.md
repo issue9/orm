@@ -17,7 +17,7 @@ func(u *User) Meta() string {
 ```
 
 结构体中的字段与数据表中列的关联通过名为 orm 的 struct tag 进行设置。
-struct tag 中的格式为 `key(val);key(v1,v2)`。
+struct tag 中的格式为 `key(val);key(v1,v2)`，其中 key 属性名，val 等为该属性对应的值列表。
 
 目前支持在 struct tag 支持以下属性：
 
@@ -173,7 +173,7 @@ func(l *Last) Scan(v interface{}) error {
 ```
 
 
-#### BeforeUpdater/BefoerInserter/AfterFetcher
+#### BeforeUpdater/BeforeInserter/AfterFetcher
 
 分别用于在更新和插入数据之前和从数据库获取数据之后被执行的方法。
 一般用于特定内容的生成，比如：
