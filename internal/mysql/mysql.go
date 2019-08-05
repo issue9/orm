@@ -11,7 +11,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/issue9/orm/v2/core"
+	"github.com/issue9/orm/v3/core"
 )
 
 // Table 表信息

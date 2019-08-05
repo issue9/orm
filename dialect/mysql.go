@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/issue9/orm/v2/core"
-	my "github.com/issue9/orm/v2/internal/mysql"
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/core"
+	my "github.com/issue9/orm/v3/internal/mysql"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 const (

@@ -7,9 +7,9 @@ package orm
 import (
 	"database/sql"
 
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/fetch"
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/fetch"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 // AfterFetcher 从数据库查询到数据之后，需要执行的操作。

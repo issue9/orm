@@ -7,9 +7,9 @@ package sqlbuilder_test
 import (
 	"time"
 
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/internal/test"
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/internal/test"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 // user 需要与 initDB 中的 users 表中的字段相同

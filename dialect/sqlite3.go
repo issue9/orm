@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/issue9/orm/v2/core"
-	s3 "github.com/issue9/orm/v2/internal/sqlite3"
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/core"
+	s3 "github.com/issue9/orm/v3/internal/sqlite3"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 const (

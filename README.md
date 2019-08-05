@@ -21,7 +21,7 @@ orm
 
 ```go
 import (
-    github.com/issue9/orm/v2/dialect  // sqlite3 的 dialect 声明在此处
+    github.com/issue9/orm/v3/dialect  // sqlite3 的 dialect 声明在此处
     _ github.com/mattn/go-sqlite3  // 加载数据库驱动
 )
 

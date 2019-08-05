@@ -9,8 +9,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/fetch"
-	"github.com/issue9/orm/v2/internal/test"
+	"github.com/issue9/orm/v3/fetch"
+	"github.com/issue9/orm/v3/internal/test"
 )
 
 func BenchmarkObject(b *testing.B) {

@@ -4,7 +4,7 @@
 
 package model
 
-import "github.com/issue9/orm/v2/core"
+import "github.com/issue9/orm/v3/core"
 
 // DefaultParser 提供了 ParseDefault 函数
 //

@@ -5,8 +5,8 @@
 package orm
 
 import (
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/model"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/model"
 )
 
 type (

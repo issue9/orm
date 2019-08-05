@@ -8,7 +8,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/issue9/orm/v2/core"
+	"github.com/issue9/orm/v3/core"
 )
 
 // SQLer 定义 SQL 语句的基本接口

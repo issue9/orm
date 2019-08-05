@@ -4,7 +4,7 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v2/core"
+import "github.com/issue9/orm/v3/core"
 
 // CreateViewStmt 创建视图的语句
 type CreateViewStmt struct {

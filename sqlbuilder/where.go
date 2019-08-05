@@ -4,7 +4,7 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v2/core"
+import "github.com/issue9/orm/v3/core"
 
 // WhereStmter 带 Where 语句的 SQL
 type WhereStmter interface {

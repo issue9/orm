@@ -11,7 +11,7 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/core"
+	"github.com/issue9/orm/v3/core"
 )
 
 func TestSetColumnLen(t *testing.T) {

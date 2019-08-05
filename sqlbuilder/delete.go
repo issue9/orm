@@ -4,7 +4,7 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v2/core"
+import "github.com/issue9/orm/v3/core"
 
 // DeleteStmt 表示删除操作的 SQL 语句
 type DeleteStmt struct {

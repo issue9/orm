@@ -2,8 +2,8 @@
 
 ```go
 import (
-    "github.com/issue9/orm/v2"
-    "github.com/issue9/orm/v2/dialect"
+    "github.com/issue9/orm/v3"
+    "github.com/issue9/orm/v3/dialect"
 
     _ "github.com/mattn/go-sqlite3"
 )
@@ -60,7 +60,7 @@ func main() {
 在项目的 go.mod 中引用项目即可，当前版本为 v2：
 ```go.mod
 require (
-    github.com/issue9/orm/v2 v2.x.x
+    github.com/issue9/orm/v3 v2.x.x
 )
 
 go 1.11
@@ -78,8 +78,8 @@ go 1.11
 
 ```go
 import (
-    "github.com/issue9/orm/v2"
-    "github.com/issue9/orm/v2/dialect"
+    "github.com/issue9/orm/v3"
+    "github.com/issue9/orm/v3/dialect"
 
     _ "github.com/mattn/go-sql-driver/mysql"
     _ "github.com/mattn/mattn/go-sqlite3"

@@ -11,10 +11,10 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/internal/sqltest"
-	"github.com/issue9/orm/v2/internal/test"
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/internal/sqltest"
+	"github.com/issue9/orm/v3/internal/test"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 type sqlFormatTester struct {

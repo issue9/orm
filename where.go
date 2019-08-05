@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 // WhereStmt 用于生成 where 语句

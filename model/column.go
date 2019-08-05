@@ -11,7 +11,7 @@ import (
 
 	"github.com/issue9/conv"
 
-	"github.com/issue9/orm/v2/core"
+	"github.com/issue9/orm/v3/core"
 )
 
 func newColumn(field reflect.StructField) (*core.Column, error) {

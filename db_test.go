@@ -12,7 +12,7 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2/internal/test"
+	"github.com/issue9/orm/v3/internal/test"
 )
 
 func TestDB_LastInsertID(t *testing.T) {

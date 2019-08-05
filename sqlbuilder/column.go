@@ -7,7 +7,7 @@ package sqlbuilder
 import (
 	"reflect"
 
-	"github.com/issue9/orm/v2/core"
+	"github.com/issue9/orm/v3/core"
 )
 
 // AddColumnStmt 添加列

@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/issue9/orm/v2/core"
+	"github.com/issue9/orm/v3/core"
 )
 
 // Models 数据模型管理

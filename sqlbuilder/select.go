@@ -8,8 +8,8 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/fetch"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/fetch"
 )
 
 // ErrNoData 在 Select.QueryInt 等函数中，

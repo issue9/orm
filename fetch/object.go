@@ -13,7 +13,7 @@ import (
 
 	"github.com/issue9/conv"
 
-	t "github.com/issue9/orm/v2/internal/tags"
+	t "github.com/issue9/orm/v3/internal/tags"
 )
 
 // AfterFetcher 在数据从数据库拉取之后执行的操作。

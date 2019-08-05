@@ -10,8 +10,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v2"
-	"github.com/issue9/orm/v2/dialect"
+	"github.com/issue9/orm/v3"
+	"github.com/issue9/orm/v3/dialect"
 
 	// 测试入口，数据库也在此初始化
 	_ "github.com/go-sql-driver/mysql"

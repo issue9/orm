@@ -11,9 +11,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/fetch"
-	"github.com/issue9/orm/v2/internal/tags"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/fetch"
+	"github.com/issue9/orm/v3/internal/tags"
 )
 
 func propertyError(field, name, message string) error {

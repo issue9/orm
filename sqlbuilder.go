@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 // ErrNeedAutoIncrementColumn 当以 LastInsertID

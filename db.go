@@ -11,9 +11,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/issue9/orm/v2/core"
-	"github.com/issue9/orm/v2/model"
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v3/model"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 // DB 数据库操作实例。

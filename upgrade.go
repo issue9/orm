@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/issue9/orm/v2/sqlbuilder"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 // Upgrader 提供了对更新表结构的一些操作
