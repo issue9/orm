@@ -58,7 +58,7 @@ func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 		}
 
 		if len(keys) > 0 {
-			return fmt.Errorf("多个唯一约束 %s:%s 满足查询条件", constraint, name)
+			return fmt.Errorf("多个唯一约束 %s、%s 满足查询条件", constraint, name)
 		}
 
 		keys, vals = k, v
@@ -66,8 +66,8 @@ func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	}
 
 RET:
-	if len(keys) == 0 {
-		return fmt.Errorf("没有主键或唯一约束，无法为 %s 产生 where 部分语句", m.Name)
+	if len(keys) == 0 || len(vals) == 0 {
+		return fmt.Errorf("可作为唯一条件的自增、主键和唯一约束都为空值，无法为 %s 生成查询条件", m.Name)
 	}
 
 	for index, key := range keys {
