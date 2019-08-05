@@ -7,6 +7,7 @@ package orm
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
 
 	"github.com/issue9/orm/v2/core"
 	"github.com/issue9/orm/v2/sqlbuilder"
@@ -21,7 +22,7 @@ type WhereStmt struct {
 // Where 生成 Where 语句
 func (db *DB) Where(cond string, args ...interface{}) *WhereStmt {
 	return &WhereStmt{
-		where:  sqlbuilder.Where(),
+		where:  sqlbuilder.Where().And(cond, args...),
 		engine: db,
 	}
 }
@@ -29,7 +30,7 @@ func (db *DB) Where(cond string, args ...interface{}) *WhereStmt {
 // Where 生成 Where 语句
 func (tx *Tx) Where(cond string, args ...interface{}) *WhereStmt {
 	return &WhereStmt{
-		where:  sqlbuilder.Where(),
+		where:  sqlbuilder.Where().And(cond, args...),
 		engine: tx,
 	}
 }
@@ -159,45 +160,21 @@ func (stmt *WhereStmt) Delete(v interface{}) (sql.Result, error) {
 		return nil, err
 	}
 
-	if m.Type != core.View {
+	if m.Type == core.View {
 		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
 	return stmt.where.Delete(stmt.engine).Table(m.Name).Exec()
 }
 
-// 将 v 中的所有值更新到表中，包括零值
-func (stmt *WhereStmt) Update(v interface{}) (sql.Result, error) {
-	m, rval, err := getModel(stmt.engine, v)
-	if err != nil {
+// Update 将 v 中内容更新到符合条件的行中
+//
+// 不会更新零值，除非通过 cols 指定了该列。
+func (stmt *WhereStmt) Update(v interface{}, cols ...string) (sql.Result, error) {
+	upd := stmt.where.Update(stmt.engine)
+
+	if _, _, err := getUpdateColumns(stmt.engine, v, upd, cols...); err != nil {
 		return nil, err
-	}
-
-	if obj, ok := v.(BeforeUpdater); ok {
-		if err = obj.BeforeUpdate(); err != nil {
-			return nil, err
-		}
-	}
-
-	upd := stmt.where.Update(stmt.engine).Table(m.Name)
-
-	var occValue interface{}
-	for _, col := range m.Columns {
-		field := rval.FieldByName(col.GoName)
-		if !field.IsValid() {
-			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
-		}
-
-		if m.OCC == col { // 乐观锁
-			occValue = field.Interface()
-		} else {
-			// 非零值或是明确指定需要更新的列，才会更新
-			upd.Set(col.Name, field.Interface())
-		}
-	}
-
-	if m.OCC != nil {
-		upd.OCC(m.OCC.Name, occValue)
 	}
 
 	return upd.Exec()
@@ -205,16 +182,25 @@ func (stmt *WhereStmt) Update(v interface{}) (sql.Result, error) {
 
 // Select 获取所有符合条件的数据
 //
-// 参数可以参考 fetch.Object() 中的说明
+// v 可能是某个对象的指针，或是一组相同对象指针数组。
 func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
-	m, err := stmt.engine.NewModel(v)
+	t := reflect.TypeOf(v)
+	for t.Kind() == reflect.Ptr || t.Kind() == reflect.Slice || t.Kind() == reflect.Array {
+		t = t.Elem()
+	}
+
+	m, err := stmt.engine.NewModel(reflect.New(t).Interface())
 	if err != nil {
+		println(err.Error(), t.Kind())
 		return 0, err
 	}
 
-	if m.Type != core.View {
+	if m.Type == core.View {
 		return 0, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	return stmt.where.Select(stmt.engine).QueryObject(strict, v)
+	return stmt.where.Select(stmt.engine).
+		Column("*").
+		From(m.Name).
+		QueryObject(strict, v)
 }
