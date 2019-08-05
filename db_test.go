@@ -168,6 +168,21 @@ func TestDB_Update_error(t *testing.T) {
 		r, err := t.DB.Update(123)
 		t.Error(err, "%s@%s", err, t.DriverName).Nil(r)
 	})
+
+	// 多个唯一约束符合查询条件
+	suite.ForEach(func(t *test.Driver) {
+		initData(t)
+		defer clearData(t)
+
+		admin := &Admin{
+			User: User{
+				Username: "username1",
+			},
+			Email: "email1",
+		}
+		rslt, err := t.DB.Update(admin)
+		t.ErrorString(err, "unique_admin_username").Nil(rslt)
+	})
 }
 
 func TestDB_Delete(t *testing.T) {

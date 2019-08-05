@@ -35,38 +35,34 @@ func getModel(e Engine, v interface{}) (*Model, reflect.Value, error) {
 // 根据 Model 中的主键或是唯一索引为 sql 产生 where 语句，
 // 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
 func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
-	vals := make([]interface{}, 0, 3)
-	keys := make([]string, 0, 3)
+	var keys []string
+	var vals []interface{}
+	var constraint string
 
-	// 获取构成 where 的键名和键值
-	getKV := func(cols ...*Column) bool {
-		for _, col := range cols {
-			field := rval.FieldByName(col.GoName)
-
-			if col.IsZero(field) {
-				vals = vals[:0]
-				keys = keys[:0]
-				return false
-			}
-
-			keys = append(keys, col.Name)
-			vals = append(vals, field.Interface())
+	if m.AutoIncrement != nil {
+		if keys, vals = getKV(rval, m.AutoIncrement); len(keys) > 0 {
+			goto RET
 		}
-		return len(keys) > 0 // 如果 keys 中有数据，表示已经采集成功，否则表示 cols 的长度为 0
 	}
 
-	if m.AutoIncrement != nil && getKV(m.AutoIncrement) {
-		goto RET
-	}
-
-	if len(m.PrimaryKey) > 0 && getKV(m.PrimaryKey...) {
-		goto RET
-	}
-
-	for _, cols := range m.Uniques {
-		if getKV(cols...) {
-			break
+	if len(m.PrimaryKey) > 0 {
+		if keys, vals = getKV(rval, m.PrimaryKey...); len(keys) > 0 {
+			goto RET
 		}
+	}
+
+	for name, cols := range m.Uniques {
+		k, v := getKV(rval, cols...)
+		if len(k) == 0 {
+			continue
+		}
+
+		if len(keys) > 0 {
+			return fmt.Errorf("多个唯一约束 %s:%s 满足查询条件", constraint, name)
+		}
+
+		keys, vals = k, v
+		constraint = name
 	}
 
 RET:
@@ -79,6 +75,22 @@ RET:
 	}
 
 	return nil
+}
+
+func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []interface{}) {
+	for _, col := range cols {
+		field := rval.FieldByName(col.GoName)
+
+		if col.IsZero(field) {
+			vals = vals[:0]
+			keys = keys[:0]
+			return nil, nil
+		}
+
+		keys = append(keys, col.Name)
+		vals = append(vals, field.Interface())
+	}
+	return keys, vals
 }
 
 // 根据 rval 中任意非零值产生 where 语句
