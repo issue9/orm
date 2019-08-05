@@ -194,6 +194,10 @@ func truncate(e Engine, v interface{}) error {
 		return err
 	}
 
+	if m.Type == core.View {
+		return fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+	}
+
 	stmt := e.SQL().TruncateTable()
 	if m.AutoIncrement != nil {
 		stmt.Table(m.Name, m.AutoIncrement.Name)
@@ -204,11 +208,15 @@ func truncate(e Engine, v interface{}) error {
 	return stmt.Exec()
 }
 
-// 删除一张表。
+// 删除一张表或视图。
 func drop(e Engine, v interface{}) error {
 	m, err := e.NewModel(v)
 	if err != nil {
 		return err
+	}
+
+	if m.Type == core.View {
+		return sqlbuilder.DropView(e).Name(m.Name).Exec()
 	}
 
 	return e.SQL().DropTable().Table(m.Name).Exec()
@@ -218,6 +226,10 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return 0, err
+	}
+
+	if m.Type == core.View {
+		return 0, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
 	if m.AutoIncrement == nil {
@@ -252,6 +264,10 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
+	}
+
+	if m.Type == core.View {
+		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
 	if obj, ok := v.(BeforeInserter); ok {
@@ -306,6 +322,10 @@ func forUpdate(tx *Tx, v interface{}) error {
 		return err
 	}
 
+	if m.Type == core.View {
+		return fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+	}
+
 	if obj, ok := v.(BeforeUpdater); ok {
 		if err = obj.BeforeUpdate(); err != nil {
 			return err
@@ -330,28 +350,44 @@ func forUpdate(tx *Tx, v interface{}) error {
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
 func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
-	m, rval, err := getModel(e, v)
+	stmt := e.SQL().Update()
+
+	m, rval, err := getUpdateColumns(e, v, stmt, cols...)
 	if err != nil {
 		return nil, err
 	}
 
+	if err := where(stmt, m, rval); err != nil {
+		return nil, err
+	}
+
+	return stmt.Exec()
+}
+
+func getUpdateColumns(e Engine, v interface{}, stmt *sqlbuilder.UpdateStmt, cols ...string) (*Model, reflect.Value, error) {
+	m, rval, err := getModel(e, v)
+	if err != nil {
+		return nil, reflect.Value{}, err
+	}
+	if m.Type == core.View {
+		return nil, reflect.Value{}, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+	}
+
 	if obj, ok := v.(BeforeUpdater); ok {
 		if err = obj.BeforeUpdate(); err != nil {
-			return nil, err
+			return nil, reflect.Value{}, err
 		}
 	}
 
-	stmt := e.SQL().Update().Table(m.Name)
 	var occValue interface{}
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
-			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
+			return nil, reflect.Value{}, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 		}
 
 		if m.OCC == col { // 乐观锁
 			occValue = field.Interface()
-			continue
 		} else if inStrSlice(col.Name, cols) || !col.IsZero(field) {
 			// 非零值或是明确指定需要更新的列，才会更新
 			stmt.Set(col.Name, field.Interface())
@@ -362,11 +398,9 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 		stmt.OCC(m.OCC.Name, occValue)
 	}
 
-	if err := where(stmt, m, rval); err != nil {
-		return nil, err
-	}
+	stmt.Table(m.Name)
 
-	return stmt.Exec()
+	return m, rval, nil
 }
 
 func inStrSlice(key string, slice []string) bool {
@@ -383,6 +417,10 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
+	}
+
+	if m.Type == core.View {
+		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
 	stmt := e.SQL().Delete().Table(m.Name)

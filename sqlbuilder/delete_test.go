@@ -9,6 +9,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v2/internal/sqltest"
 	"github.com/issue9/orm/v2/internal/test"
 	"github.com/issue9/orm/v2/sqlbuilder"
 )
@@ -43,5 +44,27 @@ func TestDelete_Exec(t *testing.T) {
 		sql.Reset()
 		_, err = sql.Exec()
 		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
+	})
+}
+
+func TestWhereStmt_Delete(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		initDB(t)
+		defer clearDB(t)
+
+		sql := sqlbuilder.Where().And("id=?", 1).
+			Delete(t.DB).
+			Table("users")
+		_, err := sql.Exec()
+		a.NotError(err)
+
+		query, args, err := sql.SQL()
+		a.NotError(err).
+			Equal(args, []interface{}{1})
+		sqltest.Equal(a, query, "DELETE FROM {users} WHERE id=?")
 	})
 }

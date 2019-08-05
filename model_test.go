@@ -35,8 +35,8 @@ type User struct {
 // UserInfo 带主键和唯一约束(两个字段组成)
 type UserInfo struct {
 	UID       int    `orm:"name(uid);pk"`
-	FirstName string `orm:"name(firstName);unique(unique_name);len(20)"`
-	LastName  string `orm:"name(lastName);unique(unique_name);len(20)"`
+	FirstName string `orm:"name(first_name);unique(unique_name);len(20)"`
+	LastName  string `orm:"name(last_name);unique(unique_name);len(20)"`
 	Sex       string `orm:"name(sex);default(male);len(6)"`
 }
 

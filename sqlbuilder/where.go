@@ -21,7 +21,8 @@ type WhereStmt struct {
 	args    []interface{}
 }
 
-func newWhere() *WhereStmt {
+// Where 生成 Where 语句
+func Where() *WhereStmt {
 	return &WhereStmt{
 		builder: core.NewBuilder(""),
 		args:    make([]interface{}, 0, 10),
@@ -259,7 +260,7 @@ func (stmt *WhereStmt) in(and, not bool, col string, v ...interface{}) *WhereStm
 
 // AndGroup 开始一个子条件语句
 func (stmt *WhereStmt) AndGroup() *WhereStmt {
-	w := newWhere()
+	w := Where()
 	stmt.appendGroup(true, w)
 
 	return w
@@ -267,7 +268,7 @@ func (stmt *WhereStmt) AndGroup() *WhereStmt {
 
 // OrGroup 开始一个子条件语句
 func (stmt *WhereStmt) OrGroup() *WhereStmt {
-	w := newWhere()
+	w := Where()
 	stmt.appendGroup(false, w)
 
 	return w
