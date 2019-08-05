@@ -18,12 +18,20 @@ type WhereStmt struct {
 	engine Engine
 }
 
+// Where 生成 Where 语句
 func (db *DB) Where(cond string, args ...interface{}) *WhereStmt {
-	// TODO
+	return &WhereStmt{
+		where:  sqlbuilder.Where(),
+		engine: db,
+	}
 }
 
+// Where 生成 Where 语句
 func (tx *Tx) Where(cond string, args ...interface{}) *WhereStmt {
-	// TODO
+	return &WhereStmt{
+		where:  sqlbuilder.Where(),
+		engine: tx,
+	}
 }
 
 // And 添加一条 and 语句
@@ -160,30 +168,53 @@ func (stmt *WhereStmt) Delete(v interface{}) (sql.Result, error) {
 
 // 将 v 中的所有值更新到表中，包括零值
 func (stmt *WhereStmt) Update(v interface{}) (sql.Result, error) {
-	m, err := stmt.engine.NewModel(v)
+	m, rval, err := getModel(stmt.engine, v)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.Type != core.View {
-		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+	if obj, ok := v.(BeforeUpdater); ok {
+		if err = obj.BeforeUpdate(); err != nil {
+			return nil, err
+		}
 	}
 
-	// TODO 更新 v 中的所有内容，包括零值
+	upd := stmt.where.Update(stmt.engine).Table(m.Name)
+
+	var occValue interface{}
+	for _, col := range m.Columns {
+		field := rval.FieldByName(col.GoName)
+		if !field.IsValid() {
+			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
+		}
+
+		if m.OCC == col { // 乐观锁
+			occValue = field.Interface()
+		} else {
+			// 非零值或是明确指定需要更新的列，才会更新
+			upd.Set(col.Name, field.Interface())
+		}
+	}
+
+	if m.OCC != nil {
+		upd.OCC(m.OCC.Name, occValue)
+	}
+
+	return upd.Exec()
 }
 
 // Select 获取所有符合条件的数据
 //
-// v 的类型可以参考 fetch.Object() 中的说明
-func (stmt *WhereStmt) Select(v interface{}) (sql.Result, error) {
+// 参数可以参考 fetch.Object() 中的说明
+func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
 	m, err := stmt.engine.NewModel(v)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	if m.Type != core.View {
-		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+		return 0, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	// TODO
+	return stmt.where.Select(stmt.engine).QueryObject(strict, v)
 }

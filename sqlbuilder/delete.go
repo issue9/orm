@@ -17,7 +17,7 @@ type DeleteStmt struct {
 func Delete(e core.Engine) *DeleteStmt {
 	stmt := &DeleteStmt{}
 	stmt.execStmt = newExecStmt(e, stmt)
-	stmt.where = newWhere()
+	stmt.where = Where()
 
 	return stmt
 }

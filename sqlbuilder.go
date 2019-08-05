@@ -351,7 +351,6 @@ func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
 
 		if m.OCC == col { // 乐观锁
 			occValue = field.Interface()
-			continue
 		} else if inStrSlice(col.Name, cols) || !col.IsZero(field) {
 			// 非零值或是明确指定需要更新的列，才会更新
 			stmt.Set(col.Name, field.Interface())

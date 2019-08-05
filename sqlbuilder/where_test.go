@@ -16,7 +16,7 @@ var _ SQLer = &WhereStmt{}
 
 func TestWhere(t *testing.T) {
 	a := assert.New(t)
-	w := newWhere()
+	w := Where()
 	a.NotNil(w)
 
 	w.And("id=?", 1)
@@ -48,7 +48,7 @@ func TestWhere(t *testing.T) {
 
 func TestWhereStmt_IsNull(t *testing.T) {
 	a := assert.New(t)
-	w := newWhere()
+	w := Where()
 
 	w.AndIsNull("col1")
 	query, args, err := w.SQL()
@@ -74,7 +74,7 @@ func TestWhereStmt_IsNull(t *testing.T) {
 
 func TestWhereStmt_Like(t *testing.T) {
 	a := assert.New(t)
-	w := newWhere()
+	w := Where()
 
 	w.AndLike("col1", "%str1")
 	query, args, err := w.SQL()
@@ -104,7 +104,7 @@ func TestWhereStmt_Like(t *testing.T) {
 
 func TestWhereStmt_Between(t *testing.T) {
 	a := assert.New(t)
-	w := newWhere()
+	w := Where()
 
 	// AndBetween
 	w.AndBetween("col1", 1, 2)
@@ -138,7 +138,7 @@ func TestWhereStmt_Between(t *testing.T) {
 
 func TestWhereStmt_In(t *testing.T) {
 	a := assert.New(t)
-	w := newWhere()
+	w := Where()
 
 	w.OrIn("col1", 1, 2, 3)
 	query, args, err := w.SQL()
@@ -168,7 +168,7 @@ func TestWhereStmt_In(t *testing.T) {
 
 func TestWhere_Group(t *testing.T) {
 	a := assert.New(t)
-	w := newWhere()
+	w := Where()
 
 	w.AndGroup().And("id=?", 4)
 	w.AndGroup().And("id=?", 2).

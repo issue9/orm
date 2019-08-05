@@ -51,7 +51,7 @@ type unionSelect struct {
 func Select(e core.Engine) *SelectStmt {
 	stmt := &SelectStmt{columns: make([]string, 0, 10)}
 	stmt.queryStmt = newQueryStmt(e, stmt)
-	stmt.where = newWhere()
+	stmt.where = Where()
 
 	return stmt
 }

@@ -34,7 +34,7 @@ type updateSet struct {
 func Update(e core.Engine) *UpdateStmt {
 	stmt := &UpdateStmt{values: []*updateSet{}}
 	stmt.execStmt = newExecStmt(e, stmt)
-	stmt.where = newWhere()
+	stmt.where = Where()
 
 	return stmt
 }
@@ -161,7 +161,7 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
 		return stmt.where.SQL()
 	}
 
-	w := newWhere()
+	w := Where()
 	w.appendGroup(true, stmt.where)
 
 	occ := w.AndGroup()
