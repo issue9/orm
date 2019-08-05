@@ -209,6 +209,7 @@ type DropConstraintStmt struct {
 
 	TableName string
 	Name      string
+	IsPK      bool
 }
 
 // DropConstraint 声明一条删除表约束的语句
@@ -229,8 +230,19 @@ func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
 // Constraint 指定需要删除的约束名
 //
 // NOTE: 如果需要删除主键，请使用 core.PKName 产生主键名称
+// 如果你的主键名称不是根据 core.PKName() 生成的，那么在删除时，还需要调用 PK 方法。
 func (stmt *DropConstraintStmt) Constraint(name string) *DropConstraintStmt {
 	stmt.Name = name
+	return stmt
+}
+
+// PK 当前删除的是否为主键
+func (stmt *DropConstraintStmt) PK() *DropConstraintStmt {
+	// mysql 没有主键名称，所以当主键名称不符合规范时，
+	// dialect 中将无法找到相应的主键约束，只能通过 IsPK
+	// 根据约束类型来查找。
+	// 目前该属性只针对 mysql 设置，其它的 dialect 实现不用。
+	stmt.IsPK = true
 	return stmt
 }
 

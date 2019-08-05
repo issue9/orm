@@ -139,6 +139,37 @@ func TestConstraint_PK(t *testing.T) {
 			Exec()
 		t.NotError(err)
 	})
+
+	// 约束名不是根据 core.PKName() 生成的
+	suite.ForEach(func(t *test.Driver) {
+		query := "CREATE TABLE #info (uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
+		_, err := t.DB.Exec(query)
+		t.NotError(err)
+
+		defer func() {
+			err := sqlbuilder.DropTable(t.DB).Table("#info").Exec()
+			t.NotError(err)
+		}()
+
+		// 已经存在主键，出错
+		addStmt := sqlbuilder.AddConstraint(t.DB)
+		err = addStmt.Table("#info").
+			PK("uid").
+			Exec()
+		t.Error(err)
+
+		err = sqlbuilder.DropConstraint(t.DB).
+			Table("#info").
+			Constraint("test_pk").
+			PK().
+			Exec()
+		a.NotError(err)
+
+		err = addStmt.Reset().Table("#info").
+			PK("uid").
+			Exec()
+		t.NotError(err)
+	})
 }
 
 func TestConstraint_FK(t *testing.T) {

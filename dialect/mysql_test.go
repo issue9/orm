@@ -79,6 +79,46 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 
 		testDialectDropConstraintStmtHook(t)
 	}, "mysql")
+
+	// 约束名不是根据 core.PKName() 生成的
+	suite.ForEach(func(t *test.Driver) {
+		db := t.DB
+
+		query := "CREATE TABLE #info(uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
+		_, err := db.Exec(query)
+		t.NotError(err)
+
+		defer func() {
+			_, err = db.Exec("DROP TABLE #info")
+			t.NotError(err)
+		}()
+
+		// 已经存在主键，出错
+		addStmt := sqlbuilder.AddConstraint(t.DB)
+		err = addStmt.Table("#info").
+			PK("uid").
+			Exec()
+		t.Error(err)
+
+		// 未指定 PK 属性，无法找到相同的约束名。
+		err = sqlbuilder.DropConstraint(t.DB).
+			Table("#info").
+			Constraint("test_pk").
+			Exec()
+		a.Error(err)
+
+		err = sqlbuilder.DropConstraint(t.DB).
+			Table("#info").
+			Constraint("test_pk").
+			PK().
+			Exec()
+		a.NotError(err)
+
+		err = addStmt.Reset().Table("#info").
+			PK("uid").
+			Exec()
+		t.NotError(err)
+	}, "mysql")
 }
 
 func TestMysql_DropIndexStmtHook(t *testing.T) {

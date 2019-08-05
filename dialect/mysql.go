@@ -108,15 +108,23 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 		return nil, err
 	}
 
+	builder := core.NewBuilder("ALTER TABLE ").
+		WriteString(stmt.TableName).
+		WriteString(" DROP ")
+	if stmt.IsPK {
+		query, err := builder.WriteString(" PRIMARY KEY").String()
+		if err != nil {
+			return nil, err
+		}
+		return []string{query}, nil
+	}
+
 	name := strings.Replace(stmt.Name, "#", stmt.Engine().TablePrefix(), 1)
 	constraintType, found := info.Constraints[name]
 	if !found { // 不存在，也返回错误，统一与其它数据的行为
 		return nil, fmt.Errorf("不存在的约束:%s", name)
 	}
 
-	builder := core.NewBuilder("ALTER TABLE ").
-		WriteString(stmt.TableName).
-		WriteString(" DROP ")
 	switch constraintType {
 	case core.ConstraintCheck:
 		builder.WriteString(" CHECK ").WriteString(stmt.Name)
