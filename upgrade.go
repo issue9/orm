@@ -257,7 +257,7 @@ func (u *Upgrader) addColumns(e Engine) error {
 		sql.Reset()
 
 		err := sql.Table(u.model.Name).
-			Column(col.Name, col.GoType, col.Nullable, col.HasDefault, col.Default, col.Length...).
+			Column(col.Name, col.GoType, col.AI, col.Nullable, col.HasDefault, col.Default, col.Length...).
 			Exec()
 		if err != nil {
 			return err

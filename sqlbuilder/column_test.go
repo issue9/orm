@@ -25,14 +25,21 @@ func TestColumn(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
-		initDB(t)
-		defer clearDB(t)
-
 		db := t.DB
 
+		err := sqlbuilder.CreateTable(db).
+			Table("users").
+			AutoIncrement("id", core.Int64Type).
+			Exec()
+		a.NotError(err)
+		defer func() {
+			err = sqlbuilder.DropTable(db).Table("users").Exec()
+			a.NotError(err)
+		}()
+
 		addStmt := sqlbuilder.AddColumn(db)
-		err := addStmt.Table("users").
-			Column("col1", core.IntType, true, false, nil).
+		err = addStmt.Table("users").
+			Column("col1", core.IntType, false, true, false, nil).
 			Exec()
 		a.NotError(err, "%s@%s", err, t.DriverName)
 
@@ -50,5 +57,40 @@ func TestColumn(t *testing.T) {
 
 		err = dropStmt.Reset().Exec()
 		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
-	}) // end suite.ForEach
+	})
+
+	// 添加主键
+	suite.ForEach(func(t *test.Driver) {
+		db := t.DB
+
+		err := sqlbuilder.CreateTable(db).
+			Table("users").
+			AutoIncrement("id", core.Int64Type).
+			Column("name", core.StringType, false, false, false, nil).
+			Exec()
+		a.NotError(err)
+		defer func() {
+			err = sqlbuilder.DropTable(db).Table("users").Exec()
+			a.NotError(err)
+		}()
+
+		// 已存在
+		addStmt := sqlbuilder.AddColumn(db)
+		err = addStmt.Table("users").
+			Column("id", core.IntType, false, true, false, nil).
+			Exec()
+		a.Error(err, "%s@%s", err, t.DriverName)
+
+		dropStmt := sqlbuilder.DropColumn(db)
+		err = dropStmt.Table("users").
+			Column("id").
+			Exec()
+		t.NotError(err, "%s@%s", err, t.DriverName)
+
+		err = addStmt.Reset().
+			Table("users").
+			Column("id", core.IntType, false, true, false, nil).
+			Exec()
+		a.NotError(err)
+	})
 }
