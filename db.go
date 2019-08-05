@@ -215,15 +215,6 @@ func (db *DB) Select(v interface{}) error {
 	return find(db, v)
 }
 
-// Count 查询符合 v 条件的记录数量。
-// v 中的所有非零字段都将参与查询。
-// 如果 v 为空值，则相当于 select count(*) from xx;
-//
-// 若需要复杂的查询方式，请构建 SelectStmt 对象查询。
-func (db *DB) Count(v interface{}) (int64, error) {
-	return count(db, v)
-}
-
 // Create 创建一张表。
 func (db *DB) Create(v interface{}) error {
 	return create(db, v)

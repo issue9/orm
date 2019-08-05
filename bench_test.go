@@ -17,7 +17,6 @@ import (
 // 测试性能的数据库驱动名称
 const benchDBDriverName = "mysql"
 
-// mysql: BenchmarkDB_Insert-4     	    5000	    280546 ns/op
 func BenchmarkDB_Insert(b *testing.B) {
 	a := assert.New(b)
 
@@ -39,7 +38,6 @@ func BenchmarkDB_Insert(b *testing.B) {
 	}, benchDBDriverName)
 }
 
-// mysql: BenchmarkDB_Update-4     	    5000	    369461 ns/op
 func BenchmarkDB_Update(b *testing.B) {
 	a := assert.New(b)
 
@@ -67,7 +65,6 @@ func BenchmarkDB_Update(b *testing.B) {
 	}, benchDBDriverName)
 }
 
-// mysql: BenchmarkDB_Select-4     	   10000	    218232 ns/op
 func BenchmarkDB_Select(b *testing.B) {
 	a := assert.New(b)
 
@@ -92,7 +89,6 @@ func BenchmarkDB_Select(b *testing.B) {
 	}, benchDBDriverName)
 }
 
-// mysql: BenchmarkDB_WhereUpdate-4	   10000	    163209 ns/op
 func BenchmarkDB_WhereUpdate(b *testing.B) {
 	a := assert.New(b)
 
@@ -121,34 +117,6 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 				Where("{id}=?", i+1).
 				Exec()
 			t.NotError(err)
-		}
-	}, benchDBDriverName)
-}
-
-// mysql: BenchmarkDB_Count-4      	   10000	    186920 ns/op
-func BenchmarkDB_Count(b *testing.B) {
-	a := assert.New(b)
-
-	m := &Group{
-		Name:    "name",
-		Created: time.Now().Unix(),
-	}
-
-	suite := test.NewSuite(a)
-	defer suite.Close()
-
-	suite.ForEach(func(t *test.Driver) {
-		t.NotError(t.DB.Create(&Group{}))
-		defer t.NotError(t.DB.Drop(&Group{}))
-
-		t.NotError(t.DB.Insert(m))
-
-		be := &Group{Name: "name"}
-		for i := 0; i < b.N; i++ {
-			count, _ := t.DB.Count(be)
-			if count < 1 {
-				t.Error("count:", count)
-			}
 		}
 	}, benchDBDriverName)
 }

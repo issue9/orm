@@ -119,3 +119,29 @@ func TestWhereStmt_Select(t *testing.T) {
 		a.Error(err).Empty(cnt)
 	})
 }
+
+func TestWhereStmt_Count(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		initData(t)
+		defer clearData(t)
+
+		// 单条件
+		count, err := t.DB.Where("uid=?", 1).Count(&UserInfo{})
+		t.NotError(err).
+			Equal(1, count)
+
+		// 无条件
+		count, err = t.DB.Where("1=1").Count(&UserInfo{})
+		t.NotError(err).
+			Equal(2, count)
+
+		// 条件不存在
+		count, err = t.DB.Where("email=?", "email1-not-exists").Count(&Admin{})
+		t.NotError(err).
+			Equal(0, count)
+	})
+}

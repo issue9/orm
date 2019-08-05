@@ -191,7 +191,6 @@ func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
 
 	m, err := stmt.engine.NewModel(reflect.New(t).Interface())
 	if err != nil {
-		println(err.Error(), t.Kind())
 		return 0, err
 	}
 
@@ -203,4 +202,17 @@ func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
 		Column("*").
 		From(m.Name).
 		QueryObject(strict, v)
+}
+
+// Count 返回符合条件数量
+func (stmt *WhereStmt) Count(v interface{}) (int64, error) {
+	m, _, err := getModel(stmt.engine, v)
+	if err != nil {
+		return 0, err
+	}
+
+	return stmt.where.Select(stmt.engine).
+		Count("count(*) as cnt").
+		From(m.Name).
+		QueryInt("cnt")
 }

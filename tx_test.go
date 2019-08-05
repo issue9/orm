@@ -259,37 +259,6 @@ func TestTx_MultDelete(t *testing.T) {
 	})
 }
 
-func TestTx_Count(t *testing.T) {
-	a := assert.New(t)
-	suite := test.NewSuite(a)
-	defer suite.Close()
-
-	suite.ForEach(func(t *test.Driver) {
-		initData(t)
-		defer clearData(t)
-
-		tx, err := t.DB.Begin()
-		t.NotError(err)
-
-		// 单条件
-		count, err := tx.Count(
-			&UserInfo{
-				UID: 1,
-			},
-		)
-		t.NotError(tx.Commit())
-		t.NotError(err).Equal(1, count)
-
-		tx, err = t.DB.Begin()
-		t.NotError(err)
-		count, err = tx.Count(
-			&Admin{Email: "email1-1000"}, // 该条件不存在
-		)
-		t.NotError(tx.Commit())
-		t.NotError(err).Equal(0, count)
-	})
-}
-
 func TestTx_Truncate(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)

@@ -53,8 +53,6 @@ type Engine interface {
 
 	Select(v interface{}) error
 
-	Count(v interface{}) (int64, error)
-
 	Create(v interface{}) error
 
 	Drop(v interface{}) error

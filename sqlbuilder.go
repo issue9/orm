@@ -93,44 +93,6 @@ func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []inte
 	return keys, vals
 }
 
-// 根据 rval 中任意非零值产生 where 语句
-func countWhere(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
-	vals := make([]interface{}, 0, 3)
-	keys := make([]string, 0, 3)
-
-	for _, col := range m.Columns {
-		field := rval.FieldByName(col.GoName)
-
-		if col.IsZero(field) {
-			continue
-		}
-
-		keys = append(keys, col.Name)
-		vals = append(vals, field.Interface())
-	}
-
-	for index, key := range keys {
-		sb.WhereStmt().And("{"+key+"}=?", vals[index])
-	}
-
-	return nil
-}
-
-// 统计符合 v 条件的记录数量。
-func count(e Engine, v interface{}) (int64, error) {
-	m, rval, err := getModel(e, v)
-	if err != nil {
-		return 0, err
-	}
-
-	stmt := e.SQL().Select().Count("count(*) as cnt").From(m.Name)
-	if err = countWhere(stmt, m, rval); err != nil {
-		return 0, err
-	}
-
-	return stmt.QueryInt("cnt")
-}
-
 // 创建表。
 //
 // 部分数据库可能并没有提供在 CREATE TABLE 中直接指定 index 约束的功能。

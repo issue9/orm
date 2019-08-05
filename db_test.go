@@ -229,38 +229,6 @@ func TestDB_Delete(t *testing.T) {
 	})
 }
 
-func TestDB_Count(t *testing.T) {
-	a := assert.New(t)
-	suite := test.NewSuite(a)
-	defer suite.Close()
-
-	suite.ForEach(func(t *test.Driver) {
-		initData(t)
-		defer clearData(t)
-
-		// 单条件
-		count, err := t.DB.Count(
-			&UserInfo{
-				UID: 1,
-			},
-		)
-		t.NotError(err).
-			Equal(1, count)
-
-		// 无条件
-		count, err = t.DB.Count(&UserInfo{})
-		t.NotError(err).
-			Equal(2, count)
-
-		// 条件不存在
-		count, err = t.DB.Count(
-			&Admin{Email: "email1-1000"}, // 该条件不存在
-		)
-		t.NotError(err).
-			Equal(0, count)
-	})
-}
-
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
