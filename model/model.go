@@ -23,11 +23,10 @@ func propertyError(field, name, message string) error {
 // New 从一个 obj 声明一个 Model 实例。
 // obj 可以是一个 struct 实例或是指针。
 func (ms *Models) New(obj interface{}) (*core.Model, error) {
-	rval := reflect.ValueOf(obj)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
+	rtype := reflect.TypeOf(obj)
+	for rtype.Kind() == reflect.Ptr {
+		rtype = rtype.Elem()
 	}
-	rtype := rval.Type()
 
 	if rtype.Kind() != reflect.Struct {
 		return nil, fetch.ErrInvalidKind
@@ -42,7 +41,7 @@ func (ms *Models) New(obj interface{}) (*core.Model, error) {
 
 	m := core.NewModel(core.Table, "#"+rtype.Name(), rtype.NumField())
 
-	if err := parseColumns(m, rval); err != nil {
+	if err := parseColumns(m, rtype); err != nil {
 		return nil, err
 	}
 
@@ -109,14 +108,13 @@ func (ms *Models) addModel(goType reflect.Type, m *core.Model) (err error) {
 }
 
 // 将 rval 中的结构解析到 m 中。支持匿名字段
-func parseColumns(m *core.Model, rval reflect.Value) error {
-	rtype := rval.Type()
+func parseColumns(m *core.Model, rtype reflect.Type) error {
 	num := rtype.NumField()
 	for i := 0; i < num; i++ {
 		field := rtype.Field(i)
 
 		if field.Anonymous {
-			if err := parseColumns(m, rval.Field(i)); err != nil {
+			if err := parseColumns(m, field.Type); err != nil {
 				return err
 			}
 			continue
