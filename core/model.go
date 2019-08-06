@@ -103,6 +103,7 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 
 // Reset 清空模型内容
 func (m *Model) Reset() {
+	m.Name = ""
 	m.Type = Table
 	m.Columns = m.Columns[:0]
 	m.Indexes = map[string][]*Column{}
