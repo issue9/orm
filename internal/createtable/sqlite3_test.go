@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package sqlite3_test
+package createtable_test
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/internal/sqlite3"
+	"github.com/issue9/orm/v3/internal/createtable"
 	"github.com/issue9/orm/v3/internal/sqltest"
 	"github.com/issue9/orm/v3/internal/test"
 )
@@ -42,11 +42,11 @@ var sqlite3CreateTable = []string{`CREATE TABLE fk_table(
 func TestTable_CreateTableSQL(t *testing.T) {
 	a := assert.New(t)
 
-	tbl := &sqlite3.Table{
+	tbl := &createtable.Sqlite3Table{
 		Columns: map[string]string{
 			"id": "id integer not null",
 		},
-		Constraints: map[string]*sqlite3.Constraint{
+		Constraints: map[string]*createtable.Sqlite3Constraint{
 			"users_pk": {
 				Type: core.ConstraintPK,
 				SQL:  "constraint users_pk primary key(id)",
@@ -81,7 +81,7 @@ func TestParseSqlite3CreateTable(t *testing.T) {
 			t.NotError(err)
 		}()
 
-		table, err := sqlite3.ParseCreateTable("usr", db)
+		table, err := createtable.ParseSqlite3CreateTable("usr", db)
 		t.NotError(err).NotNil(table)
 
 		t.Equal(len(table.Columns), 8)
@@ -94,36 +94,36 @@ func TestParseSqlite3CreateTable(t *testing.T) {
 		sqltest.Equal(a, table.Columns["email"], "email text NOT NULL")
 		sqltest.Equal(a, table.Columns["pwd"], "pwd text NOT NULL")
 		t.Equal(len(table.Constraints), 6).
-			Equal(table.Constraints["u_user_xx1"], &sqlite3.Constraint{
+			Equal(table.Constraints["u_user_xx1"], &createtable.Sqlite3Constraint{
 				Type: core.ConstraintUnique,
 				SQL:  "CONSTRAINT u_user_xx1 UNIQUE (mobile,username)",
 			}).
-			Equal(table.Constraints["u_user_email1"], &sqlite3.Constraint{
+			Equal(table.Constraints["u_user_email1"], &createtable.Sqlite3Constraint{
 				Type: core.ConstraintUnique,
 				SQL:  "CONSTRAINT u_user_email1 UNIQUE (email,username)",
 			}).
-			Equal(table.Constraints["unique_id"], &sqlite3.Constraint{
+			Equal(table.Constraints["unique_id"], &createtable.Sqlite3Constraint{
 				Type: core.ConstraintUnique,
 				SQL:  "CONSTRAINT unique_id UNIQUE (id)",
 			}).
-			Equal(table.Constraints["xxx_fk"], &sqlite3.Constraint{
+			Equal(table.Constraints["xxx_fk"], &createtable.Sqlite3Constraint{
 				Type: core.ConstraintFK,
 				SQL:  "CONSTRAINT xxx_fk FOREIGN KEY (id) REFERENCES fk_table (id)",
 			}).
-			Equal(table.Constraints["xxx"], &sqlite3.Constraint{
+			Equal(table.Constraints["xxx"], &createtable.Sqlite3Constraint{
 				Type: core.ConstraintCheck,
 				SQL:  "CONSTRAINT xxx CHECK(created > 0)",
 			}).
-			Equal(table.Constraints["users_pk"], &sqlite3.Constraint{
+			Equal(table.Constraints["users_pk"], &createtable.Sqlite3Constraint{
 				Type: core.ConstraintPK,
 				SQL:  "CONSTRAINT users_pk PRIMARY KEY (id)",
 			}) // 主键约束名为固定值
 		t.Equal(len(table.Indexes), 2).
-			Equal(table.Indexes["index_user_mobile"], &sqlite3.Index{
+			Equal(table.Indexes["index_user_mobile"], &createtable.Sqlite3Index{
 				Type: core.IndexDefault,
 				SQL:  "CREATE INDEX index_user_mobile on usr(mobile)",
 			}).
-			Equal(table.Indexes["index_user_unique_email_id"], &sqlite3.Index{
+			Equal(table.Indexes["index_user_unique_email_id"], &createtable.Sqlite3Index{
 				Type: core.IndexDefault,
 				SQL:  "CREATE UNIQUE INDEX index_user_unique_email_id on usr(email,id)",
 			}) // sqlite 没有 unique

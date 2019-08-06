@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package mysql_test
+package createtable_test
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/internal/mysql"
+	"github.com/issue9/orm/v3/internal/createtable"
 	"github.com/issue9/orm/v3/internal/sqltest"
 	"github.com/issue9/orm/v3/internal/test"
 )
@@ -57,7 +57,7 @@ func TestParseMysqlCreateTable(t *testing.T) {
 			t.NotError(err)
 		}
 
-		table, err := mysql.ParseCreateTable("users", t.DB)
+		table, err := createtable.ParseMysqlCreateTable("users", t.DB)
 		t.NotError(err).NotNil(table)
 
 		t.Equal(len(table.Columns), 8)

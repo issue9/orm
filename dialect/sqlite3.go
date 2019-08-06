@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/issue9/orm/v3/core"
-	s3 "github.com/issue9/orm/v3/internal/sqlite3"
+	"github.com/issue9/orm/v3/internal/createtable"
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
@@ -139,7 +139,7 @@ func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]s
 		return nil, fmt.Errorf("未知的约束类型：%d", stmt.Type)
 	}
 
-	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())
+	info, err := createtable.ParseSqlite3CreateTable(stmt.TableName, stmt.Engine())
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]s
 	if err != nil {
 		return nil, err
 	}
-	info.Constraints[stmt.Name] = &s3.Constraint{
+	info.Constraints[stmt.Name] = &createtable.Sqlite3Constraint{
 		Type: stmt.Type,
 		SQL:  query,
 	}
@@ -163,7 +163,7 @@ func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]s
 // https://www.sqlite.org/lang_altertable.html
 // BUG: 可能会让视图失去关联
 func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
-	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())
+	info, err := createtable.ParseSqlite3CreateTable(stmt.TableName, stmt.Engine())
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([
 // https://www.sqlite.org/lang_altertable.html
 // BUG: 可能会让视图失去关联
 func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string, error) {
-	info, err := s3.ParseCreateTable(stmt.TableName, stmt.Engine())
+	info, err := createtable.ParseSqlite3CreateTable(stmt.TableName, stmt.Engine())
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string,
 	return s.buildSQLS(stmt.Engine(), info, stmt.TableName)
 }
 
-func (s *sqlite3) buildSQLS(e core.Engine, table *s3.Table, tableName string) ([]string, error) {
+func (s *sqlite3) buildSQLS(e core.Engine, table *createtable.Sqlite3Table, tableName string) ([]string, error) {
 	ret := make([]string, 0, len(table.Indexes)+1)
 	tmpName := "temp_" + tableName + "_temp"
 

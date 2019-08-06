@@ -2,57 +2,41 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// Package mysql dialect 中用到的 mysql 专有功能
-package mysql
+package createtable
 
 import (
-	"errors"
 	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/issue9/orm/v3/core"
 )
 
-// Table 表信息
-type Table struct {
-	Columns     map[string]string          // 列信息，名称=>类型
-	Constraints map[string]core.Constraint // 约束信息，名称=>约束类型
-	Indexes     map[string]core.Index      // 索引信息，名称=>索引类型
+// MysqlTable 从 create table 中获取的表信息
+type MysqlTable struct {
+	Columns     map[string]string          // 列信息，名称 => 类型定义
+	Constraints map[string]core.Constraint // 约束信息，名称 => 约束类型
+	Indexes     map[string]core.Index      // 索引信息，名称 => 索引类型
 }
 
-// ParseCreateTable 分析 create table 的语法
-func ParseCreateTable(table string, engine core.Engine) (*Table, error) {
+// ParseMysqlCreateTable 分析 create table 的语法
+func ParseMysqlCreateTable(table string, engine core.Engine) (*MysqlTable, error) {
 	// show index 语句无法获取 check 约束的相关信息
-	rows, err := engine.Query("SHOW CREATE TABLE {" + table + "}")
-	if err != nil {
+	query := "SHOW CREATE TABLE {" + table + "}"
+	var tableName, sql string
+	if err := scanCreateTable(engine, table, query, &tableName, &sql); err != nil {
 		return nil, err
-	}
-	defer func() {
-		if err1 := rows.Close(); err1 != nil {
-			err = errors.New(err1.Error() + err.Error())
-		}
-	}()
-
-	if !rows.Next() {
-		return nil, fmt.Errorf("未找到任何与 %s 相关的 CREATE TABLE 数据", table)
 	}
 
 	// table 与 tableName 值可能是不相同的。
 	// table 的值可能是 #tbl 而 tableName 的值可能是 prefix_tbl，
 	// 两者之间一个表示未替换表名前缀之前的值，一个为替换之后的值。
-	var tableName, sql string
-	if err = rows.Scan(&tableName, &sql); err != nil {
-		return nil, err
-	}
-
-	return parseMysqlCreateTable(tableName, filterCreateTableSQL(sql))
+	return parseMysqlCreateTable(tableName, lines(sql))
 }
 
 // show create table 产生的格式比较统一，不像 create table 那样多样化。
 // https://dev.mysql.com/doc/refman/8.0/en/show-create-table.html
-func parseMysqlCreateTable(tableName string, lines []string) (*Table, error) {
-	table := &Table{
+func parseMysqlCreateTable(tableName string, lines []string) (*MysqlTable, error) {
+	table := &MysqlTable{
 		Columns:     make(map[string]string, len(lines)),
 		Constraints: make(map[string]core.Constraint, len(lines)),
 		Indexes:     make(map[string]core.Index, len(lines)),
@@ -94,41 +78,4 @@ func parseMysqlCreateTable(tableName string, lines []string) (*Table, error) {
 	}
 
 	return table, nil
-}
-
-func fields(line string) []string {
-	return strings.FieldsFunc(line, func(r rune) bool {
-		return unicode.IsSpace(r) || r == '(' || r == ')'
-	})
-}
-
-func filterCreateTableSQL(sql string) []string {
-	sql = quoteReplacer.Replace(sql)
-	var deep, start int
-	var lines []string
-
-	for index, c := range sql {
-		switch c {
-		case ',':
-			if deep == 1 && index > start {
-				lines = append(lines, strings.TrimSpace(sql[start:index]))
-				start = index + 1 // 不包含 ( 本身
-			}
-		case '(':
-			deep++
-			if deep == 1 {
-				start = index + 1 // 不包含 ( 本身
-			}
-		case ')':
-			deep--
-			if deep == 0 { // 不需要 create table xx() 之后的内容
-				if start != index {
-					lines = append(lines, strings.TrimSpace(sql[start:index]))
-				}
-				break
-			}
-		} // end switch
-	} // end for
-
-	return lines
 }

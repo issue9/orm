@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/issue9/orm/v3/core"
-	my "github.com/issue9/orm/v3/internal/mysql"
+	"github.com/issue9/orm/v3/internal/createtable"
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
@@ -103,7 +103,7 @@ func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []in
 }
 
 func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
-	info, err := my.ParseCreateTable(stmt.TableName, stmt.Engine())
+	info, err := createtable.ParseMysqlCreateTable(stmt.TableName, stmt.Engine())
 	if err != nil {
 		return nil, err
 	}
