@@ -22,6 +22,11 @@ type WhereStmt struct {
 }
 
 // Where 生成 Where 语句
+func (sql *SQLBuilder) Where() *WhereStmt {
+	return Where()
+}
+
+// Where 生成 Where 语句
 func Where() *WhereStmt {
 	return &WhereStmt{
 		builder: core.NewBuilder(""),

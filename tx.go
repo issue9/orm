@@ -11,13 +11,14 @@ import (
 
 	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/fetch"
+	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
 // Tx 事务对象
 type Tx struct {
 	*sql.Tx
-	db  *DB
-	sql *SQL
+	db         *DB
+	sqlBuilder *sqlbuilder.SQLBuilder
 }
 
 // Begin 开始一个新的事务
@@ -45,7 +46,7 @@ func (db *DB) begin(tx *sql.Tx) (*Tx, error) {
 		Tx: tx,
 		db: db,
 	}
-	inst.sql = &SQL{engine: inst}
+	inst.sqlBuilder = sqlbuilder.NewSQLBuilder(inst)
 
 	return inst, nil
 }
@@ -233,8 +234,8 @@ func (tx *Tx) Truncate(v interface{}) error {
 }
 
 // SQL 返回 SQL 实例
-func (tx *Tx) SQL() *SQL {
-	return tx.sql
+func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder {
+	return tx.sqlBuilder
 }
 
 // MultInsert 插入一个或多个数据。

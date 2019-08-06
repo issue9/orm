@@ -16,6 +16,11 @@ type CreateTableStmt struct {
 	model *core.Model
 }
 
+// CreateTable 生成创建表的语句
+func (sql *SQLBuilder) CreateTable() *CreateTableStmt {
+	return CreateTable(sql.engine)
+}
+
 // CreateTable 创建表的语句
 //
 // 执行创建表操作，可能包含了创建索引等多个语句，
@@ -357,6 +362,11 @@ type TruncateTableStmt struct {
 	AIColumnName string
 }
 
+// TruncateTable 生成清空表的语句，同时重置 AI 计算
+func (sql *SQLBuilder) TruncateTable() *TruncateTableStmt {
+	return TruncateTable(sql.engine)
+}
+
 // TruncateTable 生成清空表语句
 func TruncateTable(e core.Engine) *TruncateTableStmt {
 	stmt := &TruncateTableStmt{}
@@ -398,6 +408,11 @@ func (stmt *TruncateTableStmt) DDLSQL() ([]string, error) {
 type DropTableStmt struct {
 	*ddlStmt
 	tables []string
+}
+
+// DropTable 生成删除表的语句
+func (sql *SQLBuilder) DropTable() *DropTableStmt {
+	return DropTable(sql.engine)
 }
 
 // DropTable 声明一条删除表的语句

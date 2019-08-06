@@ -73,47 +73,7 @@ type Engine interface {
 
 	MultTruncate(objs ...interface{}) error
 
-	SQL() *SQL
+	SQLBuilder() *sqlbuilder.SQLBuilder
 
 	NewModel(v interface{}) (*Model, error)
-}
-
-// SQL 用于生成 SQL 语句
-type SQL struct {
-	engine Engine
-}
-
-// Delete 生成删除语句
-func (sql *SQL) Delete() *sqlbuilder.DeleteStmt {
-	return sqlbuilder.Delete(sql.engine)
-}
-
-// Update 生成更新语句
-func (sql *SQL) Update() *sqlbuilder.UpdateStmt {
-	return sqlbuilder.Update(sql.engine)
-}
-
-// Insert 生成插入语句
-func (sql *SQL) Insert() *sqlbuilder.InsertStmt {
-	return sqlbuilder.Insert(sql.engine)
-}
-
-// Select 生成插入语句
-func (sql *SQL) Select() *sqlbuilder.SelectStmt {
-	return sqlbuilder.Select(sql.engine)
-}
-
-// CreateIndex 生成创建索引的语句
-func (sql *SQL) CreateIndex() *sqlbuilder.CreateIndexStmt {
-	return sqlbuilder.CreateIndex(sql.engine)
-}
-
-// DropTable 生成删除表的语句
-func (sql *SQL) DropTable() *sqlbuilder.DropTableStmt {
-	return sqlbuilder.DropTable(sql.engine)
-}
-
-// TruncateTable 生成清空表的语句，同时重置 AI 计算
-func (sql *SQL) TruncateTable() *sqlbuilder.TruncateTableStmt {
-	return sqlbuilder.TruncateTable(sql.engine)
 }

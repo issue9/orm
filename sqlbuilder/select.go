@@ -47,6 +47,11 @@ type unionSelect struct {
 	stmt *SelectStmt
 }
 
+// Select 生成插入语句
+func (sql *SQLBuilder) Select() *SelectStmt {
+	return Select(sql.engine)
+}
+
 // Select 声明一条 Select 语句
 func Select(e core.Engine) *SelectStmt {
 	stmt := &SelectStmt{columns: make([]string, 0, 10)}

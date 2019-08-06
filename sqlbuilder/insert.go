@@ -22,6 +22,11 @@ type InsertStmt struct {
 	selectStmt *SelectStmt
 }
 
+// Insert 生成插入语句
+func (sql *SQLBuilder) Insert() *InsertStmt {
+	return Insert(sql.engine)
+}
+
 // Insert 声明一条插入语句
 func Insert(e core.Engine) *InsertStmt {
 	stmt := &InsertStmt{

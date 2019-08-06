@@ -172,7 +172,7 @@ func truncate(e Engine, v interface{}) error {
 		return fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	stmt := e.SQL().TruncateTable()
+	stmt := sqlbuilder.TruncateTable(e)
 	if m.AutoIncrement != nil {
 		stmt.Table(m.Name, m.AutoIncrement.Name)
 	} else {
@@ -193,7 +193,7 @@ func drop(e Engine, v interface{}) error {
 		return sqlbuilder.DropView(e).Name(m.Name).Exec()
 	}
 
-	return e.SQL().DropTable().Table(m.Name).Exec()
+	return sqlbuilder.DropTable(e).Table(m.Name).Exec()
 }
 
 func lastInsertID(e Engine, v interface{}) (int64, error) {
@@ -216,7 +216,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		}
 	}
 
-	stmt := e.SQL().Insert().Table(m.Name)
+	stmt := sqlbuilder.Insert(e).Table(m.Name)
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -250,7 +250,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		}
 	}
 
-	stmt := e.SQL().Insert().Table(m.Name)
+	stmt := sqlbuilder.Insert(e).Table(m.Name)
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -278,7 +278,7 @@ func find(e Engine, v interface{}) error {
 		return err
 	}
 
-	stmt := e.SQL().Select().
+	stmt := sqlbuilder.Select(e).
 		Column("*").
 		From(m.Name)
 	if err = where(stmt, m, rval); err != nil {
@@ -306,7 +306,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 		}
 	}
 
-	stmt := tx.SQL().Select().
+	stmt := tx.SQLBuilder().Select().
 		Column("*").
 		From(m.Name).
 		ForUpdate()
@@ -324,7 +324,7 @@ func forUpdate(tx *Tx, v interface{}) error {
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
 func update(e Engine, v interface{}, cols ...string) (sql.Result, error) {
-	stmt := e.SQL().Update()
+	stmt := sqlbuilder.Update(e)
 
 	m, rval, err := getUpdateColumns(e, v, stmt, cols...)
 	if err != nil {
@@ -397,7 +397,7 @@ func del(e Engine, v interface{}) (sql.Result, error) {
 		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	stmt := e.SQL().Delete().Table(m.Name)
+	stmt := sqlbuilder.Delete(e).Table(m.Name)
 	if err = where(stmt, m, rval); err != nil {
 		return nil, err
 	}
@@ -409,7 +409,7 @@ var errInsertHasDifferentType = errors.New("参数中包含了不同类型的元
 
 // rval 为结构体指针组成的数据
 func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, error) {
-	query := e.SQL().Insert()
+	query := e.SQLBuilder().Insert()
 	var keys []string          // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 

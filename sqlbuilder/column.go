@@ -19,6 +19,11 @@ type AddColumnStmt struct {
 }
 
 // AddColumn 声明一条添加列的语句
+func (sql *SQLBuilder) AddColumn() *AddColumnStmt {
+	return AddColumn(sql.engine)
+}
+
+// AddColumn 声明一条添加列的语句
 func AddColumn(e core.Engine) *AddColumnStmt {
 	stmt := &AddColumnStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
@@ -100,6 +105,11 @@ type DropColumnStmt struct {
 
 	TableName  string
 	ColumnName string
+}
+
+// DropColumn 声明一条删除列的语句
+func (sql *SQLBuilder) DropColumn() *DropColumnStmt {
+	return DropColumn(sql.engine)
 }
 
 // DropColumn 声明一条删除列的语句

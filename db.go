@@ -22,7 +22,7 @@ type DB struct {
 	dialect     Dialect
 	tablePrefix string
 	replacer    *strings.Replacer
-	sql         *SQL
+	sqlBuilder  *sqlbuilder.SQLBuilder
 	models      *model.Models
 	version     string
 
@@ -49,7 +49,7 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 	}
 
 	inst.models = model.NewModels(inst)
-	inst.sql = &SQL{engine: inst}
+	inst.sqlBuilder = sqlbuilder.NewSQLBuilder(inst)
 
 	return inst, nil
 }
@@ -317,8 +317,8 @@ func (db *DB) MultTruncate(objs ...interface{}) error {
 }
 
 // SQL 返回 SQL 实例
-func (db *DB) SQL() *SQL {
-	return db.sql
+func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder {
+	return db.sqlBuilder
 }
 
 func (db *DB) tx(f func(tx *Tx) error) error {

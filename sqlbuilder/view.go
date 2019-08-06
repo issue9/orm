@@ -23,6 +23,11 @@ type CreateViewStmtHooker interface {
 }
 
 // CreateView 创建视图
+func (sql *SQLBuilder) CreateView() *CreateViewStmt {
+	return CreateView(sql.engine)
+}
+
+// CreateView 创建视图
 func CreateView(e core.Engine) *CreateViewStmt {
 	stmt := &CreateViewStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)

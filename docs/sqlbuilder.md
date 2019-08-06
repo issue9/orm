@@ -117,7 +117,7 @@ Where 作为 Delete、Select 和 Update 的共有部分，提供了很多预定�
 
 
 ```go
-Where("id>?", 1).
+stmt.Where("id>?", 1).
     And("id>? AND name LIKE ?", 1, "%name").
     AndIn("id", []interface{}{1, 2, 3}). // IN
     OrBetween("id", 1, 2).               // BETWEEN
@@ -132,7 +132,7 @@ WHERE id>? AND id>? AND name LIKE ? AND id IN(?,?,?) OR id BETWEEN 1 AND 2 AND i
 
 子查询条件
 ```go
-Where("id>?", 1).
+stmt.Where("id>?", 1).
     AndGroup().
     AndBetween("id", 1, 2).
     EndGroup().
@@ -142,4 +142,14 @@ Where("id>?", 1).
 生成的 SQL 语句为：
 ```sql
 WHERE id>? AND (id BETWEEN ? AND ?) OR id IS NULL
+```
+
+也可以直接使用 Where 生成其它语句：
+```go
+// 删除符合条件的语句
+sqlbuilder.Where().And("id>?",1).
+    And("name like ?", "%xx").
+    Delete(db).
+    Table("users").
+    Exec()
 ```

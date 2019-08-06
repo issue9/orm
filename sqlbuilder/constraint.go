@@ -28,6 +28,11 @@ type AddConstraintStmt struct {
 }
 
 // AddConstraint 声明添加约束的语句
+func (sql *SQLBuilder) AddConstraint() *AddConstraintStmt {
+	return AddConstraint(sql.engine)
+}
+
+// AddConstraint 声明添加约束的语句
 func AddConstraint(e core.Engine) *AddConstraintStmt {
 	stmt := &AddConstraintStmt{}
 	stmt.ddlStmt = newDDLStmt(e, stmt)
@@ -210,6 +215,11 @@ type DropConstraintStmt struct {
 	TableName string
 	Name      string
 	IsPK      bool
+}
+
+// DropConstraint 声明一条删除表约束的语句
+func (sql *SQLBuilder) DropConstraint() *DropConstraintStmt {
+	return DropConstraint(sql.engine)
 }
 
 // DropConstraint 声明一条删除表约束的语句

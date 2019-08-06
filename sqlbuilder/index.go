@@ -15,6 +15,11 @@ type CreateIndexStmt struct {
 	typ   core.Index
 }
 
+// CreateIndex 生成创建索引的语句
+func (sql *SQLBuilder) CreateIndex() *CreateIndexStmt {
+	return CreateIndex(sql.engine)
+}
+
 // CreateIndex 声明一条 CreateIndexStmt 语句
 func CreateIndex(e core.Engine) *CreateIndexStmt {
 	stmt := &CreateIndexStmt{typ: core.IndexDefault}
@@ -116,6 +121,11 @@ type DropIndexStmt struct {
 	*ddlStmt
 	TableName string
 	IndexName string
+}
+
+// CreateIndex 生成创建索引的语句
+func (sql *SQLBuilder) DropIndex() *DropIndexStmt {
+	return DropIndex(sql.engine)
 }
 
 // DropIndex 声明一条 DropIndexStmt 语句

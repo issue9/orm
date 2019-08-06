@@ -13,6 +13,11 @@ type DeleteStmt struct {
 	where *WhereStmt
 }
 
+// Delete 生成删除语句
+func (sql *SQLBuilder) Delete() *DeleteStmt {
+	return Delete(sql.engine)
+}
+
 // Delete 声明一条删除语句
 func Delete(e core.Engine) *DeleteStmt {
 	stmt := &DeleteStmt{}

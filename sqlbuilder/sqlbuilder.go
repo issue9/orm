@@ -9,7 +9,11 @@
 // 那么该例外的 Dialect 实现，可以同时实现 Hooker 接口， 自定义该语句的实现。
 package sqlbuilder
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/issue9/orm/v3/core"
+)
 
 var (
 	// ErrTableIsEmpty 未指定表名，任何 SQL 语句中，
@@ -45,3 +49,13 @@ var (
 	// ErrUnionColumnNotMatch 在 Union 中，各个 select 中的列长度不相同。
 	ErrUnionColumnNotMatch = errors.New("union 列长度不相同")
 )
+
+// SQLBuilder 提供了 sqlbuilder 下的各类语句的创建方法。
+type SQLBuilder struct {
+	engine core.Engine
+}
+
+// NewSQLBuilder 声明 SQLBuilder 实例
+func NewSQLBuilder(e core.Engine) *SQLBuilder {
+	return &SQLBuilder{engine: e}
+}

@@ -30,6 +30,11 @@ type updateSet struct {
 	typ    byte // 类型，可以是 + 自增类型，- 自减类型，或是空值表示正常表达式
 }
 
+// Update 生成更新语句
+func (sql *SQLBuilder) Update() *UpdateStmt {
+	return Update(sql.engine)
+}
+
 // Update 声明一条 UPDATE 的 SQL 语句
 func Update(e core.Engine) *UpdateStmt {
 	stmt := &UpdateStmt{values: []*updateSet{}}
