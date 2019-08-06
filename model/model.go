@@ -196,7 +196,7 @@ func parseMeta(m *core.Model, tag string) error {
 				return propertyError("Metaer", "name", "太多的值")
 			}
 
-			m.SetName("#" + v.Args[0]) // 所有 model 生成的表都带 #
+			m.Name = "#" + v.Args[0] // 所有 model 生成的表都带 #
 		case "check":
 			if len(v.Args) != 2 {
 				return propertyError("Metaer", "check", "参数个数不正确")

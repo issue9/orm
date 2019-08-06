@@ -87,6 +87,7 @@ type Model struct {
 // cap 表示列的数量，如果指定了，可以提交分配内存。
 func NewModel(modelType ModelType, name string, cap int) *Model {
 	m := &Model{
+		Name:        name,
 		Type:        modelType,
 		Columns:     make([]*Column, 0, cap),
 		Indexes:     map[string][]*Column{},
@@ -96,7 +97,6 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 		Checks:      map[string]string{},
 		Meta:        map[string][]string{},
 	}
-	m.SetName(name)
 
 	return m
 }
@@ -122,11 +122,6 @@ func (m *Model) AIName() string {
 // PKName 当前模型中主键约束的名称
 func (m *Model) PKName() string {
 	return PKName(m.Name)
-}
-
-// SetName 设置名称
-func (m *Model) SetName(name string) {
-	m.Name = name
 }
 
 // AddColumns 添加新列

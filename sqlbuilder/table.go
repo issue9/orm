@@ -43,7 +43,7 @@ func (stmt *CreateTableStmt) Reset() *CreateTableStmt {
 
 // Table 指定表名
 func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
-	stmt.model.SetName(t)
+	stmt.model.Name = t
 	return stmt
 }
 
