@@ -215,12 +215,12 @@ func (db *DB) Select(v interface{}) error {
 	return find(db, v)
 }
 
-// Create 创建一张表。
+// Create 创建一张表或是视图。
 func (db *DB) Create(v interface{}) error {
 	return create(db, v)
 }
 
-// Drop 删除一张表。
+// Drop 删除一张表或视图。
 func (db *DB) Drop(v interface{}) error {
 	return drop(db, v)
 }

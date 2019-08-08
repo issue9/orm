@@ -218,12 +218,12 @@ func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
 	return del(tx, v)
 }
 
-// Create 创建数据表。
+// Create 创建数据表或是视图。
 func (tx *Tx) Create(v interface{}) error {
 	return create(tx, v)
 }
 
-// Drop 删除表结构及数据。
+// Drop 删除表或视图。
 func (tx *Tx) Drop(v interface{}) error {
 	return drop(tx, v)
 }
@@ -250,12 +250,7 @@ func (tx *Tx) MultInsert(objs ...interface{}) error {
 
 // MultSelect 选择符合要求的一条或是多条记录。
 func (tx *Tx) MultSelect(objs ...interface{}) error {
-	for _, v := range objs {
-		if err := tx.Select(v); err != nil {
-			return err
-		}
-	}
-	return nil
+	return tx.multDo(tx.Select, objs...)
 }
 
 // MultUpdate 更新一条或多条类型。
@@ -280,33 +275,24 @@ func (tx *Tx) MultDelete(objs ...interface{}) error {
 
 // MultCreate 创建数据表。
 func (tx *Tx) MultCreate(objs ...interface{}) error {
-	for _, v := range objs {
-		if err := tx.Create(v); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return tx.multDo(tx.Create, objs...)
 }
 
 // MultDrop 删除表结构及数据。
 func (tx *Tx) MultDrop(objs ...interface{}) error {
-	for _, v := range objs {
-		if err := tx.Drop(v); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return tx.multDo(tx.Drop, objs...)
 }
 
 // MultTruncate 清除表内容，重置 ai，但保留表结构。
 func (tx *Tx) MultTruncate(objs ...interface{}) error {
+	return tx.multDo(tx.Truncate, objs...)
+}
+
+func (tx *Tx) multDo(f func(interface{}) error, objs ...interface{}) error {
 	for _, v := range objs {
-		if err := tx.Truncate(v); err != nil {
+		if err := f(v); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

@@ -93,10 +93,7 @@ func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []inte
 	return keys, vals
 }
 
-// 创建表。
-//
-// 部分数据库可能并没有提供在 CREATE TABLE 中直接指定 index 约束的功能。
-// 所以此处把创建表和创建索引分成两步操作。
+// 创建表或是视图。
 func create(e Engine, v interface{}) error {
 	m, _, err := getModel(e, v)
 	if err != nil {
