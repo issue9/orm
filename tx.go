@@ -23,12 +23,7 @@ type Tx struct {
 
 // Begin 开始一个新的事务
 func (db *DB) Begin() (*Tx, error) {
-	tx, err := db.DB.Begin()
-	if err != nil {
-		return nil, err
-	}
-
-	return db.begin(tx)
+	return db.BeginTx(context.Background(), nil)
 }
 
 // BeginTx 开始一个新的事务
@@ -38,10 +33,6 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 		return nil, err
 	}
 
-	return db.begin(tx)
-}
-
-func (db *DB) begin(tx *sql.Tx) (*Tx, error) {
 	inst := &Tx{
 		Tx: tx,
 		db: db,
