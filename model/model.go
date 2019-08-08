@@ -40,6 +40,7 @@ func (ms *Models) New(obj interface{}) (*core.Model, error) {
 	}
 
 	m := core.NewModel(core.Table, "#"+rtype.Name(), rtype.NumField())
+	m.GoType = rtype
 
 	if err := parseColumns(m, rtype); err != nil {
 		return nil, err

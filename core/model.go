@@ -56,6 +56,8 @@ const (
 
 // Model 表示一个数据库的表或视图模型
 type Model struct {
+	GoType reflect.Type
+
 	// 模型的名称，可以以 # 符号开头，表示该表名带有一个表名前缀。
 	// 在生成 SQL 语句时，该符号会被转换成 Engine.TablePrefix()
 	// 返回的值。
@@ -83,7 +85,8 @@ type Model struct {
 	PrimaryKey    []*Column
 }
 
-// NewModel 声明 Model 实例
+// NewModel 初始化 Model，分其所有变量分配内存。
+// 但是变量的内容依然要手动初始化。
 //
 // cap 表示列的数量，如果指定了，可以提交分配内存。
 func NewModel(modelType ModelType, name string, cap int) *Model {
@@ -91,12 +94,12 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 		Name:        name,
 		Type:        modelType,
 		Columns:     make([]*Column, 0, cap),
+		Meta:        map[string][]string{},
 		Indexes:     map[string][]*Column{},
 		Uniques:     map[string][]*Column{},
+		Checks:      map[string]string{},
 		ForeignKeys: map[string]*ForeignKey{},
 		PrimaryKey:  []*Column{},
-		Checks:      map[string]string{},
-		Meta:        map[string][]string{},
 	}
 
 	return m
@@ -104,16 +107,19 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 
 // Reset 清空模型内容
 func (m *Model) Reset() {
+	m.GoType = nil
 	m.Name = ""
+	m.ViewAs = ""
 	m.Type = none
 	m.Columns = m.Columns[:0]
+	m.OCC = nil
+	m.Meta = map[string][]string{}
 	m.Indexes = map[string][]*Column{}
 	m.Uniques = map[string][]*Column{}
-	m.ForeignKeys = map[string]*ForeignKey{}
-	m.PrimaryKey = []*Column{}
 	m.Checks = map[string]string{}
-	m.Meta = map[string][]string{}
+	m.ForeignKeys = map[string]*ForeignKey{}
 	m.AutoIncrement = nil
+	m.PrimaryKey = []*Column{}
 }
 
 // AIName 当前模型中自增列的名称
