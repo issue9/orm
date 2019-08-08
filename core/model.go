@@ -49,7 +49,8 @@ type ModelType int8
 // 在视图类型中，唯一约束、主键约束、自增约束依然是可以定义的，
 // 虽然不会呈现在视图中，但是在查询时，可作为 orm 的一个判断依据。
 const (
-	Table ModelType = iota
+	none ModelType = iota
+	Table
 	View
 )
 
@@ -104,7 +105,7 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 // Reset 清空模型内容
 func (m *Model) Reset() {
 	m.Name = ""
-	m.Type = Table
+	m.Type = none
 	m.Columns = m.Columns[:0]
 	m.Indexes = map[string][]*Column{}
 	m.Uniques = map[string][]*Column{}
@@ -286,6 +287,10 @@ func (m *Model) NewForeignKey(name string, fk *ForeignKey) error {
 func (m *Model) Sanitize() error {
 	if m.Name == "" {
 		return errors.New("缺少模型名称")
+	}
+
+	if m.Type != Table && m.Type != View {
+		return errors.New("无效的类型")
 	}
 
 	if len(m.PrimaryKey) == 1 {

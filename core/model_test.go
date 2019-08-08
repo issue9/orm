@@ -284,6 +284,7 @@ func TestModel_Sanitize(t *testing.T) {
 
 	m.Reset()
 	m.Name = "m1"
+	m.Type = Table
 	a.NotError(m.AddColumn(ai))
 	a.NotError(m.AddColumns(nullable, def))
 	a.NotError(m.AddIndex(IndexDefault, "index_0", nullable))
