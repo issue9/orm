@@ -2,6 +2,23 @@
 sqlbuilder 提供了一组以链式操作构建 SQL 语句的方法。
 且对象本身可以复用。
 
+构建 SQL 语句的方式有很多种：
+
+1. 直接采用 sqlbuilder 下的方法，比如：
+```go
+sqlbuilder.CreateTable(e).Column(...)
+```
+
+1. 通过 sqlbuilder.SQLBuilder 对象生成：
+```go
+builder := sqlbuiler.NewSQLBuilder(e)
+builder.CreateTable().Column(...) // 创建表
+builder.Update().Table(...)       // 更新表
+```
+
+1. 或是通过 DB 和 Tx 的 SQLBuilder() 方法，这种方法本质是和 sqlbuilder.SQLBuilder
+是一样的，只不过在 DB 和 Tx 中预先初始化了 SQLBuilder。
+
 ```go
 stmt := sqlbuilder.Select(db)
     Column("*").
@@ -99,8 +116,35 @@ drop := sqlbuilder.DropTable(db).
 
 ### Insert
 
+```go
+sqlbuilder.Insert(e).Table("users").Columns("name","age").
+    Values("alice", 18).
+    Values("jobs", 19)
 
-### Select
+```
+
+或是采用 KeyValue 的方式:
+```go
+sqlbuilder.Insert(e).Table("users").
+    KeyValue("name","alice").
+    KeyValues("age",18)
+```
+
+当然也支持 `DEFAULT VALUES` 地插入数据，当然前提是你的表中所有字段都有提供默认值。
+```go
+// 全部采用默认或是自增的值填充到 users 表中
+sqlbuilder.Insert(e).Table("users").Exec()
+```
+
+或者直接从 `SELECT` 语句中生成 `INSERT`：
+```go
+// 将从 userinfo 中获取的 name 和 age 列插入到 users 表中
+sqlbuilder.Select(e).Column("age").
+    Column("name").
+    From("userinfo").
+    Insert().
+    Table("users")
+```
 
 
 ### Delete
@@ -153,3 +197,11 @@ sqlbuilder.Where().And("id>?",1).
     Table("users").
     Exec()
 ```
+
+### Select
+
+
+### AddColumn/DropColumn
+
+
+### AddConstraint/DropConstraint
