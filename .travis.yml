@@ -25,6 +25,11 @@ addons:
       - postgres
 
 before_install:
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      brew services start mysql;
+      brew services start postgres;
+    fi
+
   - mysql -e 'CREATE DATABASE orm_test;'
   - psql -c 'CREATE DATABASE orm_test;' -U postgres
 
@@ -35,3 +40,4 @@ after_success: bash <(curl -s https://codecov.io/bash)
 matrix:
   allow_failures:
     - go: tip
+    - os: windows
