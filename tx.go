@@ -224,7 +224,7 @@ func (tx *Tx) Truncate(v interface{}) error {
 	return truncate(tx, v)
 }
 
-// SQL 返回 SQL 实例
+// SQLBuilder 返回 SQL 实例
 func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder {
 	return tx.sqlBuilder
 }

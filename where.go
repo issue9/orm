@@ -153,7 +153,7 @@ func (stmt *WhereStmt) OrGroup() *sqlbuilder.WhereStmt {
 	return stmt.where.OrGroup()
 }
 
-// 从 v 中读取表名，该删除该表中符合条件的所有内容
+// Delete 从 v 中读取表名，该删除该表中符合条件的所有内容
 func (stmt *WhereStmt) Delete(v interface{}) (sql.Result, error) {
 	m, err := stmt.engine.NewModel(v)
 	if err != nil {

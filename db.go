@@ -63,7 +63,7 @@ func (db *DB) TablePrefix() string {
 //
 // 如果 l 不为 nil，则每次 SQL 调用都会输出 SQL 语句，
 // 预编译的语句，仅在预编译时输出；
-// 如果为 nil，则不输出任何中 SQL 语句。
+// 如果为 nil，则表示关闭调试。
 func (db *DB) Debug(l *log.Logger) {
 	db.sqlLogger = l
 }
@@ -236,7 +236,18 @@ func (db *DB) Truncate(v interface{}) error {
 	})
 }
 
+// InsertMany 一次插入多条数据。
+//
+// 会自动转换成事务进行处理。
+func (db *DB) InsertMany(v interface{}, max int) error {
+	return db.tx(func(tx *Tx) error {
+		return tx.InsertMany(v, max)
+	})
+}
+
 // MultInsert 插入一个或多个数据。
+//
+// 会自动转换成事务进行处理。
 func (db *DB) MultInsert(objs ...interface{}) error {
 	return db.tx(func(tx *Tx) error {
 		return tx.MultInsert(objs...)
@@ -244,6 +255,8 @@ func (db *DB) MultInsert(objs ...interface{}) error {
 }
 
 // MultSelect 选择符合要求的一条或是多条记录。
+//
+// 会自动转换成事务进行处理。
 func (db *DB) MultSelect(objs ...interface{}) error {
 	return db.tx(func(tx *Tx) error {
 		return tx.MultSelect(objs...)
@@ -251,6 +264,8 @@ func (db *DB) MultSelect(objs ...interface{}) error {
 }
 
 // MultUpdate 更新一条或多条类型。
+//
+// 会自动转换成事务进行处理。
 func (db *DB) MultUpdate(objs ...interface{}) error {
 	return db.tx(func(tx *Tx) error {
 		return tx.MultUpdate(objs...)
@@ -258,6 +273,8 @@ func (db *DB) MultUpdate(objs ...interface{}) error {
 }
 
 // MultDelete 删除一条或是多条数据。
+//
+// 会自动转换成事务进行处理。
 func (db *DB) MultDelete(objs ...interface{}) error {
 	return db.tx(func(tx *Tx) error {
 		return tx.MultDelete(objs...)
@@ -316,7 +333,7 @@ func (db *DB) MultTruncate(objs ...interface{}) error {
 	})
 }
 
-// SQL 返回 SQL 实例
+// SQLBuilder 返回 SQL 实例
 func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder {
 	return db.sqlBuilder
 }

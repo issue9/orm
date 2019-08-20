@@ -59,6 +59,8 @@ type Engine interface {
 
 	Truncate(v interface{}) error
 
+	InsertMany(v interface{}, max int) error
+
 	MultInsert(objs ...interface{}) error
 
 	MultSelect(objs ...interface{}) error
