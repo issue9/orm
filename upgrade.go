@@ -11,7 +11,7 @@ import (
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
-// Upgrader 提供了对更新表结构的一些操作
+// Upgrader 主要针对线上数据与本地模型不相同时，可执行的一些操作。
 type Upgrader struct {
 	db    *DB
 	model *Model
@@ -29,7 +29,7 @@ type Upgrader struct {
 
 // Upgrade 生成 Upgrader 对象
 //
-// Upgrader 提供了对现有的数据模型 v 与数据表之间的操作。
+// Upgrader 提供了对现有的数据模型 v 与线上数据表之间的操作。
 // 删除操作需要保证已经存在于数据表；
 // 而添加操作需要保证已经存在于模型 v，又不存在于数据表。
 func (db *DB) Upgrade(v interface{}) (*Upgrader, error) {
@@ -78,9 +78,9 @@ func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 	return u
 }
 
-// DropColumns 删除表中的列，列名可以不存在于表模型，
+// DropColumn 删除表中的列，列名可以不存在于表模型，
 // 只在数据库中的表包含该列名，就会被删除。
-func (u *Upgrader) DropColumns(name ...string) *Upgrader {
+func (u *Upgrader) DropColumn(name ...string) *Upgrader {
 	if u.err != nil {
 		return u
 	}

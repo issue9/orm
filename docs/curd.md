@@ -120,13 +120,13 @@ delete 和 update 一样，通过唯一查询条件确定需要删除的列，�
 result, err := db.Delete(&User{ID: 1})
 
 // 删除 username 值为 example 的行
-result, err = db.Delete(&User{Usrname: "example"})
+result, err = db.Delete(&User{Username: "example"})
 
 
 // 同时指这了 AI 和唯一约束，则优先 AI 作查询。
 result, err = db.Delete(&User{
     ID: 1,
-    Usrname: "example",
+    Username: "example",
 })
 
 // 返回错误，查询条件必须要有表达唯一性。

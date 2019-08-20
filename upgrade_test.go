@@ -51,7 +51,7 @@ func TestUpgrader(t *testing.T) {
 			NotNil(u)
 
 		err = u.DropConstraint("u_username", "chk_id").
-			DropColumns("created").
+			DropColumn("created").
 			DropIndex("i_name").
 			AddConstraint("u_id", "chk_username").
 			AddColumn("modified").

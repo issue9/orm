@@ -149,8 +149,22 @@ sqlbuilder.Select(e).Column("age").
 
 ### Delete
 
+```go
+sqlbuilder.Delete(e).
+    Where("id=?", 1).
+    Exec()
+```
+
 
 ### Update
+
+```go
+sqlbuilder.Update(e).
+    Where("id=?", 1).
+    Increase("age", 1). // 增加列的值
+    OCC("version", 5). // 如果服务器上 version 值不为 5，则会更新失败
+    Exec()
+```
 
 
 ### Where
@@ -200,8 +214,19 @@ sqlbuilder.Where().And("id>?",1).
 
 ### Select
 
+Select 支持大部分标准的 SQL 语句，对调用顺序没要求。
 
-### AddColumn/DropColumn
+```go
+builder := sqlbuilder.Select(e).Column("id").
+    Columns("username as name", "age").
+    Where("id=?", 5).
+    Limit(20,1)
 
+// 获取当前分页的内容
+list := make([]*User, 0, 10);
+    builder.QueryObject(true, &builder);
 
-### AddConstraint/DropConstraint
+// 查询符合以上条件的所有记录数
+builder.Count("count(*) AS cnt")
+    count, err := builder.QueryInt("cnt")
+```
