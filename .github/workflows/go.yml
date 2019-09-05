@@ -20,7 +20,7 @@ jobs:
     steps:
 
     - name: Install database
-      run:| 
+      run: |
         mysql -e 'CREATE DATABASE orm_test;'
         psql -c 'CREATE DATABASE orm_test;' -U postgres
 
