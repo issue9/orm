@@ -37,10 +37,12 @@ var (
 
 	NullStringType  = reflect.TypeOf(sql.NullString{})
 	NullInt64Type   = reflect.TypeOf(sql.NullInt64{})
+	NullInt32Type   = reflect.TypeOf(sql.NullInt32{})
 	NullBoolType    = reflect.TypeOf(sql.NullBool{})
 	NullFloat64Type = reflect.TypeOf(sql.NullFloat64{})
 	RawBytesType    = reflect.TypeOf(sql.RawBytes{})
 	TimeType        = reflect.TypeOf(time.Time{})
+	NullTimeType    = reflect.TypeOf(sql.NullTime{})
 )
 
 // Column 列结构
@@ -54,7 +56,6 @@ type Column struct {
 
 	GoType reflect.Type // Go 语言中的数据类型
 	GoName string       // Go 中的字段名
-	goZero interface{}  // Go 中的零值
 }
 
 // NewColumnFromGoType 从 Go 类型中生成 Column，会初始化 goZero
@@ -69,25 +70,7 @@ func NewColumnFromGoType(goType reflect.Type) (*Column, error) {
 
 	return &Column{
 		GoType: goType,
-		goZero: reflect.Zero(goType).Interface(),
 	}, nil
-}
-
-// IsZero 是否为零值
-func (c *Column) IsZero(v reflect.Value) bool {
-	if !v.IsValid() {
-		return false
-	}
-
-	if c.GoType.Comparable() {
-		return c.goZero == v.Interface()
-	}
-
-	if v.Kind() == reflect.Slice {
-		return v.Len() == 0
-	}
-
-	return false
 }
 
 // Clone 复制 Column

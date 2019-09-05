@@ -81,7 +81,7 @@ func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []inte
 	for _, col := range cols {
 		field := rval.FieldByName(col.GoName)
 
-		if col.IsZero(field) {
+		if field.IsZero() {
 			vals = vals[:0]
 			keys = keys[:0]
 			return nil, nil
@@ -221,7 +221,7 @@ func lastInsertID(e Engine, v interface{}) (int64, error) {
 		}
 
 		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if col.IsZero(field) && (col.AI || col.HasDefault) {
+		if field.IsZero() && (col.AI || col.HasDefault) {
 			continue
 		}
 
@@ -255,7 +255,7 @@ func insert(e Engine, v interface{}) (sql.Result, error) {
 		}
 
 		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if col.IsZero(field) && (col.AI || col.HasDefault) {
+		if field.IsZero() && (col.AI || col.HasDefault) {
 			continue
 		}
 
@@ -359,7 +359,7 @@ func getUpdateColumns(e Engine, v interface{}, stmt *sqlbuilder.UpdateStmt, cols
 
 		if m.OCC == col { // 乐观锁
 			occValue = field.Interface()
-		} else if inStrSlice(col.Name, cols) || !col.IsZero(field) {
+		} else if inStrSlice(col.Name, cols) || !field.IsZero() {
 			// 非零值或是明确指定需要更新的列，才会更新
 			stmt.Set(col.Name, field.Interface())
 		}
@@ -436,7 +436,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 				}
 
 				// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-				if col.IsZero(field) && (col.AI || col.HasDefault) {
+				if field.IsZero() && (col.AI || col.HasDefault) {
 					continue
 				}
 
@@ -461,7 +461,7 @@ func buildInsertManySQL(e *Tx, rval reflect.Value) (*sqlbuilder.InsertStmt, erro
 				}
 
 				// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-				if col.IsZero(field) && (col.AI || col.HasDefault) {
+				if field.IsZero() && (col.AI || col.HasDefault) {
 					continue
 				}
 
