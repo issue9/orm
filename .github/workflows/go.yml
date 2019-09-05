@@ -4,7 +4,19 @@ jobs:
 
   build:
     name: Build
-    runs-on: [ubuntu-latest,windows-latest,macOS-latest]
+    runs-on:
+      - ubuntu-latest
+      - windows-latest
+      - macOS-latest
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432/tcp
+      mysql:
+        image: mysql:8.0
+        ports:
+        - 3306
     steps:
 
     - name: Set up Go 1.13
@@ -23,6 +35,9 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
-
-    - name: Build
-      run: go build -v .
+      
+    - name: Test
+      run: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+      
+    - name: codecov
+      run: bash <(curl -s https://codecov.io/bash)
