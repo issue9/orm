@@ -19,7 +19,7 @@ jobs:
           - 3306
     steps:
 
-    - name: install mysql
+    - name: Install database
       run:| 
         mysql -e 'CREATE DATABASE orm_test;'
         psql -c 'CREATE DATABASE orm_test;' -U postgres
