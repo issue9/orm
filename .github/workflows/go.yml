@@ -20,9 +20,9 @@ jobs:
     steps:
 
     - name: install mysql
-      run:
-        - mysql -e 'CREATE DATABASE orm_test;'
-        - psql -c 'CREATE DATABASE orm_test;' -U postgres
+      run:| 
+        mysql -e 'CREATE DATABASE orm_test;'
+        psql -c 'CREATE DATABASE orm_test;' -U postgres
 
     - name: Set up Go 1.13
       uses: actions/setup-go@v1
