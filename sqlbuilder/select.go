@@ -6,6 +6,7 @@ package sqlbuilder
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/issue9/orm/v3/core"
@@ -433,7 +434,7 @@ func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (size int, er
 	}
 	defer func() {
 		if err1 := rows.Close(); err1 != nil {
-			err = errors.New(err1.Error() + err.Error())
+			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 		}
 	}()
 
@@ -448,7 +449,7 @@ func (stmt *SelectStmt) QueryString(colName string) (v string, err error) {
 	}
 	defer func() {
 		if err1 := rows.Close(); err1 != nil {
-			err = errors.New(err1.Error() + err.Error())
+			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 		}
 	}()
 

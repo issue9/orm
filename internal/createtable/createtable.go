@@ -6,7 +6,6 @@
 package createtable
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"unicode"
@@ -65,7 +64,7 @@ func scanCreateTable(engine core.Engine, table, query string, val ...interface{}
 
 	defer func() {
 		if err1 := rows.Close(); err1 != nil {
-			err = errors.New(err1.Error() + err.Error())
+			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 		}
 	}()
 

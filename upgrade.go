@@ -5,7 +5,6 @@
 package orm
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/issue9/orm/v3/sqlbuilder"
@@ -190,7 +189,7 @@ func (u *Upgrader) Do() error {
 	if len(u.dropConts) > 0 {
 		if err := u.dropConstraints(e); err != nil {
 			if err1 := rollback(); err1 != nil {
-				return errors.New(err1.Error() + err.Error())
+				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 			}
 			return err
 		}
@@ -199,7 +198,7 @@ func (u *Upgrader) Do() error {
 	if len(u.dropIdxs) > 0 {
 		if err := u.dropIndexes(e); err != nil {
 			if err1 := rollback(); err1 != nil {
-				return errors.New(err1.Error() + err.Error())
+				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 			}
 			return err
 		}
@@ -210,7 +209,7 @@ func (u *Upgrader) Do() error {
 	if len(u.dropCols) > 0 {
 		if err := u.dropColumns(e); err != nil {
 			if err1 := rollback(); err1 != nil {
-				return errors.New(err1.Error() + err.Error())
+				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 			}
 			return err
 		}
@@ -220,7 +219,7 @@ func (u *Upgrader) Do() error {
 	if len(u.addCols) > 0 {
 		if err := u.addColumns(e); err != nil {
 			if err1 := rollback(); err1 != nil {
-				return errors.New(err1.Error() + err.Error())
+				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 			}
 			return err
 		}
@@ -229,7 +228,7 @@ func (u *Upgrader) Do() error {
 	if len(u.addConts) > 0 {
 		if err := u.addConstraints(e); err != nil {
 			if err1 := rollback(); err1 != nil {
-				return errors.New(err1.Error() + err.Error())
+				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 			}
 			return err
 		}
@@ -238,7 +237,7 @@ func (u *Upgrader) Do() error {
 	if len(u.addIdxs) > 0 {
 		if err := u.addIndexes(e); err != nil {
 			if err1 := rollback(); err1 != nil {
-				return errors.New(err1.Error() + err.Error())
+				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 			}
 			return err
 		}

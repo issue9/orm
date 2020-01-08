@@ -7,7 +7,7 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"fmt"
 	"log"
 	"strings"
 
@@ -346,7 +346,7 @@ func (db *DB) tx(f func(tx *Tx) error) error {
 
 	if err := f(tx); err != nil {
 		if err1 := tx.Rollback(); err1 != nil {
-			return errors.New(err1.Error() + err.Error())
+			return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
 		}
 		return err
 	}
