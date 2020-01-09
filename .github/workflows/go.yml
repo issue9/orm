@@ -4,10 +4,13 @@ jobs:
 
   test:
     name: Test
+    runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
-        platform: [ubuntu-latest, windows-latest, macOS-latest]
-    runs-on: ${{ matrix.platform }}
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        go: ['1.13.x']
+
     services:
       postgres:
         image: postgres
@@ -17,32 +20,31 @@ jobs:
         image: mysql:8.0
         ports:
           - 3306
+
     steps:
 
-    - name: Install database
+    - name: 创建数据库
       run: |
         mysql -e 'CREATE DATABASE orm_test;'
         psql -c 'CREATE DATABASE orm_test;' -U postgres
 
-    - name: Set up Go 1.13
+    - name: 安装 Go ${{ matrix.go }}
       uses: actions/setup-go@v1
       with:
-        go-version: 1.13
+        go-version: ${{ matrix.go }}
       id: go
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
-    - name: Get dependencies
-      run: go get -v -t -d ./...
-      
+    - name: Vet
+      run: go vet -v ./...
+        
     - name: Test
       run: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
       
     - name: Upload coverage to Codecov  
-      uses: codecov/codecov-action@v1.0.2
+      uses: codecov/codecov-action@v1
       with:
         token: ${{secrets.CODECOV_TOKEN}}
         file: ./coverage.txt
-        flags: unittests
-        name: codecov-umbrella 

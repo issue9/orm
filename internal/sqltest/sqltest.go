@@ -1,6 +1,4 @@
-// Copyright 2018 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 // Package sqltest 提供对 SQL 内容测试的工具
 package sqltest
