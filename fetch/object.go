@@ -83,13 +83,7 @@ func Object(strict bool, rows *sql.Rows, obj interface{}) (int, error) {
 // 键值为字段的值。支持匿名字段，不会转换不可导出(小写字母开头)的
 // 字段，也不会转换 struct tag 以-开头的字段。
 func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
-	for v.Kind() == reflect.Ptr {
-		if v.IsNil() {
-			v.Set(reflect.New(v.Type().Elem()))
-		} else {
-			v = v.Elem()
-		}
-	}
+	v = getRealValue(v)
 	if v.Kind() != reflect.Struct {
 		return ErrInvalidKind
 	}
@@ -112,13 +106,7 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 			continue
 		}
 
-		for vf.Kind() == reflect.Ptr {
-			if vf.IsNil() {
-				vf.Set(reflect.New(vf.Type().Elem()))
-			}
-			vf = vf.Elem()
-		}
-
+		vf = getRealValue(vf)
 		if vf.Kind() == reflect.Struct {
 			items := make(map[string]reflect.Value, 10)
 			if err := parseObject(vf, &items); err != nil {
@@ -136,6 +124,17 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 	} // end for
 
 	return nil
+}
+
+func getRealValue(v reflect.Value) reflect.Value {
+	for v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			v.Set(reflect.New(v.Type().Elem()))
+		} else {
+			v = v.Elem()
+		}
+	}
+	return v
 }
 
 func getName(field reflect.StructField) string {
