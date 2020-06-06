@@ -72,10 +72,10 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 
 	buf := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.table).
-		WriteString(" ADD ").
+		WString(" ADD ").
 		QuoteKey(stmt.column.Name).
-		WriteBytes(' ').
-		WriteString(typ)
+		WBytes(' ').
+		WString(typ)
 
 	query, err := buf.String()
 	if err != nil {
@@ -147,7 +147,7 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 
 	buf := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
-		WriteString(" DROP COLUMN ").
+		WString(" DROP COLUMN ").
 		QuoteKey(stmt.ColumnName)
 
 	query, err := buf.String()

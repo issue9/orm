@@ -2,7 +2,9 @@
 
 package core
 
-import "bytes"
+import (
+	"github.com/issue9/errwrap"
+)
 
 // 作用于表名，列名等非关键字上的引号占位符。
 // 在 Dialect.SQL 中会自动替换成该数据相应的符号。
@@ -16,60 +18,41 @@ const (
 // 出错时，错误信息会缓存，并在 String 和 Bytes 时返回，
 // 或是通过 Err() 查看是否存在错误。
 type Builder struct {
-	buffer *bytes.Buffer
-	err    error
+	buffer errwrap.Buffer
 }
 
 // NewBuilder 声明一个新的 Builder 实例
 func NewBuilder(str ...string) *Builder {
-	b := &Builder{
-		buffer: new(bytes.Buffer),
-	}
+	b := &Builder{}
 
 	for _, s := range str {
-		b.WriteString(s)
+		b.WString(s)
 	}
 
 	return b
 }
 
-// WriteString 写入一字符串
-func (b *Builder) WriteString(str string) *Builder {
-	if b.err != nil {
-		return b
-	}
-
-	_, b.err = b.buffer.WriteString(str)
+// WString 写入一字符串
+func (b *Builder) WString(str string) *Builder {
+	b.buffer.WriteString(str)
 	return b
 }
 
-// WriteBytes 写入多个字符
-func (b *Builder) WriteBytes(c ...byte) *Builder {
-	for _, cc := range c {
-		if b.err != nil {
-			return b
-		}
-
-		b.err = b.buffer.WriteByte(cc)
-	}
+// WBytes 写入多个字符
+func (b *Builder) WBytes(c ...byte) *Builder {
+	b.buffer.WBytes(c)
 	return b
 }
 
-// WriteRunes 写入多个字符
-func (b *Builder) WriteRunes(r ...rune) *Builder {
-	for _, rr := range r {
-		if b.err != nil {
-			return b
-		}
-
-		_, b.err = b.buffer.WriteRune(rr)
-	}
+// WRunes 写入多个字符
+func (b *Builder) WRunes(r ...rune) *Builder {
+	b.buffer.WRunes(r)
 	return b
 }
 
 // Quote 给 str 左右添加 l 和 r 两个字符
 func (b *Builder) Quote(str string, l, r byte) *Builder {
-	return b.WriteBytes(l).WriteString(str).WriteBytes(r)
+	return b.WBytes(l).WString(str).WBytes(r)
 }
 
 // QuoteKey 给 str 左右添加 QuoteLeft 和 QuoteRight 两个字符
@@ -80,25 +63,24 @@ func (b *Builder) QuoteKey(str string) *Builder {
 // Reset 重置内容，同时也会将 err 设置为 nil
 func (b *Builder) Reset() *Builder {
 	b.buffer.Reset()
-	b.err = nil
+	b.buffer.Err = nil
 	return b
 }
 
 // TruncateLast 去掉最后几个字符
 func (b *Builder) TruncateLast(n int) *Builder {
 	b.buffer.Truncate(b.Len() - n)
-
 	return b
 }
 
 // Err 返回错误内容
 func (b *Builder) Err() error {
-	return b.err
+	return b.buffer.Err
 }
 
 // String 获取表示的字符串
 func (b *Builder) String() (string, error) {
-	if b.err != nil {
+	if b.Err() != nil {
 		return "", b.Err()
 	}
 	return b.buffer.String(), nil
@@ -106,7 +88,7 @@ func (b *Builder) String() (string, error) {
 
 // Bytes 获取表示的字符串
 func (b *Builder) Bytes() ([]byte, error) {
-	if b.err != nil {
+	if b.Err() != nil {
 		return nil, b.Err()
 	}
 	return b.buffer.Bytes(), nil
@@ -119,7 +101,7 @@ func (b *Builder) Len() int {
 
 // Append 追加加一个 Builder 的内容
 func (b *Builder) Append(v *Builder) *Builder {
-	if b.err != nil {
+	if b.Err() != nil {
 		return b
 	}
 
@@ -128,7 +110,7 @@ func (b *Builder) Append(v *Builder) *Builder {
 		b.buffer.WriteString(str)
 		return b
 	}
-	b.err = err
+	b.buffer.Err = err
 
 	return b
 }

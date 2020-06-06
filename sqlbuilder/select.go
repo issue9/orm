@@ -120,11 +120,11 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 
 	stmt.buildColumns(builder)
 
-	builder.WriteString(" FROM ").WriteString(stmt.tableExpr)
+	builder.WString(" FROM ").WString(stmt.tableExpr)
 
 	// join
 	if stmt.joins != nil {
-		builder.Append(stmt.joins).WriteBytes(' ')
+		builder.Append(stmt.joins).WBytes(' ')
 	}
 
 	// where
@@ -133,19 +133,19 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		return "", nil, err
 	}
 	if wq != "" {
-		builder.WriteString(" WHERE ")
-		builder.WriteString(wq)
+		builder.WString(" WHERE ")
+		builder.WString(wq)
 		args = append(args, wa...)
 	}
 
 	// group by
 	if stmt.group != "" {
-		builder.WriteString(stmt.group)
+		builder.WString(stmt.group)
 	}
 
 	// having
 	if stmt.havingQuery != "" {
-		builder.WriteString(stmt.havingQuery)
+		builder.WString(stmt.havingQuery)
 		args = append(args, stmt.havingVals...)
 	}
 
@@ -157,7 +157,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 
 		// limit
 		if stmt.limitQuery != "" {
-			builder.WriteString(stmt.limitQuery)
+			builder.WString(stmt.limitQuery)
 			args = append(args, stmt.limitVals...)
 		}
 	}
@@ -173,7 +173,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 
 	// for update
 	if stmt.forUpdate {
-		builder.WriteString(" FOR UPDATE")
+		builder.WString(" FOR UPDATE")
 	}
 
 	query, err := builder.String()
@@ -196,7 +196,7 @@ func (stmt *SelectStmt) buildUnions(builder *core.Builder) (args []interface{}, 
 			return nil, err
 		}
 
-		builder.WriteString(u.typ).WriteBytes(' ').WriteString(query)
+		builder.WString(u.typ).WBytes(' ').WString(query)
 		args = append(args, a...)
 	}
 
@@ -205,16 +205,16 @@ func (stmt *SelectStmt) buildUnions(builder *core.Builder) (args []interface{}, 
 
 func (stmt *SelectStmt) buildColumns(builder *core.Builder) {
 	if stmt.countExpr != "" {
-		builder.WriteString(stmt.countExpr)
+		builder.WString(stmt.countExpr)
 		return
 	}
 
 	if stmt.distinct {
-		builder.WriteString("DISTINCT ")
+		builder.WString("DISTINCT ")
 	}
 
 	for _, col := range stmt.columns {
-		builder.WriteString(col).WriteBytes(',')
+		builder.WString(col).WBytes(',')
 	}
 
 	builder.TruncateLast(1)
@@ -271,7 +271,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 			break
 		}
 
-		builder.WriteString(" AS ").QuoteKey(alias[0])
+		builder.WString(" AS ").QuoteKey(alias[0])
 		stmt.tableExpr, stmt.err = builder.String()
 	default:
 		stmt.err = errors.New("过多的 alias 参数")
@@ -299,14 +299,14 @@ func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 		stmt.joins = core.NewBuilder("")
 	}
 
-	stmt.joins.WriteBytes(' ').
-		WriteString(typ).
-		WriteString(" JOIN ").
+	stmt.joins.WBytes(' ').
+		WString(typ).
+		WString(" JOIN ").
 		QuoteKey(table).
-		WriteString(" AS ").
+		WString(" AS ").
 		QuoteKey(alias).
-		WriteString(" ON ").
-		WriteString(on)
+		WString(" ON ").
+		WString(on)
 
 	return stmt
 }
@@ -337,20 +337,20 @@ func (stmt *SelectStmt) orderBy(asc bool, col ...string) *SelectStmt {
 	}
 
 	if stmt.orders.Len() == 0 {
-		stmt.orders.WriteString(" ORDER BY ")
+		stmt.orders.WString(" ORDER BY ")
 	} else {
-		stmt.orders.WriteBytes(',')
+		stmt.orders.WBytes(',')
 	}
 
 	for _, c := range col {
-		stmt.orders.WriteString(c).WriteBytes(',')
+		stmt.orders.WString(c).WBytes(',')
 	}
 	stmt.orders.TruncateLast(1)
 
 	if asc {
-		stmt.orders.WriteString(" ASC ")
+		stmt.orders.WString(" ASC ")
 	} else {
-		stmt.orders.WriteString(" DESC ")
+		stmt.orders.WString(" DESC ")
 	}
 
 	return stmt
@@ -374,8 +374,8 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 	}
 
 	stmt.group, stmt.err = core.NewBuilder(" GROUP BY ").
-		WriteString(col).
-		WriteBytes(' ').
+		WString(col).
+		WBytes(' ').
 		String()
 	return stmt
 }

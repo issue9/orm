@@ -196,7 +196,7 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 
 	w := core.NewBuilder("CREATE TABLE IF NOT EXISTS ").
 		QuoteKey(stmt.model.Name).
-		WriteBytes('(')
+		WBytes('(')
 
 	for _, col := range stmt.model.Columns {
 		typ, err := stmt.Dialect().SQLType(col)
@@ -204,15 +204,15 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 			return nil, err
 		}
 		w.QuoteKey(col.Name).
-			WriteBytes(' ').
-			WriteString(typ).
-			WriteBytes(',')
+			WBytes(' ').
+			WString(typ).
+			WBytes(',')
 	}
 
 	if err := stmt.createConstraints(w); err != nil {
 		return nil, err
 	}
-	w.TruncateLast(1).WriteBytes(')')
+	w.TruncateLast(1).WBytes(')')
 
 	if err := stmt.Dialect().CreateTableOptionsSQL(w, stmt.model.Meta); err != nil {
 		return nil, err
@@ -239,24 +239,24 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 func (stmt *CreateTableStmt) createConstraints(buf *core.Builder) error {
 	for name, expr := range stmt.model.Checks {
 		stmt.createCheckSQL(buf, name, expr)
-		buf.WriteBytes(',')
+		buf.WBytes(',')
 	}
 
 	for name, cols := range stmt.model.Uniques {
 		stmt.createUniqueSQL(buf, name, cols...)
-		buf.WriteBytes(',')
+		buf.WBytes(',')
 	}
 
 	// foreign  key
 	for name, fk := range stmt.model.ForeignKeys {
 		stmt.createFKSQL(buf, name, fk)
-		buf.WriteBytes(',')
+		buf.WBytes(',')
 	}
 
 	// primary key
 	if len(stmt.model.PrimaryKey) > 0 {
 		stmt.createPKSQL(buf, stmt.model.PKName(), stmt.model.PrimaryKey...)
-		buf.WriteBytes(',')
+		buf.WBytes(',')
 	}
 
 	return nil
@@ -291,62 +291,62 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 //
 // CONSTRAINT pk_name PRIMARY KEY (id,lastName)
 func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, name string, cols ...*core.Column) {
-	buf.WriteString(" CONSTRAINT ").
+	buf.WString(" CONSTRAINT ").
 		QuoteKey(name).
-		WriteString(" PRIMARY KEY(")
+		WString(" PRIMARY KEY(")
 
 	for _, col := range cols {
-		buf.QuoteKey(col.Name).WriteBytes(',')
+		buf.QuoteKey(col.Name).WBytes(',')
 	}
-	buf.TruncateLast(1).WriteBytes(')')
+	buf.TruncateLast(1).WBytes(')')
 }
 
 // create table 语句中的 unique 约束部分的语句。
 //
 // CONSTRAINT unique_name UNIQUE (id,lastName)
 func (stmt *CreateTableStmt) createUniqueSQL(buf *core.Builder, name string, cols ...*core.Column) {
-	buf.WriteString(" CONSTRAINT ").
+	buf.WString(" CONSTRAINT ").
 		QuoteKey(name).
-		WriteString(" UNIQUE(")
+		WString(" UNIQUE(")
 	for _, col := range cols {
-		buf.QuoteKey(col.Name).WriteBytes(',')
+		buf.QuoteKey(col.Name).WBytes(',')
 	}
-	buf.TruncateLast(1).WriteBytes(')')
+	buf.TruncateLast(1).WBytes(')')
 }
 
 // create table 语句中 fk 的约束部分的语句
 func (stmt *CreateTableStmt) createFKSQL(buf *core.Builder, name string, fk *core.ForeignKey) {
 	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
-	buf.WriteString(" CONSTRAINT ").
+	buf.WString(" CONSTRAINT ").
 		QuoteKey(name)
 
-	buf.WriteString(" FOREIGN KEY (").
+	buf.WString(" FOREIGN KEY (").
 		QuoteKey(fk.Column.Name)
 
-	buf.WriteString(") REFERENCES ").
+	buf.WString(") REFERENCES ").
 		QuoteKey(fk.RefTableName)
 
-	buf.WriteBytes('(').
+	buf.WBytes('(').
 		QuoteKey(fk.RefColName).
-		WriteBytes(')')
+		WBytes(')')
 
 	if len(fk.UpdateRule) > 0 {
-		buf.WriteString(" ON UPDATE ").WriteString(fk.UpdateRule)
+		buf.WString(" ON UPDATE ").WString(fk.UpdateRule)
 	}
 
 	if len(fk.DeleteRule) > 0 {
-		buf.WriteString(" ON DELETE ").WriteString(fk.DeleteRule)
+		buf.WString(" ON DELETE ").WString(fk.DeleteRule)
 	}
 }
 
 // create table 语句中 check 约束部分的语句
 func (stmt *CreateTableStmt) createCheckSQL(buf *core.Builder, name, expr string) {
 	// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
-	buf.WriteString(" CONSTRAINT ").
+	buf.WString(" CONSTRAINT ").
 		QuoteKey(name).
-		WriteString(" CHECK(").
-		WriteString(expr).
-		WriteBytes(')')
+		WString(" CHECK(").
+		WString(expr).
+		WBytes(')')
 }
 
 // TruncateTableStmtHooker TruncateTableStmt.DDLSQL 的钩子函数

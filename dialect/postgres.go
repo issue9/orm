@@ -89,12 +89,12 @@ func (p *postgres) replace(query string) (string, error) {
 	for _, c := range query {
 		switch c {
 		case '?':
-			build.WriteBytes('$').WriteString(strconv.Itoa(num))
+			build.WBytes('$').WString(strconv.Itoa(num))
 			num++
 		case '$':
 			return "", errInvalidDollar
 		default:
-			build.WriteRunes(c)
+			build.WRunes(c)
 		}
 	}
 
@@ -114,7 +114,7 @@ func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]
 		QuoteKey(stmt.TableName)
 
 	if stmt.AIColumnName != "" {
-		builder.WriteString(" RESTART IDENTITY")
+		builder.WString(" RESTART IDENTITY")
 	}
 
 	query, err := builder.String()
@@ -209,15 +209,15 @@ func (p *postgres) buildType(typ string, col *core.Column, l int) (string, error
 	case l == 1 && len(col.Length) > 0:
 		w.Quote(strconv.Itoa(col.Length[0]), '(', ')')
 	case l == 2 && len(col.Length) > 1:
-		w.WriteBytes('(').
-			WriteString(strconv.Itoa(col.Length[0])).
-			WriteBytes(',').
-			WriteString(strconv.Itoa(col.Length[1])).
-			WriteBytes(')')
+		w.WBytes('(').
+			WString(strconv.Itoa(col.Length[0])).
+			WBytes(',').
+			WString(strconv.Itoa(col.Length[1])).
+			WBytes(')')
 	}
 
 	if !col.Nullable {
-		w.WriteString(" NOT NULL")
+		w.WString(" NOT NULL")
 	}
 
 	if col.HasDefault {
@@ -225,7 +225,7 @@ func (p *postgres) buildType(typ string, col *core.Column, l int) (string, error
 		if err != nil {
 			return "", err
 		}
-		w.WriteString(" DEFAULT ").WriteString(v)
+		w.WString(" DEFAULT ").WString(v)
 	}
 
 	return w.String()

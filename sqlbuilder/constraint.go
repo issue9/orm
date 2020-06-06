@@ -152,44 +152,44 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 
 	builder := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
-		WriteString(" ADD CONSTRAINT ").
+		WString(" ADD CONSTRAINT ").
 		QuoteKey(stmt.Name)
 
 	switch stmt.Type {
 	case core.ConstraintCheck:
-		builder.WriteString(" CHECK(").WriteString(stmt.Data[0]).WriteBytes(')')
+		builder.WString(" CHECK(").WString(stmt.Data[0]).WBytes(')')
 	case core.ConstraintFK:
-		builder.WriteString(" FOREIGN KEY(").
+		builder.WString(" FOREIGN KEY(").
 			QuoteKey(stmt.Data[0]).
-			WriteString(") REFERENCES ").
+			WString(") REFERENCES ").
 			QuoteKey(stmt.Data[1]).
-			WriteBytes('(').
+			WBytes('(').
 			QuoteKey(stmt.Data[2]).
-			WriteBytes(')')
+			WBytes(')')
 
 		if stmt.Data[3] != "" {
-			builder.WriteString(" ON UPDATE ").WriteString(stmt.Data[3])
+			builder.WString(" ON UPDATE ").WString(stmt.Data[3])
 		}
 
 		if stmt.Data[4] != "" {
-			builder.WriteString(" ON DELETE ").WriteString(stmt.Data[4])
+			builder.WString(" ON DELETE ").WString(stmt.Data[4])
 		}
 	case core.ConstraintPK:
-		builder.WriteString(" PRIMARY KEY(")
+		builder.WString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
 			builder.
 				QuoteKey(col).
-				WriteBytes(',')
+				WBytes(',')
 		}
-		builder.TruncateLast(1).WriteBytes(')')
+		builder.TruncateLast(1).WBytes(')')
 	case core.ConstraintUnique:
-		builder.WriteString(" UNIQUE(")
+		builder.WString(" UNIQUE(")
 		for _, col := range stmt.Data {
 			builder.
 				QuoteKey(col).
-				WriteBytes(',')
+				WBytes(',')
 		}
-		builder.TruncateLast(1).WriteBytes(')')
+		builder.TruncateLast(1).WBytes(')')
 	default:
 		return nil, ErrUnknownConstraint
 	}
@@ -274,7 +274,7 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 
 	builder := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
-		WriteString(" DROP CONSTRAINT ").
+		WString(" DROP CONSTRAINT ").
 		QuoteKey(stmt.Name)
 
 	query, err := builder.String()

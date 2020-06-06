@@ -44,7 +44,7 @@ func fillArgs(query string, args []interface{}) (string, error) {
 			if err := w(builder, query[start:i]); err != nil {
 				return "", err
 			}
-			builder.WriteRunes(c) // 当前的字符不能丢
+			builder.WRunes(c) // 当前的字符不能丢
 			start = -1
 			index++
 		case start == -1:
@@ -52,7 +52,7 @@ func fillArgs(query string, args []interface{}) (string, error) {
 				builder.Quote(fmt.Sprint(args[index]), '\'', '\'')
 				index++
 			} else {
-				builder.WriteRunes(c)
+				builder.WRunes(c)
 			}
 		}
 	}

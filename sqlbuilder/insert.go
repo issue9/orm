@@ -115,7 +115,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	builder := core.NewBuilder("INSERT INTO ").WriteString(stmt.table)
+	builder := core.NewBuilder("INSERT INTO ").WString(stmt.table)
 
 	if stmt.selectStmt != nil {
 		return stmt.fromSelect(builder)
@@ -131,30 +131,30 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		}
 	}
 
-	builder.WriteBytes('(')
+	builder.WBytes('(')
 	for _, col := range stmt.cols {
 		builder.QuoteKey(col).
-			WriteBytes(',')
+			WBytes(',')
 	}
 	builder.TruncateLast(1)
-	builder.WriteBytes(')')
+	builder.WBytes(')')
 
 	args := make([]interface{}, 0, len(stmt.cols)*len(stmt.args))
-	builder.WriteString(" VALUES ")
+	builder.WString(" VALUES ")
 	for _, vals := range stmt.args {
-		builder.WriteBytes('(')
+		builder.WBytes('(')
 		for _, v := range vals {
 			if named, ok := v.(sql.NamedArg); ok && named.Name != "" {
-				builder.WriteBytes('@')
-				builder.WriteString(named.Name)
+				builder.WBytes('@')
+				builder.WString(named.Name)
 			} else {
-				builder.WriteBytes('?')
+				builder.WBytes('?')
 			}
-			builder.WriteBytes(',')
+			builder.WBytes(',')
 			args = append(args, v)
 		}
 		builder.TruncateLast(1) // 去掉最后的逗号
-		builder.WriteString("),")
+		builder.WString("),")
 	}
 	builder.TruncateLast(1)
 
@@ -170,7 +170,7 @@ func (stmt *InsertStmt) insertDefault(builder *core.Builder) (string, []interfac
 		return hook.InsertDefaultValueHook(stmt.table)
 	}
 
-	query, err := builder.WriteString(" DEFAULT VALUES").String()
+	query, err := builder.WString(" DEFAULT VALUES").String()
 	if err != nil {
 		return "", nil, err
 	}
@@ -179,26 +179,26 @@ func (stmt *InsertStmt) insertDefault(builder *core.Builder) (string, []interfac
 }
 
 func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []interface{}, error) {
-	builder.WriteBytes('(')
+	builder.WBytes('(')
 	if len(stmt.cols) > 0 {
 		for _, col := range stmt.cols {
-			builder.QuoteKey(col).WriteBytes(',')
+			builder.QuoteKey(col).WBytes(',')
 		}
 		builder.TruncateLast(1)
 	} else {
 		for _, col := range stmt.selectStmt.columns {
-			builder.WriteString(getColumnName(col)).WriteBytes(',')
+			builder.WString(getColumnName(col)).WBytes(',')
 		}
 		builder.TruncateLast(1)
 	}
-	builder.WriteBytes(')')
+	builder.WBytes(')')
 
 	query, args, err := stmt.selectStmt.SQL()
 	if err != nil {
 		return "", nil, err
 	}
 
-	q, err := builder.WriteString(query).String()
+	q, err := builder.WString(query).String()
 	if err != nil {
 		return "", nil, err
 	}

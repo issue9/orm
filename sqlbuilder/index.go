@@ -81,15 +81,15 @@ func (stmt *CreateIndexStmt) DDLSQL() ([]string, error) {
 		builder = core.NewBuilder("CREATE UNIQUE INDEX ")
 	}
 
-	builder.WriteString(stmt.name).
-		WriteString(" ON ").
+	builder.WString(stmt.name).
+		WString(" ON ").
 		QuoteKey(stmt.table).
-		WriteBytes('(')
+		WBytes('(')
 	for _, col := range stmt.cols {
 		builder.QuoteKey(col).
-			WriteBytes(',')
+			WBytes(',')
 	}
-	builder.TruncateLast(1).WriteBytes(')')
+	builder.TruncateLast(1).WBytes(')')
 
 	query, err := builder.String()
 	if err != nil {

@@ -13,8 +13,8 @@ func TestSQLBuilder(t *testing.T) {
 	a := assert.New(t)
 
 	b := NewBuilder()
-	b.WriteBytes('1')
-	b.WriteString("23")
+	b.WBytes('1')
+	b.WString("23")
 
 	str, err := b.String()
 	a.NotError(err).Equal("123", str)
@@ -25,13 +25,13 @@ func TestSQLBuilder(t *testing.T) {
 	a.NotError(err).Equal(str, "")
 	a.Equal(b.Len(), 0)
 
-	b.WriteBytes('B', 'y', 't', 'e').
-		WriteRunes('R', 'u', 'n', 'e').
-		WriteString("String")
+	b.WBytes('B', 'y', 't', 'e').
+		WRunes('R', 'u', 'n', 'e').
+		WString("String")
 	str, err = b.String()
 	a.NotError(err).Equal(str, "ByteRuneString")
 
-	b.WriteBytes('1', '2')
+	b.WBytes('1', '2')
 	b.TruncateLast(2)
 	str, err = b.String()
 	a.NotError(err).Equal(str, "ByteRuneString").Equal(14, b.Len())
@@ -48,8 +48,8 @@ func TestSQLBuilder(t *testing.T) {
 
 	// 带错误信息
 	buf = NewBuilder()
-	buf.err = errors.New("test")
-	buf.WriteString("str1")
+	buf.buffer.Err = errors.New("test")
+	buf.WString("str1")
 	str, err = buf.String()
 	a.ErrorString(err, "test").
 		Empty(str)

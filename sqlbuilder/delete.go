@@ -48,8 +48,8 @@ func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
 
 	q, err := core.NewBuilder("DELETE FROM ").
 		QuoteKey(stmt.table).
-		WriteString(" WHERE ").
-		WriteString(query).
+		WString(" WHERE ").
+		WString(query).
 		String()
 	if err != nil {
 		return "", nil, err

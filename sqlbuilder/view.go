@@ -114,26 +114,26 @@ func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
 	builder := core.NewBuilder("CREATE ")
 
 	if stmt.IsReplace {
-		builder.WriteString(" OR REPLACE ")
+		builder.WString(" OR REPLACE ")
 	}
 
 	if stmt.IsTemporary {
-		builder.WriteString(" TEMPORARY ")
+		builder.WString(" TEMPORARY ")
 	}
 
-	builder.WriteString(" VIEW ").QuoteKey(stmt.ViewName)
+	builder.WString(" VIEW ").QuoteKey(stmt.ViewName)
 
 	if len(stmt.Columns) > 0 {
-		builder.WriteBytes('(')
+		builder.WBytes('(')
 		for _, col := range stmt.Columns {
 			builder.QuoteKey(col).
-				WriteBytes(',')
+				WBytes(',')
 		}
-		builder.TruncateLast(1).WriteBytes(')')
+		builder.TruncateLast(1).WBytes(')')
 	}
 
-	query, err := builder.WriteString(" AS ").
-		WriteString(stmt.SelectQuery).
+	query, err := builder.WString(" AS ").
+		WString(stmt.SelectQuery).
 		String()
 	if err != nil {
 		return nil, err

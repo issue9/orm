@@ -78,17 +78,17 @@ func (m *mysql) Prepare(query string) (string, map[string]int, error) {
 
 func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
 	if len(options[mysqlEngine]) == 1 {
-		w.WriteString(" ENGINE=")
-		w.WriteString(options[mysqlEngine][0])
-		w.WriteBytes(' ')
+		w.WString(" ENGINE=")
+		w.WString(options[mysqlEngine][0])
+		w.WBytes(' ')
 	} else if len(options[mysqlEngine]) > 0 {
 		return errors.New("无效的属性值：" + mysqlCharset)
 	}
 
 	if len(options[mysqlCharset]) == 1 {
-		w.WriteString(" CHARACTER SET=")
-		w.WriteString(options[mysqlCharset][0])
-		w.WriteBytes(' ')
+		w.WString(" CHARACTER SET=")
+		w.WString(options[mysqlCharset][0])
+		w.WBytes(' ')
 	} else if len(options[mysqlCharset]) > 0 {
 		return errors.New("无效的属性值：" + mysqlCharset)
 	}
@@ -107,10 +107,10 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 	}
 
 	builder := core.NewBuilder("ALTER TABLE ").
-		WriteString(stmt.TableName).
-		WriteString(" DROP ")
+		WString(stmt.TableName).
+		WString(" DROP ")
 	if stmt.IsPK {
-		query, err := builder.WriteString(" PRIMARY KEY").String()
+		query, err := builder.WString(" PRIMARY KEY").String()
 		if err != nil {
 			return nil, err
 		}
@@ -125,13 +125,13 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 
 	switch constraintType {
 	case core.ConstraintCheck:
-		builder.WriteString(" CHECK ").WriteString(stmt.Name)
+		builder.WString(" CHECK ").WString(stmt.Name)
 	case core.ConstraintFK:
-		builder.WriteString(" FOREIGN KEY ").WriteString(stmt.Name)
+		builder.WString(" FOREIGN KEY ").WString(stmt.Name)
 	case core.ConstraintPK:
-		builder.WriteString(" PRIMARY KEY")
+		builder.WString(" PRIMARY KEY")
 	case core.ConstraintUnique:
-		builder.WriteString(" INDEX ").WriteString(stmt.Name)
+		builder.WString(" INDEX ").WString(stmt.Name)
 	default:
 		panic(fmt.Sprintf("不存在的约束类型:%d", constraintType))
 	}
@@ -146,7 +146,7 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
 	builder := core.NewBuilder("ALTER TABLE ").
 		QuoteKey(stmt.TableName).
-		WriteString(" DROP INDEX ").
+		WString(" DROP INDEX ").
 		QuoteKey(stmt.IndexName)
 
 	query, err := builder.String()
@@ -170,25 +170,25 @@ func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, e
 	builder := core.NewBuilder("CREATE ")
 
 	if stmt.IsReplace {
-		builder.WriteString(" OR REPLACE ")
+		builder.WString(" OR REPLACE ")
 	}
 
 	if stmt.IsTemporary {
-		builder.WriteString(" ALGORITHM=TEMPTABLE ")
+		builder.WString(" ALGORITHM=TEMPTABLE ")
 	}
 
-	builder.WriteString(" VIEW ").QuoteKey(stmt.ViewName)
+	builder.WString(" VIEW ").QuoteKey(stmt.ViewName)
 
 	if len(stmt.Columns) > 0 {
-		builder.WriteBytes('(')
+		builder.WBytes('(')
 		for _, col := range stmt.Columns {
 			builder.QuoteKey(col).
-				WriteBytes(',')
+				WBytes(',')
 		}
-		builder.TruncateLast(1).WriteBytes(')')
+		builder.TruncateLast(1).WBytes(')')
 	}
 
-	builder.WriteString(" AS ").WriteString(stmt.SelectQuery)
+	builder.WString(" AS ").WString(stmt.SelectQuery)
 
 	query, err := builder.String()
 	if err != nil {
@@ -200,7 +200,7 @@ func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, e
 func (m *mysql) InsertDefaultValueHook(table string) (string, []interface{}, error) {
 	query, err := core.NewBuilder("INSERT INTO").
 		QuoteKey(table).
-		WriteString("() VALUES ()").
+		WString("() VALUES ()").
 		String()
 
 	if err != nil {
@@ -292,23 +292,23 @@ func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (s
 	case l == 1 && len(col.Length) > 0:
 		w.Quote(strconv.Itoa(col.Length[0]), '(', ')')
 	case l == 2 && len(col.Length) > 1:
-		w.WriteBytes('(').
-			WriteString(strconv.Itoa(col.Length[0])).
-			WriteBytes(',').
-			WriteString(strconv.Itoa(col.Length[1])).
-			WriteBytes(')')
+		w.WBytes('(').
+			WString(strconv.Itoa(col.Length[0])).
+			WBytes(',').
+			WString(strconv.Itoa(col.Length[1])).
+			WBytes(')')
 	}
 
 	if unsigned {
-		w.WriteString(" UNSIGNED")
+		w.WString(" UNSIGNED")
 	}
 
 	if col.AI {
-		w.WriteString(" PRIMARY KEY AUTO_INCREMENT")
+		w.WString(" PRIMARY KEY AUTO_INCREMENT")
 	}
 
 	if !col.Nullable {
-		w.WriteString(" NOT NULL")
+		w.WString(" NOT NULL")
 	}
 
 	if col.HasDefault {
@@ -316,7 +316,7 @@ func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (s
 		if err != nil {
 			return "", err
 		}
-		w.WriteString(" DEFAULT ").WriteString(v)
+		w.WString(" DEFAULT ").WString(v)
 	}
 
 	return w.String()

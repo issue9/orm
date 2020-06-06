@@ -82,7 +82,7 @@ func (s *sqlite3) CreateTableOptionsSQL(w *core.Builder, options map[string][]st
 		}
 
 		if !val {
-			w.WriteString("WITHOUT ROWID")
+			w.WString("WITHOUT ROWID")
 		}
 	} else if len(options[sqlite3RowID]) > 0 {
 		return errors.New("rowid 只接受一个参数")
@@ -99,39 +99,39 @@ func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []
 // BUG: 可能会让视图失去关联
 func (s *sqlite3) AddConstraintStmtHook(stmt *sqlbuilder.AddConstraintStmt) ([]string, error) {
 	builder := core.NewBuilder("CONSTRAINT ").
-		WriteString(stmt.Name)
+		WString(stmt.Name)
 	switch stmt.Type {
 	case core.ConstraintUnique:
-		builder.WriteString(" UNIQUE(")
+		builder.WString(" UNIQUE(")
 		for _, col := range stmt.Data {
-			builder.WriteString(col).WriteBytes(',')
+			builder.WString(col).WBytes(',')
 		}
 		builder.TruncateLast(1).
-			WriteBytes(')')
+			WBytes(')')
 	case core.ConstraintPK:
-		builder.WriteString(" PRIMARY KEY(")
+		builder.WString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
-			builder.WriteString(col).WriteBytes(',')
+			builder.WString(col).WBytes(',')
 		}
 		builder.TruncateLast(1).
-			WriteBytes(')')
+			WBytes(')')
 	case core.ConstraintCheck:
-		builder.WriteString(" CHECK(").
-			WriteString(stmt.Data[0]).
-			WriteBytes(')')
+		builder.WString(" CHECK(").
+			WString(stmt.Data[0]).
+			WBytes(')')
 	case core.ConstraintFK:
-		builder.WriteString(" FOREIGN KEY(").
-			WriteString(stmt.Data[0]).
-			WriteString(") REFERENCES ").
-			WriteString(stmt.Data[1]).
-			WriteBytes('(').
-			WriteString(stmt.Data[2]).
-			WriteBytes(')')
+		builder.WString(" FOREIGN KEY(").
+			WString(stmt.Data[0]).
+			WString(") REFERENCES ").
+			WString(stmt.Data[1]).
+			WBytes('(').
+			WString(stmt.Data[2]).
+			WBytes(')')
 		if len(stmt.Data) >= 3 && stmt.Data[3] != "" {
-			builder.WriteString(" ON UPDATE ").WriteString(stmt.Data[3])
+			builder.WString(" ON UPDATE ").WString(stmt.Data[3])
 		}
 		if len(stmt.Data) >= 4 && stmt.Data[4] != "" {
-			builder.WriteString(" ON DELETE ").WriteString(stmt.Data[4])
+			builder.WString(" ON DELETE ").WString(stmt.Data[4])
 		}
 	default:
 		return nil, fmt.Errorf("未知的约束类型：%d", stmt.Type)
@@ -247,7 +247,7 @@ func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]s
 	ret := make([]string, 2)
 	ret[0] = query
 
-	ret[1], err = builder.Reset().WriteString("DELETE FROM SQLITE_SEQUENCE WHERE name=").
+	ret[1], err = builder.Reset().WString("DELETE FROM SQLITE_SEQUENCE WHERE name=").
 		Quote(stmt.TableName, '\'', '\'').
 		String()
 	if err != nil {
@@ -270,22 +270,22 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 	builder := core.NewBuilder("CREATE ")
 
 	if stmt.IsTemporary {
-		builder.WriteString(" TEMPORARY ")
+		builder.WString(" TEMPORARY ")
 	}
 
-	builder.WriteString(" VIEW ").QuoteKey(stmt.ViewName)
+	builder.WString(" VIEW ").QuoteKey(stmt.ViewName)
 
 	if len(stmt.Columns) > 0 {
-		builder.WriteBytes('(')
+		builder.WBytes('(')
 		for _, col := range stmt.Columns {
 			builder.QuoteKey(col).
-				WriteBytes(',')
+				WBytes(',')
 		}
-		builder.TruncateLast(1).WriteBytes(')')
+		builder.TruncateLast(1).WBytes(')')
 	}
 
-	query, err := builder.WriteString(" AS ").
-		WriteString(stmt.SelectQuery).
+	query, err := builder.WString(" AS ").
+		WString(stmt.SelectQuery).
 		String()
 	if err != nil {
 		return nil, err
@@ -348,11 +348,11 @@ func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 	w := core.NewBuilder(typ)
 
 	if col.AI {
-		w.WriteString(" PRIMARY KEY AUTOINCREMENT ")
+		w.WString(" PRIMARY KEY AUTOINCREMENT ")
 	}
 
 	if !col.Nullable {
-		w.WriteString(" NOT NULL")
+		w.WString(" NOT NULL")
 	}
 
 	if col.HasDefault {
@@ -361,7 +361,7 @@ func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 			return "", err
 		}
 
-		w.WriteString(" DEFAULT ").WriteString(v)
+		w.WString(" DEFAULT ").WString(v)
 	}
 
 	return w.String()

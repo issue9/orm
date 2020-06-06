@@ -126,7 +126,7 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 	cnt := 0
 
 	write := func(name string, val int) error {
-		builder.WriteString(" ? ")
+		builder.WString(" ? ")
 
 		if _, found := orders[name]; found {
 			return fmt.Errorf("存在相同的参数名：%s", name)
@@ -144,11 +144,11 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 			if err := write(query[start:index], cnt); err != nil {
 				return "", nil, err
 			}
-			builder.WriteRunes(c) // 当前的字符不能丢
+			builder.WRunes(c) // 当前的字符不能丢
 			cnt++
 			start = -1
 		case start == -1:
-			builder.WriteRunes(c)
+			builder.WRunes(c)
 			if c == '?' {
 				qm = true
 			}

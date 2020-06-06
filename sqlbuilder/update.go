@@ -120,24 +120,24 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	}
 
 	buf := core.NewBuilder("UPDATE ")
-	buf.WriteString(stmt.table)
-	buf.WriteString(" SET ")
+	buf.WString(stmt.table)
+	buf.WString(" SET ")
 
 	args := make([]interface{}, 0, len(stmt.values))
 
 	for _, val := range stmt.values {
-		buf.QuoteKey(val.column).WriteBytes('=')
+		buf.QuoteKey(val.column).WBytes('=')
 
 		if val.typ != 0 {
-			buf.QuoteKey(val.column).WriteBytes(val.typ)
+			buf.QuoteKey(val.column).WBytes(val.typ)
 		}
 
 		if named, ok := val.value.(sql.NamedArg); ok && named.Name != "" {
-			buf.WriteBytes('@').WriteString(named.Name)
+			buf.WBytes('@').WString(named.Name)
 		} else {
-			buf.WriteBytes('?')
+			buf.WBytes('?')
 		}
-		buf.WriteBytes(',')
+		buf.WBytes(',')
 		args = append(args, val.value)
 	}
 	buf.TruncateLast(1)
@@ -148,7 +148,7 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	}
 
 	if wq != "" {
-		buf.WriteString(" WHERE ").WriteString(wq)
+		buf.WString(" WHERE ").WString(wq)
 		args = append(args, wa...)
 	}
 

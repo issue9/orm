@@ -34,18 +34,18 @@ type Sqlite3Constraint struct {
 // CreateTableSQL 生成 create table 语句
 func (t Sqlite3Table) CreateTableSQL(name string) (string, error) {
 	builder := core.NewBuilder("CREATE TABLE ").
-		WriteString(name).
-		WriteBytes('(')
+		WString(name).
+		WBytes('(')
 
 	for _, col := range t.Columns {
-		builder.WriteString(col).WriteBytes(',')
+		builder.WString(col).WBytes(',')
 	}
 
 	for _, cont := range t.Constraints {
-		builder.WriteString(cont.SQL).WriteBytes(',')
+		builder.WString(cont.SQL).WBytes(',')
 	}
 
-	builder.TruncateLast(1).WriteBytes(')')
+	builder.TruncateLast(1).WBytes(')')
 
 	return builder.String()
 }
