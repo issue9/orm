@@ -27,7 +27,7 @@ type DB struct {
 	sqlLogger *log.Logger
 }
 
-// NewDB 声明一个新的 DB 实例。
+// NewDB 声明一个新的 DB 实例
 func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
@@ -37,7 +37,7 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB
 	return NewDBWithStdDB(db, tablePrefix, dialect)
 }
 
-// NewDBWithStdDB 从 sql.DB 构建一个 DB 实例。
+// NewDBWithStdDB 从 sql.DB 构建一个 DB 实例
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
 	inst := &DB{
 		DB:          db,
@@ -137,12 +137,12 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{
 	return db.DB.QueryContext(ctx, query, args...)
 }
 
-// Exec 执行 SQL 语句。
+// Exec 执行 SQL 语句
 func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return db.ExecContext(context.Background(), query, args...)
 }
 
-// ExecContext 执行 SQL 语句。
+// ExecContext 执行 SQL 语句
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	db.printDebug(query)
 	query = db.replacer.Replace(query)
@@ -154,7 +154,7 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 	return db.DB.ExecContext(ctx, query, args...)
 }
 
-// Prepare 预编译查询语句。
+// Prepare 预编译查询语句
 func (db *DB) Prepare(query string) (*core.Stmt, error) {
 	return db.PrepareContext(context.Background(), query)
 }
