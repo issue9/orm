@@ -13,7 +13,7 @@ import "github.com/issue9/orm/v3/core"
 // 如果用户不提供该接口实现，那么默认情况下，
 // 系统会采用 github.com/issue9/conv.Value() 函数作默认转换。
 type DefaultParser interface {
-	// 将默认值从字符串解析成 t 类型的值。
+	// 将默认值从字符串解析成 t 类型的值
 	ParseDefault(v string) error
 }
 
@@ -23,7 +23,7 @@ type Viewer interface {
 	ViewAs(e core.Engine) (string, error)
 }
 
-// Metaer 用于指定数据模型的元数据。
+// Metaer 用于指定数据模型的元数据
 //
 // 不同的数据库可以有各自的属性内容，具体的由 Dialect 的实现者定义。
 // 但是 name、check 是通用的，分别表示名称和 check 约束。

@@ -13,7 +13,7 @@ var (
 	// ErrColumnTypeError 列的类型错误
 	//
 	// 部分列对其类型有要求，比如自增列和被定义为乐观锁的锁，
-	// 其类型必须为数值类型，否则将返回此错误
+	// 其类型必须为数值类型，否则将返回此错误。
 	ErrColumnTypeError = errors.New("类型必须为数值")
 
 	// ErrAutoIncrementPrimaryKeyConflict 自增和主键不能同时存在

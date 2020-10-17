@@ -29,7 +29,7 @@ type BeforeInserter interface {
 	BeforeInsert() error
 }
 
-// Engine 是 DB 与 Tx 的共有接口。
+// Engine 是 DB 与 Tx 的共有接口
 type Engine interface {
 	core.Engine
 

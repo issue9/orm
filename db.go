@@ -14,7 +14,7 @@ import (
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
-// DB 数据库操作实例。
+// DB 数据库操作实例
 type DB struct {
 	*sql.DB
 	dialect     Dialect
@@ -66,7 +66,7 @@ func (db *DB) Debug(l *log.Logger) {
 	db.sqlLogger = l
 }
 
-// Dialect 返回对应的 Dialect 接口实例。
+// Dialect 返回对应的 Dialect 接口实例
 func (db *DB) Dialect() Dialect {
 	return db.dialect
 }
@@ -93,7 +93,7 @@ func (db *DB) Version() (string, error) {
 	return db.version, nil
 }
 
-// QueryRow 执行一条查询语句，并返回相应的 sql.Rows 实例。
+// QueryRow 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
 func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
@@ -106,7 +106,7 @@ func (db *DB) printDebug(query string) {
 	}
 }
 
-// QueryRowContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
+// QueryRowContext 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
@@ -120,12 +120,12 @@ func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interfa
 	return db.DB.QueryRowContext(ctx, query, args...)
 }
 
-// Query 执行一条查询语句，并返回相应的 sql.Rows 实例。
+// Query 执行一条查询语句
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	return db.QueryContext(context.Background(), query, args...)
 }
 
-// QueryContext 执行一条查询语句，并返回相应的 sql.Rows 实例。
+// QueryContext 执行一条查询语句
 func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	db.printDebug(query)
 	query = db.replacer.Replace(query)
@@ -159,7 +159,7 @@ func (db *DB) Prepare(query string) (*core.Stmt, error) {
 	return db.PrepareContext(context.Background(), query)
 }
 
-// PrepareContext 预编译查询语句。
+// PrepareContext 预编译查询语句
 func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
 	db.printDebug(query)
 	query = db.replacer.Replace(query)
@@ -175,17 +175,19 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 	return core.NewStmt(s, orders), nil
 }
 
-// LastInsertID 插入数据，并获取其自增的 ID。
+// LastInsertID 插入数据并获取其自增的 ID
 func (db *DB) LastInsertID(v interface{}) (int64, error) {
 	return lastInsertID(db, v)
 }
 
-// Insert 插入数据，若需一次性插入多条数据，请使用 tx.Insert()。
+// Insert 插入数据
+//
+// NOTE: 若需一次性插入多条数据，请使用 tx.Insert()。
 func (db *DB) Insert(v interface{}) (sql.Result, error) {
 	return insert(db, v)
 }
 
-// Delete 删除符合条件的数据。
+// Delete 删除符合条件的数据
 //
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回 error
@@ -193,7 +195,9 @@ func (db *DB) Delete(v interface{}) (sql.Result, error) {
 	return del(db, v)
 }
 
-// Update 更新数据，零值不会被提交，cols 指定的列，即使是零值也会被更新。
+// Update 更新数据
+//
+// 零值不会被提交，cols 指定的列，即使是零值也会被更新。
 //
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回 error
@@ -201,7 +205,7 @@ func (db *DB) Update(v interface{}, cols ...string) (sql.Result, error) {
 	return update(db, v, cols...)
 }
 
-// Select 查询一个符合条件的数据。
+// Select 查询一个符合条件的数据
 //
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下 ) 来查找，
 // 若两者都不存在，则将返回 error
@@ -213,7 +217,7 @@ func (db *DB) Select(v interface{}) error {
 	return find(db, v)
 }
 
-// Create 创建一张表或是视图。
+// Create 创建一张表或是视图
 func (db *DB) Create(v interface{}) error {
 	return create(db, v)
 }
@@ -234,7 +238,7 @@ func (db *DB) Truncate(v interface{}) error {
 	})
 }
 
-// InsertMany 一次插入多条数据。
+// InsertMany 一次插入多条数据
 //
 // 会自动转换成事务进行处理。
 func (db *DB) InsertMany(v interface{}, max int) error {
@@ -243,7 +247,7 @@ func (db *DB) InsertMany(v interface{}, max int) error {
 	})
 }
 
-// MultInsert 插入一个或多个数据。
+// MultInsert 插入一个或多个数据
 //
 // 会自动转换成事务进行处理。
 func (db *DB) MultInsert(objs ...interface{}) error {
@@ -252,7 +256,7 @@ func (db *DB) MultInsert(objs ...interface{}) error {
 	})
 }
 
-// MultSelect 选择符合要求的一条或是多条记录。
+// MultSelect 选择符合要求的一条或是多条记录
 //
 // 会自动转换成事务进行处理。
 func (db *DB) MultSelect(objs ...interface{}) error {
@@ -270,7 +274,7 @@ func (db *DB) MultUpdate(objs ...interface{}) error {
 	})
 }
 
-// MultDelete 删除一条或是多条数据。
+// MultDelete 删除一条或是多条数据
 //
 // 会自动转换成事务进行处理。
 func (db *DB) MultDelete(objs ...interface{}) error {
@@ -279,7 +283,7 @@ func (db *DB) MultDelete(objs ...interface{}) error {
 	})
 }
 
-// MultCreate 创建数据表。
+// MultCreate 创建数据表
 //
 // 如果数据库支持事务 DDL，则会在事务中完成此操作。
 func (db *DB) MultCreate(objs ...interface{}) error {
@@ -297,7 +301,7 @@ func (db *DB) MultCreate(objs ...interface{}) error {
 	})
 }
 
-// MultDrop 删除表结构及数据。
+// MultDrop 删除表结构及数据
 //
 // 如果数据库支持事务 DDL，则会在事务中完成此操作。
 func (db *DB) MultDrop(objs ...interface{}) error {
@@ -315,7 +319,9 @@ func (db *DB) MultDrop(objs ...interface{}) error {
 	})
 }
 
-// MultTruncate 清除表内容，重置 ai，但保留表结构。
+// MultTruncate 清除表内容
+//
+// 重置 ai，但保留表结构。
 func (db *DB) MultTruncate(objs ...interface{}) error {
 	if !db.Dialect().TransactionalDDL() {
 		for _, v := range objs {

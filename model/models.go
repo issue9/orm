@@ -26,7 +26,7 @@ func NewModels(e core.Engine) *Models {
 	}
 }
 
-// Clear 清除所有的 Model 缓存。
+// Clear 清除所有的 Model 缓存
 func (ms *Models) Clear() {
 	ms.locker.Lock()
 	defer ms.locker.Unlock()

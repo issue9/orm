@@ -7,7 +7,8 @@ import (
 	"reflect"
 )
 
-// Map 将 rows 中的所有或一行数据导出到 map[string]interface{} 中。
+// Map 将 rows 中的所有或一行数据导出到 map[string]interface{} 中
+//
 // 若 once 值为 true，则只导出第一条数据。
 //
 // NOTE:
@@ -53,7 +54,7 @@ func Map(once bool, rows *sql.Rows) ([]map[string]interface{}, error) {
 	return data, nil
 }
 
-// MapString 将 rows 中的数据导出到一个 map[string]string 中。
+// MapString 将 rows 中的数据导出到一个 map[string]string 中
 //
 // 功能上与 Map() 上一样，但 map 的键值固定为 string。
 func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) {

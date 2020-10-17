@@ -8,7 +8,9 @@ import (
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
-// Upgrader 主要针对线上数据与本地模型不相同时，可执行的一些操作。
+// Upgrader 更新数据库对象
+//
+// 主要针对线上数据与本地模型不相同时，可执行的一些操作。
 type Upgrader struct {
 	db    *DB
 	model *Model
@@ -57,7 +59,9 @@ func (u *Upgrader) Err() error {
 	return u.err
 }
 
-// AddColumn 添加表中的列，列名必须存在于表模型中
+// AddColumn 添加表中的列
+//
+// 列名必须存在于表模型中。
 func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 	if u.err != nil {
 		return u
@@ -75,8 +79,9 @@ func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 	return u
 }
 
-// DropColumn 删除表中的列，列名可以不存在于表模型，
-// 只在数据库中的表包含该列名，就会被删除。
+// DropColumn 删除表中的列
+//
+// 列名可以不存在于表模型，只在数据库中的表包含该列名，就会被删除。
 func (u *Upgrader) DropColumn(name ...string) *Upgrader {
 	if u.err != nil {
 		return u

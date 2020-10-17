@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Package tags 包实现对特定格式的 struct tag 字符串的分析。
+// Package tags 包实现对特定格式的 struct tag 字符串的分析
 //
 // 1. 以分号分隔的字符串，每个子串又以逗号分隔，
 // 第一个字符串为键名，之后的字符串组成的数组为键值。如：
@@ -34,7 +34,7 @@ type Tag struct {
 	Args []string
 }
 
-// Parse 分析 tag 的内容，并以 map 的形式返回
+// Parse 分析 tag 的内容并以 map 的形式返回
 func Parse(tag string) []*Tag {
 	ret := make([]*Tag, 0, 10)
 
@@ -62,7 +62,8 @@ func Parse(tag string) []*Tag {
 	return ret
 }
 
-// Get 从 tag 中查找名称为 name 的内容。
+// Get 从 tag 中查找名称为 name 的内容
+//
 // 第二个参数用于判断该项是否存在。若存在多个同外的，则只返回第一个。
 func Get(tag, name string) ([]string, bool) {
 	if len(tag) == 0 {
@@ -98,8 +99,9 @@ func MustGet(tag, name string, defVal ...string) []string {
 	return defVal
 }
 
-// Has 查询指定名称的项是否存在，若只是查找是否存在该项，
-// 使用 Has() 会比 Get() 要快上许多。
+// Has 查询指定名称的项是否存在
+//
+// 若只是查找是否存在该项，使用 Has() 会比 Get() 要快上许多。
 func Has(tag, name string) bool {
 	if len(tag) == 0 {
 		return false

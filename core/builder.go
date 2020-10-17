@@ -34,7 +34,7 @@ func NewBuilder(str ...string) *Builder {
 
 // WString 写入一字符串
 func (b *Builder) WString(str string) *Builder {
-	b.buffer.WriteString(str)
+	b.buffer.WString(str)
 	return b
 }
 
@@ -63,7 +63,6 @@ func (b *Builder) QuoteKey(str string) *Builder {
 // Reset 重置内容，同时也会将 err 设置为 nil
 func (b *Builder) Reset() *Builder {
 	b.buffer.Reset()
-	b.buffer.Err = nil
 	return b
 }
 
@@ -107,8 +106,7 @@ func (b *Builder) Append(v *Builder) *Builder {
 
 	str, err := v.String()
 	if err == nil {
-		b.buffer.WriteString(str)
-		return b
+		return b.WString(str)
 	}
 	b.buffer.Err = err
 

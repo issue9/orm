@@ -45,12 +45,12 @@ func (tx *Tx) TablePrefix() string {
 	return tx.db.tablePrefix
 }
 
-// Query 执行一条查询语句。
+// Query 执行一条查询语句
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	return tx.QueryContext(context.Background(), query, args...)
 }
 
-// QueryContext 执行一条查询语句。
+// QueryContext 执行一条查询语句
 func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
@@ -62,14 +62,14 @@ func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{
 	return tx.Tx.QueryContext(ctx, query, args...)
 }
 
-// QueryRow 执行一条查询语句。
+// QueryRow 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
 func (tx *Tx) QueryRow(query string, args ...interface{}) *sql.Row {
 	return tx.QueryRowContext(context.Background(), query, args...)
 }
 
-// QueryRowContext 执行一条查询语句。
+// QueryRowContext 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
 func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
@@ -83,12 +83,12 @@ func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interfa
 	return tx.Tx.QueryRowContext(ctx, query, args...)
 }
 
-// Exec 执行一条 SQL 语句。
+// Exec 执行一条 SQL 语句
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return tx.ExecContext(context.Background(), query, args...)
 }
 
-// ExecContext 执行一条 SQL 语句。
+// ExecContext 执行一条 SQL 语句
 func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
@@ -100,12 +100,12 @@ func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}
 	return tx.Tx.ExecContext(ctx, query, args...)
 }
 
-// Prepare 将一条 SQL 语句进行预编译。
+// Prepare 将一条 SQL 语句进行预编译
 func (tx *Tx) Prepare(query string) (*core.Stmt, error) {
 	return tx.PrepareContext(context.Background(), query)
 }
 
-// PrepareContext 将一条 SQL 语句进行预编译。
+// PrepareContext 将一条 SQL 语句进行预编译
 func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
 	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
@@ -126,12 +126,12 @@ func (tx *Tx) Dialect() Dialect {
 	return tx.db.Dialect()
 }
 
-// LastInsertID 插入数据，并获取其自增的 ID。
+// LastInsertID 插入数据，并获取其自增的 ID
 func (tx *Tx) LastInsertID(v interface{}) (int64, error) {
 	return lastInsertID(tx, v)
 }
 
-// Insert 插入一个或多个数据。
+// Insert 插入一个或多个数据
 func (tx *Tx) Insert(v interface{}) (sql.Result, error) {
 	return insert(tx, v)
 }
@@ -146,8 +146,9 @@ func (tx *Tx) ForUpdate(v interface{}) error {
 	return forUpdate(tx, v)
 }
 
-// InsertMany 插入多条相同的数据。若需要向某张表中插入多条记录，
-// InsertMany() 会比 Insert() 性能上好很多。
+// InsertMany 插入多条相同的数据
+//
+// 若需要向某张表中插入多条记录，InsertMany() 会比 Insert() 性能上好很多。
 //
 // max 表示一次最多插入的数量，如果超过此值，会分批执行，
 // 但是依然在一个事务中完成。
@@ -197,27 +198,29 @@ func (tx *Tx) InsertMany(v interface{}, max int) error {
 	return nil
 }
 
-// Update 更新一条类型。
+// Update 更新一条类型
 func (tx *Tx) Update(v interface{}, cols ...string) (sql.Result, error) {
 	return update(tx, v, cols...)
 }
 
-// Delete 删除一条数据。
+// Delete 删除一条数据
 func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
 	return del(tx, v)
 }
 
-// Create 创建数据表或是视图。
+// Create 创建数据表或是视图
 func (tx *Tx) Create(v interface{}) error {
 	return create(tx, v)
 }
 
-// Drop 删除表或视图。
+// Drop 删除表或视图
 func (tx *Tx) Drop(v interface{}) error {
 	return drop(tx, v)
 }
 
-// Truncate 清除表内容，重置 ai，但保留表结构。
+// Truncate 清除表内容
+//
+// 会重置 ai，但保留表结构。
 func (tx *Tx) Truncate(v interface{}) error {
 	return truncate(tx, v)
 }
@@ -227,7 +230,7 @@ func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder {
 	return tx.sqlBuilder
 }
 
-// MultInsert 插入一个或多个数据。
+// MultInsert 插入一个或多个数据
 func (tx *Tx) MultInsert(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Insert(v); err != nil {
@@ -237,12 +240,12 @@ func (tx *Tx) MultInsert(objs ...interface{}) error {
 	return nil
 }
 
-// MultSelect 选择符合要求的一条或是多条记录。
+// MultSelect 选择符合要求的一条或是多条记录
 func (tx *Tx) MultSelect(objs ...interface{}) error {
 	return tx.multDo(tx.Select, objs...)
 }
 
-// MultUpdate 更新一条或多条类型。
+// MultUpdate 更新一条或多条类型
 func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Update(v); err != nil {
@@ -252,7 +255,7 @@ func (tx *Tx) MultUpdate(objs ...interface{}) error {
 	return nil
 }
 
-// MultDelete 删除一条或是多条数据。
+// MultDelete 删除一条或是多条数据
 func (tx *Tx) MultDelete(objs ...interface{}) error {
 	for _, v := range objs {
 		if _, err := tx.Delete(v); err != nil {
@@ -262,17 +265,19 @@ func (tx *Tx) MultDelete(objs ...interface{}) error {
 	return nil
 }
 
-// MultCreate 创建数据表。
+// MultCreate 创建数据表
 func (tx *Tx) MultCreate(objs ...interface{}) error {
 	return tx.multDo(tx.Create, objs...)
 }
 
-// MultDrop 删除表结构及数据。
+// MultDrop 删除表结构及数据
 func (tx *Tx) MultDrop(objs ...interface{}) error {
 	return tx.multDo(tx.Drop, objs...)
 }
 
-// MultTruncate 清除表内容，重置 ai，但保留表结构。
+// MultTruncate 清除表内容
+//
+// 会重置 ai，但保留表结构。
 func (tx *Tx) MultTruncate(objs ...interface{}) error {
 	return tx.multDo(tx.Truncate, objs...)
 }

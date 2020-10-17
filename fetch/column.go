@@ -12,7 +12,7 @@ func columnNotExists(col string) error {
 	return fmt.Errorf("指定的列名 %s 不存在", col)
 }
 
-// Column 导出 rows 中某列的所有或一行数据。
+// Column 导出 rows 中某列的所有或一行数据
 //
 // once 若为 true，则只导出第一条数据。
 // colName 指定需要导出的列名，若指定了不存在的名称，返回 error。
@@ -52,7 +52,7 @@ func Column(once bool, colName string, rows *sql.Rows) ([]interface{}, error) {
 	return data, nil
 }
 
-// ColumnString 导出 rows 中某列的所有或是一行数据。
+// ColumnString 导出 rows 中某列的所有或是一行数据
 //
 // 功能等同于 Columns() 函数，但是返回值是 []string 而不是 []interface{}。
 func ColumnString(once bool, colName string, rows *sql.Rows) ([]string, error) {

@@ -18,7 +18,8 @@ func propertyError(field, name, message string) error {
 	return fmt.Errorf("%s 的 %s 属性发生以下错误: %s", field, name, message)
 }
 
-// New 从一个 obj 声明一个 Model 实例。
+// New 从一个 obj 声明一个 Model 实例
+//
 // obj 可以是一个 struct 实例或是指针。
 func (ms *Models) New(obj interface{}) (*core.Model, error) {
 	rtype := reflect.TypeOf(obj)
@@ -106,7 +107,7 @@ func (ms *Models) addModel(goType reflect.Type, m *core.Model) (err error) {
 	return
 }
 
-// 将 rval 中的结构解析到 m 中。支持匿名字段
+// 将 rval 中的结构解析到 m 中，支持匿名字段。
 func parseColumns(m *core.Model, rtype reflect.Type) error {
 	num := rtype.NumField()
 	for i := 0; i < num; i++ {
@@ -141,7 +142,7 @@ func parseColumns(m *core.Model, rtype reflect.Type) error {
 	return nil
 }
 
-// 分析一个字段。
+// 分析一个字段
 func parseColumn(m *core.Model, col *core.Column, tag string) (err error) {
 	if err = m.AddColumn(col); err != nil {
 		return err
@@ -185,7 +186,7 @@ func parseColumn(m *core.Model, col *core.Column, tag string) (err error) {
 	return nil
 }
 
-// 分析 meta 接口数据。
+// 分析 meta 接口数据
 func parseMeta(m *core.Model, tag string) error {
 	ts := tags.Parse(tag)
 	for _, v := range ts {

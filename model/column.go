@@ -23,8 +23,8 @@ func newColumn(field reflect.StructField) (*core.Column, error) {
 	return col, nil
 }
 
-// 从参数中获取 Column 的 len1 和 len2 变量。
-// len(len1,len2)
+// 从参数中获取 Column 的 len1 和 len2 变量
+//  len(len1,len2)
 func setColumnLen(c *core.Column, vals []string) (err error) {
 	l := len(vals)
 	switch l {

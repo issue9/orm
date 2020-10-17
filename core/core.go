@@ -33,7 +33,7 @@ func AIName(table string) string {
 	return table + defaultAINameSuffix
 }
 
-// Engine 数据库执行的基本接口。
+// Engine 数据库执行的基本接口
 //
 // orm.DB 和 orm.Tx 应该实现此接口。
 type Engine interface {
@@ -58,7 +58,7 @@ type Engine interface {
 	PrepareContext(ctx context.Context, query string) (*Stmt, error)
 }
 
-// Dialect 接口用于描述与数据库和驱动相关的一些特性。
+// Dialect 接口用于描述与数据库和驱动相关的一些特性
 //
 // Dialect 的实现者除了要实现 Dialect 之外，
 // 还需要根据数据库的支持情况实现 sqlbuilder 下的部分 *Hooker 接口。
@@ -90,10 +90,10 @@ type Dialect interface {
 	// 依次提交语句。
 	TransactionalDDL() bool
 
-	// 查询服务器版本号的 SQL 语句。
+	// 查询服务器版本号的 SQL 语句
 	VersionSQL() string
 
-	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句。
+	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
 	// 返回的是对应数据库的 limit 语句以及语句中占位符对应的值。
@@ -101,7 +101,7 @@ type Dialect interface {
 	// limit 和 offset 可以是 SQL.NamedArg 类型。
 	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
 
-	// 自定义获取 LastInsertID 的获取方式。
+	// 自定义获取 LastInsertID 的获取方式
 	//
 	// 类似于 postgresql 等都需要额外定义。
 	//
@@ -113,13 +113,13 @@ type Dialect interface {
 	// 创建表时根据附加信息返回的部分 SQL 语句
 	CreateTableOptionsSQL(sql *Builder, meta map[string][]string) error
 
-	// 根据当前的数据库，对 SQL 作调整。
+	// 根据当前的数据库，对 SQL 作调整
 	//
 	// 比如替换 {} 符号；处理 sql.NamedArgs；
 	// postgresql 需要将 ? 改成 $1 等形式。
 	SQL(query string, args []interface{}) (string, []interface{}, error)
 
-	// 对预编译的内容进行处理。
+	// 对预编译的内容进行处理
 	//
 	// 目前大部分驱动都不支持 sql.NamedArgs，为了支持该功能，
 	// 需要在预编译之前，对语句进行如下处理：

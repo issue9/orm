@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Package dialect 提供了部分数据库对 orm.Dialect 接口的实现。
+// Package dialect 提供了部分数据库对 orm.Dialect 接口的实现
 package dialect
 
 import (
@@ -25,8 +25,9 @@ func errUncovert(dest string) error {
 	return fmt.Errorf("不支持的类型: %s", dest)
 }
 
-// MysqlLimitSQL mysql 系列数据库分页语法的实现。支持以下数据库：
-// MySQL, H2, HSQLDB, Postgres, SQLite3
+// MysqlLimitSQL mysql 系列数据库分页语法的实现
+//
+// 支持以下数据库：MySQL, H2, HSQLDB, Postgres, SQLite3
 func MysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	query := " LIMIT "
 
@@ -51,8 +52,9 @@ func MysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interfac
 	return query + " ", []interface{}{limit, offset[0]}
 }
 
-// OracleLimitSQL oracle 系列数据库分页语法的实现。支持以下数据库：
-// Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
+// OracleLimitSQL oracle 系列数据库分页语法的实现
+//
+// 支持以下数据库：Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
 func OracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	query := "FETCH NEXT "
 

@@ -56,7 +56,7 @@ type Column struct {
 	GoName string       // Go 中的字段名
 }
 
-// NewColumnFromGoType 从 Go 类型中生成 Column，会初始化 goZero
+// NewColumnFromGoType 从 Go 类型中生成 Column
 func NewColumnFromGoType(goType reflect.Type) (*Column, error) {
 	for goType.Kind() == reflect.Ptr {
 		goType = goType.Elem()

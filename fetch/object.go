@@ -14,12 +14,12 @@ import (
 	t "github.com/issue9/orm/v3/internal/tags"
 )
 
-// AfterFetcher 在数据从数据库拉取之后执行的操作。
+// AfterFetcher 在数据从数据库拉取之后执行的操作
 type AfterFetcher interface {
 	AfterFetch() error
 }
 
-// ErrInvalidKind 表示当前功能对数据的 Kind 值有特殊需求。
+// ErrInvalidKind 表示当前功能对数据的 Kind 值有特殊需求
 var ErrInvalidKind = errors.New("无效的 Kind 类型")
 
 // 输出无法转换时的字段信息
@@ -27,7 +27,7 @@ func convertError(field, message string) error {
 	return fmt.Errorf("字段 %s 转换出错：%s", field, message)
 }
 
-// Object 将 rows 中的数据导出到 obj 中。
+// Object 将 rows 中的数据导出到 obj 中
 //
 // strict 严格模式，如果为 true，不会将 null 转换成当前类型的空值。
 // 在多表查询的情况下，如果有空记录，则 strict 模式下，可能会出错（nil 无法转换)。
