@@ -13,20 +13,31 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: postgres:10.10
         ports:
           - 5432/tcp
+        options: >-
+          --health-cmd pg_isready
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
       mysql:
         image: mysql:8.0
         ports:
           - 3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
 
     steps:
 
     - name: 创建数据库
       run: |
-        mysql -e 'CREATE DATABASE orm_test;'
-        psql -c 'CREATE DATABASE orm_test;' -U postgres
+        mysql -uroot -h127.0.0.1 -proot -e 'CREATE DATABASE IF NOT EXISTS orm_test;'
+        psql -h127.0.0.1 -c 'CREATE DATABASE orm_test;' -U postgres
 
     - name: 安装 Go ${{ matrix.go }}
       uses: actions/setup-go@v2
