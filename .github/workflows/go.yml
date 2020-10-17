@@ -25,8 +25,6 @@ jobs:
         image: mariadb:10.4
         env:
           MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 3306/tcp
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
@@ -38,8 +36,8 @@ jobs:
 
     - name: 创建数据库
       run: |
-        mysql -uroot -h127.0.0.1 -proot -e 'CREATE DATABASE IF NOT EXISTS orm_test;'
-        psql -h127.0.0.1 -c 'CREATE DATABASE orm_test;' -U postgres
+        psql -U postgres --host postgres -c 'CREATE DATABASE orm_test;'
+        mysql -uroot --host mysql -proot -e 'CREATE DATABASE IF NOT EXISTS orm_test;'
 
     - name: 安装 Go ${{ matrix.go }}
       uses: actions/setup-go@v2
