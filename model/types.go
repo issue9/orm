@@ -17,9 +17,11 @@ type DefaultParser interface {
 	ParseDefault(v string) error
 }
 
-// Viewer 如果是视图模型，需要实现此接口
+// Viewer 视图必须要实现的接口
+//
+// 当一个模型实现了该接口，会被识别为视图模型，不再在数据库中创建普通的数据表。
 type Viewer interface {
-	// 返回视图所需的 Select 语句。
+	// 返回视图所需的 Select 语句
 	ViewAs(e core.Engine) (string, error)
 }
 
