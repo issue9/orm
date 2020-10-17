@@ -151,7 +151,7 @@ func (stmt *WhereStmt) OrGroup() *sqlbuilder.WhereStmt {
 	return stmt.where.OrGroup()
 }
 
-// Delete 从 v 中读取表名，该删除该表中符合条件的所有内容
+// Delete 从 v 表中删除符合条件的内容
 func (stmt *WhereStmt) Delete(v interface{}) (sql.Result, error) {
 	m, err := stmt.engine.NewModel(v)
 	if err != nil {
@@ -168,6 +168,7 @@ func (stmt *WhereStmt) Delete(v interface{}) (sql.Result, error) {
 // Update 将 v 中内容更新到符合条件的行中
 //
 // 不会更新零值，除非通过 cols 指定了该列。
+// 表名来自 v，列名为 v 的所有列或是 cols 指定的列。
 func (stmt *WhereStmt) Update(v interface{}, cols ...string) (sql.Result, error) {
 	upd := stmt.where.Update(stmt.engine)
 
@@ -181,6 +182,7 @@ func (stmt *WhereStmt) Update(v interface{}, cols ...string) (sql.Result, error)
 // Select 获取所有符合条件的数据
 //
 // v 可能是某个对象的指针，或是一组相同对象指针数组。
+// 表名来自 v，列名为 v 的所有列。
 func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
 	t := reflect.TypeOf(v)
 	for t.Kind() == reflect.Ptr || t.Kind() == reflect.Slice || t.Kind() == reflect.Array {
@@ -192,10 +194,6 @@ func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
 		return 0, err
 	}
 
-	if m.Type == core.View {
-		return 0, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
-	}
-
 	return stmt.where.Select(stmt.engine).
 		Column("*").
 		From(m.Name).
@@ -203,6 +201,8 @@ func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
 }
 
 // Count 返回符合条件数量
+//
+// 表名来自 v。
 func (stmt *WhereStmt) Count(v interface{}) (int64, error) {
 	m, _, err := getModel(stmt.engine, v)
 	if err != nil {
