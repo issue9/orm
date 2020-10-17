@@ -34,13 +34,13 @@ var cases = []struct {
 	},
 	{
 		prefix:     "prefix_",
-		dsn:        "user=postgres dbname=orm_test sslmode=disable",
+		dsn:        "user=postgres password=postgres dbname=orm_test sslmode=disable",
 		dialect:    dialect.Postgres(),
 		driverName: "postgres",
 	},
 	{
 		prefix:     "prefix_",
-		dsn:        "root@/orm_test?charset=utf8&parseTime=true",
+		dsn:        "root:root@/orm_test?charset=utf8&parseTime=true",
 		dialect:    dialect.Mysql(),
 		driverName: "mysql",
 	},
