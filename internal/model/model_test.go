@@ -20,7 +20,7 @@ type last struct {
 	Created int64
 }
 
-var _ DefaultParser = &last{}
+var _ core.DefaultParser = &last{}
 
 func (l *last) ParseDefault(v string) error {
 	vals := strings.Split(v, ",")

@@ -19,7 +19,9 @@ var replacer = strings.NewReplacer(
 
 var spaceReplaceRegexp = regexp.MustCompile("\\s+")
 
-// Equal 检测两条 SQL 语句是否相等，忽略大小写与多余的空格。
+// Equal 检测两条 SQL 语句是否相等
+//
+// 忽略大小写与多余的空格。
 func Equal(a *assert.Assertion, s1, s2 string) {
 	// 将'(', ')', ',' 等字符的前后空格标准化
 	s1 = replacer.Replace(s1)

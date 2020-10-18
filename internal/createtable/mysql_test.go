@@ -19,7 +19,7 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 	)`,
 	`CREATE TABLE users (
 	id BIGINT(20) NOT NULL,
-	created BIGINT(20) NOT NULL,
+	created BIGINT NOT NULL,
 	nickname VARCHAR(50) NOT NULL,
 	state SMALLINT(6) NOT NULL,
 	username VARCHAR(50) NOT NULL,
@@ -59,10 +59,10 @@ func TestParseMysqlCreateTable(t *testing.T) {
 		t.NotError(err).NotNil(table)
 
 		t.Equal(len(table.Columns), 8)
-		sqltest.Equal(a, table.Columns["id"], "bigint(20) NOT NULL")
-		sqltest.Equal(a, table.Columns["created"], "bigint(20) NOT NULL")
+		sqltest.Equal(a, table.Columns["id"], "bigint NOT NULL")
+		sqltest.Equal(a, table.Columns["created"], "bigint NOT NULL")
 		sqltest.Equal(a, table.Columns["nickname"], "varchar(50) NOT NULL")
-		sqltest.Equal(a, table.Columns["state"], "smallint(6) NOT NULL")
+		sqltest.Equal(a, table.Columns["state"], "smallint NOT NULL")
 		sqltest.Equal(a, table.Columns["username"], "varchar(50) NOT NULL")
 		sqltest.Equal(a, table.Columns["mobile"], "varchar(18) NOT NULL")
 		sqltest.Equal(a, table.Columns["email"], "varchar(50) NOT NULL")

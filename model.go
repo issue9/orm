@@ -2,17 +2,14 @@
 
 package orm
 
-import (
-	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/model"
-)
+import "github.com/issue9/orm/v3/core"
 
 type (
 	// Metaer 用于指定一个表级别的元数据
 	//
 	// 如表名，存储引擎等：
 	//  "name(tbl_name);engine(myISAM);charset(utf8)"
-	Metaer = model.Metaer
+	Metaer = core.Metaer
 
 	// Model 表示一个数据库的表模型
 	//

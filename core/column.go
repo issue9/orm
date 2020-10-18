@@ -85,7 +85,7 @@ func (c *Column) SetDefault(v interface{}) {
 	c.Default = v
 }
 
-// Check 检测 Column 内容是否合法。
+// Check 检测 Column 内容是否合法
 func (c *Column) Check() error {
 	if c.AI && c.HasDefault {
 		return fmt.Errorf("AutoIncrement 列 %s 不能同时包含默认值", c.Name)

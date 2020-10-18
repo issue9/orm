@@ -66,7 +66,7 @@ func fillArgs(query string, args []interface{}) (string, error) {
 	return builder.String()
 }
 
-// 从表达式中获取列的名称。
+// 从表达式中获取列的名称
 //
 // 如果不存在别名，则取其列名或是整个表达式作为别名。
 //  *  => *

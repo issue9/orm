@@ -35,7 +35,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 		Tx: tx,
 		db: db,
 	}
-	inst.sqlBuilder = sqlbuilder.NewSQLBuilder(inst)
+	inst.sqlBuilder = sqlbuilder.New(inst)
 
 	return inst, nil
 }

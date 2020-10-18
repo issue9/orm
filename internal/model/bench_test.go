@@ -8,7 +8,6 @@ import (
 	"github.com/issue9/assert"
 )
 
-// go1.10 BenchmarkNewModelNoCached-4   	  200000	      8161 ns/op
 func BenchmarkNewModelNoCached(b *testing.B) {
 	a := assert.New(b)
 	ms := NewModels(nil)
@@ -21,7 +20,6 @@ func BenchmarkNewModelNoCached(b *testing.B) {
 	}
 }
 
-// go1.10 BenchmarkNewModelCached-4     	10000000	       187 ns/op
 func BenchmarkNewModelCached(b *testing.B) {
 	a := assert.New(b)
 	ms := NewModels(nil)

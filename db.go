@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/model"
+	"github.com/issue9/orm/v3/internal/model"
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
@@ -47,7 +47,7 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 	}
 
 	inst.models = model.NewModels(inst)
-	inst.sqlBuilder = sqlbuilder.NewSQLBuilder(inst)
+	inst.sqlBuilder = sqlbuilder.New(inst)
 
 	return inst, nil
 }

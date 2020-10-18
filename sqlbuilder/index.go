@@ -121,7 +121,7 @@ type DropIndexStmt struct {
 	IndexName string
 }
 
-// CreateIndex 生成创建索引的语句
+// DropIndex 生成删除索引的语句
 func (sql *SQLBuilder) DropIndex() *DropIndexStmt {
 	return DropIndex(sql.engine)
 }

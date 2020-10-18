@@ -10,17 +10,47 @@ import (
 )
 
 var (
-	// ErrColumnTypeError 列的类型错误
+	// ErrColumnMustNumber 列的类型错误
 	//
 	// 部分列对其类型有要求，比如自增列和被定义为乐观锁的锁，
 	// 其类型必须为数值类型，否则将返回此错误。
-	ErrColumnTypeError = errors.New("类型必须为数值")
+	ErrColumnMustNumber = errors.New("类型必须为数值")
 
 	// ErrAutoIncrementPrimaryKeyConflict 自增和主键不能同时存在
 	//
 	// 当添加自增时，会自动将其转换为主键，如果此时已经已经存在主键，则会报此错误。
 	ErrAutoIncrementPrimaryKeyConflict = errors.New("自增和主键不能同时存在")
 )
+
+// DefaultParser 提供了 ParseDefault 函数
+//
+// 在 struct tag 中可以通过 default 指定默认值，
+// 该值的表示可能与数据库中的表示不尽相同，
+// 所以自定义的数据类型，需要实现该接口，以便能正确转换成该类型的值。
+//
+// 如果用户不提供该接口实现，那么默认情况下，
+// 系统会采用 github.com/issue9/conv.Value() 函数作默认转换。
+type DefaultParser interface {
+	// 将默认值从字符串解析成 t 类型的值
+	ParseDefault(v string) error
+}
+
+// Viewer 视图必须要实现的接口
+//
+// 当一个模型实现了该接口，会被识别为视图模型，不再在数据库中创建普通的数据表。
+type Viewer interface {
+	// 返回视图所需的 Select 语句
+	ViewAs(e Engine) (string, error)
+}
+
+// Metaer 用于指定数据模型的元数据
+//
+// 不同的数据库可以有各自的属性内容，具体的由 Dialect 的实现者定义。
+// 但是 name、check 是通用的，分别表示名称和 check 约束。
+//  "name(tbl_name);mysql_engine(myISAM);mysql_charset(utf8)"
+type Metaer interface {
+	Meta() string
+}
 
 // ForeignKey 外键
 type ForeignKey struct {
@@ -169,7 +199,7 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 	default:
-		return ErrColumnTypeError
+		return ErrColumnMustNumber
 	}
 
 	if m.AutoIncrement != nil && m.AutoIncrement != col {
@@ -220,7 +250,7 @@ func (m *Model) SetOCC(col *Column) error {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 	default:
-		return ErrColumnTypeError
+		return ErrColumnMustNumber
 	}
 
 	if !m.columnExists(col) {

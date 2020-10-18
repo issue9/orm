@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Package sqlbuilder 提供一套通过字符串拼接来构成 SQL 语句的工具。
+// Package sqlbuilder 提供一套通过字符串拼接来构成 SQL 语句的工具
 //
 // sqlbuilder 提供了部分 *Hooker 的接口，用于自定义某一条语句的实现。
 // 一般情况下， 如果有多个数据是遵循 SQL 标准的，只有个别有例外，
@@ -53,7 +53,7 @@ type SQLBuilder struct {
 	engine core.Engine
 }
 
-// NewSQLBuilder 声明 SQLBuilder 实例
-func NewSQLBuilder(e core.Engine) *SQLBuilder {
+// New 声明 SQLBuilder 实例
+func New(e core.Engine) *SQLBuilder {
 	return &SQLBuilder{engine: e}
 }

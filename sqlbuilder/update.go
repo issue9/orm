@@ -80,7 +80,7 @@ func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
 	return stmt
 }
 
-// OCC 指定一个用于乐观锁的字段。
+// OCC 指定一个用于乐观锁的字段
 //
 // val 表示乐观锁原始的值，更新时如果值不等于 val，将更新失败。
 func (stmt *UpdateStmt) OCC(col string, val interface{}) *UpdateStmt {

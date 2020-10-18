@@ -45,13 +45,13 @@ func (ms *Models) New(obj interface{}) (*core.Model, error) {
 		return nil, err
 	}
 
-	if meta, ok := obj.(Metaer); ok {
+	if meta, ok := obj.(core.Metaer); ok {
 		if err := parseMeta(m, meta.Meta()); err != nil {
 			return nil, err
 		}
 	}
 
-	if view, ok := obj.(Viewer); ok {
+	if view, ok := obj.(core.Viewer); ok {
 		m.Type = core.View
 		sql, err := view.ViewAs(ms.engine)
 		if err != nil {

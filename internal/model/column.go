@@ -71,7 +71,7 @@ func setDefault(col *core.Column, vals []string) error {
 
 	rval := reflect.New(col.GoType)
 	v := rval.Interface()
-	if p, ok := v.(DefaultParser); ok {
+	if p, ok := v.(core.DefaultParser); ok {
 		if err := p.ParseDefault(vals[0]); err != nil {
 			return err
 		}

@@ -75,7 +75,7 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.NotError(err).NotNil(ai2)
 	ai2.Name = "ai2"
 	a.NotError(m.AddColumns(ai2))
-	a.ErrorType(m.SetAutoIncrement(ai2), ErrColumnTypeError)
+	a.ErrorType(m.SetAutoIncrement(ai2), ErrColumnMustNumber)
 
 	// 存在主键
 	m.Reset()
@@ -152,7 +152,7 @@ func TestModel_SetOCC(t *testing.T) {
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai"
 	a.NotError(m.AddColumn(ai))
-	a.ErrorType(m.SetOCC(ai), ErrColumnTypeError)
+	a.ErrorType(m.SetOCC(ai), ErrColumnMustNumber)
 
 	// 正常
 	ai, err = NewColumnFromGoType(IntType)
