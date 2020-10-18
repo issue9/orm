@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Package test 提供了整个包的基本测试数据。
+// Package test 提供了整个包的基本测试数据
 package test
 
 import (
@@ -79,7 +79,8 @@ func NewSuite(a *assert.Assertion) *Suite {
 	return s
 }
 
-// Close 销毁测试用例，关闭数据库。
+// Close 销毁测试用例并关闭数据库
+//
 // 如果是 sqlite3，还会删除数据库文件。
 func (s Suite) Close() {
 	for _, t := range s.tests {
