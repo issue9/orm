@@ -4,6 +4,7 @@
 package test
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/issue9/assert"
@@ -31,7 +32,9 @@ var (
 	Postgres = dialect.Postgres("postgres")
 )
 
-// 需要测试的数据用例
+// 以驱动为单的测试用例
+//
+// 如果不需要该驱动的测试用例，真接注释即可。
 var cases = []struct {
 	prefix  string
 	dsn     string
@@ -107,7 +110,7 @@ func (s Suite) Close() {
 // ForEach 为每个数据库测试用例调用 f 进行测试
 //
 // dialects 为需要测试的驱动，如果为空表示测试全部
-func (s Suite) ForEach(f func(t *Driver), dialects ...core.Dialect) {
+func (s Suite) ForEach(f func(*Driver), dialects ...core.Dialect) {
 	if len(dialects) == 0 {
 		for _, test := range s.tests {
 			f(test)
@@ -124,6 +127,6 @@ LOOP:
 			}
 		}
 
-		panic("不存在的 driverName:" + d.DriverName())
+		fmt.Println("不存在的 driverName:" + d.DriverName())
 	}
 }

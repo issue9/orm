@@ -25,13 +25,6 @@ func TestSuite_ForEach(t *testing.T) {
 	})
 	a.Equal(size, len(cases))
 
-	// 指定了 driverName
-	size = 0
-	s.ForEach(func(t *Driver) {
-		size++
-	}, Mysql, Sqlite3)
-	a.Equal(2, size)
-
 	// 指定了不存在的 driverName
 	a.Panic(func() {
 		s.ForEach(func(t *Driver) {
