@@ -28,8 +28,8 @@ type DB struct {
 }
 
 // NewDB 声明一个新的 DB 实例
-func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB, error) {
-	db, err := sql.Open(driverName, dataSourceName)
+func NewDB(dataSourceName, tablePrefix string, dialect Dialect) (*DB, error) {
+	db, err := sql.Open(dialect.DriverName(), dataSourceName)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,10 @@ func NewDB(driverName, dataSourceName, tablePrefix string, dialect Dialect) (*DB
 	return NewDBWithStdDB(db, tablePrefix, dialect)
 }
 
-// NewDBWithStdDB 从 sql.DB 构建一个 DB 实例
+// NewDBWithStdDB 从 sql.DB 构建 DB 实例
+//
+// NOTE: 请确保用于打开 db 的 driverName 参数与 dialect.DriverName() 是相同的，
+// 否则后续操作的结果是未知的。
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
 	inst := &DB{
 		DB:          db,

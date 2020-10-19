@@ -3,7 +3,7 @@ orm
 [![Go version](https://img.shields.io/badge/Go-1.13-brightgreen.svg?style=flat)](https://golang.org)
 [![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/orm)
 [![codecov](https://codecov.io/gh/issue9/orm/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/orm)
-[![GoDoc](https://godoc.org/github.com/issue9/orm?status.svg)](https://godoc.org/github.com/issue9/orm)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/orm)](https://pkg.go.dev/github.com/issue9/orm)
 ======
 
 目前内置了对以下数据库的支持：
@@ -22,14 +22,14 @@ orm
 ```go
 import (
     github.com/issue9/orm/v3/dialect  // sqlite3 的 dialect 声明在此处
-    _ github.com/mattn/go-sqlite3  // 加载数据库驱动
+    _ github.com/mattn/go-sqlite3     // 加载数据库驱动
 )
 
 // 初始化一个 DB，表前缀为 prefix_
-db1 := orm.NewDB("sqlite3", "./db1", "prefix_", dialect.Sqlite3())
+db1 := orm.NewDB("./db1", "prefix_", dialect.Sqlite3("sqlite3"))
 
 // 另一个 DB 实例
-db2 := orm.NewDB("sqlite3", "./db2", "db2_", dialect.Sqlite3())
+db2 := orm.NewDB("./db2", "db2_", dialect.Sqlite3("sqlite3"))
 ```
 
 

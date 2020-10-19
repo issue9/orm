@@ -125,5 +125,5 @@ func TestParseSqlite3CreateTable(t *testing.T) {
 				Type: core.IndexDefault,
 				SQL:  "CREATE UNIQUE INDEX index_user_unique_email_id on usr(email,id)",
 			}) // sqlite 没有 unique
-	}, "sqlite3")
+	}, test.Sqlite3)
 }

@@ -63,10 +63,12 @@ type Engine interface {
 // Dialect 的实现者除了要实现 Dialect 之外，
 // 还需要根据数据库的支持情况实现 sqlbuilder 下的部分 *Hooker 接口。
 type Dialect interface {
-	// Dialect 的名称
+	// 与当前实例关联的驱动名称
 	//
-	// 可以直接采用驱动的 DriverName 值，方便简单。
-	Name() string
+	// 同一个 Dialect 实现，允许与不同的驱动关联，
+	// 比如 github.com/lib/pq 和 github.com/jackc/pgx/v4/stdlib 功能上是相同的，
+	// 仅注册的名称的不同。
+	DriverName() string
 
 	// 将列转换成数据支持的类型表达式
 	SQLType(col *Column) (string, error)

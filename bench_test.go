@@ -13,7 +13,7 @@ import (
 )
 
 // 测试性能的数据库驱动名称
-const benchDBDriverName = "mysql"
+var benchDBDriverName = test.Mysql
 
 func BenchmarkDB_Insert(b *testing.B) {
 	a := assert.New(b)

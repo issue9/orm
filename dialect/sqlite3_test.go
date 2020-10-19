@@ -59,7 +59,7 @@ func TestSqlite3_VersionSQL(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
-	}, "sqlite3")
+	}, test.Sqlite3)
 }
 
 func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
@@ -84,7 +84,7 @@ func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 			Exec()
 		t.NotError(err)
 
-	}, "sqlite3")
+	}, test.Sqlite3)
 }
 
 func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
@@ -104,7 +104,7 @@ func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 		defer clearSqlite3CreateTable(t, db)
 
 		testDialectDropConstraintStmtHook(t)
-	}, "sqlite3")
+	}, test.Sqlite3)
 }
 
 func TestSqlite3_DropColumnStmtHook(t *testing.T) {
@@ -131,14 +131,14 @@ func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 		// 查询删除的列会出错
 		_, err = db.Query("SELECT state FROM usr")
 		t.Error(err)
-	}, "sqlite3")
+	}, test.Sqlite3)
 }
 
 func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	builder := core.NewBuilder("")
 	a.NotNil(builder)
-	var s = dialect.Sqlite3()
+	var s = dialect.Sqlite3("sqlite3")
 
 	// 空的 meta
 	a.NotError(s.CreateTableOptionsSQL(builder, nil))
@@ -182,7 +182,7 @@ func TestSqlite3_TruncateTableStmtHooker(t *testing.T) {
 		a.NotError(err).Equal(2, len(qs))
 		sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
 		sqltest.Equal(a, qs[1], "DELETE FROM SQLITE_SEQUENCE WHERE name='tbl'")
-	}, "sqlite3")
+	}, test.Sqlite3)
 }
 
 func TestSqlite3_SQLType(t *testing.T) {
@@ -284,7 +284,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, dialect.Sqlite3(), data)
+	testSQLType(a, dialect.Sqlite3("sqlite3"), data)
 }
 
 func TestSqlite3_SQLFormat(t *testing.T) {
@@ -394,7 +394,7 @@ func TestSqlite3_SQLFormat(t *testing.T) {
 		},
 	}
 
-	testSQLFormat(a, dialect.Sqlite3(), data)
+	testSQLFormat(a, dialect.Sqlite3("sqlite3"), data)
 }
 
 func TestSqlite3_Types(t *testing.T) {
@@ -404,7 +404,7 @@ func TestSqlite3_Types(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
-	}, "sqlite3")
+	}, test.Sqlite3)
 }
 
 func TestSqlite3_TypesDefault(t *testing.T) {
@@ -414,5 +414,5 @@ func TestSqlite3_TypesDefault(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypesDefault(t)
-	}, "sqlite3")
+	}, test.Sqlite3)
 }

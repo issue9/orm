@@ -17,15 +17,13 @@ import (
 )
 
 const (
-	mysqlName    = "mysql"
-	mysqlEngine  = mysqlName + "_engine"
-	mysqlCharset = mysqlName + "_charset"
+	mysqlEngine  = "mysql_engine"
+	mysqlCharset = "mysql_charset"
 )
 
-var mysqlInst *mysql
-
 type mysql struct {
-	replacer *strings.Replacer
+	driverName string
+	replacer   *strings.Replacer
 }
 
 var (
@@ -41,18 +39,15 @@ var (
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql() core.Dialect {
-	if mysqlInst == nil {
-		mysqlInst = &mysql{
-			replacer: strings.NewReplacer("{", "`", "}", "`"),
-		}
+func Mysql(driverName string) core.Dialect {
+	return &mysql{
+		driverName: driverName,
+		replacer:   strings.NewReplacer("{", "`", "}", "`"),
 	}
-
-	return mysqlInst
 }
 
-func (m *mysql) Name() string {
-	return mysqlName
+func (m *mysql) DriverName() string {
+	return m.driverName
 }
 
 func (m *mysql) SQL(query string, args []interface{}) (string, []interface{}, error) {

@@ -29,13 +29,13 @@ func TestSuite_ForEach(t *testing.T) {
 	size = 0
 	s.ForEach(func(t *Driver) {
 		size++
-	}, "mysql", "sqlite3")
+	}, Mysql, Sqlite3)
 	a.Equal(2, size)
 
 	// 指定了不存在的 driverName
 	a.Panic(func() {
 		s.ForEach(func(t *Driver) {
 			size++
-		}, "mysql", "not-exists")
+		}, Mysql, nil)
 	})
 }

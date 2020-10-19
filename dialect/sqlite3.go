@@ -16,15 +16,11 @@ import (
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
-const (
-	sqlite3Name  = "sqlite3"
-	sqlite3RowID = sqlite3Name + "_rowid"
-)
-
-var sqlite3Inst *sqlite3
+const sqlite3RowID = "sqlite3_rowid"
 
 type sqlite3 struct {
-	replacer *strings.Replacer
+	driverName string
+	replacer   *strings.Replacer
 }
 
 var (
@@ -39,18 +35,15 @@ var (
 //
 // Meta 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
-func Sqlite3() core.Dialect {
-	if sqlite3Inst == nil {
-		sqlite3Inst = &sqlite3{
-			replacer: strings.NewReplacer("{", "`", "}", "`"),
-		}
+func Sqlite3(driverName string) core.Dialect {
+	return &sqlite3{
+		driverName: driverName,
+		replacer:   strings.NewReplacer("{", "`", "}", "`"),
 	}
-
-	return sqlite3Inst
 }
 
-func (s *sqlite3) Name() string {
-	return sqlite3Name
+func (s *sqlite3) DriverName() string {
+	return s.driverName
 }
 
 func (s *sqlite3) SQL(query string, args []interface{}) (string, []interface{}, error) {

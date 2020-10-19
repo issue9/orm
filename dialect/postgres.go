@@ -15,12 +15,9 @@ import (
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
-const postgresName = "postgres"
-
-var postgresInst *postgres
-
 type postgres struct {
-	replacer *strings.Replacer
+	driverName string
+	replacer   *strings.Replacer
 }
 
 var (
@@ -28,18 +25,15 @@ var (
 )
 
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
-func Postgres() core.Dialect {
-	if postgresInst == nil {
-		postgresInst = &postgres{
-			replacer: strings.NewReplacer("{", `"`, "}", `"`),
-		}
+func Postgres(driverName string) core.Dialect {
+	return &postgres{
+		driverName: driverName,
+		replacer:   strings.NewReplacer("{", `"`, "}", `"`),
 	}
-
-	return postgresInst
 }
 
-func (p *postgres) Name() string {
-	return postgresName
+func (p *postgres) DriverName() string {
+	return p.driverName
 }
 
 func (p *postgres) VersionSQL() string {

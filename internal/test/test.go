@@ -9,6 +9,7 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v3"
+	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/dialect"
 
 	// 测试入口，数据库也在此初始化
@@ -19,30 +20,37 @@ import (
 
 const sqlite3DBFile = "orm_test.db"
 
+var (
+	// Sqlite3 Dialect 实例
+	Sqlite3 = dialect.Sqlite3("sqlite3")
+
+	// Mysql Dialect 实例
+	Mysql = dialect.Mysql("mysql")
+
+	// Postgres Dialect 实例
+	Postgres = dialect.Postgres("postgres")
+)
+
 // 需要测试的数据用例
 var cases = []struct {
-	prefix     string
-	dsn        string
-	dialect    orm.Dialect
-	driverName string // 需要唯一
+	prefix  string
+	dsn     string
+	dialect orm.Dialect
 }{
 	{
-		prefix:     "prefix_",
-		dsn:        "./" + sqlite3DBFile + "?_fk=true",
-		dialect:    dialect.Sqlite3(),
-		driverName: "sqlite3",
+		prefix:  "prefix_",
+		dsn:     "./" + sqlite3DBFile + "?_fk=true",
+		dialect: Sqlite3,
 	},
 	{
-		prefix:     "prefix_",
-		dsn:        "user=postgres password=postgres dbname=orm_test sslmode=disable",
-		dialect:    dialect.Postgres(),
-		driverName: "postgres",
+		prefix:  "prefix_",
+		dsn:     "user=postgres password=postgres dbname=orm_test sslmode=disable",
+		dialect: Postgres,
 	},
 	{
-		prefix:     "prefix_",
-		dsn:        "root:root@/orm_test?charset=utf8&parseTime=true",
-		dialect:    dialect.Mysql(),
-		driverName: "mysql",
+		prefix:  "prefix_",
+		dsn:     "root:root@/orm_test?charset=utf8&parseTime=true",
+		dialect: Mysql,
 	},
 }
 
@@ -65,13 +73,13 @@ func NewSuite(a *assert.Assertion) *Suite {
 	s := &Suite{a: a}
 
 	for _, c := range cases {
-		db, err := orm.NewDB(c.driverName, c.dsn, c.prefix, c.dialect)
+		db, err := orm.NewDB(c.dsn, c.prefix, c.dialect)
 		a.NotError(err).NotNil(db)
 
 		s.tests = append(s.tests, &Driver{
 			Assertion:  a,
 			DB:         db,
-			DriverName: c.driverName,
+			DriverName: c.dialect.DriverName(),
 			dsn:        c.dsn,
 		})
 	}
@@ -86,7 +94,7 @@ func (s Suite) Close() {
 	for _, t := range s.tests {
 		t.NotError(t.DB.Close())
 
-		if t.DB.Dialect().Name() != "sqlite3" {
+		if t.DB.Dialect().DriverName() != Sqlite3.DriverName() {
 			return
 		}
 
@@ -98,9 +106,9 @@ func (s Suite) Close() {
 
 // ForEach 为每个数据库测试用例调用 f 进行测试
 //
-// driverName 为需要测试的驱动，如果为空表示测试全部
-func (s Suite) ForEach(f func(t *Driver), driverName ...string) {
-	if len(driverName) == 0 {
+// dialects 为需要测试的驱动，如果为空表示测试全部
+func (s Suite) ForEach(f func(t *Driver), dialects ...core.Dialect) {
+	if len(dialects) == 0 {
 		for _, test := range s.tests {
 			f(test)
 		}
@@ -108,14 +116,14 @@ func (s Suite) ForEach(f func(t *Driver), driverName ...string) {
 	}
 
 LOOP:
-	for _, name := range driverName {
+	for _, d := range dialects {
 		for _, test := range s.tests {
-			if test.DriverName == name {
+			if test.DriverName == d.DriverName() {
 				f(test)
 				continue LOOP
 			}
 		}
 
-		panic("不存在的 driverName:" + name)
-	} // end for driverName
+		panic("不存在的 driverName:" + d.DriverName())
+	}
 }

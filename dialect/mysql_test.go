@@ -51,7 +51,7 @@ func TestMysql_VersionSQL(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
-	}, "mysql")
+	}, test.Mysql)
 }
 
 func TestMysql_DropConstrainStmtHook(t *testing.T) {
@@ -76,7 +76,7 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 		}()
 
 		testDialectDropConstraintStmtHook(t)
-	}, "mysql")
+	}, test.Mysql)
 
 	// 约束名不是根据 core.PKName() 生成的
 	suite.ForEach(func(t *test.Driver) {
@@ -116,7 +116,7 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 			PK("uid").
 			Exec()
 		t.NotError(err)
-	}, "mysql")
+	}, test.Mysql)
 }
 
 func TestMysql_DropIndexStmtHook(t *testing.T) {
@@ -133,7 +133,7 @@ func TestMysql_DropIndexStmtHook(t *testing.T) {
 		a.True(ok).NotNil(hook)
 		qs, err := hook.DropIndexStmtHook(stmt)
 		a.NotError(err).Equal(qs, []string{"ALTER TABLE {tbl} DROP INDEX {index_name}"})
-	}, "mysql")
+	}, test.Mysql)
 }
 
 func TestMysql_TruncateTableStmtHook(t *testing.T) {
@@ -151,14 +151,14 @@ func TestMysql_TruncateTableStmtHook(t *testing.T) {
 		a.True(ok).NotNil(hook)
 		qs, err := hook.TruncateTableStmtHook(stmt)
 		a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE {tbl}"})
-	}, "mysql")
+	}, test.Mysql)
 }
 
 func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	builder := core.NewBuilder("")
 	a.NotNil(builder)
-	var m = dialect.Mysql()
+	var m = dialect.Mysql("mysql_driver_name")
 
 	// 空的 meta
 	a.NotError(m.CreateTableOptionsSQL(builder, nil))
@@ -335,7 +335,7 @@ func TestMysql_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, dialect.Mysql(), data)
+	testSQLType(a, dialect.Mysql("mysql_driver_name"), data)
 }
 
 func TestMysql_SQLFormat(t *testing.T) {
@@ -445,7 +445,7 @@ func TestMysql_SQLFormat(t *testing.T) {
 		},
 	}
 
-	testSQLFormat(a, dialect.Mysql(), data)
+	testSQLFormat(a, dialect.Mysql("mysql_driver_name"), data)
 }
 
 func TestMysql_Types(t *testing.T) {
@@ -455,7 +455,7 @@ func TestMysql_Types(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
-	}, "mysql")
+	}, test.Mysql)
 }
 
 func TestMysql_TypesDefault(t *testing.T) {
@@ -465,5 +465,5 @@ func TestMysql_TypesDefault(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypesDefault(t)
-	}, "mysql")
+	}, test.Mysql)
 }

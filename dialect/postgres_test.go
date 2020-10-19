@@ -24,7 +24,7 @@ func TestPostgres_VersionSQL(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
-	}, "postgres")
+	}, test.Postgres)
 }
 
 func TestPostgres_SQLType(t *testing.T) {
@@ -223,7 +223,7 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, dialect.Postgres(), data)
+	testSQLType(a, dialect.Postgres("postgres"), data)
 }
 
 func TestPostgres_SQLFormat(t *testing.T) {
@@ -333,7 +333,7 @@ func TestPostgres_SQLFormat(t *testing.T) {
 		},
 	}
 
-	testSQLFormat(a, dialect.Postgres(), data)
+	testSQLFormat(a, dialect.Postgres("postgres"), data)
 }
 
 func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
@@ -357,12 +357,12 @@ func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
 		qs, err = hook.TruncateTableStmtHook(stmt)
 		a.NotError(err).Equal(1, len(qs))
 		sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl} RESTART IDENTITY`)
-	}, "postgres")
+	}, test.Postgres)
 }
 
 func TestPostgres_SQL(t *testing.T) {
 	a := assert.New(t)
-	p := dialect.Postgres()
+	p := dialect.Postgres("postgres")
 	a.NotNil(p)
 
 	eq := func(s1, s2 string) {
@@ -391,7 +391,7 @@ func TestPostgres_SQL(t *testing.T) {
 
 func BenchmarkPostgres_SQL(b *testing.B) {
 	a := assert.New(b)
-	p := dialect.Postgres()
+	p := dialect.Postgres("postgres_driver_name")
 	a.NotNil(p)
 
 	s1 := "SELECT * FROM tbl WHERE uid>? AND group=? AND username LIKE ?"
@@ -408,7 +408,7 @@ func TestPostgres_Types(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
-	}, "postgres")
+	}, test.Postgres)
 }
 
 func TestPostgres_TypesDefault(t *testing.T) {
@@ -418,5 +418,5 @@ func TestPostgres_TypesDefault(t *testing.T) {
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypesDefault(t)
-	}, "postgres")
+	}, test.Postgres)
 }
