@@ -25,7 +25,7 @@ jobs:
           --health-timeout=5s
           --health-retries=3
       mysql:
-        image: mariadb:10.4
+        image: mysql:8.0.16
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:

@@ -57,13 +57,13 @@ func main() {
 
 ### 安装
 
-在项目的 go.mod 中引用项目即可，当前版本为 v2：
+在项目的 go.mod 中引用项目即可，当前版本为 v3：
 ```go.mod
 require (
-    github.com/issue9/orm/v3 v2.x.x
+    github.com/issue9/orm/v3 v3.x.x
 )
 
-go 1.11
+go 1.13
 ```
 
 
@@ -72,9 +72,12 @@ go 1.11
 目前支持以下数据库以及对应的驱动:
  1. sqlite3:  github.com/mattn/go-sqlite3
  1. mysql:    github.com/go-sql-driver/mysql
+ 1. mariadb:  github.com/go-sql-driver/mysql
  1. postgres: github.com/lib/pq
 
 在初始化时，需要用到什么数据库，只需要引入该驱动即可。
+如果用到了 check 约束，则需要 mysql > 8.0.16、mariadb > 10.2.1。
+
 
 ```go
 import (
