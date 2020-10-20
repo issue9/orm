@@ -138,7 +138,7 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	builder := core.NewBuilder("")
 	a.NotNil(builder)
-	var s = dialect.Sqlite3("sqlite3")
+	var s = dialect.Sqlite3("sqlite3", "sqlite3_driver")
 
 	// 空的 meta
 	a.NotError(s.CreateTableOptionsSQL(builder, nil))
@@ -284,7 +284,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, dialect.Sqlite3("sqlite3"), data)
+	testSQLType(a, dialect.Sqlite3("sqlite3", "sqlite3_driver"), data)
 }
 
 func TestSqlite3_SQLFormat(t *testing.T) {
@@ -394,7 +394,7 @@ func TestSqlite3_SQLFormat(t *testing.T) {
 		},
 	}
 
-	testSQLFormat(a, dialect.Sqlite3("sqlite3"), data)
+	testSQLFormat(a, dialect.Sqlite3("sqlite3", "sqlite3_driver"), data)
 }
 
 func TestSqlite3_Types(t *testing.T) {

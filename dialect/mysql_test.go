@@ -158,7 +158,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t)
 	builder := core.NewBuilder("")
 	a.NotNil(builder)
-	var m = dialect.Mysql("mysql_driver_name")
+	var m = dialect.Mysql("mysql_name", "mysql_driver_name")
 
 	// 空的 meta
 	a.NotError(m.CreateTableOptionsSQL(builder, nil))
@@ -335,7 +335,7 @@ func TestMysql_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, dialect.Mysql("mysql_driver_name"), data)
+	testSQLType(a, dialect.Mysql("mysql_name", "mysql_driver_name"), data)
 }
 
 func TestMysql_SQLFormat(t *testing.T) {
@@ -445,7 +445,7 @@ func TestMysql_SQLFormat(t *testing.T) {
 		},
 	}
 
-	testSQLFormat(a, dialect.Mysql("mysql_driver_name"), data)
+	testSQLFormat(a, dialect.Mysql("mysql_name", "mysql_driver_name"), data)
 }
 
 func TestMysql_Types(t *testing.T) {

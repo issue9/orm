@@ -16,6 +16,7 @@ import (
 )
 
 type postgres struct {
+	dbName     string
 	driverName string
 	replacer   *strings.Replacer
 }
@@ -25,11 +26,16 @@ var (
 )
 
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
-func Postgres(driverName string) core.Dialect {
+func Postgres(name, driverName string) core.Dialect {
 	return &postgres{
+		dbName:     name,
 		driverName: driverName,
 		replacer:   strings.NewReplacer("{", `"`, "}", `"`),
 	}
+}
+
+func (p *postgres) DBName() string {
+	return p.dbName
 }
 
 func (p *postgres) DriverName() string {

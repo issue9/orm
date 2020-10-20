@@ -223,7 +223,7 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, dialect.Postgres("postgres"), data)
+	testSQLType(a, dialect.Postgres("postgres", "postgres_driver"), data)
 }
 
 func TestPostgres_SQLFormat(t *testing.T) {
@@ -333,7 +333,7 @@ func TestPostgres_SQLFormat(t *testing.T) {
 		},
 	}
 
-	testSQLFormat(a, dialect.Postgres("postgres"), data)
+	testSQLFormat(a, dialect.Postgres("postgres", "driverName"), data)
 }
 
 func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
@@ -362,7 +362,7 @@ func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
 
 func TestPostgres_SQL(t *testing.T) {
 	a := assert.New(t)
-	p := dialect.Postgres("postgres")
+	p := dialect.Postgres("postgres", "driver_name")
 	a.NotNil(p)
 
 	eq := func(s1, s2 string) {
@@ -391,7 +391,7 @@ func TestPostgres_SQL(t *testing.T) {
 
 func BenchmarkPostgres_SQL(b *testing.B) {
 	a := assert.New(b)
-	p := dialect.Postgres("postgres_driver_name")
+	p := dialect.Postgres("psql", "postgres_driver_name")
 	a.NotNil(p)
 
 	s1 := "SELECT * FROM tbl WHERE uid>? AND group=? AND username LIKE ?"

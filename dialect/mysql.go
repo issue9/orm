@@ -22,6 +22,7 @@ const (
 )
 
 type mysql struct {
+	dbName     string
 	driverName string
 	replacer   *strings.Replacer
 }
@@ -39,11 +40,16 @@ var (
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql(driverName string) core.Dialect {
+func Mysql(name, driverName string) core.Dialect {
 	return &mysql{
+		dbName:     name,
 		driverName: driverName,
 		replacer:   strings.NewReplacer("{", "`", "}", "`"),
 	}
+}
+
+func (m *mysql) DBName() string {
+	return m.dbName
 }
 
 func (m *mysql) DriverName() string {
