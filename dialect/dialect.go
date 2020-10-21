@@ -19,6 +19,16 @@ var (
 	errGoTypeIsNil           = errors.New("无效的 col.GoType 值")
 	errMissLength            = errors.New("缺少长度")
 	errTimeFractionalInvalid = errors.New("时间精度只能介于 [0,6] 之间")
+
+	datetimeLayouts = []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04:05.9",
+		"2006-01-02 15:04:05.99",
+		"2006-01-02 15:04:05.999",
+		"2006-01-02 15:04:05.9999",
+		"2006-01-02 15:04:05.99999",
+		"2006-01-02 15:04:05.999999",
+	}
 )
 
 func errUncovert(dest string) error {

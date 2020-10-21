@@ -270,7 +270,7 @@ func (p *postgres) formatSQL(v interface{}, length ...int) (f string, err error)
 		vv = vv.In(time.UTC)
 
 		if len(length) == 0 {
-			return "'" + vv.Format(postgresDatetimeLayouts[0]) + "'", nil
+			return "'" + vv.Format(datetimeLayouts[6]) + "'", nil
 		}
 		if len(length) > 1 {
 			return "", errTimeFractionalInvalid
@@ -280,18 +280,8 @@ func (p *postgres) formatSQL(v interface{}, length ...int) (f string, err error)
 		if index < 0 || index > 6 {
 			return "", errTimeFractionalInvalid
 		}
-		return "'" + vv.Format(postgresDatetimeLayouts[index]) + "'", nil
+		return "'" + vv.Format(datetimeLayouts[index]) + "'", nil
 	}
 
 	return fmt.Sprint(v), nil
-}
-
-var postgresDatetimeLayouts = []string{
-	"2006-01-02 15:04:05Z07:00",
-	"2006-01-02 15:04:05.9Z07:00",
-	"2006-01-02 15:04:05.99Z07:00",
-	"2006-01-02 15:04:05.999Z07:00",
-	"2006-01-02 15:04:05.9999Z07:00",
-	"2006-01-02 15:04:05.99999Z07:00",
-	"2006-01-02 15:04:05.999999Z07:00",
 }

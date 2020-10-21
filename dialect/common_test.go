@@ -4,6 +4,7 @@ package dialect_test
 
 import (
 	"database/sql"
+	"fmt"
 	"math"
 	"time"
 
@@ -230,6 +231,8 @@ func testTypes(t *test.Driver) {
 		// bug(caixw): mysql 对无精度的保存会出整
 		True(math.Abs(float64(Time.Unix()-now.Unix())) < 2, "Time:%v:%d <==> %v:%d", Time, Time.Unix(), now, now.Unix()).
 		Equal(NullTime.Unix(), now.Unix(), "NullTime:%v:%d <==> %v:%d", Time, Time.Unix(), now, now.Unix())
+
+	fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
 }
 
 func quoteColumns(stmt *sqlbuilder.SelectStmt, col ...string) {
@@ -356,4 +359,5 @@ func testTypesDefault(t *test.Driver) {
 		Nil(RawBytes).
 		Equal(Time.Unix(), now.Unix()).
 		Equal(TimeWithLen.Unix(), now.Unix())
+	//fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
 }

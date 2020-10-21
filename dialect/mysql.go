@@ -350,7 +350,7 @@ func (m *mysql) formatSQL(v interface{}, length ...int) (f string, err error) {
 		vv = vv.In(time.UTC)
 
 		if len(length) == 0 {
-			return "'" + vv.Format(mysqlDatetimeLayouts[0]) + "'", nil
+			return "'" + vv.Format(datetimeLayouts[0]) + "'", nil
 		}
 		if len(length) > 1 {
 			return "", errTimeFractionalInvalid
@@ -360,18 +360,8 @@ func (m *mysql) formatSQL(v interface{}, length ...int) (f string, err error) {
 		if index < 0 || index > 6 {
 			return "", errTimeFractionalInvalid
 		}
-		return "'" + vv.Format(mysqlDatetimeLayouts[index]) + "'", nil
+		return "'" + vv.Format(datetimeLayouts[index]) + "'", nil
 	}
 
 	return fmt.Sprint(v), nil
-}
-
-var mysqlDatetimeLayouts = []string{
-	"2006-01-02 15:04:05",
-	"2006-01-02 15:04:05.9",
-	"2006-01-02 15:04:05.99",
-	"2006-01-02 15:04:05.999",
-	"2006-01-02 15:04:05.9999",
-	"2006-01-02 15:04:05.99999",
-	"2006-01-02 15:04:05.999999",
 }

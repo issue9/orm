@@ -42,7 +42,7 @@ var cases = []struct {
 }{
 	{
 		prefix:  "prefix_",
-		dsn:     "./" + sqlite3DBFile + "?_fk=true",
+		dsn:     "./" + sqlite3DBFile + "?_fk=true&_loc=UTC",
 		dialect: Sqlite3,
 	},
 	{
