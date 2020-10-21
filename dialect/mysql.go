@@ -56,7 +56,7 @@ func (m *mysql) DriverName() string {
 	return m.driverName
 }
 
-func (m *mysql) SQL(query string, args []interface{}) (string, []interface{}, error) {
+func (m *mysql) Fix(query string, args []interface{}) (string, []interface{}, error) {
 	query = ReplaceNamedArgs(query, args)
 	return m.replacer.Replace(query), args, nil
 }

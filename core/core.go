@@ -120,11 +120,12 @@ type Dialect interface {
 	// 创建表时根据附加信息返回的部分 SQL 语句
 	CreateTableOptionsSQL(sql *Builder, meta map[string][]string) error
 
-	// 对 SQL 语句作调整
+	// 对 sql 语句作调整
 	//
 	// 比如替换 {} 符号；处理 sql.NamedArgs；
 	// postgresql 需要将 ? 改成 $1 等形式。
-	SQL(query string, args []interface{}) (string, []interface{}, error)
+	// 以及对 args 的参数作校正，比如 lib/pq 对 time.Time 处理有问题，也可以在此处作调整。
+	Fix(query string, args []interface{}) (string, []interface{}, error)
 
 	// 对预编译的内容进行处理
 	//

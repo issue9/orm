@@ -3,6 +3,7 @@
 package dialect
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"errors"
 	"fmt"
@@ -65,11 +66,27 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 }
 
 // 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
-func (p *postgres) SQL(query string, args []interface{}) (string, []interface{}, error) {
+func (p *postgres) Fix(query string, args []interface{}) (string, []interface{}, error) {
 	query = ReplaceNamedArgs(query, args)
 	query, err := p.replace(query)
 	if err != nil {
 		return "", nil, err
+	}
+
+	// lib/pq 对 time.Time 的处理有问题，保存时不会考虑其时区，
+	// 直接从字面值当作零时区进行保存。
+	// https://github.com/lib/pq/issues/329
+	for index, arg := range args {
+		switch a := arg.(type) {
+		case time.Time:
+			args[index] = a.In(time.UTC)
+		case *time.Time:
+			args[index] = a.In(time.UTC)
+		case sql.NullTime:
+			args[index] = sql.NullTime{Valid: a.Valid, Time: a.Time.In(time.UTC)}
+		case *sql.NullTime:
+			args[index] = &sql.NullTime{Valid: a.Valid, Time: a.Time.In(time.UTC)}
+		}
 	}
 
 	return query, args, nil

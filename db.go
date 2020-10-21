@@ -115,7 +115,7 @@ func (db *DB) printDebug(query string) {
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	db.printDebug(query)
 	query = db.replacer.Replace(query)
-	query, args, err := db.dialect.SQL(query, args)
+	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		panic(err)
 	}
@@ -132,7 +132,7 @@ func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	db.printDebug(query)
 	query = db.replacer.Replace(query)
-	query, args, err := db.dialect.SQL(query, args)
+	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	db.printDebug(query)
 	query = db.replacer.Replace(query)
-	query, args, err := db.dialect.SQL(query, args)
+	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		return nil, err
 	}

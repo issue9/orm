@@ -54,7 +54,7 @@ func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
-	query, args, err := tx.Dialect().SQL(query, args)
+	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (tx *Tx) QueryRow(query string, args ...interface{}) *sql.Row {
 func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
-	query, args, err := tx.Dialect().SQL(query, args)
+	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +92,7 @@ func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	tx.db.printDebug(query)
 	query = tx.db.replacer.Replace(query)
-	query, args, err := tx.Dialect().SQL(query, args)
+	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {
 		return nil, err
 	}

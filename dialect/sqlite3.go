@@ -52,7 +52,7 @@ func (s *sqlite3) DriverName() string {
 	return s.driverName
 }
 
-func (s *sqlite3) SQL(query string, args []interface{}) (string, []interface{}, error) {
+func (s *sqlite3) Fix(query string, args []interface{}) (string, []interface{}, error) {
 	query = ReplaceNamedArgs(query, args)
 	return s.replacer.Replace(query), args, nil
 }

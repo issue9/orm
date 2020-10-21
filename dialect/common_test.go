@@ -244,16 +244,9 @@ func testTypes(t *test.Driver) {
 		True(NullF64.Valid).Equal(NullF64.Float64, .64).
 		Equal(RawBytes, sql.RawBytes("rawBytes"))
 
-	// bug(caixw) lib/pq 处理 time 时有 bug，更换驱动？
-	//
-	// lib/pq 对 time.Time 的处理有问题，保存时不会考虑其时区，
-	// 直接从字面值当作零时区进行保存。
-	// https://github.com/lib/pq/issues/329
-	if t.DriverName != "postgres" {
-		// 部分数据库可能保存时间，会相差 1 秒。
-		tt := math.Abs(float64(Time.Unix() - now.Unix()))
-		t.True(tt < 2)
-	}
+	// 部分数据库可能保存时间，会相差 1 秒。
+	tt := math.Abs(float64(Time.Unix() - now.Unix()))
+	t.True(tt < 2)
 }
 
 func quoteColumns(stmt *sqlbuilder.SelectStmt, col ...string) {
