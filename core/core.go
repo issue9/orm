@@ -70,13 +70,13 @@ type Dialect interface {
 
 	// 与当前实例关联的驱动名称
 	//
-	// 同一个 Dialect 实现，允许与不同的驱动关联，
-	// 比如 github.com/lib/pq 和 github.com/jackc/pgx/v4/stdlib 功能上是相同的，
+	// 原则上驱动名和 Dialect 应该是一一对应的，但是也会有例外，比如：
+	// github.com/lib/pq 和 github.com/jackc/pgx/v4/stdlib 功能上是相同的，
 	// 仅注册的名称的不同。
 	DriverName() string
 
 	// 将列转换成数据支持的类型表达式
-	SQLType(col *Column) (string, error)
+	SQLType(*Column) (string, error)
 
 	// 将 v 格式化为 SQL 对应的格式
 	//
@@ -120,7 +120,7 @@ type Dialect interface {
 	// 创建表时根据附加信息返回的部分 SQL 语句
 	CreateTableOptionsSQL(sql *Builder, meta map[string][]string) error
 
-	// 根据当前的数据库，对 SQL 作调整
+	// 对 SQL 语句作调整
 	//
 	// 比如替换 {} 符号；处理 sql.NamedArgs；
 	// postgresql 需要将 ? 改成 $1 等形式。

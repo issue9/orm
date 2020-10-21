@@ -345,6 +345,7 @@ func (m *mysql) SQLFormat(v interface{}, length ...int) (f string, err error) {
 		return "'" + vv + "'", nil
 	case time.Time: // datetime
 		vv = vv.In(time.UTC)
+
 		if len(length) == 0 {
 			return "'" + vv.Format(mysqlDatetimeLayouts[0]) + "'", nil
 		}

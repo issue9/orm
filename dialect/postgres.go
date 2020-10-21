@@ -247,8 +247,9 @@ func (p *postgres) SQLFormat(v interface{}, length ...int) (f string, err error)
 	case string:
 		return "'" + vv + "'", nil
 	case time.Time: // timestamp
+		vv = vv.In(time.UTC)
+
 		if len(length) == 0 {
-			vv = vv.In(time.UTC)
 			return "'" + vv.Format(postgresDatetimeLayouts[0]) + "'", nil
 		}
 		if len(length) > 1 {
