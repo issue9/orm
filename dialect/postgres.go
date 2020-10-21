@@ -207,8 +207,11 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 				return p.buildType("TEXT", col, 0)
 			}
 			return p.buildType("VARCHAR", col, 1)
-		case core.TimeType:
-			if len(col.Length) > 0 && (col.Length[0] < 0 || col.Length[0] > 6) {
+		case core.TimeType, core.NullTimeType:
+			if len(col.Length) == 0 {
+				return p.buildType("TIMESTAMP", col, 0)
+			}
+			if col.Length[0] < 0 || col.Length[0] > 6 {
 				return "", errTimeFractionalInvalid
 			}
 			return p.buildType("TIMESTAMP", col, 1)
@@ -273,10 +276,11 @@ func (p *postgres) formatSQL(v interface{}, length ...int) (f string, err error)
 			return "", errTimeFractionalInvalid
 		}
 
-		if length[0] < 0 || length[0] > 6 {
+		index := length[0]
+		if index < 0 || index > 6 {
 			return "", errTimeFractionalInvalid
 		}
-		return "'" + vv.Format(postgresDatetimeLayouts[length[0]]) + "'", nil
+		return "'" + vv.Format(postgresDatetimeLayouts[index]) + "'", nil
 	}
 
 	return fmt.Sprint(v), nil

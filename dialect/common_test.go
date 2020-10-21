@@ -110,6 +110,7 @@ func testTypes(t *test.Driver) {
 		Column("null_float64", core.NullFloat64Type, false, false, false, nil, 5, 3).
 		Column("raw_bytes", core.RawBytesType, false, false, false, nil).
 		Column("time", core.TimeType, false, false, false, nil).
+		Column("null_time", core.NullTimeType, false, false, false, nil, 5).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -137,6 +138,7 @@ func testTypes(t *test.Driver) {
 		"null_float64",
 		"raw_bytes",
 		"time",
+		"null_time",
 	}
 	vals := []interface{}{ // 与 cols 一一对应
 		true,
@@ -158,6 +160,7 @@ func testTypes(t *test.Driver) {
 		true,
 		.64,
 		sql.RawBytes("rawBytes"),
+		now,
 		now,
 	}
 
@@ -199,10 +202,11 @@ func testTypes(t *test.Driver) {
 		NullF64    sql.NullFloat64
 		RawBytes   sql.RawBytes
 		Time       time.Time
+		NullTime   time.Time
 	)
 	err = rows.Scan(&Bool, &Int, &Int8, &Int16, &Int32, &Int64,
 		&Uint, &Uint8, &Uint16, &Uint32, &Uint64,
-		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time)
+		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time, &NullTime)
 	t.NotError(err)
 	t.True(Bool).
 		Equal(Int, -1).
@@ -222,11 +226,10 @@ func testTypes(t *test.Driver) {
 		True(NullInt64.Valid).Equal(NullInt64.Int64, 164).
 		True(NullBool.Valid).True(NullBool.Bool).
 		True(NullF64.Valid).Equal(NullF64.Float64, .64).
-		Equal(RawBytes, sql.RawBytes("rawBytes"))
-
-	// 部分数据库可能保存时间，会相差 1 秒。
-	tt := math.Abs(float64(Time.Unix() - now.Unix()))
-	t.True(tt < 2)
+		Equal(RawBytes, sql.RawBytes("rawBytes")).
+		// bug(caixw): mysql 对无精度的保存会出整
+		True(math.Abs(float64(Time.Unix()-now.Unix())) < 2, "Time:%v:%d <==> %v:%d", Time, Time.Unix(), now, now.Unix()).
+		Equal(NullTime.Unix(), now.Unix(), "NullTime:%v:%d <==> %v:%d", Time, Time.Unix(), now, now.Unix())
 }
 
 func quoteColumns(stmt *sqlbuilder.SelectStmt, col ...string) {
@@ -352,5 +355,5 @@ func testTypesDefault(t *test.Driver) {
 		False(NullF64.Valid).
 		Nil(RawBytes).
 		Equal(Time.Unix(), now.Unix()).
-		Equal(Time.Unix(), now.Unix())
+		Equal(TimeWithLen.Unix(), now.Unix())
 }

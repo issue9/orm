@@ -334,7 +334,7 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 			return s.buildType("INTEGER", col)
 		case core.NullStringType:
 			return s.buildType("TEXT", col)
-		case core.TimeType:
+		case core.TimeType, core.NullTimeType:
 			return s.buildType("TIMESTAMP", col)
 		}
 	}

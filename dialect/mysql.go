@@ -274,11 +274,14 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 				return m.buildType("LONGTEXT", col, false, 0)
 			}
 			return m.buildType("VARCHAR", col, false, 1)
-		case core.TimeType:
-			if len(col.Length) > 0 && (col.Length[0] < 0 || col.Length[0] > 6) {
+		case core.TimeType, core.NullTimeType:
+			if len(col.Length) == 0 {
+				return m.buildType("DATETIME", col, false, 0)
+			}
+			if col.Length[0] < 0 || col.Length[0] > 6 {
 				return "", errTimeFractionalInvalid
 			}
-			return m.buildType("DATETIME", col, false, 0)
+			return m.buildType("DATETIME", col, false, 1)
 		}
 	}
 
@@ -353,10 +356,11 @@ func (m *mysql) formatSQL(v interface{}, length ...int) (f string, err error) {
 			return "", errTimeFractionalInvalid
 		}
 
-		if length[0] < 0 || length[0] > 6 {
+		index := length[0]
+		if index < 0 || index > 6 {
 			return "", errTimeFractionalInvalid
 		}
-		return "'" + vv.Format(mysqlDatetimeLayouts[length[0]]) + "'", nil
+		return "'" + vv.Format(mysqlDatetimeLayouts[index]) + "'", nil
 	}
 
 	return fmt.Sprint(v), nil
