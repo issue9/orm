@@ -3,6 +3,7 @@
 package dialect
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"errors"
 	"fmt"
@@ -382,7 +383,9 @@ func (s *sqlite3) formatSQL(v interface{}, length ...int) (f string, err error) 
 	case string:
 		return "'" + vv + "'", nil
 	case time.Time: // timestamp
-		return "'" + vv.In(time.UTC).Format("2006-01-02 15:04:05") + "'", nil
+		return "'" + vv.In(time.UTC).Format(datetimeLayouts[0]) + "'", nil
+	case sql.NullTime: // timestamp
+		return "'" + vv.Time.In(time.UTC).Format(datetimeLayouts[0]) + "'", nil
 	}
 
 	return fmt.Sprint(v), nil

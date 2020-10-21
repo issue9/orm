@@ -3,6 +3,7 @@
 package dialect
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"errors"
 	"fmt"
@@ -347,21 +348,27 @@ func (m *mysql) formatSQL(v interface{}, length ...int) (f string, err error) {
 	case string:
 		return "'" + vv + "'", nil
 	case time.Time: // datetime
-		vv = vv.In(time.UTC)
-
-		if len(length) == 0 {
-			return "'" + vv.Format(datetimeLayouts[0]) + "'", nil
-		}
-		if len(length) > 1 {
-			return "", errTimeFractionalInvalid
-		}
-
-		index := length[0]
-		if index < 0 || index > 6 {
-			return "", errTimeFractionalInvalid
-		}
-		return "'" + vv.Format(datetimeLayouts[index]) + "'", nil
+		return m.formatTime(vv, length...)
+	case sql.NullTime: // datetime
+		return m.formatTime(vv.Time, length...)
 	}
 
 	return fmt.Sprint(v), nil
+}
+
+func (m *mysql) formatTime(t time.Time, length ...int) (string, error) {
+	t = t.In(time.UTC)
+
+	if len(length) == 0 {
+		return "'" + t.Format(datetimeLayouts[0]) + "'", nil
+	}
+	if len(length) > 1 {
+		return "", errTimeFractionalInvalid
+	}
+
+	index := length[0]
+	if index < 0 || index > 6 {
+		return "", errTimeFractionalInvalid
+	}
+	return "'" + t.Format(datetimeLayouts[index]) + "'", nil
 }

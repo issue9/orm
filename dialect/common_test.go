@@ -4,7 +4,6 @@ package dialect_test
 
 import (
 	"database/sql"
-	"fmt"
 	"math"
 	"time"
 
@@ -232,7 +231,7 @@ func testTypes(t *test.Driver) {
 		True(math.Abs(float64(Time.Unix()-now.Unix())) < 2, "Time:%v:%d <==> %v:%d", Time, Time.Unix(), now, now.Unix()).
 		Equal(NullTime.Unix(), now.Unix(), "NullTime:%v:%d <==> %v:%d", Time, Time.Unix(), now, now.Unix())
 
-	fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
+	//	fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
 }
 
 func quoteColumns(stmt *sqlbuilder.SelectStmt, col ...string) {
