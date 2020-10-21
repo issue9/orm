@@ -338,7 +338,7 @@ func TestMysql_SQLType(t *testing.T) {
 	testSQLType(a, dialect.Mysql("mysql_name", "mysql_driver_name"), data)
 }
 
-func TestMysql_SQLFormat(t *testing.T) {
+func TestMysql_FormatSQL(t *testing.T) {
 	a := assert.New(t)
 	now := time.Now().In(time.UTC)
 
@@ -352,8 +352,7 @@ func TestMysql_SQLFormat(t *testing.T) {
 			format: "1",
 		},
 
-		// Bool
-		{
+		{ // Bool
 			v:      true,
 			format: "1",
 		},
@@ -362,8 +361,7 @@ func TestMysql_SQLFormat(t *testing.T) {
 			format: "0",
 		},
 
-		// NullBool
-		{
+		{ // NullBool
 			v:      sql.NullBool{Valid: true, Bool: true},
 			format: "1",
 		},
@@ -376,8 +374,7 @@ func TestMysql_SQLFormat(t *testing.T) {
 			format: "NULL",
 		},
 
-		// NullInt64
-		{
+		{ // NullInt64
 			v:      sql.NullInt64{Valid: true, Int64: 64},
 			format: "64",
 		},
@@ -390,8 +387,7 @@ func TestMysql_SQLFormat(t *testing.T) {
 			format: "NULL",
 		},
 
-		// NullFloat64
-		{
+		{ // NullFloat64
 			v:      sql.NullFloat64{Valid: true, Float64: 6.4},
 			format: "6.4",
 		},
@@ -404,8 +400,7 @@ func TestMysql_SQLFormat(t *testing.T) {
 			format: "NULL",
 		},
 
-		// NullString
-		{
+		{ // NullString
 			v:      sql.NullString{Valid: true, String: "str"},
 			format: "'str'",
 		},
@@ -445,7 +440,7 @@ func TestMysql_SQLFormat(t *testing.T) {
 		},
 	}
 
-	testSQLFormat(a, dialect.Mysql("mysql_name", "mysql_driver_name"), data)
+	testFormatSQL(a, dialect.Mysql("mysql_name", "mysql_driver_name"), data)
 }
 
 func TestMysql_Types(t *testing.T) {

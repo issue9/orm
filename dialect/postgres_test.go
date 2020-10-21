@@ -226,7 +226,7 @@ func TestPostgres_SQLType(t *testing.T) {
 	testSQLType(a, dialect.Postgres("postgres", "postgres_driver"), data)
 }
 
-func TestPostgres_SQLFormat(t *testing.T) {
+func TestPostgres_FormatSQL(t *testing.T) {
 	a := assert.New(t)
 	now := time.Now().In(time.UTC)
 
@@ -240,8 +240,7 @@ func TestPostgres_SQLFormat(t *testing.T) {
 			format: "1",
 		},
 
-		// Bool
-		{
+		{ // Bool
 			v:      true,
 			format: "true",
 		},
@@ -250,8 +249,7 @@ func TestPostgres_SQLFormat(t *testing.T) {
 			format: "false",
 		},
 
-		// NullBool
-		{
+		{ // NullBool
 			v:      sql.NullBool{Valid: true, Bool: true},
 			format: "true",
 		},
@@ -264,8 +262,7 @@ func TestPostgres_SQLFormat(t *testing.T) {
 			format: "NULL",
 		},
 
-		// NullInt64
-		{
+		{ // NullInt64
 			v:      sql.NullInt64{Valid: true, Int64: 64},
 			format: "64",
 		},
@@ -278,8 +275,7 @@ func TestPostgres_SQLFormat(t *testing.T) {
 			format: "NULL",
 		},
 
-		// NullFloat64
-		{
+		{ // NullFloat64
 			v:      sql.NullFloat64{Valid: true, Float64: 6.4},
 			format: "6.4",
 		},
@@ -292,8 +288,7 @@ func TestPostgres_SQLFormat(t *testing.T) {
 			format: "NULL",
 		},
 
-		// NullString
-		{
+		{ // NullString
 			v:      sql.NullString{Valid: true, String: "str"},
 			format: "'str'",
 		},
@@ -333,7 +328,7 @@ func TestPostgres_SQLFormat(t *testing.T) {
 		},
 	}
 
-	testSQLFormat(a, dialect.Postgres("postgres", "driverName"), data)
+	testFormatSQL(a, dialect.Postgres("postgres", "driverName"), data)
 }
 
 func TestPostgres_TruncateTableStmtHooker(t *testing.T) {

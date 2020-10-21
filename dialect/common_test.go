@@ -15,6 +15,10 @@ import (
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
+type sqlFormater interface {
+	FormatSQL(v interface{}, length ...int) (f string, err error)
+}
+
 type sqlFormatTester struct {
 	v      interface{} // 格式化的值
 	l      []int       // 长度值
@@ -40,9 +44,12 @@ func testSQLType(a *assert.Assertion, d core.Dialect, data []*sqlTypeTester) {
 	}
 }
 
-func testSQLFormat(a *assert.Assertion, d core.Dialect, data []*sqlFormatTester) {
+func testFormatSQL(a *assert.Assertion, d core.Dialect, data []*sqlFormatTester) {
+	formater, ok := d.(sqlFormater)
+	a.True(ok, "dialect 不是 sqlFormater")
+
 	for index, item := range data {
-		f, err := d.SQLFormat(item.v, item.l...)
+		f, err := formater.FormatSQL(item.v, item.l...)
 		if item.err {
 			a.Error(err, "not error @%d", index).
 				Empty(f)

@@ -78,17 +78,6 @@ type Dialect interface {
 	// 将列转换成数据支持的类型表达式
 	SQLType(*Column) (string, error)
 
-	// 将 v 格式化为 SQL 对应的格式
-	//
-	// 比如在 mysql 中，true 会返回 1，而 postgres 中则返回 true
-	//
-	// 参数 length 表示部分需要固定长度的数据格式，比如浮点数，
-	// 或是时间格式也需要精度。
-	//
-	// SQLFormat 应该优先调用 driver.Valuer 获取其原始类型的值，
-	// 再作进一步的转换。
-	SQLFormat(v interface{}, length ...int) (string, error)
-
 	// 是否允许在事务中执行 DDL
 	//
 	// 比如在 postgresql 中，如果创建一个带索引的表，会采用在事务中，

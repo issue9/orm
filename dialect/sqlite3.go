@@ -355,7 +355,7 @@ func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 	}
 
 	if col.HasDefault {
-		v, err := s.SQLFormat(col.Default)
+		v, err := s.FormatSQL(col.Default)
 		if err != nil {
 			return "", err
 		}
@@ -366,7 +366,7 @@ func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 	return w.String()
 }
 
-func (s *sqlite3) SQLFormat(v interface{}, length ...int) (f string, err error) {
+func (s *sqlite3) FormatSQL(v interface{}, length ...int) (f string, err error) {
 	if vv, ok := v.(driver.Valuer); ok {
 		v, err = vv.Value()
 		if err != nil {
