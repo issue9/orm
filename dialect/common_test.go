@@ -15,17 +15,6 @@ import (
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
-type sqlFormater interface {
-	FormatSQL(v interface{}, length ...int) (f string, err error)
-}
-
-type sqlFormatTester struct {
-	v      interface{} // 格式化的值
-	l      []int       // 长度值
-	format string      // 格式化之后的值
-	err    bool        // 是否有错误
-}
-
 type sqlTypeTester struct {
 	col     *core.Column
 	err     bool
@@ -40,22 +29,6 @@ func testSQLType(a *assert.Assertion, d core.Dialect, data []*sqlTypeTester) {
 		} else {
 			a.NotError(err, "%v @%d", err, index)
 			sqltest.Equal(a, typ, item.SQLType)
-		}
-	}
-}
-
-func testFormatSQL(a *assert.Assertion, d core.Dialect, data []*sqlFormatTester) {
-	formater, ok := d.(sqlFormater)
-	a.True(ok, "dialect 不是 sqlFormater")
-
-	for index, item := range data {
-		f, err := formater.FormatSQL(item.v, item.l...)
-		if item.err {
-			a.Error(err, "not error @%d", index).
-				Empty(f)
-		} else {
-			a.NotError(err, "%v @%d", err, index).
-				Equal(f, item.format, "not equal @%d,v1:%s,v2:%s", index, f, item.format)
 		}
 	}
 }
@@ -287,6 +260,7 @@ func testTypesDefault(t *test.Driver) {
 		Column("null_float64", core.NullFloat64Type, false, true, true, nil, 5, 3).
 		Column("raw_bytes", core.RawBytesType, false, true, false, nil).
 		Column("time", core.TimeType, false, false, true, now).
+		Column("time_with_len", core.TimeType, false, false, true, now, 5).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -314,6 +288,7 @@ func testTypesDefault(t *test.Driver) {
 		"null_float64",
 		"raw_bytes",
 		"time",
+		"time_with_len",
 	}
 	r, err := sqlbuilder.Insert(t.DB).
 		Table(tableName).
@@ -331,30 +306,31 @@ func testTypesDefault(t *test.Driver) {
 
 	t.True(rows.Next())
 	var (
-		Bool       bool
-		Int        int
-		Int8       int8
-		Int16      int16
-		Int32      int32
-		Int64      int64
-		Uint       uint
-		Uint8      uint8
-		Uint16     uint16
-		Uint32     uint32
-		Uint64     uint64
-		F32        float32
-		F64        float64
-		String     string
-		NullString sql.NullString
-		NullInt64  sql.NullInt64
-		NullBool   sql.NullBool
-		NullF64    sql.NullFloat64
-		RawBytes   sql.RawBytes
-		Time       time.Time
+		Bool        bool
+		Int         int
+		Int8        int8
+		Int16       int16
+		Int32       int32
+		Int64       int64
+		Uint        uint
+		Uint8       uint8
+		Uint16      uint16
+		Uint32      uint32
+		Uint64      uint64
+		F32         float32
+		F64         float64
+		String      string
+		NullString  sql.NullString
+		NullInt64   sql.NullInt64
+		NullBool    sql.NullBool
+		NullF64     sql.NullFloat64
+		RawBytes    sql.RawBytes
+		Time        time.Time
+		TimeWithLen time.Time
 	)
 	err = rows.Scan(&Bool, &Int, &Int8, &Int16, &Int32, &Int64,
 		&Uint, &Uint8, &Uint16, &Uint32, &Uint64,
-		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time)
+		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time, &TimeWithLen)
 	t.NotError(err)
 	t.False(Bool).
 		Equal(Int, -1).
@@ -375,5 +351,6 @@ func testTypesDefault(t *test.Driver) {
 		True(NullBool.Valid).True(NullBool.Bool).
 		False(NullF64.Valid).
 		Nil(RawBytes).
+		Equal(Time.Unix(), now.Unix()).
 		Equal(Time.Unix(), now.Unix())
 }

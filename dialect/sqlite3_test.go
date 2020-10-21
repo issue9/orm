@@ -3,10 +3,8 @@
 package dialect_test
 
 import (
-	"database/sql"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/issue9/assert"
 
@@ -285,111 +283,6 @@ func TestSqlite3_SQLType(t *testing.T) {
 	}
 
 	testSQLType(a, dialect.Sqlite3("sqlite3", "sqlite3_driver"), data)
-}
-
-func TestSqlite3_FormatSQL(t *testing.T) {
-	a := assert.New(t)
-	now := time.Now().In(time.UTC)
-
-	var data = []*sqlFormatTester{
-		{
-			v:      1,
-			format: "1",
-		},
-		{
-			v:      int8(1),
-			format: "1",
-		},
-
-		{ // Bool
-			v:      true,
-			format: "true",
-		},
-		{
-			v:      false,
-			format: "false",
-		},
-
-		{ // NullBool
-			v:      sql.NullBool{Valid: true, Bool: true},
-			format: "true",
-		},
-		{
-			v:      sql.NullBool{Valid: true, Bool: false},
-			format: "false",
-		},
-		{
-			v:      sql.NullBool{Valid: false, Bool: true},
-			format: "NULL",
-		},
-
-		{ // NullInt64
-			v:      sql.NullInt64{Valid: true, Int64: 64},
-			format: "64",
-		},
-		{
-			v:      sql.NullInt64{Valid: true, Int64: -1},
-			format: "-1",
-		},
-		{
-			v:      sql.NullInt64{Valid: false, Int64: 64},
-			format: "NULL",
-		},
-
-		{ // NullFloat64
-			v:      sql.NullFloat64{Valid: true, Float64: 6.4},
-			format: "6.4",
-		},
-		{
-			v:      sql.NullFloat64{Valid: true, Float64: -1.64},
-			format: "-1.64",
-		},
-		{
-			v:      sql.NullFloat64{Valid: false, Float64: 6.4},
-			format: "NULL",
-		},
-
-		{ // NullString
-			v:      sql.NullString{Valid: true, String: "str"},
-			format: "'str'",
-		},
-		{
-			v:      sql.NullString{Valid: true, String: ""},
-			format: "''",
-		},
-		{
-			v:      sql.NullString{Valid: false, String: "str"},
-			format: "NULL",
-		},
-
-		// time
-		{ // sqlite3 不考虑长度信息
-			v:      now,
-			l:      []int{1, 5},
-			format: "'" + now.Format("2006-01-02 15:04:05") + "'",
-		},
-		{ // sqlite3 不考虑长度信息
-			v:      now,
-			l:      []int{-1},
-			format: "'" + now.Format("2006-01-02 15:04:05") + "'",
-		},
-		{
-			v:      now,
-			format: "'" + now.Format("2006-01-02 15:04:05") + "'",
-		},
-		{
-			v:      now,
-			l:      []int{1},
-			format: "'" + now.Format("2006-01-02 15:04:05") + "'",
-		},
-		{
-			v:      now,
-			l:      []int{3},
-			format: "'" + now.Format("2006-01-02 15:04:05") + "'",
-		},
-	}
-
-	testFormatSQL(a, dialect.Sqlite3("sqlite3", "sqlite3_driver"), data)
 }
 
 func TestSqlite3_Types(t *testing.T) {

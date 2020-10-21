@@ -238,7 +238,7 @@ func (p *postgres) buildType(typ string, col *core.Column, l int) (string, error
 	}
 
 	if col.HasDefault {
-		v, err := p.FormatSQL(col.Default, col.Length...)
+		v, err := p.formatSQL(col.Default, col.Length...)
 		if err != nil {
 			return "", err
 		}
@@ -248,7 +248,7 @@ func (p *postgres) buildType(typ string, col *core.Column, l int) (string, error
 	return w.String()
 }
 
-func (p *postgres) FormatSQL(v interface{}, length ...int) (f string, err error) {
+func (p *postgres) formatSQL(v interface{}, length ...int) (f string, err error) {
 	if vv, ok := v.(driver.Valuer); ok {
 		v, err = vv.Value()
 		if err != nil {

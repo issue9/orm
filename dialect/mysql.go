@@ -313,7 +313,7 @@ func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (s
 	}
 
 	if col.HasDefault {
-		v, err := m.FormatSQL(col.Default, col.Length...)
+		v, err := m.formatSQL(col.Default, col.Length...)
 		if err != nil {
 			return "", err
 		}
@@ -323,7 +323,7 @@ func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (s
 	return w.String()
 }
 
-func (m *mysql) FormatSQL(v interface{}, length ...int) (f string, err error) {
+func (m *mysql) formatSQL(v interface{}, length ...int) (f string, err error) {
 	if vv, ok := v.(driver.Valuer); ok {
 		v, err = vv.Value()
 		if err != nil {
