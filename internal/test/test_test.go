@@ -6,7 +6,13 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/orm/v3/internal/flagtest"
 )
+
+func TestMain(m *testing.M) {
+	flagtest.Main(m)
+}
 
 func TestSuite_ForEach(t *testing.T) {
 	a := assert.New(t)
@@ -23,9 +29,9 @@ func TestSuite_ForEach(t *testing.T) {
 			Equal(t.Assertion, a)
 		size++
 	})
-	a.Equal(size, len(cases))
+	a.Equal(size, len(flagtest.Flags))
 
-	// 指定了不存在的 driverName
+	// 指定了不存在的 driver
 	a.Panic(func() {
 		s.ForEach(func(t *Driver) {
 			size++

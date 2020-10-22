@@ -12,6 +12,7 @@ import (
 	"github.com/issue9/orm/v3"
 	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/dialect"
+	"github.com/issue9/orm/v3/internal/flagtest"
 
 	// 测试入口，数据库也在此初始化
 	_ "github.com/go-sql-driver/mysql"
@@ -80,8 +81,6 @@ type Suite struct {
 
 // NewSuite 初始化测试内容
 func NewSuite(a *assert.Assertion) *Suite {
-	parseFlag()
-
 	s := &Suite{a: a}
 
 	for _, c := range cases {
@@ -91,7 +90,8 @@ func NewSuite(a *assert.Assertion) *Suite {
 		name := c.dialect.DBName()
 		driver := c.dialect.DriverName()
 
-		if len(dbs) != 0 && sliceutil.Count(dbs, func(i int) bool { return dbs[i].dbName == name && dbs[i].driverNme == driver }) <= 0 {
+		fs := flagtest.Flags
+		if len(fs) != 0 && sliceutil.Count(fs, func(i int) bool { return fs[i].DBName == name && fs[i].DriverName == driver }) <= 0 {
 			continue
 		}
 

@@ -45,7 +45,7 @@ jobs:
       run: go vet -v ./...
         
     - name: Test
-      run: go test -v -dbs=postgres,postgres -coverprofile=coverage.txt -covermode=atomic ./...
+      run: go test -v -coverprofile=coverage.txt -covermode=atomic ./... -dbs=postgres,postgres
       
     - name: Upload coverage to Codecov  
       uses: codecov/codecov-action@v1

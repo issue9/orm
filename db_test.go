@@ -10,8 +10,13 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v3/internal/flagtest"
 	"github.com/issue9/orm/v3/internal/test"
 )
+
+func TestMain(m *testing.M) {
+	flagtest.Main(m)
+}
 
 func TestDB_LastInsertID(t *testing.T) {
 	a := assert.New(t)

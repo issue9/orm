@@ -12,8 +12,13 @@ import (
 
 	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/fetch"
+	"github.com/issue9/orm/v3/internal/flagtest"
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
+
+func TestMain(m *testing.M) {
+	flagtest.Main(m)
+}
 
 type last struct {
 	IP      string
