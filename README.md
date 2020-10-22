@@ -1,5 +1,4 @@
 orm
-[![Go](https://github.com/issue9/orm/workflows/Go/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3AGo)
 [![Go version](https://img.shields.io/badge/Go-1.13-brightgreen.svg?style=flat)](https://golang.org)
 [![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/orm)
 [![codecov](https://codecov.io/gh/issue9/orm/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/orm)
@@ -12,6 +11,13 @@ orm
  2. mysql:    github.com/go-sql-driver/mysql
  3. mariadb:  github.com/go-sql-driver/mysql
  4. postgres: github.com/lib/pq
+
+数据库    | 驱动                                | 状态
+----------|-------------------------------------|------------
+mysql     | github.com/go-sql-driver/mysql      | [![Mysql](https://github.com/issue9/orm/workflows/Mysql/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3AMysql)
+mariadb   | github.com/go-sql-driver/mysql      | [![Mariadb](https://github.com/issue9/orm/workflows/Mariadb/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3AMariadb)
+sqlite3   | github.com/mattn/go-sqlite3         | [![Sqlite3](https://github.com/issue9/orm/workflows/Sqlite3/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3ASqlite3)
+postgres  | github.com/lib/pq                   | [![Postgres](https://github.com/issue9/orm/workflows/Postgres/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3APostgres)
 
 其它数据库，用户可以通过实现 Dialect 接口，来实现相应的支持。
 如果用到了 check 约束，则需要 mysql > 8.0.16、mariadb > 10.2.1。
