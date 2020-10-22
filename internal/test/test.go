@@ -4,10 +4,10 @@
 package test
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/sliceutil"
 
 	"github.com/issue9/orm/v3"
 	"github.com/issue9/orm/v3/core"
@@ -28,13 +28,14 @@ var (
 	// Mysql Dialect 实例
 	Mysql = dialect.Mysql("mysql", "mysql")
 
+	// Mariadb Dialect 实例
+	Mariadb = dialect.Mysql("mariadb", "mysql")
+
 	// Postgres Dialect 实例
 	Postgres = dialect.Postgres("postgresql", "postgres")
 )
 
 // 以驱动为单的测试用例
-//
-// 如果不需要该驱动的测试用例，真接注释即可。
 var cases = []struct {
 	prefix  string
 	dsn     string
@@ -55,6 +56,11 @@ var cases = []struct {
 		dsn:     "root:root@/orm_test?charset=utf8&parseTime=true",
 		dialect: Mysql,
 	},
+	{
+		prefix:  "prefix_",
+		dsn:     "root:root@/orm_test?charset=utf8&parseTime=true",
+		dialect: Mariadb,
+	},
 }
 
 // Driver 单个测试用例
@@ -62,27 +68,38 @@ type Driver struct {
 	*assert.Assertion
 	DB         *orm.DB
 	DriverName string
+	DBName     string
 	dsn        string
 }
 
 // Suite 测试用例管理
 type Suite struct {
-	a     *assert.Assertion
-	tests []*Driver
+	a       *assert.Assertion
+	drivers []*Driver
 }
 
 // NewSuite 初始化测试内容
 func NewSuite(a *assert.Assertion) *Suite {
+	parseFlag()
+
 	s := &Suite{a: a}
 
 	for _, c := range cases {
 		db, err := orm.NewDB(c.dsn, c.prefix, c.dialect)
 		a.NotError(err).NotNil(db)
 
-		s.tests = append(s.tests, &Driver{
+		name := c.dialect.DBName()
+		driver := c.dialect.DriverName()
+
+		if len(dbs) != 0 && sliceutil.Count(dbs, func(i int) bool { return dbs[i].dbName == name && dbs[i].driverNme == driver }) <= 0 {
+			continue
+		}
+
+		s.drivers = append(s.drivers, &Driver{
 			Assertion:  a,
 			DB:         db,
-			DriverName: c.dialect.DriverName(),
+			DriverName: driver,
+			DBName:     name,
 			dsn:        c.dsn,
 		})
 	}
@@ -94,7 +111,7 @@ func NewSuite(a *assert.Assertion) *Suite {
 //
 // 如果是 sqlite3，还会删除数据库文件。
 func (s Suite) Close() {
-	for _, t := range s.tests {
+	for _, t := range s.drivers {
 		t.NotError(t.DB.Close())
 
 		if t.DB.Dialect().DriverName() != Sqlite3.DriverName() {
@@ -112,7 +129,7 @@ func (s Suite) Close() {
 // dialects 为需要测试的驱动，如果为空表示测试全部
 func (s Suite) ForEach(f func(*Driver), dialects ...core.Dialect) {
 	if len(dialects) == 0 {
-		for _, test := range s.tests {
+		for _, test := range s.drivers {
 			f(test)
 		}
 		return
@@ -120,13 +137,13 @@ func (s Suite) ForEach(f func(*Driver), dialects ...core.Dialect) {
 
 LOOP:
 	for _, d := range dialects {
-		for _, test := range s.tests {
-			if test.DriverName == d.DriverName() {
+		for _, test := range s.drivers {
+			if test.DriverName == d.DriverName() && test.DBName == d.DBName() {
 				f(test)
 				continue LOOP
 			}
 		}
 
-		fmt.Println("不存在的 driverName:" + d.DriverName())
+		s.a.TB().Logf("忽略的驱动 :%s:%s\n", d.DBName(), d.DriverName())
 	}
 }

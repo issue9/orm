@@ -1,0 +1,53 @@
+name: Mysql
+on: [push, pull_request]
+jobs:
+
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest] # action 不支持非 linux 下的容器, windows-latest, macOS-latest
+        go: ['1.13.x', '1.15.x']
+
+    services:
+      mysql:
+        image: mysql:8.0.16
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+
+    steps:
+
+    - name: 创建数据库
+      run: |
+        mysql -u root -proot -h 127.0.0.1 -e 'CREATE DATABASE IF NOT EXISTS orm_test;'
+
+    - name: 安装 Go ${{ matrix.go }}
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Vet
+      run: go vet -v ./...
+        
+    - name: Test
+      run: go test -v -dbs=mysql,mysql -coverprofile=coverage.txt -covermode=atomic ./...
+      
+    - name: Upload coverage to Codecov  
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        file: ./coverage.txt

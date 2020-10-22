@@ -1,4 +1,4 @@
-name: Go
+name: Mariadb
 on: [push, pull_request]
 jobs:
 
@@ -12,20 +12,8 @@ jobs:
         go: ['1.13.x', '1.15.x']
 
     services:
-      postgres:
-        image: postgres:10.10
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-      mysql:
-        image: mysql:8.0.16
+      mariadb:
+        image: mariadb:10.2.1
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
@@ -41,7 +29,6 @@ jobs:
 
     - name: 创建数据库
       run: |
-        PGPASSWORD=postgres psql -U postgres -h 127.0.0.1 -c 'CREATE DATABASE orm_test;'
         mysql -u root -proot -h 127.0.0.1 -e 'CREATE DATABASE IF NOT EXISTS orm_test;'
 
     - name: 安装 Go ${{ matrix.go }}
@@ -57,7 +44,7 @@ jobs:
       run: go vet -v ./...
         
     - name: Test
-      run: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+      run: go test -v -dbs=mariadb,mysql -coverprofile=coverage.txt -covermode=atomic ./...
       
     - name: Upload coverage to Codecov  
       uses: codecov/codecov-action@v1

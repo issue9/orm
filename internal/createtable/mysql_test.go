@@ -76,5 +76,5 @@ func TestParseMysqlCreateTable(t *testing.T) {
 			Equal(table.Constraints["users_pk"], core.ConstraintPK) // 主键约束名为固定值
 		t.Equal(len(table.Indexes), 1).
 			Equal(table.Indexes["index_user_mobile"], core.IndexDefault)
-	}, test.Mysql)
+	}, test.Mysql, test.Mariadb)
 }
