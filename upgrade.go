@@ -160,6 +160,8 @@ func (u *Upgrader) DropIndex(name ...string) *Upgrader {
 }
 
 // Do 执行操作
+//
+// 此操作会尽量在一个事务中完成，但是如果数据不支持 DDL 模式，则可能是多次提交。
 func (u *Upgrader) Do() error {
 	if u.Err() != nil {
 		return u.Err()

@@ -28,8 +28,13 @@ type DB struct {
 }
 
 // NewDB 声明一个新的 DB 实例
-func NewDB(dataSourceName, tablePrefix string, dialect Dialect) (*DB, error) {
-	db, err := sql.Open(dialect.DriverName(), dataSourceName)
+//
+// 不同驱动对时间的处理不尽相同，如果有在不同数据库之间移植的需求，
+// 那么建议将保存时的时区都统一设置为 UTC：
+// postgres 已经固定为 UTC，sqlite3 可以在 dsn 中通过 _loc=UTC 指定，
+// mysql 默认是 UTC，也可以在 DSN 中通过 loc=UTC 指定。
+func NewDB(dsn, tablePrefix string, dialect Dialect) (*DB, error) {
+	db, err := sql.Open(dialect.DriverName(), dsn)
 	if err != nil {
 		return nil, err
 	}
