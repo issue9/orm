@@ -13,7 +13,7 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8.0.16
+        image: mysql:latest
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
