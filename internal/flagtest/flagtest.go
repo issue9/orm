@@ -23,6 +23,8 @@ type Flag struct {
 func Main(m *testing.M) {
 	dbString := flag.String("dbs", "", "指定需要测试的数据库，格式为 dbName,driverName:dbName,driverName")
 
+	flag.Parse()
+
 	if *dbString == "" || Flags != nil {
 		return
 	}

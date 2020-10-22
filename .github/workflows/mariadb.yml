@@ -44,7 +44,7 @@ jobs:
       run: go vet -v ./...
         
     - name: Test
-      run: go test -v -coverprofile=coverage.txt -covermode=atomic ./... -dbs=mariadb,mysql
+      run: go test -test.v -test.coverprofile=coverage.txt ./... -covermode=atomic -dbs=mariadb,mysql
       
     - name: Upload coverage to Codecov  
       uses: codecov/codecov-action@v1
