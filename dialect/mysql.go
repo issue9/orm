@@ -23,6 +23,7 @@ const (
 )
 
 type mysql struct {
+	isMariadb  bool
 	dbName     string
 	driverName string
 	replacer   *strings.Replacer
@@ -41,8 +42,20 @@ var (
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql(name, driverName string) core.Dialect {
+func Mysql(driverName string) core.Dialect {
+	return newMysql(false, "mysql", driverName)
+}
+
+// Mariadb 返回一个适配 mysql 的 Dialect 接口
+//
+// meta 属性可参考 mysql，大部分内容增多与 Mysql 相同。
+func Mariadb(driverName string) core.Dialect {
+	return newMysql(true, "mariadb", driverName)
+}
+
+func newMysql(isMariadb bool, name, driverName string) core.Dialect {
 	return &mysql{
+		isMariadb:  isMariadb,
 		dbName:     name,
 		driverName: driverName,
 		replacer:   strings.NewReplacer("{", "`", "}", "`"),
@@ -126,8 +139,6 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 	}
 
 	switch constraintType {
-	case core.ConstraintCheck:
-		builder.WString(" CHECK ").WString(stmt.Name)
 	case core.ConstraintFK:
 		builder.WString(" FOREIGN KEY ").WString(stmt.Name)
 	case core.ConstraintPK:
@@ -135,7 +146,15 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 	case core.ConstraintUnique:
 		builder.WString(" INDEX ").WString(stmt.Name)
 	default:
-		panic(fmt.Sprintf("不存在的约束类型:%d", constraintType))
+		if constraintType == core.ConstraintCheck {
+			if m.isMariadb {
+				builder.WString(" CONSTRAINT ").WString(stmt.Name)
+			} else {
+				builder.WString(" CHECK ").WString(stmt.Name)
+			}
+		} else {
+			panic(fmt.Sprintf("不存在的约束类型:%d", constraintType))
+		}
 	}
 
 	query, err := builder.String()

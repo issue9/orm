@@ -23,16 +23,16 @@ const sqlite3DBFile = "orm_test.db"
 
 var (
 	// Sqlite3 Dialect 实例
-	Sqlite3 = dialect.Sqlite3("sqlite3", "sqlite3")
+	Sqlite3 = dialect.Sqlite3("sqlite3")
 
 	// Mysql Dialect 实例
-	Mysql = dialect.Mysql("mysql", "mysql")
+	Mysql = dialect.Mysql("mysql")
 
 	// Mariadb Dialect 实例
-	Mariadb = dialect.Mysql("mariadb", "mysql")
+	Mariadb = dialect.Mariadb("mysql")
 
 	// Postgres Dialect 实例
-	Postgres = dialect.Postgres("postgresql", "postgres")
+	Postgres = dialect.Postgres("postgres")
 )
 
 // 以驱动为单的测试用例

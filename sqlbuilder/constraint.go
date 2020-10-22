@@ -227,7 +227,7 @@ func DropConstraint(e core.Engine) *DropConstraintStmt {
 	return stmt
 }
 
-// Table 指定表名。
+// Table 指定表名
 //
 // 重复指定，会覆盖之前的。
 func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
