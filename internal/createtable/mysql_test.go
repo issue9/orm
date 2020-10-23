@@ -39,7 +39,7 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 func TestParseMysqlCreateTable(t *testing.T) {
 	a := assert.New(t)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Mysql)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -76,14 +76,14 @@ func TestParseMysqlCreateTable(t *testing.T) {
 			Equal(table.Constraints["users_pk"], core.ConstraintPK) // 主键约束名为固定值
 		t.Equal(len(table.Indexes), 1).
 			Equal(table.Indexes["index_user_mobile"], core.IndexDefault)
-	}, test.Mysql)
+	})
 }
 
 // mariadb 稍微和 mysql 有点不一样
 func TestParseMysqlCreateTable_mariadb(t *testing.T) {
 	a := assert.New(t)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -120,5 +120,5 @@ func TestParseMysqlCreateTable_mariadb(t *testing.T) {
 			Equal(table.Constraints["users_pk"], core.ConstraintPK) // 主键约束名为固定值
 		t.Equal(len(table.Indexes), 1).
 			Equal(table.Indexes["index_user_mobile"], core.IndexDefault)
-	}, test.Mariadb)
+	})
 }

@@ -17,12 +17,12 @@ import (
 
 func TestPostgres_VersionSQL(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
-	}, test.Postgres)
+	})
 }
 
 func TestPostgres_SQLType(t *testing.T) {
@@ -227,7 +227,7 @@ func TestPostgres_SQLType(t *testing.T) {
 func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
 	a := assert.New(t)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -245,7 +245,7 @@ func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
 		qs, err = hook.TruncateTableStmtHook(stmt)
 		a.NotError(err).Equal(1, len(qs))
 		sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl} RESTART IDENTITY`)
-	}, test.Postgres)
+	})
 }
 
 func TestPostgres_SQL(t *testing.T) {
@@ -291,20 +291,20 @@ func BenchmarkPostgres_SQL(b *testing.B) {
 
 func TestPostgres_Types(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
-	}, test.Postgres)
+	})
 }
 
 func TestPostgres_TypesDefault(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypesDefault(t)
-	}, test.Postgres)
+	})
 }

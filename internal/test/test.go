@@ -37,6 +37,8 @@ var (
 )
 
 // 以驱动为单的测试用例
+//
+// 部分设置项需要与 action 中的设置相同才能正常启动，比如端口号等。
 var cases = []struct {
 	prefix  string
 	dsn     string
@@ -80,20 +82,27 @@ type Suite struct {
 }
 
 // NewSuite 初始化测试内容
-func NewSuite(a *assert.Assertion) *Suite {
+//
+// dialect 指定了当前需要测试的驱动，如果未指定表示需要测全部，否则只测试指定内容。
+// 同时 dialect 还受到 flagsets.Flags 变量的影响，如果未在其中指定的，也不会执行测试。
+func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 	s := &Suite{a: a}
 
 	for _, c := range cases {
-		db, err := orm.NewDB(c.dsn, c.prefix, c.dialect)
-		a.NotError(err).NotNil(db)
-
 		name := c.dialect.DBName()
 		driver := c.dialect.DriverName()
 
-		fs := flagtest.Flags
-		if len(fs) != 0 && sliceutil.Count(fs, func(i int) bool { return fs[i].DBName == name && fs[i].DriverName == driver }) <= 0 {
+		if len(dialect) > 0 && sliceutil.Count(dialect, func(i int) bool { return dialect[i].DBName() == name && dialect[i].DriverName() == driver }) <= 0 {
 			continue
 		}
+
+		fs := flagtest.Flags
+		if len(fs) > 0 && sliceutil.Count(fs, func(i int) bool { return fs[i].DBName == name && fs[i].DriverName == driver }) <= 0 {
+			continue
+		}
+
+		db, err := orm.NewDB(c.dsn, c.prefix, c.dialect)
+		a.NotError(err).NotNil(db)
 
 		s.drivers = append(s.drivers, &Driver{
 			Assertion:  a,
@@ -127,23 +136,8 @@ func (s Suite) Close() {
 // ForEach 为每个数据库测试用例调用 f 进行测试
 //
 // dialects 为需要测试的驱动，如果为空表示测试全部
-func (s Suite) ForEach(f func(*Driver), dialects ...core.Dialect) {
-	if len(dialects) == 0 {
-		for _, test := range s.drivers {
-			f(test)
-		}
-		return
-	}
-
-LOOP:
-	for _, d := range dialects {
-		for _, test := range s.drivers {
-			if test.DriverName == d.DriverName() && test.DBName == d.DBName() {
-				f(test)
-				continue LOOP
-			}
-		}
-
-		s.a.TB().Logf("忽略的驱动 :%s:%s\n", d.DBName(), d.DriverName())
+func (s Suite) ForEach(f func(*Driver)) {
+	for _, test := range s.drivers {
+		f(test)
 	}
 }

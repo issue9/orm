@@ -60,7 +60,7 @@ func TestTable_CreateTableSQL(t *testing.T) {
 func TestParseSqlite3CreateTable(t *testing.T) {
 	a := assert.New(t)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -125,5 +125,5 @@ func TestParseSqlite3CreateTable(t *testing.T) {
 				Type: core.IndexDefault,
 				SQL:  "CREATE UNIQUE INDEX index_user_unique_email_id on usr(email,id)",
 			}) // sqlite 没有 unique
-	}, test.Sqlite3)
+	})
 }

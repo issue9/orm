@@ -29,12 +29,34 @@ func TestSuite_ForEach(t *testing.T) {
 			Equal(t.Assertion, a)
 		size++
 	})
-	a.Equal(size, len(flagtest.Flags))
+	a.Equal(size, len(flagtest.Flags)).
+		Equal(size, len(cases))
+}
 
-	// 指定了不存在的 driver
-	a.Panic(func() {
-		s.ForEach(func(t *Driver) {
-			size++
-		}, Mysql, nil)
+func TestSuite_ForEach_withDialect(t *testing.T) {
+	a := assert.New(t)
+
+	// 不再限定 Flags
+	flagtest.Flags = []*flagtest.Flag{
+		{DBName: "mysql", DriverName: "mysql"},
+		{DBName: "sqlite3", DriverName: "sqlite3"},
+		{DBName: "mariadb", DriverName: "mariadb"},
+		{DBName: "postgres", DriverName: "postgres"},
+	}
+
+	// 通过参数 限定了 dialect
+
+	s := NewSuite(a, Mysql, Sqlite3)
+	defer s.Close()
+
+	size := 0
+	s.ForEach(func(t *Driver) {
+		a.NotNil(t).
+			NotNil(t.DB).
+			NotNil(t.DB.Dialect()).
+			NotNil(t.DB.DB).
+			Equal(t.Assertion, a)
+		size++
 	})
+	a.Equal(size, 2)
 }

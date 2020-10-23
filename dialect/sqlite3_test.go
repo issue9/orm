@@ -52,17 +52,17 @@ func clearSqlite3CreateTable(t *test.Driver, db core.Engine) {
 
 func TestSqlite3_VersionSQL(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
-	}, test.Sqlite3)
+	})
 }
 
 func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -82,13 +82,13 @@ func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 			Exec()
 		t.NotError(err)
 
-	}, test.Sqlite3)
+	})
 }
 
 func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 	a := assert.New(t)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -102,12 +102,12 @@ func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 		defer clearSqlite3CreateTable(t, db)
 
 		testDialectDropConstraintStmtHook(t)
-	}, test.Sqlite3)
+	})
 }
 
 func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -129,7 +129,7 @@ func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 		// 查询删除的列会出错
 		_, err = db.Query("SELECT state FROM usr")
 		t.Error(err)
-	}, test.Sqlite3)
+	})
 }
 
 func TestSqlite3_CreateTableOptions(t *testing.T) {
@@ -161,7 +161,7 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 func TestSqlite3_TruncateTableStmtHooker(t *testing.T) {
 	a := assert.New(t)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -180,7 +180,7 @@ func TestSqlite3_TruncateTableStmtHooker(t *testing.T) {
 		a.NotError(err).Equal(2, len(qs))
 		sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
 		sqltest.Equal(a, qs[1], "DELETE FROM SQLITE_SEQUENCE WHERE name='tbl'")
-	}, test.Sqlite3)
+	})
 }
 
 func TestSqlite3_SQLType(t *testing.T) {
@@ -287,20 +287,20 @@ func TestSqlite3_SQLType(t *testing.T) {
 
 func TestSqlite3_Types(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
-	}, test.Sqlite3)
+	})
 }
 
 func TestSqlite3_TypesDefault(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypesDefault(t)
-	}, test.Sqlite3)
+	})
 }

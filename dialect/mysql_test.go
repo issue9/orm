@@ -44,17 +44,17 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 
 func TestMysql_VersionSQL(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testDialectVersionSQL(t)
-	}, test.Mysql, test.Mariadb)
+	})
 }
 
 func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -74,7 +74,7 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 		}()
 
 		testDialectDropConstraintStmtHook(t)
-	}, test.Mysql, test.Mariadb)
+	})
 
 	// 约束名不是根据 core.PKName() 生成的
 	suite.ForEach(func(t *test.Driver) {
@@ -114,13 +114,13 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 			PK("uid").
 			Exec()
 		t.NotError(err)
-	}, test.Mysql, test.Mariadb)
+	})
 }
 
 func TestMysql_DropIndexStmtHook(t *testing.T) {
 	a := assert.New(t)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -131,13 +131,13 @@ func TestMysql_DropIndexStmtHook(t *testing.T) {
 		a.True(ok).NotNil(hook)
 		qs, err := hook.DropIndexStmtHook(stmt)
 		a.NotError(err).Equal(qs, []string{"ALTER TABLE {tbl} DROP INDEX {index_name}"})
-	}, test.Mysql, test.Mariadb)
+	})
 }
 
 func TestMysql_TruncateTableStmtHook(t *testing.T) {
 	a := assert.New(t)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -149,7 +149,7 @@ func TestMysql_TruncateTableStmtHook(t *testing.T) {
 		a.True(ok).NotNil(hook)
 		qs, err := hook.TruncateTableStmtHook(stmt)
 		a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE {tbl}"})
-	}, test.Mysql, test.Mariadb)
+	})
 }
 
 func TestMysql_CreateTableOptions(t *testing.T) {
@@ -338,20 +338,20 @@ func TestMysql_SQLType(t *testing.T) {
 
 func TestMysql_Types(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypes(t)
-	}, test.Mysql, test.Mariadb)
+	})
 }
 
 func TestMysql_TypesDefault(t *testing.T) {
 	a := assert.New(t)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
 		testTypesDefault(t)
-	}, test.Mysql, test.Mariadb)
+	})
 }

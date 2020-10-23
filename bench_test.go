@@ -23,7 +23,7 @@ func BenchmarkDB_Insert(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, benchDBDriverName)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -33,7 +33,7 @@ func BenchmarkDB_Insert(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			t.NotError(t.DB.Insert(m))
 		}
-	}, benchDBDriverName)
+	})
 }
 
 func BenchmarkDB_Update(b *testing.B) {
@@ -44,7 +44,7 @@ func BenchmarkDB_Update(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, benchDBDriverName)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -60,7 +60,7 @@ func BenchmarkDB_Update(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			t.NotError(t.DB.Update(m))
 		}
-	}, benchDBDriverName)
+	})
 }
 
 func BenchmarkDB_Select(b *testing.B) {
@@ -71,7 +71,7 @@ func BenchmarkDB_Select(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, benchDBDriverName)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -84,7 +84,7 @@ func BenchmarkDB_Select(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			t.NotError(t.DB.Select(m))
 		}
-	}, benchDBDriverName)
+	})
 }
 
 func BenchmarkDB_WhereUpdate(b *testing.B) {
@@ -95,7 +95,7 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 		Created: time.Now().Unix(),
 	}
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, benchDBDriverName)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
@@ -116,5 +116,5 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 				Exec()
 			t.NotError(err)
 		}
-	}, benchDBDriverName)
+	})
 }
