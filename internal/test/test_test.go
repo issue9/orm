@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/sliceutil"
 
+	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/internal/flagtest"
 )
 
@@ -29,8 +31,7 @@ func TestSuite_ForEach(t *testing.T) {
 			Equal(t.Assertion, a)
 		size++
 	})
-	a.Equal(size, len(flagtest.Flags)).
-		Equal(size, len(cases))
+	a.Equal(size, len(flagtest.Flags))
 }
 
 func TestSuite_ForEach_withDialect(t *testing.T) {
@@ -46,7 +47,8 @@ func TestSuite_ForEach_withDialect(t *testing.T) {
 
 	// 通过参数 限定了 dialect
 
-	s := NewSuite(a, Mysql, Sqlite3)
+	dialects := []core.Dialect{Mysql, Sqlite3}
+	s := NewSuite(a, dialects...)
 	defer s.Close()
 
 	size := 0
@@ -56,7 +58,13 @@ func TestSuite_ForEach_withDialect(t *testing.T) {
 			NotNil(t.DB.Dialect()).
 			NotNil(t.DB.DB).
 			Equal(t.Assertion, a)
+
+		d := t.DB.Dialect()
+		a.Equal(sliceutil.Count(dialects, func(i int) bool {
+			return dialects[i].DBName() == d.DBName() && dialects[i].DriverName() == d.DriverName()
+		}), 1)
+
 		size++
 	})
-	a.Equal(size, 2)
+	a.Equal(size, len(dialects))
 }
