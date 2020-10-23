@@ -76,5 +76,49 @@ func TestParseMysqlCreateTable(t *testing.T) {
 			Equal(table.Constraints["users_pk"], core.ConstraintPK) // 主键约束名为固定值
 		t.Equal(len(table.Indexes), 1).
 			Equal(table.Indexes["index_user_mobile"], core.IndexDefault)
-	}, test.Mysql, test.Mariadb)
+	}, test.Mysql)
+}
+
+// mariadb 稍微和 mysql 有点不一样
+func TestParseMysqlCreateTable_mariadb(t *testing.T) {
+	a := assert.New(t)
+
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		defer func() {
+			_, err := t.DB.Exec("DROP TABLE users")
+			a.NotError(err)
+
+			_, err = t.DB.Exec("DROP TABLE fk_table")
+			a.NotError(err)
+		}()
+		for _, query := range mysqlCreateTable {
+			_, err := t.DB.Exec(query)
+			t.NotError(err)
+		}
+
+		table, err := createtable.ParseMysqlCreateTable("users", t.DB)
+		t.NotError(err).NotNil(table)
+
+		t.Equal(len(table.Columns), 8)
+		sqltest.Equal(a, table.Columns["id"], "bigint(20) NOT NULL")
+		sqltest.Equal(a, table.Columns["created"], "bigint(20) NOT NULL")
+		sqltest.Equal(a, table.Columns["nickname"], "varchar(50) NOT NULL")
+		sqltest.Equal(a, table.Columns["state"], "smallint(6) NOT NULL")
+		sqltest.Equal(a, table.Columns["username"], "varchar(50) NOT NULL")
+		sqltest.Equal(a, table.Columns["mobile"], "varchar(18) NOT NULL")
+		sqltest.Equal(a, table.Columns["email"], "varchar(50) NOT NULL")
+		sqltest.Equal(a, table.Columns["password"], "varchar(128) NOT NULL")
+		t.Equal(len(table.Constraints), 6).
+			Equal(table.Constraints["u_user_xx1"], core.ConstraintUnique).
+			Equal(table.Constraints["u_user_email1"], core.ConstraintUnique).
+			Equal(table.Constraints["unique_id"], core.ConstraintUnique).
+			Equal(table.Constraints["xxx_fk"], core.ConstraintFK).
+			Equal(table.Constraints["xxx"], core.ConstraintCheck).
+			Equal(table.Constraints["users_pk"], core.ConstraintPK) // 主键约束名为固定值
+		t.Equal(len(table.Indexes), 1).
+			Equal(table.Indexes["index_user_mobile"], core.IndexDefault)
+	}, test.Mariadb)
 }
