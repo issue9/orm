@@ -41,6 +41,7 @@ var (
 	RawBytesType    = reflect.TypeOf(sql.RawBytes{})
 	TimeType        = reflect.TypeOf(time.Time{})
 	NullTimeType    = reflect.TypeOf(sql.NullTime{})
+	UnixType        = reflect.TypeOf(Unix{})
 )
 
 // Column 列结构
