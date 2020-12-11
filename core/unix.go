@@ -31,3 +31,13 @@ func (n *Unix) Scan(value interface{}) error {
 func (n Unix) Value() (driver.Value, error) {
 	return int64(time.Time(n).Unix()), nil
 }
+
+// AsTime 转换成 time.Time
+func (n Unix) AsTime() time.Time {
+	return time.Time(n)
+}
+
+// FromTime 从 time.Time 转换而来
+func (n *Unix) FromTime(t time.Time) {
+	*n = Unix(t)
+}
