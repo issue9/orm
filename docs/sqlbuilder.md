@@ -1,15 +1,16 @@
-
 sqlbuilder 提供了一组以链式操作构建 SQL 语句的方法。
 且对象本身可以复用。
 
 构建 SQL 语句的方式有很多种：
 
 1. 直接采用 sqlbuilder 下的方法，比如：
+
 ```go
 sqlbuilder.CreateTable(e).Column(...)
 ```
 
 1. 通过 sqlbuilder.SQLBuilder 对象生成：
+
 ```go
 builder := sqlbuiler.NewSQLBuilder(e)
 builder.CreateTable().Column(...) // 创建表
@@ -34,8 +35,8 @@ stmt.QueryObject(false, &list)
 
 ### 命名参数
 
-支持 Go 1.8 之后提供的 sql.NamedArgs 格式的命名参数。
-在链式操作中，并不要求语句的顺序，比如：
+支持 Go 1.8 之后提供的 sql.NamedArgs 格式的命名参数。在链式操作中，并不要求语句的顺序，比如：
+
 ```go
 stmt1, err := sqlbuilder.Select(db)
     Column("*").
@@ -51,15 +52,19 @@ stmt2, err := sqlbuilder.Select(db)
     Where("id>?", 1).
     Prepare()
 ```
+
 以上两个语句生成的 SQL 是一样的：
+
 ```sql
 SELECT * FROM users AS u WHERE id>? LIMIT ? OFFSET ?
 ```
+
 所以在调用预编译的语句时，给的参数也必须是一样的，
 而不是按照链式语句的参数顺序就行了。
 这就成造成了，一旦你的语句需要预编译，那么链式操作带来的只有麻烦而不是便捷。
 
 所以在这类操作中，推荐使用命名参数的方式调用：
+
 ```go
 stmt2, err := sqlbuilder.Select(db)
     From("users", "u").
@@ -74,7 +79,6 @@ stmt2.Query([]interface{}{
 })
 ```
 
-
 ### 占位符
 
 如果你表中的字段是 SQL 的关键字，那么在查询时，需要将该字段加特殊的引号，
@@ -84,13 +88,13 @@ stmt2.Query([]interface{}{
 
 当然大部分时候，你都不需要手动添加，系统会自动帮你添加，
 只有在 `WHERE` 和 `CHECK` 表达式才需要：
+
 ```go
 query := sqlbuilder.Select(db).
     From("users").
     Column("group").              // 此处不需要
     Where("{group} IS NOT NULL")  // WHERE 表达式需要加 {}
 ```
-
 
 ### CrateTable/TruncateTable/DropTable
 
@@ -124,6 +128,7 @@ sqlbuilder.Insert(e).Table("users").Columns("name","age").
 ```
 
 或是采用 KeyValue 的方式:
+
 ```go
 sqlbuilder.Insert(e).Table("users").
     KeyValue("name","alice").
@@ -131,12 +136,14 @@ sqlbuilder.Insert(e).Table("users").
 ```
 
 当然也支持 `DEFAULT VALUES` 地插入数据，当然前提是你的表中所有字段都有提供默认值。
+
 ```go
 // 全部采用默认或是自增的值填充到 users 表中
 sqlbuilder.Insert(e).Table("users").Exec()
 ```
 
 或者直接从 `SELECT` 语句中生成 `INSERT`：
+
 ```go
 // 将从 userinfo 中获取的 name 和 age 列插入到 users 表中
 sqlbuilder.Select(e).Column("age").
@@ -146,7 +153,6 @@ sqlbuilder.Select(e).Column("age").
     Table("users")
 ```
 
-
 ### Delete
 
 ```go
@@ -154,7 +160,6 @@ sqlbuilder.Delete(e).
     Where("id=?", 1).
     Exec()
 ```
-
 
 ### Update
 
@@ -166,13 +171,11 @@ sqlbuilder.Update(e).
     Exec()
 ```
 
-
 ### Where
 
 Where 作为 Delete、Select 和 Update 的共有部分，提供了很多预定义的操作，
 所有的操作都包含了 And 和 Or 两个操作。
 比如 `AndIn()` 和 `OrIn()`、`AndBetween()` 和 `OrBetween()` 都是成对出现。
-
 
 ```go
 stmt.Where("id>?", 1).
@@ -183,12 +186,15 @@ stmt.Where("id>?", 1).
     AndIsNull("name").                   // IS NULL
     OrIsNotNull("name")                  // IS NOT NULL
 ```
+
 生成 SQL 语句为：
+
 ```sql
 WHERE id>? AND id>? AND name LIKE ? AND id IN(?,?,?) OR id BETWEEN 1 AND 2 AND id LIKE ? AND name IS NULL OR name IS NOT NULL
 ```
 
 子查询条件
+
 ```go
 stmt.Where("id>?", 1).
     AndGroup().
@@ -198,11 +204,13 @@ stmt.Where("id>?", 1).
 ```
 
 生成的 SQL 语句为：
+
 ```sql
 WHERE id>? AND (id BETWEEN ? AND ?) OR id IS NULL
 ```
 
 也可以直接使用 Where 生成其它语句：
+
 ```go
 // 删除符合条件的语句
 sqlbuilder.Where().And("id>?",1).
