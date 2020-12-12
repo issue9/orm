@@ -3,6 +3,7 @@
 package model
 
 import (
+	"database/sql"
 	"reflect"
 	"strconv"
 	"time"
@@ -121,6 +122,13 @@ func setDefault(col *core.Column, vals []string) error {
 			return err
 		}
 
+		col.Default = v
+		return nil
+	}
+	if p, ok := v.(sql.Scanner); ok {
+		if err := p.Scan(vals[0]); err != nil {
+			return err
+		}
 		col.Default = v
 		return nil
 	}
