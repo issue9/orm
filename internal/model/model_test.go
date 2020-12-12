@@ -182,28 +182,6 @@ func TestModels_New(t *testing.T) {
 		NotNil(m.ViewAs)
 }
 
-func TestModel_parseColumn(t *testing.T) {
-	a := assert.New(t)
-	m := &core.Model{
-		Columns: []*core.Column{},
-	}
-
-	// 不存在 struct tag，则以 col.Name 作为键名
-	col := &core.Column{
-		Name: "xx",
-	}
-	a.NotError(parseColumn(m, col, ""))
-	a.Equal(col.Name, "xx")
-
-	// name 值过多
-	col = &core.Column{}
-	a.Error(parseColumn(m, col, "name(m1,m2)"))
-
-	// 不存在的属性名称
-	col = &core.Column{}
-	a.Error(parseColumn(m, col, "not-exists-property(p1)"))
-}
-
 func TestModel_parseMeta(t *testing.T) {
 	a := assert.New(t)
 	m := &core.Model{

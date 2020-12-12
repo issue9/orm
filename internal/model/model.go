@@ -142,50 +142,6 @@ func parseColumns(m *core.Model, rtype reflect.Type) error {
 	return nil
 }
 
-// 分析一个字段
-func parseColumn(m *core.Model, col *core.Column, tag string) (err error) {
-	if err = m.AddColumn(col); err != nil {
-		return err
-	}
-
-	ts := tags.Parse(tag)
-	for _, tag := range ts {
-		switch tag.Name {
-		case "name": // name(col)
-			if len(tag.Args) != 1 {
-				return propertyError(col.Name, "name", "过多的参数值")
-			}
-			col.Name = tag.Args[0]
-		case "index":
-			err = setIndex(m, col, tag.Args)
-		case "pk":
-			err = setPK(m, col, tag.Args)
-		case "unique":
-			err = setUnique(m, col, tag.Args)
-		case "nullable":
-			err = setColumnNullable(col, tag.Args)
-		case "ai":
-			err = setAI(m, col, tag.Args)
-		case "len":
-			err = setColumnLen(col, tag.Args)
-		case "fk":
-			err = setFK(m, col, tag.Args)
-		case "default":
-			err = setDefault(col, tag.Args)
-		case "occ":
-			err = setOCC(m, col, tag.Args)
-		default:
-			err = propertyError(col.Name, tag.Name, "未知的属性")
-		}
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // 分析 meta 接口数据
 func parseMeta(m *core.Model, tag string) error {
 	ts := tags.Parse(tag)
