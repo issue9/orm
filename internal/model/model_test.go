@@ -37,7 +37,7 @@ func (l *last) ParseDefault(v string) error {
 		return errors.New("无效的值格式")
 	}
 
-	cc, err := time.Parse(time.RFC3339, vals[1])
+	cc, err := time.Parse(core.TimeFormatLayout, vals[1])
 	if err != nil {
 		return err
 	}

@@ -25,7 +25,7 @@ func TestUnix_ParseDefault(t *testing.T) {
 	a.Error(u.ParseDefault("2020"))
 
 	now := time.Now()
-	a.NotError(u.ParseDefault(now.Format(time.RFC3339))).
+	a.NotError(u.ParseDefault(now.Format(TimeFormatLayout))).
 		Equal(now.Unix(), u.AsTime().Unix())
 }
 

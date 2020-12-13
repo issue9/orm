@@ -44,7 +44,6 @@ const (
 )
 
 // 基本的数据类型
-
 var types = map[reflect.Type]PrimitiveType{
 	reflect.TypeOf(true):              Bool,
 	reflect.TypeOf(int(1)):            Int,
@@ -148,12 +147,6 @@ func (c *Column) Clone() *Column {
 	*cc = *c
 
 	return cc
-}
-
-// SetDefault 为列设置默认值
-func (c *Column) SetDefault(v interface{}) {
-	c.HasDefault = true
-	c.Default = v
 }
 
 // Check 检测 Column 内容是否合法

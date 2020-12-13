@@ -250,7 +250,8 @@ func TestModel_Sanitize(t *testing.T) {
 
 	pk1, err := NewColumnFromGoType(reflect.TypeOf(1))
 	a.NotError(err).NotNil(pk1)
-	pk1.SetDefault(1)
+	pk1.Default = 1
+	pk1.HasDefault = true
 	pk1.Name = "pk1"
 
 	pk2, err := NewColumnFromGoType(reflect.TypeOf(1))

@@ -12,7 +12,7 @@ import (
 	"github.com/issue9/orm/v3/core"
 )
 
-func TestModel_parseColumn(t *testing.T) {
+func TestParseColumn(t *testing.T) {
 	a := assert.New(t)
 	m := &core.Model{
 		Columns: []*core.Column{},
@@ -69,9 +69,11 @@ func TestSetColumnNullable(t *testing.T) {
 	a.Error(setColumnNullable(col, []string{"true"}))
 }
 
-func TestModel_setDefault(t *testing.T) {
+func TestSetDefault(t *testing.T) {
 	a := assert.New(t)
 	m := core.NewModel(core.Table, "m1", 10)
+
+	// col == int
 
 	col, err := core.NewColumnFromGoType(reflect.TypeOf(1))
 	a.NotError(err).NotNil(col)
@@ -95,6 +97,8 @@ func TestModel_setDefault(t *testing.T) {
 	a.True(col.HasDefault).
 		Equal(col.Default, 1)
 
+	// col == last
+
 	col, err = core.NewColumnFromGoType(reflect.TypeOf(&last{}))
 	a.NotError(err).NotNil(col)
 
@@ -102,14 +106,15 @@ func TestModel_setDefault(t *testing.T) {
 	a.Error(setDefault(col, []string{"1"}))
 
 	// 格式正确
-	now := "2019-07-29T00:38:59+08:00"
-	tt, err := time.Parse(time.RFC3339, now)
-	a.NotError(err).NotEmpty(tt)
-	a.NotError(setDefault(col, []string{"192.168.1.1," + now}))
+	now := time.Now()
+	f := now.Format(core.TimeFormatLayout)
+	a.NotError(setDefault(col, []string{"192.168.1.1," + f}))
 	a.Equal(col.Default, &last{
 		IP:      "192.168.1.1",
-		Created: tt.Unix(),
+		Created: now.Unix(),
 	})
+
+	// col == time.Time
 
 	col, err = core.NewColumnFromGoType(reflect.TypeOf(time.Time{}))
 	a.NotError(err).NotNil(col)
@@ -118,6 +123,30 @@ func TestModel_setDefault(t *testing.T) {
 	a.Error(setDefault(col, []string{"1"}))
 
 	// 格式正确
-	a.NotError(setDefault(col, []string{now}))
-	a.Equal(col.Default, tt)
+	a.NotError(setDefault(col, []string{f}))
+	a.Equal(col.Default.(time.Time).Unix(), now.Unix())
+
+	// col == core.Unix
+
+	col, err = core.NewColumnFromGoType(reflect.TypeOf(core.Unix{}))
+	a.NotError(err).NotNil(col)
+
+	// 格式不正确
+	a.Error(setDefault(col, []string{"xyz"}))
+
+	// 格式正确，但类型被转换成 *core.Unix，而不初始的 core.Unix
+	a.NotError(setDefault(col, []string{f}))
+	a.Equal(col.Default.(*core.Unix).AsTime().Unix(), now.Unix())
+
+	// col == &core.Unix
+
+	col, err = core.NewColumnFromGoType(reflect.TypeOf(&core.Unix{}))
+	a.NotError(err).NotNil(col)
+
+	// 格式不正确
+	a.Error(setDefault(col, []string{"xyz"}))
+
+	// 格式正确
+	a.NotError(setDefault(col, []string{f}))
+	a.Equal(col.Default.(*core.Unix).AsTime().Unix(), now.Unix())
 }

@@ -121,10 +121,27 @@ func setDefault(col *core.Column, vals []string) error {
 		if err := p.ParseDefault(vals[0]); err != nil {
 			return err
 		}
-
 		col.Default = v
 		return nil
 	}
+	v = rval.Elem().Interface()
+	if p, ok := v.(core.DefaultParser); ok {
+		if err := p.ParseDefault(vals[0]); err != nil {
+			return err
+		}
+		col.Default = v
+		return nil
+	}
+
+	v = rval.Interface()
+	if p, ok := v.(sql.Scanner); ok {
+		if err := p.Scan(vals[0]); err != nil {
+			return err
+		}
+		col.Default = v
+		return nil
+	}
+	v = rval.Elem().Interface()
 	if p, ok := v.(sql.Scanner); ok {
 		if err := p.Scan(vals[0]); err != nil {
 			return err
@@ -135,7 +152,7 @@ func setDefault(col *core.Column, vals []string) error {
 
 	switch col.PrimitiveType {
 	case core.Time:
-		v, err := time.Parse(time.RFC3339, vals[0])
+		v, err := time.Parse(core.TimeFormatLayout, vals[0])
 		if err != nil {
 			return err
 		}

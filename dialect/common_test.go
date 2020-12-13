@@ -112,6 +112,7 @@ func testTypes(t *test.Driver) {
 		Column("raw_bytes", reflect.TypeOf(sql.RawBytes{}), false, false, false, nil).
 		Column("time", reflect.TypeOf(time.Time{}), false, false, false, nil).
 		Column("null_time", reflect.TypeOf(sql.NullTime{}), false, false, false, nil, 5).
+		Column("unix", reflect.TypeOf(core.Unix{}), false, false, false, nil).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -140,6 +141,7 @@ func testTypes(t *test.Driver) {
 		"raw_bytes",
 		"time",
 		"null_time",
+		"unix",
 	}
 	vals := []interface{}{ // 与 cols 一一对应
 		true,
@@ -163,6 +165,7 @@ func testTypes(t *test.Driver) {
 		sql.RawBytes("rawBytes"),
 		now,
 		now,
+		core.Unix(now),
 	}
 
 	r, err := sqlbuilder.Insert(t.DB).
@@ -204,10 +207,11 @@ func testTypes(t *test.Driver) {
 		RawBytes   sql.RawBytes
 		Time       time.Time
 		NullTime   time.Time
+		Unix       core.Unix
 	)
 	err = rows.Scan(&Bool, &Int, &Int8, &Int16, &Int32, &Int64,
 		&Uint, &Uint8, &Uint16, &Uint32, &Uint64,
-		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time, &NullTime)
+		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time, &NullTime, &Unix)
 	t.NotError(err)
 	t.True(Bool).
 		Equal(Int, -1).
@@ -228,9 +232,10 @@ func testTypes(t *test.Driver) {
 		True(NullBool.Valid).True(NullBool.Bool).
 		True(NullF64.Valid).Equal(NullF64.Float64, .64).
 		Equal(RawBytes, sql.RawBytes("rawBytes")).
-		// bug(caixw): mysql 对无精度的保存会出整
-		True(math.Abs(float64(Time.Unix()-now.Unix())) < 2, "Time:%v:%d <==> %v:%d", Time, Time.Unix(), now, now.Unix()).
-		Equal(NullTime.Unix(), now.Unix(), "NullTime:%v:%d <==> %v:%d", Time, Time.Unix(), now, now.Unix())
+		// bug(caixw): mysql 对无精度的保存会取整
+		True(math.Abs(float64(Time.Unix()-now.Unix())) < 2, "Time not true\n%v:%d\n%v:%d", Time, Time.Unix(), now, now.Unix()).
+		Equal(NullTime.Unix(), now.Unix(), "NullTime not equal\n%v:%d\n%v:%d", Time, Time.Unix(), now, now.Unix()).
+		Equal(Unix.AsTime().Unix(), now.Unix(), "Unix not equal\n%v:%d\n%v:%d", Unix.AsTime(), Unix.AsTime().Unix(), now, now.Unix())
 
 	//	fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
 }
@@ -267,6 +272,7 @@ func testTypesDefault(t *test.Driver) {
 		Column("raw_bytes", reflect.TypeOf(sql.RawBytes{}), false, true, false, nil).
 		Column("time", reflect.TypeOf(time.Time{}), false, false, true, now).
 		Column("time_with_len", reflect.TypeOf(time.Time{}), false, false, true, now, 5).
+		Column("unix", reflect.TypeOf(&core.Unix{}), false, false, true, now.Format(core.TimeFormatLayout)).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -295,6 +301,7 @@ func testTypesDefault(t *test.Driver) {
 		"raw_bytes",
 		"time",
 		"time_with_len",
+		"unix",
 	}
 	r, err := sqlbuilder.Insert(t.DB).
 		Table(tableName).
@@ -333,10 +340,11 @@ func testTypesDefault(t *test.Driver) {
 		RawBytes    sql.RawBytes
 		Time        time.Time
 		TimeWithLen time.Time
+		Unix        core.Unix
 	)
 	err = rows.Scan(&Bool, &Int, &Int8, &Int16, &Int32, &Int64,
 		&Uint, &Uint8, &Uint16, &Uint32, &Uint64,
-		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time, &TimeWithLen)
+		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time, &TimeWithLen, &Unix)
 	t.NotError(err)
 	t.False(Bool).
 		Equal(Int, -1).
@@ -358,6 +366,7 @@ func testTypesDefault(t *test.Driver) {
 		False(NullF64.Valid).
 		Nil(RawBytes).
 		Equal(Time.Unix(), now.Unix()).
-		Equal(TimeWithLen.Unix(), now.Unix())
+		Equal(TimeWithLen.Unix(), now.Unix()).
+		Equal(Unix.AsTime().Unix(), now.Unix())
 	//fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
 }
