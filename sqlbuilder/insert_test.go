@@ -4,11 +4,11 @@ package sqlbuilder_test
 
 import (
 	"database/sql"
+	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/internal/test"
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
@@ -24,8 +24,8 @@ func TestInsert(t *testing.T) {
 	s.ForEach(func(t *test.Driver) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
-			AutoIncrement("id", core.Int64Type).
-			Column("name", core.StringType, false, false, true, "def-name", 20).
+			AutoIncrement("id", reflect.TypeOf(int64(1))).
+			Column("name", reflect.TypeOf(""), false, false, true, "def-name", 20).
 			Exec()
 		a.NotError(err)
 		defer func() {
@@ -72,8 +72,8 @@ func TestInsert_NamedArgs(t *testing.T) {
 	s.ForEach(func(t *test.Driver) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
-			AutoIncrement("id", core.Int64Type).
-			Column("name", core.StringType, false, false, false, nil, 20).
+			AutoIncrement("id", reflect.TypeOf(int64(1))).
+			Column("name", reflect.TypeOf(""), false, false, false, nil, 20).
 			Exec()
 		a.NotError(err)
 		defer func() {

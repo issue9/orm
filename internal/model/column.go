@@ -133,8 +133,8 @@ func setDefault(col *core.Column, vals []string) error {
 		return nil
 	}
 
-	switch col.GoType {
-	case core.TimeType:
+	switch col.PrimitiveType {
+	case core.Time:
 		v, err := time.Parse(time.RFC3339, vals[0])
 		if err != nil {
 			return err

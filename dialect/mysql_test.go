@@ -3,7 +3,6 @@
 package dialect_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -178,158 +177,151 @@ func TestMysql_SQLType(t *testing.T) {
 	a := assert.New(t)
 
 	var data = []*sqlTypeTester{
-		{ // col == nil
-			err: true,
-		},
-		{ // col.GoType == nil
-			col: &core.Column{GoType: nil},
+		{ // col.PrimitiveType = auto
+			col: &core.Column{PrimitiveType: core.Auto},
 			err: true,
 		},
 		{
-			col:     &core.Column{GoType: core.IntType},
+			col:     &core.Column{PrimitiveType: core.Int},
 			SQLType: "BIGINT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType:  core.Int16Type,
-				Default: 5,
+				PrimitiveType: core.Int16,
+				Default:       5,
 			},
 			SQLType: "mediumint NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType:     core.Int32Type,
-				HasDefault: true,
-				Default:    5,
+				PrimitiveType: core.Int32,
+				HasDefault:    true,
+				Default:       5,
 			},
 			SQLType: "INT NOT NULL DEFAULT 5",
 		},
 		{
-			col:     &core.Column{GoType: core.BoolType},
+			col:     &core.Column{PrimitiveType: core.Bool},
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.TimeType},
+			col:     &core.Column{PrimitiveType: core.Time},
 			SQLType: "DATETIME NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.TimeType,
-				Length: []int{-1},
+				PrimitiveType: core.Time,
+				Length:        []int{-1},
 			},
 			err: true,
 		},
 		{
 			col: &core.Column{
-				GoType: core.TimeType,
-				Length: []int{7},
+				PrimitiveType: core.Time,
+				Length:        []int{7},
 			},
 			err: true,
 		},
 		{
-			col:     &core.Column{GoType: core.Uint16Type},
+			col:     &core.Column{PrimitiveType: core.Uint16},
 			SQLType: "MEDIUMINT UNSIGNED NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.Int8Type},
+			col:     &core.Column{PrimitiveType: core.Int8},
 			SQLType: "SMALLINT NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: reflect.TypeOf([]byte{'a', 'b', 'c'})},
+			col:     &core.Column{PrimitiveType: core.RawBytes},
 			SQLType: "BLOB NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.IntType,
-				Length: []int{5, 6},
+				PrimitiveType: core.Int,
+				Length:        []int{5, 6},
 			},
 			SQLType: "BIGINT(5) NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.StringType,
-				Length: []int{5, 6},
+				PrimitiveType: core.String,
+				Length:        []int{5, 6},
 			},
 			SQLType: "VARCHAR(5) NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.StringType,
-				Length: []int{-1},
+				PrimitiveType: core.String,
+				Length:        []int{-1},
 			},
 			SQLType: "LONGTEXT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.Float32Type,
-				Length: []int{5, 6},
+				PrimitiveType: core.Float32,
+				Length:        []int{5, 6},
 			},
 			SQLType: "DOUBLE(5,6) NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.Float64Type,
-				Length: []int{5},
+				PrimitiveType: core.Float64,
+				Length:        []int{5},
 			},
 			err: true,
 		},
 		{
 			col: &core.Column{
-				GoType: core.NullFloat64Type,
-				Length: []int{5},
+				PrimitiveType: core.NullFloat64,
+				Length:        []int{5},
 			},
 			err: true,
 		},
 		{
 			col: &core.Column{
-				GoType: core.NullFloat64Type,
-				Length: []int{5, 7},
+				PrimitiveType: core.NullFloat64,
+				Length:        []int{5, 7},
 			},
 			SQLType: "DOUBLE(5,7) NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.NullInt64Type,
-				Length: []int{5},
+				PrimitiveType: core.NullInt64,
+				Length:        []int{5},
 			},
 			SQLType: "BIGINT(5) NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.NullStringType,
-				Length: []int{5},
+				PrimitiveType: core.NullString,
+				Length:        []int{5},
 			},
 			SQLType: "VARCHAR(5) NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.NullStringType},
+			col:     &core.Column{PrimitiveType: core.NullString},
 			SQLType: "LONGTEXT NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.NullBoolType},
+			col:     &core.Column{PrimitiveType: core.NullBool},
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{ // sql.RawBytes 会被转换成 []byte
-			col:     &core.Column{GoType: core.RawBytesType},
+			col:     &core.Column{PrimitiveType: core.RawBytes},
 			SQLType: "BLOB NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.Int64Type,
-				AI:     true,
+				PrimitiveType: core.Int64,
+				AI:            true,
 			},
 			SQLType: "BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.Uint64Type,
-				AI:     true,
+				PrimitiveType: core.Uint64,
+				AI:            true,
 			},
 			SQLType: "BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT NOT NULL",
-		},
-		{
-			col: &core.Column{GoType: reflect.TypeOf(struct{}{})},
-			err: true,
 		},
 	}
 

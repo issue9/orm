@@ -7,7 +7,6 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -148,75 +147,64 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 		return "", errColIsNil
 	}
 
-	if col.GoType == nil {
-		return "", errGoTypeIsNil
-	}
-
-	switch col.GoType.Kind() {
-	case reflect.Bool:
+	switch col.PrimitiveType {
+	case core.Bool:
 		return p.buildType("BOOLEAN", col, 0)
-	case reflect.Int8, reflect.Int16, reflect.Uint8, reflect.Uint16:
+	case core.Int8, core.Int16, core.Uint8, core.Uint16:
 		if col.AI {
 			return p.buildType("SERIAL", col, 0)
 		}
 		return p.buildType("SMALLINT", col, 0)
-	case reflect.Int32, reflect.Uint32:
+	case core.Int32, core.Uint32:
 		if col.AI {
 			return p.buildType("SERIAL", col, 0)
 		}
 		return p.buildType("INT", col, 0)
-	case reflect.Int64, reflect.Int, reflect.Uint64, reflect.Uint:
+	case core.Int64, core.Int, core.Uint64, core.Uint:
 		if col.AI {
 			return p.buildType("BIGSERIAL", col, 0)
 		}
 		return p.buildType("BIGINT", col, 0)
-	case reflect.Float32, reflect.Float64:
+	case core.Float32, core.Float64:
 		if len(col.Length) != 2 {
 			return "", errMissLength
 		}
 		return p.buildType("NUMERIC", col, 2)
-	case reflect.String:
+	case core.String:
 		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
 			return p.buildType("TEXT", col, 0)
 		}
 		return p.buildType("VARCHAR", col, 1)
-	case reflect.Slice, reflect.Array:
-		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return p.buildType("BYTEA", col, 0)
+	case core.RawBytes:
+		return p.buildType("BYTEA", col, 0)
+	case core.NullBool:
+		return p.buildType("BOOLEAN", col, 0)
+	case core.NullFloat64:
+		if len(col.Length) != 2 {
+			return "", errMissLength
 		}
-	case reflect.Struct:
-		switch col.GoType {
-		case core.RawBytesType:
-			return p.buildType("BYTEA", col, 0)
-		case core.NullBoolType:
-			return p.buildType("BOOLEAN", col, 0)
-		case core.NullFloat64Type:
-			if len(col.Length) != 2 {
-				return "", errMissLength
-			}
-			return p.buildType("NUMERIC", col, 2)
-		case core.NullInt64Type:
-			if col.AI {
-				return p.buildType("BIGSERIAL", col, 0)
-			}
-			return p.buildType("BIGINT", col, 0)
-		case core.NullStringType:
-			if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
-				return p.buildType("TEXT", col, 0)
-			}
-			return p.buildType("VARCHAR", col, 1)
-		case core.TimeType, core.NullTimeType:
-			if len(col.Length) == 0 {
-				return p.buildType("TIMESTAMP", col, 0)
-			}
-			if col.Length[0] < 0 || col.Length[0] > 6 {
-				return "", errTimeFractionalInvalid
-			}
-			return p.buildType("TIMESTAMP", col, 1)
+		return p.buildType("NUMERIC", col, 2)
+	case core.NullInt64:
+		if col.AI {
+			return p.buildType("BIGSERIAL", col, 0)
 		}
+		return p.buildType("BIGINT", col, 0)
+	case core.NullString:
+		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
+			return p.buildType("TEXT", col, 0)
+		}
+		return p.buildType("VARCHAR", col, 1)
+	case core.Time, core.NullTime:
+		if len(col.Length) == 0 {
+			return p.buildType("TIMESTAMP", col, 0)
+		}
+		if col.Length[0] < 0 || col.Length[0] > 6 {
+			return "", errTimeFractionalInvalid
+		}
+		return p.buildType("TIMESTAMP", col, 1)
 	}
 
-	return "", errUncovert(col.GoType.Name())
+	return "", errUncovert(col)
 }
 
 // l 表示需要取的长度数量

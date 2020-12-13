@@ -3,6 +3,7 @@
 package sqlbuilder_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -26,10 +27,10 @@ func TestCreateTableStmt(t *testing.T) {
 	suite.ForEach(func(t *test.Driver) {
 		stmt := sqlbuilder.CreateTable(t.DB).
 			Table(table).
-			AutoIncrement("id", core.IntType).
-			Column("age", core.IntType, false, false, false, nil).
-			Column("name", core.StringType, false, true, true, "", 100).
-			Column("address", core.StringType, false, false, false, nil, 100).
+			AutoIncrement("id", reflect.TypeOf(1)).
+			Column("age", reflect.TypeOf(1), false, false, false, nil).
+			Column("name", reflect.TypeOf(""), false, true, true, "", 100).
+			Column("address", reflect.TypeOf(""), false, false, false, nil, 100).
 			Index(core.IndexDefault, "index_index", "name", "address").
 			Unique("u_age", "name", "address").
 			Check("age_gt_0", "age>0")
@@ -39,14 +40,14 @@ func TestCreateTableStmt(t *testing.T) {
 		// AI 和 PK 同时指定为 ID
 		err = stmt.Reset().
 			Table("users").
-			AutoIncrement("id", core.IntType).
+			AutoIncrement("id", reflect.TypeOf(1)).
 			PK("id").
 			Err()
 		t.Error(err)
 
 		// 约束名重和昨
 		err = stmt.Reset().Table("users").
-			Column("name", core.StringType, false, false, false, nil).
+			Column("name", reflect.TypeOf(""), false, false, false, nil).
 			Unique("c1", "name").
 			Check("c1", "name IS NOT NULL").
 			Exec()

@@ -73,7 +73,7 @@ func TestModel_setDefault(t *testing.T) {
 	a := assert.New(t)
 	m := core.NewModel(core.Table, "m1", 10)
 
-	col, err := core.NewColumnFromGoType(core.IntType)
+	col, err := core.NewColumnFromGoType(reflect.TypeOf(1))
 	a.NotError(err).NotNil(col)
 	col.Name = "def"
 	a.NotError(m.AddColumn(col))

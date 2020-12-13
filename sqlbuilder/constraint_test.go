@@ -3,6 +3,7 @@
 package sqlbuilder_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -108,8 +109,8 @@ func TestConstraint_PK(t *testing.T) {
 	suite.ForEach(func(t *test.Driver) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table("#info").
-			Column("uid", core.Int64Type, false, false, false, nil).
-			Column("tel", core.StringType, false, false, false, nil, 11).
+			Column("uid", reflect.TypeOf(int64(1)), false, false, false, nil).
+			Column("tel", reflect.TypeOf(""), false, false, false, nil, 11).
 			PK("tel", "uid").
 			Exec()
 		t.NotError(err)

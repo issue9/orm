@@ -4,6 +4,7 @@ package model
 
 import (
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -25,7 +26,10 @@ type last struct {
 	Created int64
 }
 
-var _ core.DefaultParser = &last{}
+var (
+	_ core.DefaultParser  = &last{}
+	_ core.PrimitiveTyper = &last{}
+)
 
 func (l *last) ParseDefault(v string) error {
 	vals := strings.Split(v, ",")
@@ -41,6 +45,10 @@ func (l *last) ParseDefault(v string) error {
 	l.IP = vals[0]
 	l.Created = cc.Unix()
 	return nil
+}
+
+func (l *last) PrimitiveType() core.PrimitiveType {
+	return core.String
 }
 
 // User 带自增和一个唯一约束
@@ -208,7 +216,7 @@ func TestModel_setOCC(t *testing.T) {
 	a := assert.New(t)
 	m := core.NewModel(core.Table, "m1", 10)
 
-	col, err := core.NewColumnFromGoType(core.IntType)
+	col, err := core.NewColumnFromGoType(reflect.TypeOf(1))
 	a.NotError(err).NotNil(col)
 	col.Name = "occ"
 	a.NotError(m.AddColumn(col))
@@ -228,7 +236,7 @@ func TestModel_setPK(t *testing.T) {
 	a := assert.New(t)
 	m := core.NewModel(core.Table, "m1", 10)
 	a.NotNil(m)
-	col, err := core.NewColumnFromGoType(core.Int8Type)
+	col, err := core.NewColumnFromGoType(reflect.TypeOf(int8(1)))
 	a.NotError(err).NotNil(col)
 
 	// 过多的参数
@@ -240,18 +248,18 @@ func TestModel_setAI(t *testing.T) {
 	m := core.NewModel(core.Table, "m1", 10)
 	a.NotNil(m)
 
-	col, err := core.NewColumnFromGoType(core.IntType)
+	col, err := core.NewColumnFromGoType(reflect.TypeOf(1))
 	a.NotError(err).NotNil(col)
 
 	// 太多的参数
 	a.Error(setAI(m, col, []string{"true", "false"}))
 
 	// 列类型只能是整数型
-	col, err = core.NewColumnFromGoType(core.Float32Type)
+	col, err = core.NewColumnFromGoType(reflect.TypeOf(float32(1.1)))
 	a.NotError(err).NotNil(col)
 	a.Error(setAI(m, col, nil))
 
-	col, err = core.NewColumnFromGoType(core.IntType)
+	col, err = core.NewColumnFromGoType(reflect.TypeOf(1))
 	a.NotError(err).NotNil(col)
 	col.Name = "ai"
 	a.NotError(m.AddColumn(col))

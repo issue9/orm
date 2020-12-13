@@ -7,7 +7,6 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -239,73 +238,62 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 		return "", errColIsNil
 	}
 
-	if col.GoType == nil {
-		return "", errGoTypeIsNil
-	}
-
-	switch col.GoType.Kind() {
-	case reflect.Bool:
+	switch col.PrimitiveType {
+	case core.Bool:
 		return m.buildType("BOOLEAN", col, false, 0)
-	case reflect.Int8:
+	case core.Int8:
 		return m.buildType("SMALLINT", col, false, 1)
-	case reflect.Int16:
+	case core.Int16:
 		return m.buildType("MEDIUMINT", col, false, 1)
-	case reflect.Int32:
+	case core.Int32:
 		return m.buildType("INT", col, false, 1)
-	case reflect.Int64, reflect.Int: // reflect.Int 大小未知，都当作是 BIGINT 处理
+	case core.Int64, core.Int: // reflect.Int 大小未知，都当作是 BIGINT 处理
 		return m.buildType("BIGINT", col, false, 1)
-	case reflect.Uint8:
+	case core.Uint8:
 		return m.buildType("SMALLINT", col, true, 1)
-	case reflect.Uint16:
+	case core.Uint16:
 		return m.buildType("MEDIUMINT", col, true, 1)
-	case reflect.Uint32:
+	case core.Uint32:
 		return m.buildType("INT", col, true, 1)
-	case reflect.Uint64, reflect.Uint, reflect.Uintptr:
+	case core.Uint64, core.Uint:
 		return m.buildType("BIGINT", col, true, 1)
-	case reflect.Float32, reflect.Float64:
+	case core.Float32, core.Float64:
 		if len(col.Length) != 2 {
 			return "", errMissLength
 		}
 		return m.buildType("DOUBLE", col, false, 2)
-	case reflect.String:
+	case core.String:
 		if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
 			return m.buildType("LONGTEXT", col, false, 0)
 		}
 		return m.buildType("VARCHAR", col, false, 1)
-	case reflect.Slice, reflect.Array:
-		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return m.buildType("BLOB", col, false, 0)
+	case core.RawBytes:
+		return m.buildType("BLOB", col, false, 0)
+	case core.NullBool:
+		return m.buildType("BOOLEAN", col, false, 0)
+	case core.NullFloat64:
+		if len(col.Length) != 2 {
+			return "", errMissLength
 		}
-	case reflect.Struct:
-		switch col.GoType {
-		case core.RawBytesType:
-			return m.buildType("BLOB", col, false, 0)
-		case core.NullBoolType:
-			return m.buildType("BOOLEAN", col, false, 0)
-		case core.NullFloat64Type:
-			if len(col.Length) != 2 {
-				return "", errMissLength
-			}
-			return m.buildType("DOUBLE", col, false, 2)
-		case core.NullInt64Type:
-			return m.buildType("BIGINT", col, false, 1)
-		case core.NullStringType:
-			if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
-				return m.buildType("LONGTEXT", col, false, 0)
-			}
-			return m.buildType("VARCHAR", col, false, 1)
-		case core.TimeType, core.NullTimeType:
-			if len(col.Length) == 0 {
-				return m.buildType("DATETIME", col, false, 0)
-			}
-			if col.Length[0] < 0 || col.Length[0] > 6 {
-				return "", errTimeFractionalInvalid
-			}
-			return m.buildType("DATETIME", col, false, 1)
+		return m.buildType("DOUBLE", col, false, 2)
+	case core.NullInt64:
+		return m.buildType("BIGINT", col, false, 1)
+	case core.NullString:
+		if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
+			return m.buildType("LONGTEXT", col, false, 0)
 		}
+		return m.buildType("VARCHAR", col, false, 1)
+	case core.Time, core.NullTime:
+		if len(col.Length) == 0 {
+			return m.buildType("DATETIME", col, false, 0)
+		}
+		if col.Length[0] < 0 || col.Length[0] > 6 {
+			return "", errTimeFractionalInvalid
+		}
+		return m.buildType("DATETIME", col, false, 1)
 	}
 
-	return "", errUncovert(col.GoType.Name())
+	return "", errUncovert(col)
 }
 
 // l 表示需要取的长度数量

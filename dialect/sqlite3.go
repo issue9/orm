@@ -7,7 +7,6 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -303,42 +302,31 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 		return "", errColIsNil
 	}
 
-	if col.GoType == nil {
-		return "", errGoTypeIsNil
-	}
-
-	switch col.GoType.Kind() {
-	case reflect.Bool:
+	switch col.PrimitiveType {
+	case core.Bool:
 		return s.buildType("INTEGER", col)
-	case reflect.String:
+	case core.String:
 		return s.buildType("TEXT", col)
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case core.Int, core.Int8, core.Int16, core.Int32, core.Int64,
+		core.Uint, core.Uint8, core.Uint16, core.Uint32, core.Uint64:
 		return s.buildType("INTEGER", col)
-	case reflect.Float32, reflect.Float64:
+	case core.Float32, core.Float64:
 		return s.buildType("REAL", col)
-	case reflect.Array, reflect.Slice:
-		if col.GoType.Elem().Kind() == reflect.Uint8 {
-			return s.buildType("BLOB", col)
-		}
-	case reflect.Struct:
-		switch col.GoType {
-		case core.RawBytesType:
-			return s.buildType("BLOB", col)
-		case core.NullBoolType:
-			return s.buildType("INTEGER", col)
-		case core.NullFloat64Type:
-			return s.buildType("REAL", col)
-		case core.NullInt64Type:
-			return s.buildType("INTEGER", col)
-		case core.NullStringType:
-			return s.buildType("TEXT", col)
-		case core.TimeType, core.NullTimeType:
-			return s.buildType("TIMESTAMP", col)
-		}
+	case core.RawBytes:
+		return s.buildType("BLOB", col)
+	case core.NullBool:
+		return s.buildType("INTEGER", col)
+	case core.NullFloat64:
+		return s.buildType("REAL", col)
+	case core.NullInt64:
+		return s.buildType("INTEGER", col)
+	case core.NullString:
+		return s.buildType("TEXT", col)
+	case core.Time, core.NullTime:
+		return s.buildType("TIMESTAMP", col)
 	}
 
-	return "", errUncovert(col.GoType.Name())
+	return "", errUncovert(col)
 }
 
 // l 表示需要取的长度数量

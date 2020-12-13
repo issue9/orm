@@ -3,15 +3,45 @@
 package core
 
 import (
+	"database/sql"
+	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
 )
 
+func TestNewColumnFromGoType(t *testing.T) {
+	a := assert.New(t)
+
+	col, err := NewColumnFromGoType(reflect.TypeOf(1))
+	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int)
+
+	col, err = NewColumnFromGoType(reflect.TypeOf(int8(1)))
+	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int8)
+
+	col, err = NewColumnFromGoType(reflect.TypeOf(true))
+	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Bool)
+
+	col, err = NewColumnFromGoType(reflect.TypeOf(sql.NullFloat64{}))
+	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, NullFloat64)
+
+	col, err = NewColumnFromGoType(reflect.TypeOf(struct{}{}))
+	a.Error(err).Nil(col)
+
+	col, err = NewColumnFromGoType(reflect.TypeOf(Unix{}))
+	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int64)
+
+	col, err = NewColumnFromGoType(reflect.TypeOf(&Unix{}))
+	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int64)
+
+	col, err = NewColumnFromGoType(reflect.TypeOf(Unix{}))
+	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int64)
+}
+
 func TestColumn_Clone(t *testing.T) {
 	a := assert.New(t)
 
-	col, err := NewColumnFromGoType(IntType)
+	col, err := NewColumnFromGoType(reflect.TypeOf(1))
 	a.NotError(err).NotNil(col)
 	col.Nullable = true
 
@@ -23,7 +53,7 @@ func TestColumn_Clone(t *testing.T) {
 func TestColumn_Check(t *testing.T) {
 	a := assert.New(t)
 
-	col, err := NewColumnFromGoType(StringType)
+	col, err := NewColumnFromGoType(reflect.TypeOf(""))
 	a.NotError(err).NotNil(col)
 	col.Length = []int{-1}
 
@@ -35,7 +65,7 @@ func TestColumn_Check(t *testing.T) {
 	col.Length[0] = -2
 	a.Error(col.Check())
 
-	col, err = NewColumnFromGoType(IntType)
+	col, err = NewColumnFromGoType(reflect.TypeOf(5))
 	a.NotError(err).NotNil(col)
 	col.Length = []int{-2}
 	a.Error(col.Check())

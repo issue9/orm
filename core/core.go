@@ -76,6 +76,8 @@ type Dialect interface {
 	DriverName() string
 
 	// 将列转换成数据支持的类型表达式
+	//
+	// 必须实现对所有 PrimitiveType 类型的转换。
 	SQLType(*Column) (string, error)
 
 	// 是否允许在事务中执行 DDL

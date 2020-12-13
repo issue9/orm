@@ -3,7 +3,6 @@
 package dialect_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -190,95 +189,90 @@ func TestSqlite3_SQLType(t *testing.T) {
 		{ // col == nil
 			err: true,
 		},
-		{ // col.GoType == nil
-			col: &core.Column{GoType: nil},
+		{ // col.PrimitiveType == nil
+			col: &core.Column{PrimitiveType: core.Auto},
 			err: true,
 		},
 		{
-			col:     &core.Column{GoType: core.IntType},
+			col:     &core.Column{PrimitiveType: core.Int},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.NullBoolType},
+			col:     &core.Column{PrimitiveType: core.NullBool},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.BoolType},
+			col:     &core.Column{PrimitiveType: core.Bool},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: reflect.TypeOf([]byte{'a', 'b'})},
+			col:     &core.Column{PrimitiveType: core.RawBytes},
 			SQLType: "BLOB NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.NullInt64Type},
+			col:     &core.Column{PrimitiveType: core.NullInt64},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.NullFloat64Type},
+			col:     &core.Column{PrimitiveType: core.NullFloat64},
 			SQLType: "REAL NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.NullStringType},
+			col:     &core.Column{PrimitiveType: core.NullString},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType:   core.NullStringType,
-				Nullable: true,
+				PrimitiveType: core.NullString,
+				Nullable:      true,
 			},
 			SQLType: "TEXT",
 		},
 		{
 			col: &core.Column{
-				GoType:  core.NullStringType,
-				Default: "123",
+				PrimitiveType: core.NullString,
+				Default:       "123",
 			},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType:     core.NullStringType,
-				Default:    "123",
-				HasDefault: true,
+				PrimitiveType: core.NullString,
+				Default:       "123",
+				HasDefault:    true,
 			},
 			SQLType: "TEXT NOT NULL DEFAULT '123'",
 		},
 		{
 			col: &core.Column{
-				GoType: core.IntType,
-				Length: []int{5, 6},
+				PrimitiveType: core.Int,
+				Length:        []int{5, 6},
 			},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
 			col: &core.Column{
-				GoType: core.IntType,
-				AI:     true,
+				PrimitiveType: core.Int,
+				AI:            true,
 			},
 			SQLType: "INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.StringType},
+			col:     &core.Column{PrimitiveType: core.String},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.Float64Type},
+			col:     &core.Column{PrimitiveType: core.Float64},
 			SQLType: "REAL NOT NULL",
 		},
 		{
-			col:     &core.Column{GoType: core.NullInt64Type},
+			col:     &core.Column{PrimitiveType: core.NullInt64},
 			SQLType: "INTEGER NOT NULL",
 		},
 
 		{
-			col:     &core.Column{GoType: core.TimeType},
+			col:     &core.Column{PrimitiveType: core.Time},
 			SQLType: "TIMESTAMP NOT NULL",
-		},
-
-		{
-			col: &core.Column{GoType: reflect.TypeOf(struct{}{})},
-			err: true,
 		},
 	}
 

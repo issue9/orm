@@ -16,7 +16,6 @@ import (
 
 var (
 	errColIsNil              = errors.New("参数 col 参数是个空值")
-	errGoTypeIsNil           = errors.New("无效的 col.GoType 值")
 	errMissLength            = errors.New("缺少长度")
 	errTimeFractionalInvalid = errors.New("时间精度只能介于 [0,6] 之间")
 
@@ -31,8 +30,8 @@ var (
 	}
 )
 
-func errUncovert(dest string) error {
-	return fmt.Errorf("不支持的类型: %s", dest)
+func errUncovert(col *core.Column) error {
+	return fmt.Errorf("不支持的列类型: %s", col.Name)
 }
 
 // MysqlLimitSQL mysql 系列数据库分页语法的实现
