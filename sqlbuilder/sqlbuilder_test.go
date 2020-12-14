@@ -3,10 +3,10 @@
 package sqlbuilder_test
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
+	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/internal/flagtest"
 	"github.com/issue9/orm/v3/internal/test"
 	"github.com/issue9/orm/v3/sqlbuilder"
@@ -31,20 +31,20 @@ func (u *user) Meta() string {
 func initDB(t *test.Driver) {
 	creator := sqlbuilder.CreateTable(t.DB).
 		Table("users").
-		AutoIncrement("id", reflect.TypeOf(int64(1))).
-		Column("name", reflect.TypeOf(""), false, false, false, nil, 20).
-		Column("age", reflect.TypeOf(1), false, true, false, nil).
-		Column("version", reflect.TypeOf(int64(1)), false, false, true, 0).
+		AutoIncrement("id", core.Int64).
+		Column("name", core.String, false, false, false, nil, 20).
+		Column("age", core.Int, false, true, false, nil).
+		Column("version", core.Int64, false, false, true, 0).
 		Unique("unique_users_id", "id")
 	err := creator.Exec()
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	creator.Reset().Table("info").
-		Column("uid", reflect.TypeOf(int64(1)), false, false, false, nil).
-		Column("tel", reflect.TypeOf(""), false, false, false, nil, 11).
-		Column("nickname", reflect.TypeOf(""), false, false, false, nil, 20).
-		Column("address", reflect.TypeOf(""), false, false, false, nil, 1024).
-		Column("birthday", reflect.TypeOf(time.Now()), false, false, true, time.Time{}).
+		Column("uid", core.Int64, false, false, false, nil).
+		Column("tel", core.String, false, false, false, nil, 11).
+		Column("nickname", core.String, false, false, false, nil, 20).
+		Column("address", core.String, false, false, false, nil, 1024).
+		Column("birthday", core.Time, false, false, true, time.Time{}).
 		PK("tel", "nickname").
 		ForeignKey("info_fk", "uid", "users", "id", "CASCADE", "CASCADE")
 	err = creator.Exec()

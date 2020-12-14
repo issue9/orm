@@ -2,11 +2,7 @@
 
 package sqlbuilder
 
-import (
-	"reflect"
-
-	"github.com/issue9/orm/v3/core"
-)
+import "github.com/issue9/orm/v3/core"
 
 // CreateTableStmt 创建表的语句
 type CreateTableStmt struct {
@@ -46,8 +42,8 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	return stmt
 }
 
-func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) (*core.Column, error) {
-	col, err := core.NewColumnFromGoType(goType)
+func newColumn(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def interface{}, length ...int) (*core.Column, error) {
+	col, err := core.NewColumn(p)
 	if err != nil {
 		return nil, err
 	}
@@ -65,19 +61,19 @@ func newColumn(name string, goType reflect.Type, ai, nullable, hasDefault bool, 
 // Column 添加列
 //
 // name 列的名称；
-// goType Go 中的类型，该类型会被转换成相应的数据库类型；
+// p Go 中的类型，该类型会被转换成相应的数据库类型；
 // ai 是否自增列；
 // nullable 表示该列是否可以为 NULL；
 // hasDefault 表示是否拥有默认值，如果为 true，则 v 同时会被当作默认值；
 // def 默认值；
 // length 表示长度信息。
-func (stmt *CreateTableStmt) Column(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
+func (stmt *CreateTableStmt) Column(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
 	if stmt.err != nil {
 		return stmt
 	}
 
 	var col *core.Column
-	col, stmt.err = newColumn(name, goType, ai, nullable, hasDefault, def, length...)
+	col, stmt.err = newColumn(name, p, ai, nullable, hasDefault, def, length...)
 	return stmt.Columns(col)
 }
 
@@ -97,9 +93,8 @@ func (stmt *CreateTableStmt) Columns(col ...*core.Column) *CreateTableStmt {
 // 功能与 Column() 中将 ai 设置 true 是一样的。
 //
 // col 列名；
-// goType 对应的 Go 类型。
-func (stmt *CreateTableStmt) AutoIncrement(col string, goType reflect.Type) *CreateTableStmt {
-	return stmt.Column(col, goType, true, false, false, nil)
+func (stmt *CreateTableStmt) AutoIncrement(col string, p core.PrimitiveType) *CreateTableStmt {
+	return stmt.Column(col, p, true, false, false, nil)
 }
 
 // PK 指定主键约束

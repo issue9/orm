@@ -2,11 +2,7 @@
 
 package sqlbuilder
 
-import (
-	"reflect"
-
-	"github.com/issue9/orm/v3/core"
-)
+import "github.com/issue9/orm/v3/core"
 
 // AddColumnStmt 添加列
 type AddColumnStmt struct {
@@ -38,12 +34,12 @@ func (stmt *AddColumnStmt) Table(table string) *AddColumnStmt {
 // Column 添加列
 //
 // 参数信息可参考 CreateTableStmt.Column
-func (stmt *AddColumnStmt) Column(name string, goType reflect.Type, ai, nullable, hasDefault bool, def interface{}, length ...int) *AddColumnStmt {
+func (stmt *AddColumnStmt) Column(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def interface{}, length ...int) *AddColumnStmt {
 	if stmt.err != nil {
 		return stmt
 	}
 
-	stmt.column, stmt.err = newColumn(name, goType, ai, nullable, hasDefault, def, length...)
+	stmt.column, stmt.err = newColumn(name, p, ai, nullable, hasDefault, def, length...)
 	return stmt
 }
 

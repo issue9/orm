@@ -12,52 +12,68 @@ import (
 	"github.com/issue9/orm/v3/core"
 )
 
-func TestParseColumn(t *testing.T) {
+func TestNewColumn(t *testing.T) {
+	a := assert.New(t)
+
+	c, err := newColumn(reflect.StructField{Name: "name", Type: reflect.TypeOf(5)})
+	a.NotError(err).NotNil(c).
+		Equal(c.Name, "name").Equal(c.GoName, "name").
+		Equal(c.GoType, reflect.TypeOf(1)).
+		Equal(c.PrimitiveType, core.Int)
+
+	c, err = newColumn(reflect.StructField{Name: "Name", Type: reflect.TypeOf(&last{})})
+	a.NotError(err).NotNil(c).
+		Equal(c.Name, "Name").Equal(c.GoName, "Name").
+		Equal(c.GoType, reflect.TypeOf(last{})).
+		Equal(c.PrimitiveType, (&last{}).PrimitiveType())
+}
+
+func TestColumn_ParseTags(t *testing.T) {
 	a := assert.New(t)
 	m := &core.Model{
 		Columns: []*core.Column{},
 	}
 
 	// 不存在 struct tag，则以 col.Name 作为键名
-	col := &core.Column{
-		Name: "xx",
+	col := &column{
+		Column: &core.Column{Name: "xx"},
 	}
-	a.NotError(parseColumn(m, col, ""))
+	a.NotError(col.parseTags(m, ""))
 	a.Equal(col.Name, "xx")
 
 	// name 值过多
-	col = &core.Column{}
-	a.Error(parseColumn(m, col, "name(m1,m2)"))
+	col = &column{Column: &core.Column{}}
+	a.Error(col.parseTags(m, "name(m1,m2)"))
 
 	// 不存在的属性名称
-	col = &core.Column{}
-	a.Error(parseColumn(m, col, "not-exists-property(p1)"))
+	col = &column{Column: &core.Column{}}
+	a.Error(col.parseTags(m, "not-exists-property(p1)"))
 }
 
-func TestSetColumnLen(t *testing.T) {
+func TestColumn_SetLen(t *testing.T) {
 	a := assert.New(t)
-	col := &core.Column{}
+	col := &column{Column: &core.Column{}}
 
-	a.NotError(setColumnLen(col, []string{})).Empty(col.Length)
-	a.NotError(setColumnLen(col, []string{"1", "2"})).
+	a.NotError(col.setLen([]string{})).Empty(col.Length)
+	a.NotError(col.setLen([]string{"1", "2"})).
 		Equal(col.Length[0], 1).
 		Equal(col.Length[1], 2)
-	a.Error(setColumnLen(col, []string{"1", "2", "3"}))
-	a.Error(setColumnLen(col, []string{"1", "one"}))
-	a.Error(setColumnLen(col, []string{"one", "one"}))
+	a.Error(col.setLen([]string{"1", "2", "3"}))
+	a.Error(col.setLen([]string{"1", "one"}))
+	a.Error(col.setLen([]string{"one", "one"}))
 }
 
-func TestSetColumnNullable(t *testing.T) {
+func TestColumn_SetNullable(t *testing.T) {
 	a := assert.New(t)
 
-	col := &core.Column{}
+	col := &column{Column: &core.Column{}}
 
 	a.False(col.Nullable)
-	a.NotError(setColumnNullable(col, []string{})).True(col.Nullable)
-	a.Error(setColumnNullable(col, []string{"false"})).
+	a.NotError(col.setNullable([]string{})).True(col.Nullable)
+	a.Error(col.setNullable([]string{"false"})).
 		True(col.Nullable)
-	a.Error(setColumnNullable(col, []string{"1", "2"}))
-	a.Error(setColumnNullable(col, []string{"T1"}))
+	a.Error(col.setNullable([]string{"1", "2"}))
+	a.Error(col.setNullable([]string{"T1"}))
 
 	ms := NewModels(nil)
 	a.NotNil(ms)
@@ -66,7 +82,7 @@ func TestSetColumnNullable(t *testing.T) {
 	m, err := ms.New(&User{})
 	a.NotError(err).NotNil(m)
 	col.AI = true
-	a.Error(setColumnNullable(col, []string{"true"}))
+	a.Error(col.setNullable([]string{"true"}))
 }
 
 func TestSetDefault(t *testing.T) {
@@ -75,40 +91,39 @@ func TestSetDefault(t *testing.T) {
 
 	// col == int
 
-	col, err := core.NewColumnFromGoType(reflect.TypeOf(1))
-	a.NotError(err).NotNil(col)
-	col.Name = "def"
-	a.NotError(m.AddColumn(col))
+	col, err := newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(1)})
+	a.NotError(err).NotNil(col).Equal(col.GoType.Kind(), reflect.Int)
+	a.NotError(m.AddColumn(col.Column))
 
 	// 未指定参数
-	a.Error(setDefault(col, nil))
+	a.Error(col.setDefault(nil))
 
 	// 过多的参数
-	a.Error(setDefault(col, []string{"1", "2"}))
+	a.Error(col.setDefault([]string{"1", "2"}))
 
 	// 正常
-	a.NotError(setDefault(col, []string{"1"}))
+	a.NotError(col.setDefault([]string{"1"}))
 	a.True(col.HasDefault).
 		Equal(col.Default, 1)
 
 	// 可以是主键的一部分
-	m.PrimaryKey = []*core.Column{col, col}
-	a.NotError(setDefault(col, []string{"1"}))
+	m.PrimaryKey = []*core.Column{col.Column, col.Column}
+	a.NotError(col.setDefault([]string{"1"}))
 	a.True(col.HasDefault).
 		Equal(col.Default, 1)
 
 	// col == last
 
-	col, err = core.NewColumnFromGoType(reflect.TypeOf(&last{}))
-	a.NotError(err).NotNil(col)
+	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&last{})})
+	a.NotError(err).NotNil(col).Equal(col.GoType, reflect.TypeOf(last{}))
 
 	// 格式不正确
-	a.Error(setDefault(col, []string{"1"}))
+	a.Error(col.setDefault([]string{"1"}))
 
 	// 格式正确
 	now := time.Now()
 	f := now.Format(core.TimeFormatLayout)
-	a.NotError(setDefault(col, []string{"192.168.1.1," + f}))
+	a.NotError(col.setDefault([]string{"192.168.1.1," + f}))
 	a.Equal(col.Default, &last{
 		IP:      "192.168.1.1",
 		Created: now.Unix(),
@@ -116,37 +131,50 @@ func TestSetDefault(t *testing.T) {
 
 	// col == time.Time
 
-	col, err = core.NewColumnFromGoType(reflect.TypeOf(time.Time{}))
+	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(time.Time{})})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
-	a.Error(setDefault(col, []string{"1"}))
+	a.Error(col.setDefault([]string{"1"}))
 
 	// 格式正确
-	a.NotError(setDefault(col, []string{f}))
+	a.NotError(col.setDefault([]string{f}))
 	a.Equal(col.Default.(time.Time).Unix(), now.Unix())
 
 	// col == core.Unix
 
-	col, err = core.NewColumnFromGoType(reflect.TypeOf(core.Unix{}))
+	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(core.Unix{})})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
-	a.Error(setDefault(col, []string{"xyz"}))
+	a.Error(col.setDefault([]string{"xyz"}))
 
 	// 格式正确，但类型被转换成 *core.Unix，而不初始的 core.Unix
-	a.NotError(setDefault(col, []string{f}))
+	a.NotError(col.setDefault([]string{f}))
 	a.Equal(col.Default.(*core.Unix).AsTime().Unix(), now.Unix())
 
 	// col == &core.Unix
 
-	col, err = core.NewColumnFromGoType(reflect.TypeOf(&core.Unix{}))
+	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&core.Unix{})})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
-	a.Error(setDefault(col, []string{"xyz"}))
+	a.Error(col.setDefault([]string{"xyz"}))
 
 	// 格式正确
-	a.NotError(setDefault(col, []string{f}))
+	a.NotError(col.setDefault([]string{f}))
+	a.Equal(col.Default.(*core.Unix).AsTime().Unix(), now.Unix())
+
+	// col == &&core.Unix
+
+	u := &core.Unix{}
+	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&u)})
+	a.NotError(err).NotNil(col)
+
+	// 格式不正确
+	a.Error(col.setDefault([]string{"xyz"}))
+
+	// 格式正确
+	a.NotError(col.setDefault([]string{f}))
 	a.Equal(col.Default.(*core.Unix).AsTime().Unix(), now.Unix())
 }

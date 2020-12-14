@@ -3,11 +3,11 @@
 package sqlbuilder_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/internal/test"
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
@@ -27,7 +27,7 @@ func TestColumn(t *testing.T) {
 
 		err := sqlbuilder.CreateTable(db).
 			Table("users").
-			AutoIncrement("id", reflect.TypeOf(int64(1))).
+			AutoIncrement("id", core.Int64).
 			Exec()
 		a.NotError(err)
 		defer func() {
@@ -37,7 +37,7 @@ func TestColumn(t *testing.T) {
 
 		addStmt := sqlbuilder.AddColumn(db)
 		err = addStmt.Table("users").
-			Column("col1", reflect.TypeOf(1), false, true, false, nil).
+			Column("col1", core.Int, false, true, false, nil).
 			Exec()
 		a.NotError(err, "%s@%s", err, t.DriverName)
 
@@ -63,8 +63,8 @@ func TestColumn(t *testing.T) {
 
 		err := sqlbuilder.CreateTable(db).
 			Table("users").
-			AutoIncrement("id", reflect.TypeOf(int64(1))).
-			Column("name", reflect.TypeOf(""), false, false, false, nil).
+			AutoIncrement("id", core.Int64).
+			Column("name", core.String, false, false, false, nil).
 			Exec()
 		a.NotError(err)
 		defer func() {
@@ -75,7 +75,7 @@ func TestColumn(t *testing.T) {
 		// 已存在
 		addStmt := sqlbuilder.AddColumn(db)
 		err = addStmt.Table("users").
-			Column("id", reflect.TypeOf(1), false, true, false, nil).
+			Column("id", core.Int, false, true, false, nil).
 			Exec()
 		a.Error(err, "%s@%s", err, t.DriverName)
 
@@ -87,7 +87,7 @@ func TestColumn(t *testing.T) {
 
 		err = addStmt.Reset().
 			Table("users").
-			Column("id", reflect.TypeOf(1), false, true, false, nil).
+			Column("id", core.Int, false, true, false, nil).
 			Exec()
 		a.NotError(err)
 	})

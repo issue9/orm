@@ -134,7 +134,7 @@ func parseColumns(m *core.Model, rtype reflect.Type) error {
 			return err
 		}
 
-		if err := parseColumn(m, col, tag); err != nil {
+		if err := col.parseTags(m, tag); err != nil {
 			return err
 		}
 	}
@@ -170,45 +170,45 @@ func parseMeta(m *core.Model, tag string) error {
 }
 
 // occ
-func setOCC(m *core.Model, c *core.Column, vals []string) error {
+func setOCC(m *core.Model, c *column, vals []string) error {
 	if len(vals) > 0 {
 		return propertyError(c.Name, "occ", "指定了太多的值")
 	}
-	return m.SetOCC(c)
+	return m.SetOCC(c.Column)
 }
 
 // index(idx_name)
-func setIndex(m *core.Model, col *core.Column, vals []string) error {
+func setIndex(m *core.Model, col *column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "index", "太多的值")
 	}
-	return m.AddIndex(core.IndexDefault, strings.ToLower(vals[0]), col)
+	return m.AddIndex(core.IndexDefault, strings.ToLower(vals[0]), col.Column)
 }
 
 // pk
-func setPK(m *core.Model, col *core.Column, vals []string) error {
+func setPK(m *core.Model, col *column, vals []string) error {
 	if len(vals) != 0 {
 		return propertyError(col.Name, "pk", "太多的值")
 	}
-	return m.AddPrimaryKey(col)
+	return m.AddPrimaryKey(col.Column)
 }
 
 // unique(unique_name)
-func setUnique(m *core.Model, col *core.Column, vals []string) error {
+func setUnique(m *core.Model, col *column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
-	return m.AddUnique(strings.ToLower(vals[0]), col)
+	return m.AddUnique(strings.ToLower(vals[0]), col.Column)
 }
 
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
-func setFK(m *core.Model, col *core.Column, vals []string) error {
+func setFK(m *core.Model, col *column, vals []string) error {
 	if len(vals) < 3 || len(vals) > 5 {
 		return propertyError(col.Name, "fk", "参数数量不正确")
 	}
 
 	fk := &core.ForeignKey{
-		Column:       col,
+		Column:       col.Column,
 		RefTableName: vals[1],
 		RefColName:   vals[2],
 	}

@@ -3,7 +3,6 @@
 package core
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -25,12 +24,12 @@ func TestModel_AddColumns(t *testing.T) {
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
-	ai, err := NewColumnFromGoType(reflect.TypeOf(1))
+	ai, err := NewColumn(Int)
 	a.NotError(err).NotNil(ai)
 	ai.AI = true
 	a.Error(m.AddColumns(ai)) // 没有名称
 
-	col, err := NewColumnFromGoType(reflect.TypeOf(1))
+	col, err := NewColumn(Int)
 	a.NotError(err).NotNil(col)
 
 	// 同名
@@ -50,7 +49,7 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.NotNil(m)
 
 	// 正常添加
-	ai, err := NewColumnFromGoType(reflect.TypeOf(1))
+	ai, err := NewColumn(Int)
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai"
 	a.NotError(m.AddColumns(ai))
@@ -64,7 +63,7 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.Equal(m.AutoIncrement, ai)
 
 	// 已有自增列
-	ai2, err := NewColumnFromGoType(reflect.TypeOf(int64(1)))
+	ai2, err := NewColumn(Int64)
 	a.NotError(err).NotNil(ai2)
 	ai2.Name = "ai2"
 	a.NotError(m.AddColumns(ai2))
@@ -72,7 +71,7 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 
 	// 类型错误
 	m.Reset()
-	ai2, err = NewColumnFromGoType(reflect.TypeOf(""))
+	ai2, err = NewColumn(String)
 	a.NotError(err).NotNil(ai2)
 	ai2.Name = "ai2"
 	a.NotError(m.AddColumns(ai2))
@@ -94,14 +93,14 @@ func TestModel_AddPrimaryKey(t *testing.T) {
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
-	ai, err := NewColumnFromGoType(reflect.TypeOf(1))
+	ai, err := NewColumn(Int)
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai"
 	ai.AI = true
 	a.NotError(m.AddColumns(ai))
 
 	// 与自增冲突
-	pk, err := NewColumnFromGoType(reflect.TypeOf(1))
+	pk, err := NewColumn(Int)
 	a.NotError(err).NotNil(pk)
 	pk.Name = "pk"
 	a.Error(m.AddPrimaryKey(pk))
@@ -116,7 +115,7 @@ func TestModel_AddPrimaryKey(t *testing.T) {
 	a.NotError(m.AddPrimaryKey(pk))
 
 	// 多列主键约束
-	pk2, err := NewColumnFromGoType(reflect.TypeOf(""))
+	pk2, err := NewColumn(String)
 	a.NotError(err).NotNil(pk2)
 	pk2.Name = "pk2"
 	a.NotError(m.AddColumns(pk2))
@@ -131,7 +130,7 @@ func TestModel_SetOCC(t *testing.T) {
 	a.NotNil(m)
 
 	// AI 作为 OCC
-	ai, err := NewColumnFromGoType(reflect.TypeOf(1))
+	ai, err := NewColumn(Int)
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai"
 	ai.AI = true
@@ -143,27 +142,27 @@ func TestModel_SetOCC(t *testing.T) {
 	a.Error(m.SetOCC(ai))
 
 	// 列不存在
-	ai, err = NewColumnFromGoType(reflect.TypeOf(1))
+	ai, err = NewColumn(Int)
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai"
 	a.Error(m.SetOCC(ai))
 
 	// 类型错误
-	ai, err = NewColumnFromGoType(reflect.TypeOf(""))
+	ai, err = NewColumn(String)
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai"
 	a.NotError(m.AddColumn(ai))
 	a.ErrorType(m.SetOCC(ai), ErrColumnMustNumber)
 
 	// 正常
-	ai, err = NewColumnFromGoType(reflect.TypeOf(1))
+	ai, err = NewColumn(Int)
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai2"
 	a.NotError(m.AddColumn(ai))
 	a.NotError(m.SetOCC(ai))
 
 	// 多次添加
-	col2, err := NewColumnFromGoType(reflect.TypeOf(1))
+	col2, err := NewColumn(Int)
 	a.NotError(err).NotNil(col2)
 	col2.Name = "col2"
 	a.NotError(m.AddColumn(col2))
@@ -175,11 +174,11 @@ func TestModel_AddIndex(t *testing.T) {
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
-	col, err := NewColumnFromGoType(reflect.TypeOf(1))
+	col, err := NewColumn(Int)
 	a.NotError(err).NotNil(col)
 	col.Name = "col"
 
-	col2, err := NewColumnFromGoType(reflect.TypeOf(1))
+	col2, err := NewColumn(Int)
 	a.NotError(err).NotNil(col2)
 	col2.Name = "col2"
 
@@ -199,7 +198,7 @@ func TestModel_AddIndex(t *testing.T) {
 		Equal(1, len(m.Uniques))
 
 	// unique 列不存在
-	col3, err := NewColumnFromGoType(reflect.TypeOf(1))
+	col3, err := NewColumn(Int)
 	a.NotError(err).NotNil(col3)
 	col3.Name = "col3"
 	a.Error(m.AddIndex(IndexUnique, "unique_1", col3))
@@ -225,7 +224,7 @@ func TestModel_NewForeignKey(t *testing.T) {
 	// 空的 ForeignKey
 	a.Error(m.NewForeignKey("fk_0", &ForeignKey{}))
 
-	fkCol, err := NewColumnFromGoType(reflect.TypeOf(uint8(1)))
+	fkCol, err := NewColumn(Uint8)
 	a.NotError(err).NotNil(fkCol)
 	fkCol.Name = "fk_col"
 
@@ -243,27 +242,27 @@ func TestModel_NewForeignKey(t *testing.T) {
 func TestModel_Sanitize(t *testing.T) {
 	a := assert.New(t)
 
-	ai, err := NewColumnFromGoType(reflect.TypeOf(1))
+	ai, err := NewColumn(Int)
 	a.NotError(err).NotNil(ai)
 	ai.AI = true
 	ai.Name = "ai"
 
-	pk1, err := NewColumnFromGoType(reflect.TypeOf(1))
+	pk1, err := NewColumn(Int)
 	a.NotError(err).NotNil(pk1)
 	pk1.Default = 1
 	pk1.HasDefault = true
 	pk1.Name = "pk1"
 
-	pk2, err := NewColumnFromGoType(reflect.TypeOf(1))
+	pk2, err := NewColumn(Int8)
 	a.NotError(err).NotNil(pk2)
 	pk2.Name = "pk2"
 
-	nullable, err := NewColumnFromGoType(reflect.TypeOf(1))
+	nullable, err := NewColumn(Int8)
 	a.NotError(err).NotNil(nullable)
 	nullable.Nullable = true
 	nullable.Name = "nullable"
 
-	def, err := NewColumnFromGoType(reflect.TypeOf(1))
+	def, err := NewColumn(Int)
 	a.NotError(err).NotNil(def)
 	def.HasDefault = true
 	def.Default = 1

@@ -182,9 +182,8 @@ func (m *Model) AddColumn(col *Column) error {
 //
 // 如果已经存在自增列或是主键，返回错误。
 func (m *Model) SetAutoIncrement(col *Column) error {
-	switch col.GoType.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	switch col.PrimitiveType {
+	case Int, Int8, Int16, Int32, Int64, Uint, Uint8, Uint16, Uint32, Uint64:
 	default:
 		return ErrColumnMustNumber
 	}
@@ -233,9 +232,8 @@ func (m *Model) SetOCC(col *Column) error {
 		return fmt.Errorf("已经存在乐观锁 %s", m.OCC.Name)
 	}
 
-	switch col.GoType.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	switch col.PrimitiveType {
+	case Int, Int8, Int16, Int32, Int64, Uint, Uint8, Uint16, Uint32, Uint64:
 	default:
 		return ErrColumnMustNumber
 	}

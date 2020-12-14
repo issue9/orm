@@ -106,7 +106,7 @@ func create(e Engine, v interface{}) error {
 	sb.Table(m.Name)
 	for _, col := range m.Columns {
 		if col.AI {
-			sb.AutoIncrement(col.Name, col.GoType)
+			sb.AutoIncrement(col.Name, col.PrimitiveType)
 		} else {
 			sb.Columns(col.Clone())
 		}

@@ -4,7 +4,6 @@ package model
 
 import (
 	"errors"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -17,6 +16,11 @@ import (
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
+var (
+	_ core.DefaultParser  = &last{}
+	_ core.PrimitiveTyper = &last{}
+)
+
 func TestMain(m *testing.M) {
 	flagtest.Main(m)
 }
@@ -25,11 +29,6 @@ type last struct {
 	IP      string
 	Created int64
 }
-
-var (
-	_ core.DefaultParser  = &last{}
-	_ core.PrimitiveTyper = &last{}
-)
 
 func (l *last) ParseDefault(v string) error {
 	vals := strings.Split(v, ",")
@@ -216,13 +215,14 @@ func TestModel_setOCC(t *testing.T) {
 	a := assert.New(t)
 	m := core.NewModel(core.Table, "m1", 10)
 
-	col, err := core.NewColumnFromGoType(reflect.TypeOf(1))
-	a.NotError(err).NotNil(col)
+	c, err := core.NewColumn(core.Int)
+	a.NotError(err).NotNil(c)
+	col := &column{Column: c}
 	col.Name = "occ"
-	a.NotError(m.AddColumn(col))
+	a.NotError(m.AddColumn(c))
 
 	a.NotError(setOCC(m, col, nil))
-	a.Equal(col, m.OCC)
+	a.Equal(col.Column, m.OCC)
 
 	// m.OCC 已经存在
 	a.Error(setOCC(m, col, nil))
@@ -236,10 +236,11 @@ func TestModel_setPK(t *testing.T) {
 	a := assert.New(t)
 	m := core.NewModel(core.Table, "m1", 10)
 	a.NotNil(m)
-	col, err := core.NewColumnFromGoType(reflect.TypeOf(int8(1)))
-	a.NotError(err).NotNil(col)
+	c, err := core.NewColumn(core.Int8)
+	a.NotError(err).NotNil(c)
 
 	// 过多的参数
+	col := &column{Column: c}
 	a.Error(setPK(m, col, []string{"123"}))
 }
 
@@ -248,20 +249,23 @@ func TestModel_setAI(t *testing.T) {
 	m := core.NewModel(core.Table, "m1", 10)
 	a.NotNil(m)
 
-	col, err := core.NewColumnFromGoType(reflect.TypeOf(1))
-	a.NotError(err).NotNil(col)
+	c, err := core.NewColumn(core.Int)
+	a.NotError(err).NotNil(c)
+	col := &column{Column: c}
 
 	// 太多的参数
-	a.Error(setAI(m, col, []string{"true", "false"}))
+	a.Error(col.setAI(m, []string{"true", "false"}))
 
 	// 列类型只能是整数型
-	col, err = core.NewColumnFromGoType(reflect.TypeOf(float32(1.1)))
-	a.NotError(err).NotNil(col)
-	a.Error(setAI(m, col, nil))
+	c, err = core.NewColumn(core.Float32)
+	a.NotError(err).NotNil(c)
+	col = &column{Column: c}
+	a.Error(col.setAI(m, nil))
 
-	col, err = core.NewColumnFromGoType(reflect.TypeOf(1))
-	a.NotError(err).NotNil(col)
+	c, err = core.NewColumn(core.Int)
+	a.NotError(err).NotNil(c)
+	col = &column{Column: c}
 	col.Name = "ai"
-	a.NotError(m.AddColumn(col))
-	a.NotError(setAI(m, col, nil))
+	a.NotError(m.AddColumn(col.Column))
+	a.NotError(col.setAI(m, nil))
 }

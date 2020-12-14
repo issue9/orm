@@ -3,45 +3,34 @@
 package core
 
 import (
-	"database/sql"
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert"
 )
 
-func TestNewColumnFromGoType(t *testing.T) {
+func TestNewColumn(t *testing.T) {
 	a := assert.New(t)
 
-	col, err := NewColumnFromGoType(reflect.TypeOf(1))
+	col, err := NewColumn(Int)
 	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int)
 
-	col, err = NewColumnFromGoType(reflect.TypeOf(int8(1)))
-	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int8)
-
-	col, err = NewColumnFromGoType(reflect.TypeOf(true))
+	col, err = NewColumn(Bool)
 	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Bool)
 
-	col, err = NewColumnFromGoType(reflect.TypeOf(sql.NullFloat64{}))
+	col, err = NewColumn(NullFloat64)
 	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, NullFloat64)
 
-	col, err = NewColumnFromGoType(reflect.TypeOf(struct{}{}))
-	a.Error(err).Nil(col)
+	col, err = NewColumn(Auto)
+	a.ErrorIs(err, ErrInvalidColumnType).Nil(col)
 
-	col, err = NewColumnFromGoType(reflect.TypeOf(Unix{}))
-	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int64)
-
-	col, err = NewColumnFromGoType(reflect.TypeOf(&Unix{}))
-	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int64)
-
-	col, err = NewColumnFromGoType(reflect.TypeOf(Unix{}))
-	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int64)
+	col, err = NewColumn(maxPrimitiveType)
+	a.ErrorIs(err, ErrInvalidColumnType).Nil(col)
 }
 
 func TestColumn_Clone(t *testing.T) {
 	a := assert.New(t)
 
-	col, err := NewColumnFromGoType(reflect.TypeOf(1))
+	col, err := NewColumn(Int)
 	a.NotError(err).NotNil(col)
 	col.Nullable = true
 
@@ -53,7 +42,7 @@ func TestColumn_Clone(t *testing.T) {
 func TestColumn_Check(t *testing.T) {
 	a := assert.New(t)
 
-	col, err := NewColumnFromGoType(reflect.TypeOf(""))
+	col, err := NewColumn(String)
 	a.NotError(err).NotNil(col)
 	col.Length = []int{-1}
 
@@ -65,7 +54,7 @@ func TestColumn_Check(t *testing.T) {
 	col.Length[0] = -2
 	a.Error(col.Check())
 
-	col, err = NewColumnFromGoType(reflect.TypeOf(5))
+	col, err = NewColumn(Int)
 	a.NotError(err).NotNil(col)
 	col.Length = []int{-2}
 	a.Error(col.Check())
