@@ -35,6 +35,7 @@ var types = map[reflect.Type]core.PrimitiveType{
 	reflect.TypeOf(sql.NullInt32{}):   core.NullInt32,
 	reflect.TypeOf(sql.NullBool{}):    core.NullBool,
 	reflect.TypeOf(sql.NullFloat64{}): core.NullFloat64,
+	reflect.TypeOf([]byte{}):          core.Bytes,
 	reflect.TypeOf(sql.RawBytes{}):    core.RawBytes,
 	reflect.TypeOf(time.Time{}):       core.Time,
 	reflect.TypeOf(sql.NullTime{}):    core.NullTime,

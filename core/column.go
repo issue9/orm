@@ -35,6 +35,7 @@ const (
 	NullInt32
 	NullBool
 	NullFloat64
+	Bytes
 	RawBytes
 	Time
 	NullTime

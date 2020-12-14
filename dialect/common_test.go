@@ -268,7 +268,8 @@ func testTypesDefault(t *test.Driver) {
 		Column("null_int64", core.NullInt64, false, true, true, sql.NullInt64{Int64: 64, Valid: false}).
 		Column("null_bool", core.NullBool, false, false, true, sql.NullBool{Bool: true, Valid: true}).
 		Column("null_float64", core.NullFloat64, false, true, true, nil, 5, 3).
-		Column("raw_bytes", core.RawBytes, false, true, false, nil).
+		Column("bytes", core.Bytes, false, true, false, []byte("bytes")).           // 默认值无效
+		Column("raw_bytes", core.RawBytes, false, true, false, []byte("rawBytes")). // 默认值无效
 		Column("time", core.Time, false, false, true, now).
 		Column("time_with_len", core.Time, false, false, true, now, 5).
 		Column("unix", core.Int64, false, false, true, now.Unix()).
@@ -297,6 +298,7 @@ func testTypesDefault(t *test.Driver) {
 		"null_int64",
 		"null_bool",
 		"null_float64",
+		"bytes",
 		"raw_bytes",
 		"time",
 		"time_with_len",
@@ -336,6 +338,7 @@ func testTypesDefault(t *test.Driver) {
 		NullInt64   sql.NullInt64
 		NullBool    sql.NullBool
 		NullF64     sql.NullFloat64
+		Bytes       []byte
 		RawBytes    sql.RawBytes
 		Time        time.Time
 		TimeWithLen time.Time
@@ -343,7 +346,7 @@ func testTypesDefault(t *test.Driver) {
 	)
 	err = rows.Scan(&Bool, &Int, &Int8, &Int16, &Int32, &Int64,
 		&Uint, &Uint8, &Uint16, &Uint32, &Uint64,
-		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &RawBytes, &Time, &TimeWithLen, &Unix)
+		&F32, &F64, &String, &NullString, &NullInt64, &NullBool, &NullF64, &Bytes, &RawBytes, &Time, &TimeWithLen, &Unix)
 	t.NotError(err)
 	t.False(Bool).
 		Equal(Int, -1).
@@ -363,7 +366,8 @@ func testTypesDefault(t *test.Driver) {
 		False(NullInt64.Valid).
 		True(NullBool.Valid).True(NullBool.Bool).
 		False(NullF64.Valid).
-		Nil(RawBytes).
+		Nil(Bytes, []byte("bytes")).
+		Nil(RawBytes, []byte("rawBytes")).
 		Equal(Time.Unix(), now.Unix()).
 		Equal(TimeWithLen.Unix(), now.Unix()).
 		Equal(Unix.AsTime().Unix(), now.Unix())

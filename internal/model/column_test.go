@@ -26,9 +26,15 @@ func TestNewColumn(t *testing.T) {
 		Equal(c.Name, "Name").Equal(c.GoName, "Name").
 		Equal(c.GoType, reflect.TypeOf(last{})).
 		Equal(c.PrimitiveType, (&last{}).PrimitiveType())
+
+	c, err = newColumn(reflect.StructField{Name: "Name", Type: reflect.TypeOf([]byte{'1', '2'})})
+	a.NotError(err).NotNil(c).
+		Equal(c.Name, "Name").Equal(c.GoName, "Name").
+		Equal(c.GoType, reflect.TypeOf([]byte{})).
+		Equal(c.PrimitiveType, core.Bytes)
 }
 
-func TestColumn_ParseTags(t *testing.T) {
+func TestColumn_parseTags(t *testing.T) {
 	a := assert.New(t)
 	m := &core.Model{
 		Columns: []*core.Column{},
@@ -63,7 +69,7 @@ func TestColumn_SetLen(t *testing.T) {
 	a.Error(col.setLen([]string{"one", "one"}))
 }
 
-func TestColumn_SetNullable(t *testing.T) {
+func TestColumn_setNullable(t *testing.T) {
 	a := assert.New(t)
 
 	col := &column{Column: &core.Column{}}
@@ -85,7 +91,7 @@ func TestColumn_SetNullable(t *testing.T) {
 	a.Error(col.setNullable([]string{"true"}))
 }
 
-func TestSetDefault(t *testing.T) {
+func TestColumn_setDefault(t *testing.T) {
 	a := assert.New(t)
 	m := core.NewModel(core.Table, "m1", 10)
 
@@ -111,6 +117,18 @@ func TestSetDefault(t *testing.T) {
 	a.NotError(col.setDefault([]string{"1"}))
 	a.True(col.HasDefault).
 		Equal(col.Default, 1)
+
+		// col == []byte
+
+	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf([]byte{'1', '2'})})
+	a.NotError(err).NotNil(col).Equal(col.GoType, reflect.TypeOf([]byte{}))
+
+	// 空格
+	a.NotError(col.setDefault([]string{""}))
+	a.Equal(col.Default, []byte(""))
+
+	a.NotError(col.setDefault([]string{"192.168.1.1,"}))
+	a.Equal(col.Default, []byte("192.168.1.1,"))
 
 	// col == last
 

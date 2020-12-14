@@ -312,7 +312,7 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 		return s.buildType("INTEGER", col)
 	case core.Float32, core.Float64:
 		return s.buildType("REAL", col)
-	case core.RawBytes:
+	case core.RawBytes, core.Bytes:
 		return s.buildType("BLOB", col)
 	case core.NullBool:
 		return s.buildType("INTEGER", col)
