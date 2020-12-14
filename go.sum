@@ -1,12 +1,10 @@
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
-github.com/issue9/assert v1.3.4 h1:m9O+Nmi0ejRsLaTfQa349WTQtryQYHynBn6DFv6+sNY=
-github.com/issue9/assert v1.3.4/go.mod h1:9Ger+iz8X7r1zMYYwEhh++2wMGWcNN2oVI+zIQXxcio=
 github.com/issue9/assert v1.4.0/go.mod h1:Yktk83hAVl1SPSYtd9kjhBizuiBIqUQyj+D5SE2yjVY=
 github.com/issue9/assert v1.4.1 h1:gUtOpMTeaE4JTe9kACma5foOHBvVt1p5XTFrULDwdXI=
 github.com/issue9/assert v1.4.1/go.mod h1:Yktk83hAVl1SPSYtd9kjhBizuiBIqUQyj+D5SE2yjVY=
-github.com/issue9/conv v1.2.0 h1:E3tytDaA1LsPKTBr+I1d2Z5jKSh6vfsCPROZ91Y6rRY=
-github.com/issue9/conv v1.2.0/go.mod h1:VQn91C7Fsj2JMM/cJbhkVL1cLDaWv7/f8uGh6/22gVw=
+github.com/issue9/conv v1.2.1 h1:bSRC6p0eSJqwtnN2yk04ct4F556y8i+TdiUiBvN+KdA=
+github.com/issue9/conv v1.2.1/go.mod h1:rxUsUvpb1/3rZt0Uf/UtEC6BogEO2BV3bCWbh2DORp8=
 github.com/issue9/errwrap v0.2.0 h1:EPisAVHfGj8ZnR3aNlLFpih/ahDWdMXTOOA+3QaELpk=
 github.com/issue9/errwrap v0.2.0/go.mod h1:yudSKP/VtwvbW8hD9riNxJd8sAAzgJUgjllibgHqdJg=
 github.com/issue9/sliceutil v0.6.0 h1:qff0GiuTf5ThPfm+Vgp3+XDzAiHA3o98Dlx/TU7Gj8w=
