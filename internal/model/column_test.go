@@ -32,6 +32,14 @@ func TestNewColumn(t *testing.T) {
 		Equal(c.Name, "Name").Equal(c.GoName, "Name").
 		Equal(c.GoType, reflect.TypeOf([]byte{})).
 		Equal(c.PrimitiveType, core.Bytes)
+
+	// 自定义类型，但是未实现 PrimitiveTyper 接口
+	type T int16
+	c, err = newColumn(reflect.StructField{Name: "Name", Type: reflect.TypeOf(T(1))})
+	a.NotError(err).NotNil(c).
+		Equal(c.Name, "Name").Equal(c.GoName, "Name").
+		Equal(c.GoType, reflect.TypeOf(T(1))).
+		Equal(c.PrimitiveType, core.Int16)
 }
 
 func TestColumn_parseTags(t *testing.T) {

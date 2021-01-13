@@ -41,6 +41,23 @@ var types = map[reflect.Type]core.PrimitiveType{
 	reflect.TypeOf(sql.NullTime{}):    core.NullTime,
 }
 
+var kinds = map[reflect.Kind]core.PrimitiveType{
+	reflect.Bool:    core.Bool,
+	reflect.Int:     core.Int,
+	reflect.Int8:    core.Int8,
+	reflect.Int16:   core.Int16,
+	reflect.Int32:   core.Int32,
+	reflect.Int64:   core.Int64,
+	reflect.Uint:    core.Uint,
+	reflect.Uint8:   core.Uint8,
+	reflect.Uint16:  core.Uint16,
+	reflect.Uint32:  core.Uint32,
+	reflect.Uint64:  core.Uint64,
+	reflect.Float32: core.Float32,
+	reflect.Float64: core.Float64,
+	reflect.String:  core.String,
+}
+
 var primitiveTyperType = reflect.TypeOf((*core.PrimitiveTyper)(nil)).Elem()
 
 type column struct {
@@ -62,6 +79,10 @@ func newColumn(field reflect.StructField) (*column, error) {
 		} else if v.Addr().Type().Implements(primitiveTyperType) {
 			primitiveType = v.Addr().Interface().(core.PrimitiveTyper).PrimitiveType()
 		}
+	}
+
+	if primitiveType == core.Auto {
+		primitiveType = kinds[t.Kind()]
 	}
 
 	col, err := core.NewColumn(primitiveType)

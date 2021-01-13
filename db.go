@@ -230,12 +230,12 @@ func (db *DB) Create(v interface{}) error {
 	return create(db, v)
 }
 
-// Drop 删除一张表或视图。
+// Drop 删除一张表或视图
 func (db *DB) Drop(v interface{}) error {
 	return drop(db, v)
 }
 
-// Truncate 清空一张表。
+// Truncate 清空一张表
 func (db *DB) Truncate(v interface{}) error {
 	if !db.Dialect().TransactionalDDL() {
 		return truncate(db, v)

@@ -27,6 +27,14 @@ func (n *Unix) Scan(value interface{}) (err error) {
 			if unix, err = strconv.ParseInt(string(v), 10, 64); err != nil {
 				return err
 			}
+		case string:
+			if unix, err = strconv.ParseInt(v, 10, 64); err != nil {
+				return err
+			}
+		case []rune:
+			if unix, err = strconv.ParseInt(string(v), 10, 64); err != nil {
+				return err
+			}
 		default:
 			return ErrInvalidColumnType
 		}
