@@ -40,11 +40,22 @@ func TestUnix_Scan(t *testing.T) {
 	a.NotError(u.Scan(1)).
 		Equal(1, u.AsTime().Unix())
 
+	u = &Unix{}
+	a.Error(u.Scan(int32(1)))
+	u = &Unix{}
+	a.NotError(u.Scan("123"))
+
+	// 无法解析的值
+	u = &Unix{}
+	a.Error(u.Scan(int32(1)))
+	u = &Unix{}
+	a.Error(u.Scan("123x"))
+
 	// 无效的类型
 	u = &Unix{}
 	a.Error(u.Scan(int32(1)))
 	u = &Unix{}
-	a.Error(u.Scan("123"))
+	a.Error(u.Scan(&struct{ X int }{X: 5}))
 
 	u = &Unix{}
 	a.NotError(u.Scan(nil))
