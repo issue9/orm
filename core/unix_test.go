@@ -5,6 +5,8 @@ package core
 import (
 	"database/sql"
 	"database/sql/driver"
+	"encoding"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -16,6 +18,13 @@ var (
 	_ driver.Valuer  = Unix{}
 	_ DefaultParser  = &Unix{}
 	_ PrimitiveTyper = &Unix{}
+
+	_ encoding.BinaryMarshaler   = Unix{}
+	_ encoding.TextMarshaler     = Unix{}
+	_ json.Marshaler             = Unix{}
+	_ encoding.BinaryUnmarshaler = &Unix{}
+	_ encoding.TextUnmarshaler   = &Unix{}
+	_ json.Unmarshaler           = &Unix{}
 )
 
 func TestUnix_ParseDefault(t *testing.T) {

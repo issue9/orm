@@ -72,3 +72,36 @@ func (n *Unix) ParseDefault(v string) error {
 func (n Unix) PrimitiveType() PrimitiveType {
 	return Int64
 }
+
+// MarshalText encoding.TextMarshaler
+func (n Unix) MarshalText() ([]byte, error) {
+	return n.AsTime().MarshalText()
+}
+
+// MarshalJSON implements json.Marshaler
+func (n Unix) MarshalJSON() ([]byte, error) {
+	return n.AsTime().MarshalJSON()
+}
+
+// MarshalBinary implements encoding.BinaryMarshaler
+func (n Unix) MarshalBinary() ([]byte, error) {
+	return n.AsTime().MarshalBinary()
+}
+
+// UnmarshalText encoding.TextUnmarshaler
+func (n *Unix) UnmarshalText(data []byte) error {
+	t := (*time.Time)(n)
+	return t.UnmarshalText(data)
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (n *Unix) UnmarshalJSON(data []byte) error {
+	t := (*time.Time)(n)
+	return t.UnmarshalJSON(data)
+}
+
+// UnmarshalBinary implements encoding.BinaryUnmarshaler
+func (n *Unix) UnmarshalBinary(data []byte) error {
+	t := (*time.Time)(n)
+	return t.UnmarshalBinary(data)
+}
