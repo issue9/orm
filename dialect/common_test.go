@@ -164,7 +164,7 @@ func testTypes(t *test.Driver) {
 		sql.RawBytes("rawBytes"),
 		now,
 		now,
-		core.Unix(now),
+		core.Unix{Time: now},
 	}
 
 	r, err := sqlbuilder.Insert(t.DB).
@@ -234,7 +234,7 @@ func testTypes(t *test.Driver) {
 		// bug(caixw): mysql 对无精度的保存会取整
 		True(math.Abs(float64(Time.Unix()-now.Unix())) < 2, "Time not true\n%v:%d\n%v:%d", Time, Time.Unix(), now, now.Unix()).
 		Equal(NullTime.Unix(), now.Unix(), "NullTime not equal\n%v:%d\n%v:%d", Time, Time.Unix(), now, now.Unix()).
-		Equal(Unix.AsTime().Unix(), now.Unix(), "Unix not equal\n%v:%d\n%v:%d", Unix.AsTime(), Unix.AsTime().Unix(), now, now.Unix())
+		Equal(Unix.Time.Unix(), now.Unix(), "Unix not equal\n%v:%d\n%v:%d", Unix.Time, Unix.Time.Unix(), now, now.Unix())
 
 	//	fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
 }
@@ -272,7 +272,7 @@ func testTypesDefault(t *test.Driver) {
 		Column("raw_bytes", core.RawBytes, false, true, false, []byte("rawBytes")). // 默认值无效
 		Column("time", core.Time, false, false, true, now).
 		Column("time_with_len", core.Time, false, false, true, now, 5).
-		Column("unix", core.Int64, false, false, true, now.Unix()).
+		Column("unix", core.Int64, false, false, true, core.Unix{Time: now}).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -370,6 +370,6 @@ func testTypesDefault(t *test.Driver) {
 		Nil(RawBytes, []byte("rawBytes")).
 		Equal(Time.Unix(), now.Unix()).
 		Equal(TimeWithLen.Unix(), now.Unix()).
-		Equal(Unix.AsTime().Unix(), now.Unix())
+		Equal(Unix.Time.Unix(), now.Unix())
 	//fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
 }

@@ -35,7 +35,7 @@ func TestUnix_ParseDefault(t *testing.T) {
 
 	now := time.Now()
 	a.NotError(u.ParseDefault(now.Format(TimeFormatLayout))).
-		Equal(now.Unix(), u.AsTime().Unix())
+		Equal(now.Unix(), u.Time.Unix())
 }
 
 func TestUnix_Scan(t *testing.T) {
@@ -43,11 +43,11 @@ func TestUnix_Scan(t *testing.T) {
 
 	u := &Unix{}
 	a.NotError(u.Scan(int64(1))).
-		Equal(1, u.AsTime().Unix())
+		Equal(1, u.Time.Unix())
 
 	u = &Unix{}
 	a.NotError(u.Scan(1)).
-		Equal(1, u.AsTime().Unix())
+		Equal(1, u.Time.Unix())
 
 	u = &Unix{}
 	a.Error(u.Scan(int32(1)))

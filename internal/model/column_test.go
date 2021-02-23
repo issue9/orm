@@ -177,7 +177,7 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// 格式正确，但类型被转换成 *core.Unix，而不初始的 core.Unix
 	a.NotError(col.setDefault([]string{f}))
-	a.Equal(col.Default.(*core.Unix).AsTime().Unix(), now.Unix())
+	a.Equal(col.Default.(*core.Unix).Time.Unix(), now.Unix())
 
 	// col == &core.Unix
 
@@ -189,7 +189,7 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// 格式正确
 	a.NotError(col.setDefault([]string{f}))
-	a.Equal(col.Default.(*core.Unix).AsTime().Unix(), now.Unix())
+	a.Equal(col.Default.(*core.Unix).Time.Unix(), now.Unix())
 
 	// col == &&core.Unix
 
@@ -202,5 +202,5 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// 格式正确
 	a.NotError(col.setDefault([]string{f}))
-	a.Equal(col.Default.(*core.Unix).AsTime().Unix(), now.Unix())
+	a.Equal(col.Default.(*core.Unix).Time.Unix(), now.Unix())
 }
