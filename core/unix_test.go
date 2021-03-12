@@ -69,3 +69,16 @@ func TestUnix_Scan(t *testing.T) {
 	u = &Unix{}
 	a.NotError(u.Scan(nil))
 }
+
+func TestUnix_Unmarshal(t *testing.T) {
+	a := assert.New(t)
+
+	now := time.Now()
+	format := now.Format(time.RFC3339)
+
+	obj := struct {
+		U Unix `json:"u"`
+	}{}
+	a.NotError(json.Unmarshal([]byte(`{"u":"`+format+`"}`), &obj))
+	a.Equal(now.Unix(), obj.U.Unix())
+}
