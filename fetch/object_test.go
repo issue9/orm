@@ -9,6 +9,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/fetch"
 	"github.com/issue9/orm/v3/internal/test"
 )
@@ -31,10 +32,10 @@ func (u *FetchUser) Meta() string {
 }
 
 type Log struct {
-	ID      int    `orm:"name(id);ai"`
-	Content string `orm:"name(content);len(1024)"`
-	Created int    `orm:"name(created)"`
-	UID     int    `orm:"name(uid)"`
+	ID      int       `orm:"name(id);ai"`
+	Content string    `orm:"name(content);len(1024)"`
+	Created core.Unix `orm:"name(created)"`
+	UID     int       `orm:"name(uid)"`
 }
 
 func (l *Log) Meta() string {
@@ -49,8 +50,6 @@ func (u *FetchEmail) AfterFetch() error {
 
 // 初始化一个 sql.DB，方便后面的测试用例使用。
 func initDB(t *test.Driver) {
-	now := time.Now().Unix()
-
 	t.NotError(t.DB.MultCreate(&FetchUser{}, &Log{}))
 
 	/* 插入数据 */
@@ -68,7 +67,7 @@ func initDB(t *test.Driver) {
 	stmt, err = tx.Prepare("INSERT INTO #logs(id, created,content,uid) values(?, ?, ?, ?)")
 	t.NotError(err).NotNil(stmt)
 	for i := 1; i < 100; i++ {
-		_, err = stmt.Exec(i, now, fmt.Sprintf("content-%d", i), i)
+		_, err = stmt.Exec(i, core.Unix{Time: time.Now()}, fmt.Sprintf("content-%d", i), i)
 		t.NotError(err)
 	}
 	t.NotError(stmt.Close())
@@ -368,8 +367,13 @@ func TestObjectNest(t *testing.T) {
 		}
 		cnt, err := fetch.Object(true, rows, &objs)
 		t.NotError(err).Equal(cnt, len(objs))
-		t.Equal(objs[0].User.ID, objs[0].UID)
-		t.Equal(objs[1].User.ID, objs[1].UID)
+		yestday := time.Now().Add(-24 * time.Hour)
+		o0 := objs[0]
+		o1 := objs[1]
+		t.Equal(o0.User.ID, o0.UID).
+			False(o0.Created.IsNull).True(o0.Created.After(yestday)) // Created 肯定是一个晚于 24 小时之前值
+		t.Equal(o1.User.ID, o1.UID).
+			False(o1.Created.IsNull).True(o1.Created.After(yestday))
 	})
 }
 

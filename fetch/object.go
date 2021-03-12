@@ -11,6 +11,7 @@ import (
 
 	"github.com/issue9/conv"
 
+	"github.com/issue9/orm/v3/core"
 	t "github.com/issue9/orm/v3/internal/tags"
 )
 
@@ -107,7 +108,7 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 		}
 
 		vf = getRealValue(vf)
-		if vf.Kind() == reflect.Struct {
+		if vf.Kind() == reflect.Struct && core.GetPrimitiveType(vf.Type()) == core.Auto {
 			items := make(map[string]reflect.Value, vf.NumField())
 			if err := parseObject(vf, &items); err != nil {
 				return err

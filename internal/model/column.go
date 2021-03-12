@@ -14,52 +14,6 @@ import (
 	"github.com/issue9/orm/v3/internal/tags"
 )
 
-// 基本的数据类型
-var types = map[reflect.Type]core.PrimitiveType{
-	reflect.TypeOf(true):              core.Bool,
-	reflect.TypeOf(int(1)):            core.Int,
-	reflect.TypeOf(int8(1)):           core.Int8,
-	reflect.TypeOf(int16(1)):          core.Int16,
-	reflect.TypeOf(int32(1)):          core.Int32,
-	reflect.TypeOf(int64(1)):          core.Int64,
-	reflect.TypeOf(uint(1)):           core.Uint,
-	reflect.TypeOf(uint8(1)):          core.Uint8,
-	reflect.TypeOf(uint16(1)):         core.Uint16,
-	reflect.TypeOf(uint32(1)):         core.Uint32,
-	reflect.TypeOf(uint64(1)):         core.Uint64,
-	reflect.TypeOf(float32(1)):        core.Float32,
-	reflect.TypeOf(float64(1)):        core.Float64,
-	reflect.TypeOf(""):                core.String,
-	reflect.TypeOf(sql.NullString{}):  core.NullString,
-	reflect.TypeOf(sql.NullInt64{}):   core.NullInt64,
-	reflect.TypeOf(sql.NullInt32{}):   core.NullInt32,
-	reflect.TypeOf(sql.NullBool{}):    core.NullBool,
-	reflect.TypeOf(sql.NullFloat64{}): core.NullFloat64,
-	reflect.TypeOf([]byte{}):          core.Bytes,
-	reflect.TypeOf(sql.RawBytes{}):    core.RawBytes,
-	reflect.TypeOf(time.Time{}):       core.Time,
-	reflect.TypeOf(sql.NullTime{}):    core.NullTime,
-}
-
-var kinds = map[reflect.Kind]core.PrimitiveType{
-	reflect.Bool:    core.Bool,
-	reflect.Int:     core.Int,
-	reflect.Int8:    core.Int8,
-	reflect.Int16:   core.Int16,
-	reflect.Int32:   core.Int32,
-	reflect.Int64:   core.Int64,
-	reflect.Uint:    core.Uint,
-	reflect.Uint8:   core.Uint8,
-	reflect.Uint16:  core.Uint16,
-	reflect.Uint32:  core.Uint32,
-	reflect.Uint64:  core.Uint64,
-	reflect.Float32: core.Float32,
-	reflect.Float64: core.Float64,
-	reflect.String:  core.String,
-}
-
-var primitiveTyperType = reflect.TypeOf((*core.PrimitiveTyper)(nil)).Elem()
-
 type column struct {
 	*core.Column
 	GoType reflect.Type
@@ -71,21 +25,7 @@ func newColumn(field reflect.StructField) (*column, error) {
 		t = t.Elem()
 	}
 
-	primitiveType, found := types[t]
-	if !found {
-		v := reflect.New(t).Elem()
-		if t.Implements(primitiveTyperType) {
-			primitiveType = v.Interface().(core.PrimitiveTyper).PrimitiveType()
-		} else if v.Addr().Type().Implements(primitiveTyperType) {
-			primitiveType = v.Addr().Interface().(core.PrimitiveTyper).PrimitiveType()
-		}
-	}
-
-	if primitiveType == core.Auto {
-		primitiveType = kinds[t.Kind()]
-	}
-
-	col, err := core.NewColumn(primitiveType)
+	col, err := core.NewColumn(core.GetPrimitiveType(t))
 	if err != nil {
 		return nil, err
 	}

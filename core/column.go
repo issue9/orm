@@ -13,35 +13,6 @@ import (
 // 像 reflect.Func 和 reflect.Chan 等都将返回该错误。
 var ErrInvalidColumnType = errors.New("无效的列类型")
 
-// 所有的 PrimitiveType
-const (
-	Auto PrimitiveType = iota
-	Bool
-	Int
-	Int8
-	Int16
-	Int32
-	Int64
-	Uint
-	Uint8
-	Uint16
-	Uint32
-	Uint64
-	Float32
-	Float64
-	String
-	NullString
-	NullInt64
-	NullInt32
-	NullBool
-	NullFloat64
-	Bytes
-	RawBytes
-	Time
-	NullTime
-	maxPrimitiveType
-)
-
 // DefaultParser 提供了 ParseDefault 函数
 //
 // 在 struct tag 中可以通过 default 指定默认值，
@@ -54,23 +25,6 @@ type DefaultParser interface {
 	// 将默认值从字符串解析成 t 类型的值
 	ParseDefault(v string) error
 }
-
-// PrimitiveTyper 提供了 PrimitiveType 方法
-//
-// 如果用户需要将自定义类型写入数据，需要提供该类型所表示的 PrimitiveType 值，
-// 最终会以该类型的值写入数据库。
-//
-// NOTE: 最简单的方法是复用 driver.Valuer 接口，从其返回值中获取类型信息，
-// 但是该接口有可能返回 nil 值，无法确定类型。
-type PrimitiveTyper interface {
-	// PrimitiveType 返回当前对象所表示的 PrimitiveType 值
-	//
-	// NOTE: 每个对象在任何时间返回的值应该都是固定的。
-	PrimitiveType() PrimitiveType
-}
-
-// PrimitiveType 表示支持转换成数据库类型的 Go 类型信息
-type PrimitiveType int
 
 // Column 列结构
 type Column struct {
