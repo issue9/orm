@@ -108,7 +108,7 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 
 		vf = getRealValue(vf)
 		if vf.Kind() == reflect.Struct {
-			items := make(map[string]reflect.Value, 10)
+			items := make(map[string]reflect.Value, vf.NumField())
 			if err := parseObject(vf, &items); err != nil {
 				return err
 			}

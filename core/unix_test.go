@@ -46,13 +46,16 @@ func TestUnix_Scan(t *testing.T) {
 		Equal(1, u.Time.Unix())
 
 	u = &Unix{}
-	a.NotError(u.Scan(1)).
-		Equal(1, u.Time.Unix())
+	a.NotError(u.Scan("123")).
+		Equal(123, u.Time.Unix())
 
 	u = &Unix{}
-	a.Error(u.Scan(int32(1)))
+	a.NotError(u.Scan([]byte("123"))).
+		Equal(123, u.Time.Unix())
+
 	u = &Unix{}
-	a.NotError(u.Scan("123"))
+	a.NotError(u.Scan(nil)).
+		True(u.IsNull)
 
 	// 无法解析的值
 	u = &Unix{}
@@ -75,10 +78,14 @@ func TestUnix_Unmarshal(t *testing.T) {
 
 	now := time.Now()
 	format := now.Format(time.RFC3339)
+	j := `{"u":"` + format + `"}`
 
 	obj := struct {
 		U Unix `json:"u"`
 	}{}
-	a.NotError(json.Unmarshal([]byte(`{"u":"`+format+`"}`), &obj))
+	a.NotError(json.Unmarshal([]byte(j), &obj))
 	a.Equal(now.Unix(), obj.U.Unix())
+
+	jj, err := json.Marshal(obj)
+	a.NotError(err).Equal(string(jj), j)
 }
