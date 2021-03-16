@@ -20,7 +20,7 @@ func (u *User) Meta() string {
 }
 
 func main() {
-    db, err := orm.NewDB("sqlite3", "./test.db", "test_", dialect.Sqlite3())
+    db, err := orm.NewDB("./test.db", "test_", dialect.Sqlite3())
     if err !=nil {
         panic(err)
     }
@@ -95,7 +95,7 @@ import (
 
 ```go
 // 初始化 sqlite3 的实例
-sqlite, err := orm.NewDB("sqlite3", "./orm.db", "table_prefix_", dialect.Sqlite3())
+sqlite, err := orm.NewDB("./orm.db", "table_prefix_", dialect.Sqlite3())
 
 // 初始化 mysql 的实例
 db, err := sql.Open("mysql", "root@/orm")
