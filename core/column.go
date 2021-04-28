@@ -75,7 +75,7 @@ func (c *Column) Check() error {
 	} else {
 		for _, v := range c.Length {
 			if v < 0 {
-				return fmt.Errorf("列 %s 的长度只能是不能小于 0", c.Name)
+				return fmt.Errorf("列 %s 的长度不能小于 0", c.Name)
 			}
 		}
 	}

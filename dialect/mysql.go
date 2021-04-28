@@ -45,7 +45,7 @@ func Mysql(driverName string) core.Dialect {
 	return newMysql(false, "mysql", driverName)
 }
 
-// Mariadb 返回一个适配 mysql 的 Dialect 接口
+// Mariadb 返回一个适配 mariadb 的 Dialect 接口
 //
 // meta 属性可参考 mysql，大部分内容增多与 Mysql 相同。
 func Mariadb(driverName string) core.Dialect {
