@@ -96,7 +96,7 @@ func TestWhereStmt_Select(t *testing.T) {
 			Equal(u.UID, 1).
 			Equal(u.FirstName, "f1")
 
-		us := make([]*UserInfo, 0, 0)
+		us := make([]*UserInfo, 0)
 		cnt, err = t.DB.Where("uid>=?", 1).Select(true, &us)
 		a.NotError(err).
 			Equal(cnt, 2).

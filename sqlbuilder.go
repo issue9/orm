@@ -80,8 +80,6 @@ func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []inte
 		field := rval.FieldByName(col.GoName)
 
 		if field.IsZero() {
-			vals = vals[:0]
-			keys = keys[:0]
 			return nil, nil
 		}
 

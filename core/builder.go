@@ -71,9 +71,7 @@ func (b *Builder) TruncateLast(n int) *Builder {
 }
 
 // Err 返回错误内容
-func (b *Builder) Err() error {
-	return b.buffer.Err
-}
+func (b *Builder) Err() error { return b.buffer.Err }
 
 // String 获取表示的字符串
 func (b *Builder) String() (string, error) {
@@ -92,9 +90,7 @@ func (b *Builder) Bytes() ([]byte, error) {
 }
 
 // Len 获取长度
-func (b *Builder) Len() int {
-	return b.buffer.Len()
-}
+func (b *Builder) Len() int { return b.buffer.Len() }
 
 // Append 追加加一个 Builder 的内容
 func (b *Builder) Append(v *Builder) *Builder {

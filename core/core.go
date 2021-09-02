@@ -19,9 +19,7 @@ const (
 // 为了统一，主键约束的名称统一由此函数生成，用户不能另外指定。
 //
 // 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
-func PKName(table string) string {
-	return table + defaultPKNameSuffix
-}
+func PKName(table string) string { return table + defaultPKNameSuffix }
 
 // AIName 生成 AI 约束名称
 //
@@ -29,9 +27,7 @@ func PKName(table string) string {
 // 而 postgres 会创建 sequence，需要指定 sequence 名称。
 //
 // 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
-func AIName(table string) string {
-	return table + defaultAINameSuffix
-}
+func AIName(table string) string { return table + defaultAINameSuffix }
 
 // Engine 数据库执行的基本接口
 //

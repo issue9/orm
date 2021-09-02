@@ -100,10 +100,9 @@ type Model struct {
 	PrimaryKey    []*Column
 }
 
-// NewModel 初始化 Model，分其所有变量分配内存。
-// 但是变量的内容依然要手动初始化。
+// NewModel 初始化 Model
 //
-// cap 表示列的数量，如果指定了，可以提交分配内存。
+// cap 表示列的数量，如果指定了，可以提前分配内存。
 func NewModel(modelType ModelType, name string, cap int) *Model {
 	m := &Model{
 		Name:        name,
@@ -138,14 +137,10 @@ func (m *Model) Reset() {
 }
 
 // AIName 当前模型中自增列的名称
-func (m *Model) AIName() string {
-	return AIName(m.Name)
-}
+func (m *Model) AIName() string { return AIName(m.Name) }
 
 // PKName 当前模型中主键约束的名称
-func (m *Model) PKName() string {
-	return PKName(m.Name)
-}
+func (m *Model) PKName() string { return PKName(m.Name) }
 
 // AddColumns 添加新列
 func (m *Model) AddColumns(col ...*Column) error {
