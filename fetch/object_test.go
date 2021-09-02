@@ -27,8 +27,9 @@ type FetchUser struct {
 	Group    int    `orm:"name(group)"`
 }
 
-func (u *FetchUser) Meta() string {
-	return "name(user)"
+func (u *FetchUser) Meta(m *core.Model) error {
+	m.Name = "#user"
+	return nil
 }
 
 type Log struct {
@@ -38,8 +39,9 @@ type Log struct {
 	UID     int       `orm:"name(uid)"`
 }
 
-func (l *Log) Meta() string {
-	return "name(logs)"
+func (l *Log) Meta(m *core.Model) error {
+	m.Name = "#logs"
+	return nil
 }
 
 // AfterFetcher 接口

@@ -19,8 +19,9 @@ type Group struct {
 }
 
 // Meta 指定表属性
-func (g *Group) Meta() string {
-	return "name(groups)"
+func (g *Group) Meta(m *core.Model) error {
+	m.Name = "#groups"
+	return nil
 }
 
 type User struct {
@@ -39,13 +40,18 @@ type UserInfo struct {
 }
 
 // Meta 指定表属性
-func (m *User) Meta() string {
-	return "name(users)"
+func (u *User) Meta(m *core.Model) error {
+	m.Name = "#users"
+	return nil
 }
 
 // Meta 指定表属性
-func (m *UserInfo) Meta() string {
-	return "check(user_info_chk_name,uid>0);mysql_engine(innodb);mysql_charset(utf8);name(user_info)"
+func (u *UserInfo) Meta(m *core.Model) error {
+	m.Name = "#user_info"
+	m.NewCheck("user_info_chk_name", "uid>0")
+	m.Meta["mysql_engine"] = []string{"innodb"}
+	m.Meta["mysql_charset"] = []string{"utf8"}
+	return nil
 }
 
 // Admin 带自增和两个唯一约束
@@ -56,8 +62,12 @@ type Admin struct {
 }
 
 // Meta 指定表属性
-func (m *Admin) Meta() string {
-	return "check(admin_chk_name,{group}>0);mysql_engine(innodb);mysql_charset(utf8);name(administrators)"
+func (a *Admin) Meta(m *core.Model) error {
+	m.Name = "#administrators"
+	m.NewCheck("admin_chk_name", "{group}>0")
+	m.Meta["mysql_engine"] = []string{"innodb"}
+	m.Meta["mysql_charset"] = []string{"utf8"}
+	return nil
 }
 
 // Account 带一个 OCC 字段
@@ -68,8 +78,9 @@ type Account struct {
 }
 
 // Meta 指定表属性
-func (m *Account) Meta() string {
-	return "name(account)"
+func (a *Account) Meta(m *core.Model) error {
+	m.Name = "#account"
+	return nil
 }
 
 // table 表中是否存在 size 条记录，若不是，则触发 error

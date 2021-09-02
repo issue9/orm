@@ -8,6 +8,7 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v3"
+	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/internal/test"
 )
 
@@ -31,8 +32,9 @@ var (
 	_ orm.BeforeUpdater  = &beforeObject1{}
 )
 
-func (o *beforeObject1) Meta() string {
-	return `name(objects1)`
+func (o *beforeObject1) Meta(m *core.Model) error {
+	m.Name = "#objects1"
+	return nil
 }
 
 func (o *beforeObject1) BeforeInsert() error {
@@ -50,8 +52,9 @@ var (
 	_ orm.BeforeUpdater  = &beforeObject1{}
 )
 
-func (o *beforeObject2) Meta() string {
-	return `name(objects2)`
+func (o *beforeObject2) Meta(m *core.Model) error {
+	m.Name = "#objects2"
+	return nil
 }
 
 func (o *beforeObject2) BeforeInsert() error {

@@ -47,7 +47,7 @@ CREATE INDEX i_user_index ON users (name);
 err := db.Create(&User{})
 ```
 
-会创建一张 User 表，表名由 User.Meta() 方法指定中的 name 属性指定，
+会创建一张 User 表，表名由 User.Meta() 方法指定，
 如果没有 Meta() 方法，则直接采用结构体名称作为表名。
 当然如果你在初始化 DB 时，指定了表名前缀，这里也会加上。
 

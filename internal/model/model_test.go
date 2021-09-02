@@ -66,8 +66,11 @@ type Admin1 struct {
 }
 
 // Meta 指定表属性
-func (m *User) Meta() string {
-	return "mysql_engine(innodb);mysql_charset(utf8);name(users)"
+func (u *User) Meta(m *core.Model) error {
+	m.Name = "#users"
+	m.Meta["mysql_engine"] = []string{"innodb"}
+	m.Meta["mysql_charset"] = []string{"utf8"}
+	return nil
 }
 
 // Admin 带自增和两个唯一约束
@@ -78,8 +81,11 @@ type Admin struct {
 }
 
 // Meta 指定表属性
-func (m *Admin) Meta() string {
-	return "check(admin_chk_name,{group}>0);mysql_engine(innodb);mysql_charset(utf8);name(administrators)"
+func (a *Admin) Meta(m *core.Model) error {
+	m.Name = "#administrators"
+	m.Meta["mysql_engine"] = []string{"innodb"}
+	m.Meta["mysql_charset"] = []string{"utf8"}
+	return m.NewCheck("admin_chk_name", "{group}>0")
 }
 
 type obj struct {
@@ -87,8 +93,9 @@ type obj struct {
 }
 
 // Meta 指定表属性
-func (m obj) Meta() string {
-	return `name(objs)`
+func (o obj) Meta(m *core.Model) error {
+	m.Name = "#objs"
+	return nil
 }
 
 type viewObject struct {
@@ -96,8 +103,9 @@ type viewObject struct {
 	Username string `orm:"name(username)"`
 }
 
-func (v *viewObject) Meta() string {
-	return "name(view_objects)"
+func (v *viewObject) Meta(m *core.Model) error {
+	m.Name = "#" + "view_objects"
+	return nil
 }
 
 func (v *viewObject) ViewAs(e core.Engine) (string, error) {
@@ -187,28 +195,6 @@ func TestModels_New(t *testing.T) {
 	a.NotError(err).NotNil(m)
 	a.Equal(m.Type, core.View).
 		NotNil(m.ViewAs)
-}
-
-func TestModel_parseMeta(t *testing.T) {
-	a := assert.New(t)
-	m := &core.Model{
-		Checks: map[string]string{},
-	}
-
-	// 空值不算错误
-	a.NotError(parseMeta(m, ""))
-
-	// name 属性过多
-	a.Error(parseMeta(m, "name(m1,m2)"))
-
-	// check 属性过多或是过少
-	a.Error(parseMeta(m, "check(ck,id>0 AND id<10,error)"))
-
-	// check 添加成功
-	a.NotError(parseMeta(m, "check(ck,id>0 AND id<10)"))
-
-	// check 与已有 check 名称相同
-	a.Error(parseMeta(m, "check(ck,id>0)"))
 }
 
 func TestModel_setOCC(t *testing.T) {

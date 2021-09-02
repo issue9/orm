@@ -470,7 +470,7 @@ func (stmt *SelectStmt) QueryFloat(colName string) (float64, error) {
 		return 0, err
 	}
 
-	return strconv.ParseFloat(v, 10)
+	return strconv.ParseFloat(v, 64)
 }
 
 // QueryInt 查询指定列的第一行数据，并将其转换成 int64

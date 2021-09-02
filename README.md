@@ -72,8 +72,11 @@ type User struct {
 
 // 通过 orm.Metaer 接口，指定表的额外数据。若不需要，可不用实现该接口
 // 表名 user 会被自动加上表名前缀。
-func(u *User) Meta() string {
-    return "name(user);engine(innodb);charset(utf8)"
+func(u *User) Meta(m *core.Model) error {
+    m.Name = "#user"
+    m.Meta["mysql_engine"] = []string{"innodb"}
+    m.Meta["mysql_charset"] = []string{"utf8"}
+    return nil
 }
 ```
 

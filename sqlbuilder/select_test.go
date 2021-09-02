@@ -63,7 +63,7 @@ func TestSelect(t *testing.T) {
 			Where("id<?", -100).
 			Desc("id")
 		id, err = stmt.QueryInt("id")
-		a.ErrorType(err, sqlbuilder.ErrNoData)
+		a.ErrorType(err, sqlbuilder.ErrNoData).Empty(id)
 	})
 }
 

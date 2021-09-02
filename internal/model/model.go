@@ -11,7 +11,6 @@ import (
 
 	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/fetch"
-	"github.com/issue9/orm/v3/internal/tags"
 )
 
 func propertyError(field, name, message string) error {
@@ -46,7 +45,7 @@ func (ms *Models) New(obj interface{}) (*core.Model, error) {
 	}
 
 	if meta, ok := obj.(core.Metaer); ok {
-		if err := parseMeta(m, meta.Meta()); err != nil {
+		if err := meta.Meta(m); err != nil {
 			return nil, err
 		}
 	}
@@ -136,33 +135,6 @@ func parseColumns(m *core.Model, rtype reflect.Type) error {
 
 		if err := col.parseTags(m, tag); err != nil {
 			return err
-		}
-	}
-
-	return nil
-}
-
-// 分析 meta 接口数据
-func parseMeta(m *core.Model, tag string) error {
-	ts := tags.Parse(tag)
-	for _, v := range ts {
-		switch v.Name {
-		case "name":
-			if len(v.Args) != 1 {
-				return propertyError("Metaer", "name", "太多的值")
-			}
-
-			m.Name = "#" + v.Args[0] // 所有 model 生成的表都带 #
-		case "check":
-			if len(v.Args) != 2 {
-				return propertyError("Metaer", "check", "参数个数不正确")
-			}
-
-			if err := m.NewCheck(strings.ToLower(v.Args[0]), v.Args[1]); err != nil {
-				return err
-			}
-		default:
-			m.Meta[v.Name] = v.Args
 		}
 	}
 

@@ -22,32 +22,61 @@ var (
 	ErrAutoIncrementPrimaryKeyConflict = errors.New("自增和主键不能同时存在")
 )
 
-// Viewer 视图必须要实现的接口
-//
-// 当一个模型实现了该接口，会被识别为视图模型，不再在数据库中创建普通的数据表。
-type Viewer interface {
-	// 返回视图所需的 Select 语句
-	ViewAs(e Engine) (string, error)
-}
+type (
+	// Viewer 视图必须要实现的接口
+	//
+	// 当一个模型实现了该接口，会被识别为视图模型，不再在数据库中创建普通的数据表。
+	Viewer interface {
+		// 返回视图所需的 Select 语句
+		ViewAs(e Engine) (string, error)
+	}
 
-// Metaer 用于指定数据模型的元数据
-//
-// 不同的数据库可以有各自的属性内容，具体的由 Dialect 的实现者定义。
-// 但是 name、check 是通用的，分别表示名称和 check 约束。
-//  "name(tbl_name);mysql_engine(myISAM);mysql_charset(utf8)"
-type Metaer interface {
-	Meta() string
-}
+	// Metaer 用于指定数据模型的元数据
+	Metaer interface {
+		Meta(*Model) error
+	}
 
-// ForeignKey 外键
-type ForeignKey struct {
-	Column                   *Column
-	RefTableName, RefColName string
-	UpdateRule, DeleteRule   string
-}
+	// ForeignKey 外键
+	ForeignKey struct {
+		Column                   *Column
+		RefTableName, RefColName string
+		UpdateRule, DeleteRule   string
+	}
 
-// ModelType 表示数据模型的类别
-type ModelType int8
+	// ModelType 表示数据模型的类别
+	ModelType int8
+
+	// Model 表示一个数据库的表或视图模型
+	Model struct {
+		GoType reflect.Type
+
+		// 模型的名称，可以以 # 符号开头，表示该表名带有一个表名前缀。
+		// 在生成 SQL 语句时，该符号会被转换成 Engine.TablePrefix()
+		// 返回的值。
+		Name string
+
+		// 如果当前模型是视图，那么此值表示的是视图的 select 语句，
+		// 其它类型下，ViewAs 不启作用。
+		ViewAs string
+
+		Type    ModelType
+		Columns []*Column
+		OCC     *Column             // 乐观锁
+		Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
+
+		// 索引内容
+		//
+		// 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
+		Indexes map[string][]*Column
+
+		// 约束
+		Uniques       map[string][]*Column
+		Checks        map[string]string
+		ForeignKeys   map[string]*ForeignKey
+		AutoIncrement *Column
+		PrimaryKey    []*Column
+	}
+)
 
 // 目前支持的数据模型类别
 //
@@ -68,37 +97,6 @@ const (
 	Table
 	View
 )
-
-// Model 表示一个数据库的表或视图模型
-type Model struct {
-	GoType reflect.Type
-
-	// 模型的名称，可以以 # 符号开头，表示该表名带有一个表名前缀。
-	// 在生成 SQL 语句时，该符号会被转换成 Engine.TablePrefix()
-	// 返回的值。
-	Name string
-
-	// 如果当前模型是视图，那么此值表示的是视图的 select 语句，
-	// 其它类型下，ViewAs 不启作用。
-	ViewAs string
-
-	Type    ModelType
-	Columns []*Column
-	OCC     *Column             // 乐观锁
-	Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
-
-	// 索引内容
-	//
-	// 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
-	Indexes map[string][]*Column
-
-	// 约束
-	Uniques       map[string][]*Column
-	Checks        map[string]string
-	ForeignKeys   map[string]*ForeignKey
-	AutoIncrement *Column
-	PrimaryKey    []*Column
-}
 
 // NewModel 初始化 Model
 //

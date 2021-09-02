@@ -24,8 +24,9 @@ type user struct {
 	Version int64  `orm:"name(version);default(0)"`
 }
 
-func (u *user) Meta() string {
-	return "name(users)"
+func (u *user) Meta(m *core.Model) error {
+	m.Name = "#users"
+	return nil
 }
 
 func initDB(t *test.Driver) {

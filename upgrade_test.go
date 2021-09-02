@@ -7,6 +7,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/internal/test"
 )
 
@@ -17,8 +18,9 @@ type u1 struct {
 	Created  int64  `orm:"name(created)"`
 }
 
-func (u *u1) Meta() string {
-	return `name(upgrades);check(chk_id,id>0)`
+func (u *u1) Meta(m *core.Model) error {
+	m.Name = "#upgrades"
+	return m.NewCheck("chk_id", "id>0")
 }
 
 type u2 struct {
@@ -28,8 +30,9 @@ type u2 struct {
 	Modified int64  `orm:"name(modified);default(0)"`
 }
 
-func (u *u2) Meta() string {
-	return `name(upgrades);check(chk_username,{username} IS NOT NULL)`
+func (u *u2) Meta(m *core.Model) error {
+	m.Name = "#upgrades"
+	return m.NewCheck("chk_username", "{username} IS NOT NULL")
 }
 
 func TestUpgrader(t *testing.T) {

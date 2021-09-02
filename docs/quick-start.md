@@ -15,8 +15,10 @@ type User struct {
 }
 
 // 指定了表名，以及其它一些表属性
-func (u *User) Meta() string {
-    return `name(users);mysql_charset(utf8)`
+func (u *User) Meta(m*core.Model) error {
+    m.Name = "#users"
+    m.Meta["mysql_charset"] = []string{"utf8"}
+    return nil
 }
 
 func main() {
