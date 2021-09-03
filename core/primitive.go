@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+// TimeFormatLayout 时间如果需要转换成字符串采用此格式
+const TimeFormatLayout = time.RFC3339
+
+// 所有的 PrimitiveType
 const (
 	Auto PrimitiveType = iota
 	Bool

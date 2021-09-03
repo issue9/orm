@@ -13,6 +13,7 @@ import (
 	"github.com/issue9/orm/v4/internal/sqltest"
 	"github.com/issue9/orm/v4/internal/test"
 	"github.com/issue9/orm/v4/sqlbuilder"
+	"github.com/issue9/orm/v4/types"
 )
 
 type sqlTypeTester struct {
@@ -111,7 +112,7 @@ func testTypes(t *test.Driver) {
 		Column("raw_bytes", core.RawBytes, false, false, false, nil).
 		Column("time", core.Time, false, false, false, nil).
 		Column("null_time", core.Time, false, false, false, nil, 5).
-		Column("unix", (core.Unix{}).PrimitiveType(), false, false, false, nil).
+		Column("unix", (types.Unix{}).PrimitiveType(), false, false, false, nil).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -164,7 +165,7 @@ func testTypes(t *test.Driver) {
 		sql.RawBytes("rawBytes"),
 		now,
 		now,
-		core.Unix{Time: now},
+		types.Unix{Time: now},
 	}
 
 	r, err := sqlbuilder.Insert(t.DB).
@@ -206,7 +207,7 @@ func testTypes(t *test.Driver) {
 		RawBytes   sql.RawBytes
 		Time       time.Time
 		NullTime   time.Time
-		Unix       core.Unix
+		Unix       types.Unix
 	)
 	err = rows.Scan(&Bool, &Int, &Int8, &Int16, &Int32, &Int64,
 		&Uint, &Uint8, &Uint16, &Uint32, &Uint64,
@@ -272,7 +273,7 @@ func testTypesDefault(t *test.Driver) {
 		Column("raw_bytes", core.RawBytes, false, true, false, []byte("rawBytes")). // 默认值无效
 		Column("time", core.Time, false, false, true, now).
 		Column("time_with_len", core.Time, false, false, true, now, 5).
-		Column("unix", core.Int64, false, false, true, core.Unix{Time: now}).
+		Column("unix", core.Int64, false, false, true, types.Unix{Time: now}).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -342,7 +343,7 @@ func testTypesDefault(t *test.Driver) {
 		RawBytes    sql.RawBytes
 		Time        time.Time
 		TimeWithLen time.Time
-		Unix        core.Unix
+		Unix        types.Unix
 	)
 	err = rows.Scan(&Bool, &Int, &Int8, &Int16, &Int32, &Int64,
 		&Uint, &Uint8, &Uint16, &Uint32, &Uint64,

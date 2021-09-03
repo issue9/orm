@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-package core
+package types
 
 import (
 	"database/sql"
@@ -11,13 +11,15 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/orm/v4/core"
 )
 
 var (
-	_ sql.Scanner    = &Unix{}
-	_ driver.Valuer  = Unix{}
-	_ DefaultParser  = &Unix{}
-	_ PrimitiveTyper = &Unix{}
+	_ sql.Scanner         = &Unix{}
+	_ driver.Valuer       = Unix{}
+	_ core.DefaultParser  = &Unix{}
+	_ core.PrimitiveTyper = &Unix{}
 
 	_ encoding.BinaryMarshaler   = Unix{}
 	_ encoding.TextMarshaler     = Unix{}
@@ -34,7 +36,7 @@ func TestUnix_ParseDefault(t *testing.T) {
 	a.Error(u.ParseDefault("2020"))
 
 	now := time.Now()
-	a.NotError(u.ParseDefault(now.Format(TimeFormatLayout))).
+	a.NotError(u.ParseDefault(now.Format(core.TimeFormatLayout))).
 		Equal(now.Unix(), u.Time.Unix())
 }
 

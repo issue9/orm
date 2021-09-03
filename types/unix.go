@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 
-package core
+package types
 
 import (
 	"bytes"
 	"database/sql/driver"
 	"strconv"
 	"time"
-)
 
-// TimeFormatLayout 时间如果需要转换成字符串采用此格式
-const TimeFormatLayout = time.RFC3339
+	"github.com/issue9/orm/v4/core"
+)
 
 // Unix 以 unix 时间戳保存的 time.Time 数据格式
 type Unix struct {
@@ -48,7 +47,7 @@ func (n *Unix) Scan(src interface{}) (err error) {
 				return err
 			}
 		default:
-			return ErrInvalidColumnType
+			return core.ErrInvalidColumnType
 		}
 	}
 	n.Time = time.Unix(unix, 0)
@@ -77,7 +76,7 @@ func (n *Unix) ParseDefault(v string) error {
 		return nil
 	}
 
-	t, err := time.Parse(TimeFormatLayout, v)
+	t, err := time.Parse(core.TimeFormatLayout, v)
 	if err != nil {
 		return err
 	}
@@ -86,9 +85,9 @@ func (n *Unix) ParseDefault(v string) error {
 	return nil
 }
 
-// PrimitiveType 实现 PrimitiveTyper 接口
-func (n Unix) PrimitiveType() PrimitiveType {
-	return Int64
+// PrimitiveType 实现 core.PrimitiveTyper 接口
+func (n Unix) PrimitiveType() core.PrimitiveType {
+	return core.Int64
 }
 
 var unixNull = []byte("null")
