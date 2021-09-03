@@ -46,39 +46,57 @@ type Engine interface {
 	// 更简单和安全的方法。
 	//
 	// NOTE: 要求 v 有定义自增列。
-	LastInsertID(v interface{}) (int64, error)
+	LastInsertID(v TableNamer) (int64, error)
 
-	Insert(v interface{}) (sql.Result, error)
+	Insert(v TableNamer) (sql.Result, error)
 
-	Delete(v interface{}) (sql.Result, error)
+	Delete(v TableNamer) (sql.Result, error)
 
-	Update(v interface{}, cols ...string) (sql.Result, error)
+	Update(v TableNamer, cols ...string) (sql.Result, error)
 
-	Select(v interface{}) error
+	Select(v TableNamer) error
 
-	Create(v interface{}) error
+	Create(v TableNamer) error
 
-	Drop(v interface{}) error
+	Drop(v TableNamer) error
 
-	Truncate(v interface{}) error
+	Truncate(v TableNamer) error
 
-	InsertMany(v interface{}, max int) error
+	// InsertMany 插入多条相同的数据
+	//
+	// 若需要向某张表中插入多条记录，InsertMany() 会比 Insert() 性能上好很多。
+	//
+	// max 表示一次最多插入的数量，如果超过此值，会分批执行，
+	// 但是依然在一个事务中完成。
+	//
+	// 与 MultInsert() 方法最大的不同在于:
+	//  // MultInsert() 可以每个参数的类型都不一样：
+	//  vs := []interface{}{&user{...}, &userInfo{...}}
+	//  db.Insert(vs...)
+	//  // db.InsertMany(500, vs) // 这里将出错，数组的元素的类型必须相同。
+	//  us := []*users{&user{}, &user{}}
+	//  db.InsertMany(500, us)
+	//  db.Insert(us...) // 这样也行，但是性能会差好多
+	InsertMany(max int, v ...TableNamer) error
 
-	MultInsert(objs ...interface{}) error
+	// MultInsert 一次性插入多条不同的数据
+	//
+	// 本质上是对 Insert 的多次调用，合并在一个事务中完成。
+	MultInsert(objs ...TableNamer) error
 
-	MultSelect(objs ...interface{}) error
+	MultSelect(objs ...TableNamer) error
 
-	MultUpdate(objs ...interface{}) error
+	MultUpdate(objs ...TableNamer) error
 
-	MultDelete(objs ...interface{}) error
+	MultDelete(objs ...TableNamer) error
 
-	MultCreate(objs ...interface{}) error
+	MultCreate(objs ...TableNamer) error
 
-	MultDrop(objs ...interface{}) error
+	MultDrop(objs ...TableNamer) error
 
-	MultTruncate(objs ...interface{}) error
+	MultTruncate(objs ...TableNamer) error
 
 	SQLBuilder() *sqlbuilder.SQLBuilder
 
-	NewModel(v interface{}) (*Model, error)
+	NewModel(v TableNamer) (*Model, error)
 }

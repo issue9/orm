@@ -27,10 +27,7 @@ type FetchUser struct {
 	Group    int    `orm:"name(group)"`
 }
 
-func (u *FetchUser) Meta(m *core.Model) error {
-	m.Name = "#user"
-	return nil
-}
+func (u *FetchUser) TableName() string { return "#user" }
 
 type Log struct {
 	ID      int       `orm:"name(id);ai"`
@@ -39,10 +36,7 @@ type Log struct {
 	UID     int       `orm:"name(uid)"`
 }
 
-func (l *Log) Meta(m *core.Model) error {
-	m.Name = "#logs"
-	return nil
-}
+func (l *Log) TableName() string { return "#logs" }
 
 // AfterFetcher 接口
 func (u *FetchEmail) AfterFetch() error {
@@ -144,6 +138,7 @@ func TestObject_strict(t *testing.T) {
 			{},
 			{},
 		}
+		a.NotError(err).NotNil(rows)
 		cnt, err = fetch.Object(true, rows, &objs)
 		t.NotError(err).NotEmpty(cnt)
 		t.Equal([]*FetchUser{
@@ -155,6 +150,7 @@ func TestObject_strict(t *testing.T) {
 
 		// test5:非数组指针传递。
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		array := [1]*FetchUser{
 			{},
 		}
@@ -164,6 +160,7 @@ func TestObject_strict(t *testing.T) {
 
 		// test6:数组指针传递，不会增长数组长度。
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		array = [1]*FetchUser{
 			{},
 		}
@@ -176,6 +173,7 @@ func TestObject_strict(t *testing.T) {
 
 		// test7:obj 为一个 struct 指针。
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		obj := FetchUser{}
 		cnt, err = fetch.Object(true, rows, &obj)
 		t.NotError(err).NotEmpty(cnt)
@@ -184,6 +182,7 @@ func TestObject_strict(t *testing.T) {
 
 		// test8:obj 为一个 struct。这将返回错误信息
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		obj = FetchUser{}
 		cnt, err = fetch.Object(true, rows, obj)
 		t.Error(err).Empty(cnt)
@@ -277,6 +276,7 @@ func TestObject_no_strict(t *testing.T) {
 
 		// test4:objs 的长度大于导出数据的长度。
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		objs = []*userlog{
 			{},
 			{},
@@ -293,6 +293,7 @@ func TestObject_no_strict(t *testing.T) {
 
 		// test5:非数组指针传递。
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		array := [1]*userlog{
 			{},
 		}
@@ -302,6 +303,7 @@ func TestObject_no_strict(t *testing.T) {
 
 		// test6:数组指针传递，不会增长数组长度。
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		array = [1]*userlog{
 			{},
 		}
@@ -314,6 +316,7 @@ func TestObject_no_strict(t *testing.T) {
 
 		// test7:obj 为一个 struct 指针。
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		obj := userlog{}
 		cnt, err = fetch.Object(false, rows, &obj)
 		t.NotError(err).NotEmpty(cnt)
@@ -322,6 +325,7 @@ func TestObject_no_strict(t *testing.T) {
 
 		// test8:obj 为一个 struct。这将返回错误信息
 		rows, err = db.Query(sql)
+		a.NotError(err).NotNil(rows)
 		obj = userlog{}
 		cnt, err = fetch.Object(false, rows, obj)
 		t.Error(err).Empty(cnt)
@@ -407,6 +411,7 @@ func TestObjectNotFound(t *testing.T) {
 
 		// test2:非数组指针传递。
 		rows, err = t.DB.Query(sql)
+		a.NotError(err).NotNil(rows)
 		array := [1]*FetchUser{
 			{},
 		}

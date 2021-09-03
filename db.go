@@ -184,14 +184,14 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 }
 
 // LastInsertID 插入数据并获取其自增的 ID
-func (db *DB) LastInsertID(v interface{}) (int64, error) {
+func (db *DB) LastInsertID(v TableNamer) (int64, error) {
 	return lastInsertID(db, v)
 }
 
 // Insert 插入数据
 //
 // NOTE: 若需一次性插入多条数据，请使用 tx.Insert()。
-func (db *DB) Insert(v interface{}) (sql.Result, error) {
+func (db *DB) Insert(v TableNamer) (sql.Result, error) {
 	return insert(db, v)
 }
 
@@ -199,7 +199,7 @@ func (db *DB) Insert(v interface{}) (sql.Result, error) {
 //
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回 error
-func (db *DB) Delete(v interface{}) (sql.Result, error) {
+func (db *DB) Delete(v TableNamer) (sql.Result, error) {
 	return del(db, v)
 }
 
@@ -209,7 +209,7 @@ func (db *DB) Delete(v interface{}) (sql.Result, error) {
 //
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回 error
-func (db *DB) Update(v interface{}, cols ...string) (sql.Result, error) {
+func (db *DB) Update(v TableNamer, cols ...string) (sql.Result, error) {
 	return update(db, v, cols...)
 }
 
@@ -221,22 +221,22 @@ func (db *DB) Update(v interface{}, cols ...string) (sql.Result, error) {
 //
 // 查找条件的查找顺序是为 自增 > 主键 > 唯一约束，
 // 如果同时存在多个唯一约束满足条件，则返回错误信息。
-func (db *DB) Select(v interface{}) error {
+func (db *DB) Select(v TableNamer) error {
 	return find(db, v)
 }
 
 // Create 创建一张表或是视图
-func (db *DB) Create(v interface{}) error {
+func (db *DB) Create(v TableNamer) error {
 	return create(db, v)
 }
 
 // Drop 删除一张表或视图
-func (db *DB) Drop(v interface{}) error {
+func (db *DB) Drop(v TableNamer) error {
 	return drop(db, v)
 }
 
 // Truncate 清空一张表
-func (db *DB) Truncate(v interface{}) error {
+func (db *DB) Truncate(v TableNamer) error {
 	if !db.Dialect().TransactionalDDL() {
 		return truncate(db, v)
 	}
@@ -249,16 +249,16 @@ func (db *DB) Truncate(v interface{}) error {
 // InsertMany 一次插入多条数据
 //
 // 会自动转换成事务进行处理。
-func (db *DB) InsertMany(v interface{}, max int) error {
+func (db *DB) InsertMany(max int, v ...TableNamer) error {
 	return db.tx(func(tx *Tx) error {
-		return tx.InsertMany(v, max)
+		return tx.InsertMany(max, v...)
 	})
 }
 
 // MultInsert 插入一个或多个数据
 //
 // 会自动转换成事务进行处理。
-func (db *DB) MultInsert(objs ...interface{}) error {
+func (db *DB) MultInsert(objs ...TableNamer) error {
 	return db.tx(func(tx *Tx) error {
 		return tx.MultInsert(objs...)
 	})
@@ -267,7 +267,7 @@ func (db *DB) MultInsert(objs ...interface{}) error {
 // MultSelect 选择符合要求的一条或是多条记录
 //
 // 会自动转换成事务进行处理。
-func (db *DB) MultSelect(objs ...interface{}) error {
+func (db *DB) MultSelect(objs ...TableNamer) error {
 	return db.tx(func(tx *Tx) error {
 		return tx.MultSelect(objs...)
 	})
@@ -276,7 +276,7 @@ func (db *DB) MultSelect(objs ...interface{}) error {
 // MultUpdate 更新一条或多条类型。
 //
 // 会自动转换成事务进行处理。
-func (db *DB) MultUpdate(objs ...interface{}) error {
+func (db *DB) MultUpdate(objs ...TableNamer) error {
 	return db.tx(func(tx *Tx) error {
 		return tx.MultUpdate(objs...)
 	})
@@ -285,7 +285,7 @@ func (db *DB) MultUpdate(objs ...interface{}) error {
 // MultDelete 删除一条或是多条数据
 //
 // 会自动转换成事务进行处理。
-func (db *DB) MultDelete(objs ...interface{}) error {
+func (db *DB) MultDelete(objs ...TableNamer) error {
 	return db.tx(func(tx *Tx) error {
 		return tx.MultDelete(objs...)
 	})
@@ -294,7 +294,7 @@ func (db *DB) MultDelete(objs ...interface{}) error {
 // MultCreate 创建数据表
 //
 // 如果数据库支持事务 DDL，则会在事务中完成此操作。
-func (db *DB) MultCreate(objs ...interface{}) error {
+func (db *DB) MultCreate(objs ...TableNamer) error {
 	if !db.Dialect().TransactionalDDL() {
 		for _, v := range objs {
 			if err := db.Create(v); err != nil {
@@ -312,7 +312,7 @@ func (db *DB) MultCreate(objs ...interface{}) error {
 // MultDrop 删除表结构及数据
 //
 // 如果数据库支持事务 DDL，则会在事务中完成此操作。
-func (db *DB) MultDrop(objs ...interface{}) error {
+func (db *DB) MultDrop(objs ...TableNamer) error {
 	if !db.Dialect().TransactionalDDL() {
 		for _, v := range objs {
 			if err := db.Drop(v); err != nil {
@@ -330,7 +330,7 @@ func (db *DB) MultDrop(objs ...interface{}) error {
 // MultTruncate 清除表内容
 //
 // 重置 ai，但保留表结构。
-func (db *DB) MultTruncate(objs ...interface{}) error {
+func (db *DB) MultTruncate(objs ...TableNamer) error {
 	if !db.Dialect().TransactionalDDL() {
 		for _, v := range objs {
 			if err := truncate(db, v); err != nil {

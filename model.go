@@ -5,26 +5,25 @@ package orm
 import "github.com/issue9/orm/v3/core"
 
 type (
-	// Metaer 用于指定一个表级别的元数据
 	Metaer = core.Metaer
 
 	// Model 表示一个数据库的表模型
-	//
-	// 数据结构从字段和字段的 struct tag 中分析得出。
 	Model = core.Model
 
 	// ForeignKey 外键
 	ForeignKey = core.ForeignKey
+
+	TableNamer = core.TableNamer
 )
 
 // NewModel 从一个 obj 声明一个 Model 实例
 //
 // obj 可以是一个 struct 实例或是指针。
-func (db *DB) NewModel(obj interface{}) (*Model, error) { return db.models.New(obj) }
+func (db *DB) NewModel(obj TableNamer) (*Model, error) { return db.models.New(obj) }
 
 // NewModel 从一个 obj 声明一个 Model 实例
 //
 // obj 可以是一个 struct 实例或是指针。
-func (tx *Tx) NewModel(obj interface{}) (*Model, error) {
+func (tx *Tx) NewModel(obj TableNamer) (*Model, error) {
 	return tx.db.models.New(obj)
 }

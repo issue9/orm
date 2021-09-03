@@ -39,15 +39,17 @@ func TestDB_LastInsertID(t *testing.T) {
 	})
 }
 
+type defvalues struct {
+	Name string `orm:"name(name);nullable"`
+	Age  int    `orm:"name(age);default(-1)"`
+}
+
+func (v *defvalues) TableName() string { return "#defvalues" }
+
 func TestDB_InsertDefaultValues(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
 	defer suite.Close()
-
-	type defvalues struct {
-		Name string `orm:"name(name);nullable"`
-		Age  int    `orm:"name(age);default(-1)"`
-	}
 
 	suite.ForEach(func(d *test.Driver) {
 		d.NotError(d.DB.Create(&defvalues{}))
@@ -166,10 +168,6 @@ func TestDB_Update_error(t *testing.T) {
 	suite.ForEach(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
-
-		// 非结构体传入
-		r, err := t.DB.Update(123)
-		t.Error(err, "%s@%s", err, t.DriverName).Nil(r)
 	})
 
 	// 多个唯一约束符合查询条件

@@ -8,7 +8,6 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v3"
-	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/internal/test"
 )
 
@@ -32,10 +31,7 @@ var (
 	_ orm.BeforeUpdater  = &beforeObject1{}
 )
 
-func (o *beforeObject1) Meta(m *core.Model) error {
-	m.Name = "#objects1"
-	return nil
-}
+func (o *beforeObject1) TableName() string { return "#objects1" }
 
 func (o *beforeObject1) BeforeInsert() error {
 	o.Name = "insert-" + o.Name
@@ -52,10 +48,7 @@ var (
 	_ orm.BeforeUpdater  = &beforeObject1{}
 )
 
-func (o *beforeObject2) Meta(m *core.Model) error {
-	m.Name = "#objects2"
-	return nil
-}
+func (o *beforeObject2) TableName() string { return "#objects2" }
 
 func (o *beforeObject2) BeforeInsert() error {
 	o.Name = "insert-" + o.Name
@@ -109,13 +102,13 @@ func TestBeforeInsertUpdate_Mult(t *testing.T) {
 		}()
 
 		// insert
-		oo := []interface{}{
+		oo := []orm.TableNamer{
 			&beforeObject1{ID: 1, Name: "name1"},
 			&beforeObject1{ID: 2, Name: "name2"},
 			&beforeObject2{ID: 3, Name: "name3"},
 		}
 		t.NotError(t.DB.MultInsert(oo...))
-		oo = []interface{}{
+		oo = []orm.TableNamer{
 			&beforeObject1{ID: 1},
 			&beforeObject1{ID: 2},
 			&beforeObject2{ID: 3},
@@ -129,13 +122,13 @@ func TestBeforeInsertUpdate_Mult(t *testing.T) {
 		t.True(ok).Equal(o2.Name, "insert-name3")
 
 		// update
-		oo = []interface{}{
+		oo = []orm.TableNamer{
 			&beforeObject1{ID: 1, Name: "name11"},
 			&beforeObject1{ID: 2, Name: "name22"},
 			&beforeObject2{ID: 3, Name: "name33"},
 		}
 		t.NotError(t.DB.MultUpdate(oo...))
-		oo = []interface{}{
+		oo = []orm.TableNamer{
 			&beforeObject1{ID: 1},
 			&beforeObject1{ID: 2},
 			&beforeObject2{ID: 3},

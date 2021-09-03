@@ -11,18 +11,6 @@ import (
 	"github.com/issue9/orm/v3/internal/test"
 )
 
-type u1 struct {
-	ID       int64  `orm:"name(id)"`
-	Name     string `orm:"name(name);len(50);index(i_name)"`
-	UserName string `orm:"name(username);len(50);unique(u_username)"`
-	Created  int64  `orm:"name(created)"`
-}
-
-func (u *u1) Meta(m *core.Model) error {
-	m.Name = "#upgrades"
-	return m.NewCheck("chk_id", "id>0")
-}
-
 type u2 struct {
 	ID       int64  `orm:"name(id);unique(u_id)"`
 	Name     string `orm:"name(name);len(50);index(index_name)"`
@@ -30,8 +18,9 @@ type u2 struct {
 	Modified int64  `orm:"name(modified);default(0)"`
 }
 
+func (u *u2) TableName() string { return "#upgrades" }
+
 func (u *u2) Meta(m *core.Model) error {
-	m.Name = "#upgrades"
 	return m.NewCheck("chk_username", "{username} IS NOT NULL")
 }
 
@@ -41,11 +30,22 @@ func TestUpgrader(t *testing.T) {
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
-		t.NotError(t.DB.Create(&u1{}))
+		sql := t.DB.SQLBuilder().CreateTable().
+			Column("id", core.Int64, false, false, false, nil).
+			Column("name", core.String, false, false, false, nil, 50).
+			Column("username", core.String, false, false, false, nil, 50).
+			Column("created", core.Int64, false, false, false, nil).
+			Index(core.IndexDefault, "i_name", "name").
+			Unique("u_username", "username").
+			Check("chk_id", "id>0").
+			Table((&u2{}).TableName())
+		t.NotError(sql.Exec())
 
 		defer func(n string) {
-			t.NotError(t.DB.Drop(&u1{}))
+			t.NotError(t.DB.Drop(&u2{}))
 		}(t.DriverName)
+
+		//t.DB.ccl
 
 		u, err := t.DB.Upgrade(&u2{})
 		t.NotError(err, "%s@%s", err, t.DriverName).

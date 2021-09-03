@@ -19,10 +19,7 @@ type Group struct {
 }
 
 // Meta 指定表属性
-func (g *Group) Meta(m *core.Model) error {
-	m.Name = "#groups"
-	return nil
-}
+func (g *Group) TableName() string { return "#groups" }
 
 type User struct {
 	ID       int    `orm:"name(id);ai;"`
@@ -40,14 +37,12 @@ type UserInfo struct {
 }
 
 // Meta 指定表属性
-func (u *User) Meta(m *core.Model) error {
-	m.Name = "#users"
-	return nil
-}
+func (u *User) TableName() string { return "#users" }
+
+func (u *UserInfo) TableName() string { return "#user_info" }
 
 // Meta 指定表属性
 func (u *UserInfo) Meta(m *core.Model) error {
-	m.Name = "#user_info"
 	m.NewCheck("user_info_chk_name", "uid>0")
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
@@ -61,9 +56,10 @@ type Admin struct {
 	Group int64  `orm:"name(group);fk(fk_name,#groups,id,NO ACTION)"`
 }
 
+func (a *Admin) TableName() string { return "#administrators" }
+
 // Meta 指定表属性
 func (a *Admin) Meta(m *core.Model) error {
-	m.Name = "#administrators"
 	m.NewCheck("admin_chk_name", "{group}>0")
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
@@ -78,10 +74,7 @@ type Account struct {
 }
 
 // Meta 指定表属性
-func (a *Account) Meta(m *core.Model) error {
-	m.Name = "#account"
-	return nil
-}
+func (a *Account) TableName() string { return "#account" }
 
 // table 表中是否存在 size 条记录，若不是，则触发 error
 func hasCount(e core.Engine, a *assert.Assertion, table string, size int) {
@@ -109,7 +102,7 @@ func initData(t *test.Driver) {
 	err = db.MultCreate(&Admin{}, &UserInfo{}, &Account{})
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
-	insert := func(obj interface{}) {
+	insert := func(obj core.TableNamer) {
 		r, err := db.Insert(obj)
 		t.NotError(err, "%s@%s", err, t.DriverName)
 		cnt, err := r.RowsAffected()

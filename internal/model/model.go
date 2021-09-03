@@ -20,7 +20,16 @@ func propertyError(field, name, message string) error {
 // New 从一个 obj 声明一个 Model 实例
 //
 // obj 可以是一个 struct 实例或是指针。
-func (ms *Models) New(obj interface{}) (*core.Model, error) {
+func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
+	name := obj.TableName()
+
+	ms.locker.Lock()
+	defer ms.locker.Unlock()
+
+	if m, found := ms.items[name]; found {
+		return m, nil
+	}
+
 	rtype := reflect.TypeOf(obj)
 	for rtype.Kind() == reflect.Ptr {
 		rtype = rtype.Elem()
@@ -30,14 +39,7 @@ func (ms *Models) New(obj interface{}) (*core.Model, error) {
 		return nil, fetch.ErrInvalidKind
 	}
 
-	ms.locker.Lock()
-	defer ms.locker.Unlock()
-
-	if m, found := ms.items[rtype]; found {
-		return m, nil
-	}
-
-	m := core.NewModel(core.Table, "#"+rtype.Name(), rtype.NumField())
+	m := core.NewModel(core.Table, name, rtype.NumField())
 	m.GoType = rtype
 
 	if err := parseColumns(m, rtype); err != nil {
@@ -63,15 +65,15 @@ func (ms *Models) New(obj interface{}) (*core.Model, error) {
 		return nil, err
 	}
 
-	if err := ms.addModel(rtype, m); err != nil {
+	if err := ms.addModel(m); err != nil {
 		return nil, err
 	}
 
 	return m, nil
 }
 
-func (ms *Models) addModel(goType reflect.Type, m *core.Model) (err error) {
-	ms.items[goType] = m
+func (ms *Models) addModel(m *core.Model) (err error) {
+	ms.items[m.Name] = m
 
 	w := func(name string) {
 		if err == nil {

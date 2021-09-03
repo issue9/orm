@@ -152,7 +152,7 @@ func (stmt *WhereStmt) OrGroup() *sqlbuilder.WhereStmt {
 }
 
 // Delete 从 v 表中删除符合条件的内容
-func (stmt *WhereStmt) Delete(v interface{}) (sql.Result, error) {
+func (stmt *WhereStmt) Delete(v TableNamer) (sql.Result, error) {
 	m, err := stmt.engine.NewModel(v)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (stmt *WhereStmt) Delete(v interface{}) (sql.Result, error) {
 //
 // 不会更新零值，除非通过 cols 指定了该列。
 // 表名来自 v，列名为 v 的所有列或是 cols 指定的列。
-func (stmt *WhereStmt) Update(v interface{}, cols ...string) (sql.Result, error) {
+func (stmt *WhereStmt) Update(v TableNamer, cols ...string) (sql.Result, error) {
 	upd := stmt.where.Update(stmt.engine)
 
 	if _, _, err := getUpdateColumns(stmt.engine, v, upd, cols...); err != nil {
@@ -189,7 +189,11 @@ func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
 		t = t.Elem()
 	}
 
-	m, err := stmt.engine.NewModel(reflect.New(t).Interface())
+	tn, ok := reflect.New(t).Interface().(TableNamer)
+	if !ok {
+		return 0, fmt.Errorf("v 不是 TableNamer 类型")
+	}
+	m, err := stmt.engine.NewModel(tn)
 	if err != nil {
 		return 0, err
 	}
@@ -203,7 +207,7 @@ func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
 // Count 返回符合条件数量
 //
 // 表名来自 v。
-func (stmt *WhereStmt) Count(v interface{}) (int64, error) {
+func (stmt *WhereStmt) Count(v TableNamer) (int64, error) {
 	m, _, err := getModel(stmt.engine, v)
 	if err != nil {
 		return 0, err

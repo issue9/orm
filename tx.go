@@ -5,10 +5,8 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"reflect"
 
 	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/fetch"
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
 
@@ -41,9 +39,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 }
 
 // TablePrefix 返回表名前缀内容内容
-func (tx *Tx) TablePrefix() string {
-	return tx.db.tablePrefix
-}
+func (tx *Tx) TablePrefix() string { return tx.db.tablePrefix }
 
 // Query 执行一条查询语句
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
@@ -127,65 +123,37 @@ func (tx *Tx) Dialect() Dialect {
 }
 
 // LastInsertID 插入数据，并获取其自增的 ID
-func (tx *Tx) LastInsertID(v interface{}) (int64, error) {
+func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
 	return lastInsertID(tx, v)
 }
 
 // Insert 插入一个或多个数据
-func (tx *Tx) Insert(v interface{}) (sql.Result, error) {
+func (tx *Tx) Insert(v TableNamer) (sql.Result, error) {
 	return insert(tx, v)
 }
 
 // Select 读数据
-func (tx *Tx) Select(v interface{}) error {
+func (tx *Tx) Select(v TableNamer) error {
 	return find(tx, v)
 }
 
 // ForUpdate 读数据并锁定
-func (tx *Tx) ForUpdate(v interface{}) error {
+func (tx *Tx) ForUpdate(v TableNamer) error {
 	return forUpdate(tx, v)
 }
 
-// InsertMany 插入多条相同的数据
-//
-// 若需要向某张表中插入多条记录，InsertMany() 会比 Insert() 性能上好很多。
-//
-// max 表示一次最多插入的数量，如果超过此值，会分批执行，
-// 但是依然在一个事务中完成。
-//
-// 与 MultInsert() 方法最大的不同在于:
-//  // MultInsert() 可以每个参数的类型都不一样：
-//  vs := []interface{}{&user{...}, &userInfo{...}}
-//  db.Insert(vs...)
-//  // db.InsertMany(vs) // 这里将出错，数组的元素的类型必须相同。
-//  us := []*users{&user{}, &user{}}
-//  db.InsertMany(us)
-//  db.Insert(us...) // 这样也行，但是性能会差好多
-func (tx *Tx) InsertMany(v interface{}, max int) error {
-	rval := reflect.ValueOf(v)
-	for rval.Kind() == reflect.Ptr {
-		rval = rval.Elem()
-	}
-
-	switch rval.Kind() {
-	case reflect.Struct: // 单个元素
-		_, err := tx.Insert(v)
-		return err
-	case reflect.Array, reflect.Slice: // 跳出 switch
-	default:
-		return fetch.ErrInvalidKind
-	}
-
-	if rval.Len() == 0 { // 为空，则什么也不做
+func (tx *Tx) InsertMany(max int, v ...TableNamer) error {
+	if len(v) == 0 {
 		return nil
 	}
 
-	for i := 0; i < rval.Len(); i += max {
+	l := len(v)
+	for i := 0; i < l; i += max {
 		j := i + max
-		if j > rval.Len() {
-			j = rval.Len()
+		if j > l {
+			j = l
 		}
-		query, err := buildInsertManySQL(tx, rval.Slice(i, j))
+		query, err := buildInsertManySQL(tx, v[i:j]...)
 		if err != nil {
 			return err
 		}
@@ -199,29 +167,29 @@ func (tx *Tx) InsertMany(v interface{}, max int) error {
 }
 
 // Update 更新一条类型
-func (tx *Tx) Update(v interface{}, cols ...string) (sql.Result, error) {
+func (tx *Tx) Update(v TableNamer, cols ...string) (sql.Result, error) {
 	return update(tx, v, cols...)
 }
 
 // Delete 删除一条数据
-func (tx *Tx) Delete(v interface{}) (sql.Result, error) {
+func (tx *Tx) Delete(v TableNamer) (sql.Result, error) {
 	return del(tx, v)
 }
 
 // Create 创建数据表或是视图
-func (tx *Tx) Create(v interface{}) error {
+func (tx *Tx) Create(v TableNamer) error {
 	return create(tx, v)
 }
 
 // Drop 删除表或视图
-func (tx *Tx) Drop(v interface{}) error {
+func (tx *Tx) Drop(v TableNamer) error {
 	return drop(tx, v)
 }
 
 // Truncate 清除表内容
 //
 // 会重置 ai，但保留表结构。
-func (tx *Tx) Truncate(v interface{}) error {
+func (tx *Tx) Truncate(v TableNamer) error {
 	return truncate(tx, v)
 }
 
@@ -231,7 +199,7 @@ func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder {
 }
 
 // MultInsert 插入一个或多个数据
-func (tx *Tx) MultInsert(objs ...interface{}) error {
+func (tx *Tx) MultInsert(objs ...TableNamer) error {
 	for _, v := range objs {
 		if _, err := tx.Insert(v); err != nil {
 			return err
@@ -241,12 +209,12 @@ func (tx *Tx) MultInsert(objs ...interface{}) error {
 }
 
 // MultSelect 选择符合要求的一条或是多条记录
-func (tx *Tx) MultSelect(objs ...interface{}) error {
+func (tx *Tx) MultSelect(objs ...TableNamer) error {
 	return tx.multDo(tx.Select, objs...)
 }
 
 // MultUpdate 更新一条或多条类型
-func (tx *Tx) MultUpdate(objs ...interface{}) error {
+func (tx *Tx) MultUpdate(objs ...TableNamer) error {
 	for _, v := range objs {
 		if _, err := tx.Update(v); err != nil {
 			return err
@@ -256,7 +224,7 @@ func (tx *Tx) MultUpdate(objs ...interface{}) error {
 }
 
 // MultDelete 删除一条或是多条数据
-func (tx *Tx) MultDelete(objs ...interface{}) error {
+func (tx *Tx) MultDelete(objs ...TableNamer) error {
 	for _, v := range objs {
 		if _, err := tx.Delete(v); err != nil {
 			return err
@@ -266,23 +234,23 @@ func (tx *Tx) MultDelete(objs ...interface{}) error {
 }
 
 // MultCreate 创建数据表
-func (tx *Tx) MultCreate(objs ...interface{}) error {
+func (tx *Tx) MultCreate(objs ...TableNamer) error {
 	return tx.multDo(tx.Create, objs...)
 }
 
 // MultDrop 删除表结构及数据
-func (tx *Tx) MultDrop(objs ...interface{}) error {
+func (tx *Tx) MultDrop(objs ...TableNamer) error {
 	return tx.multDo(tx.Drop, objs...)
 }
 
 // MultTruncate 清除表内容
 //
 // 会重置 ai，但保留表结构。
-func (tx *Tx) MultTruncate(objs ...interface{}) error {
+func (tx *Tx) MultTruncate(objs ...TableNamer) error {
 	return tx.multDo(tx.Truncate, objs...)
 }
 
-func (tx *Tx) multDo(f func(interface{}) error, objs ...interface{}) error {
+func (tx *Tx) multDo(f func(TableNamer) error, objs ...TableNamer) error {
 	for _, v := range objs {
 		if err := f(v); err != nil {
 			return err

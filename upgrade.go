@@ -31,7 +31,7 @@ type Upgrader struct {
 // Upgrader 提供了对现有的数据模型 v 与线上数据表之间的操作。
 // 删除操作需要保证已经存在于数据表；
 // 而添加操作需要保证已经存在于模型 v，又不存在于数据表。
-func (db *DB) Upgrade(v interface{}) (*Upgrader, error) {
+func (db *DB) Upgrade(v TableNamer) (*Upgrader, error) {
 	m, err := db.NewModel(v)
 	if err != nil {
 		return nil, err

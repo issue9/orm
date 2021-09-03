@@ -11,7 +11,6 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/fetch"
 	"github.com/issue9/orm/v3/internal/flagtest"
 	"github.com/issue9/orm/v3/sqlbuilder"
 )
@@ -65,9 +64,10 @@ type Admin1 struct {
 	Regdate  int    `orm:"-"`
 }
 
+func (u *User) TableName() string { return "#users" }
+
 // Meta 指定表属性
 func (u *User) Meta(m *core.Model) error {
-	m.Name = "#users"
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
 	return nil
@@ -80,9 +80,10 @@ type Admin struct {
 	Group int64  `orm:"name(group);fk(fk_admin_name,#groups,id,NO ACTION)"`
 }
 
+func (a *Admin) TableName() string { return "#administrators" }
+
 // Meta 指定表属性
 func (a *Admin) Meta(m *core.Model) error {
-	m.Name = "#administrators"
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
 	return m.NewCheck("admin_chk_name", "{group}>0")
@@ -93,20 +94,14 @@ type obj struct {
 }
 
 // Meta 指定表属性
-func (o obj) Meta(m *core.Model) error {
-	m.Name = "#objs"
-	return nil
-}
+func (o obj) TableName() string { return "#objs" }
 
 type viewObject struct {
 	ID       int    `orm:"name(id);ai"`
 	Username string `orm:"name(username)"`
 }
 
-func (v *viewObject) Meta(m *core.Model) error {
-	m.Name = "#" + "view_objects"
-	return nil
-}
+func (v *viewObject) TableName() string { return "#view_objects" }
 
 func (v *viewObject) ViewAs(e core.Engine) (string, error) {
 	return sqlbuilder.Select(e).
@@ -170,7 +165,7 @@ func TestModels_New(t *testing.T) {
 		"mysql_charset": {"utf8"},
 	})
 
-	// Meta返回的name属性
+	// Meta返回的 name 属性
 	a.Equal(m.Name, "#administrators")
 
 	// 多层指针下的 Receive
@@ -181,14 +176,6 @@ func TestModels_New(t *testing.T) {
 	m, err = ms.New(&o)
 	a.NotError(err).NotNil(m)
 	a.Equal(m.Name, "#objs")
-	oo := &o
-	m, err = ms.New(&oo)
-	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "#objs")
-
-	// 无效的 New
-	m, err = ms.New(123)
-	a.ErrorType(err, fetch.ErrInvalidKind).Nil(m)
 
 	// view
 	m, err = ms.New(&viewObject{})

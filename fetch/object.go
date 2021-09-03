@@ -194,18 +194,16 @@ func fetchOnceObj(strict bool, val reflect.Value, rows *sql.Rows) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	for rows.Next() {
-		if err := rows.Scan(buff...); err != nil {
-			return 0, err
-		}
 
-		if err = afterFetch(val.Interface()); err != nil {
-			return 0, err
-		}
-		return 1, nil
+	rows.Next()
+	if err := rows.Scan(buff...); err != nil {
+		return 0, err
 	}
 
-	return 0, nil
+	if err = afterFetch(val.Interface()); err != nil {
+		return 0, err
+	}
+	return 1, nil
 }
 
 func fetchOnceObjNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/issue9/assert"
 
+	"github.com/issue9/orm/v3/core"
 	"github.com/issue9/orm/v3/internal/test"
 )
 
@@ -20,50 +21,48 @@ func TestTx_InsertMany(t *testing.T) {
 		a.NotError(err)
 		a.NotError(tx.Create(&UserInfo{}))
 
-		a.NotError(tx.InsertMany([]*UserInfo{
-			{
-				UID:       1,
-				FirstName: "f1",
-				LastName:  "l1",
-			},
-		}, 10))
+		a.NotError(tx.InsertMany(10, &UserInfo{
+			UID:       1,
+			FirstName: "f1",
+			LastName:  "l1",
+		}))
 
 		// 分批插入
-		a.NotError(tx.InsertMany([]*UserInfo{
-			{
+		a.NotError(tx.InsertMany(2, []core.TableNamer{
+			&UserInfo{
 				UID:       2,
 				FirstName: "f2",
 				LastName:  "l2",
 			},
-			{
+			&UserInfo{
 				UID:       3,
 				FirstName: "f3",
 				LastName:  "l3",
 			},
-			{
+			&UserInfo{
 				UID:       4,
 				FirstName: "f4",
 				LastName:  "l4",
 			},
-			{
+			&UserInfo{
 				UID:       5,
 				FirstName: "f5",
 				LastName:  "l5",
 			},
-			{
+			&UserInfo{
 				UID:       6,
 				FirstName: "f6",
 				LastName:  "l6",
 			},
-		}, 2))
+		}...))
 
 		// 单个元素插入
-		t.NotError(tx.InsertMany(
+		t.NotError(tx.InsertMany(10,
 			&UserInfo{
 				UID:       7,
 				FirstName: "f7",
 				LastName:  "l7",
-			}, 10))
+			}))
 
 		t.NotError(tx.Commit())
 
@@ -95,22 +94,6 @@ func TestTx_InsertMany(t *testing.T) {
 		t.NotError(t.DB.Select(u7))
 		t.Equal(u7, &UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
 
-		t.NotError(t.DB.Drop(&UserInfo{}))
-
-		// 类型错误
-		tx, err = t.DB.Begin()
-		t.NotError(err)
-		t.NotError(tx.Create(&UserInfo{}))
-		t.Error(tx.InsertMany(5, 10))
-		t.NotError(tx.Rollback())
-		t.NotError(t.DB.Drop(&UserInfo{}))
-
-		// 类型错误
-		tx, err = t.DB.Begin()
-		t.NotError(err)
-		t.NotError(tx.Create(&UserInfo{}))
-		t.Error(tx.InsertMany([]int{1, 2, 3}, 10))
-		t.NotError(tx.Rollback())
 		t.NotError(t.DB.Drop(&UserInfo{}))
 	})
 }

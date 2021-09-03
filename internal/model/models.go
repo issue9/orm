@@ -3,7 +3,6 @@
 package model
 
 import (
-	"reflect"
 	"sync"
 
 	"github.com/issue9/orm/v3/core"
@@ -13,7 +12,7 @@ import (
 type Models struct {
 	engine core.Engine
 	locker sync.Mutex
-	items  map[reflect.Type]*core.Model
+	items  map[string]*core.Model
 	names  map[string]struct{}
 }
 
@@ -21,7 +20,7 @@ type Models struct {
 func NewModels(e core.Engine) *Models {
 	return &Models{
 		engine: e,
-		items:  map[reflect.Type]*core.Model{},
+		items:  map[string]*core.Model{},
 		names:  map[string]struct{}{},
 	}
 }
@@ -31,7 +30,7 @@ func (ms *Models) Clear() {
 	ms.locker.Lock()
 	defer ms.locker.Unlock()
 
-	ms.items = map[reflect.Type]*core.Model{}
+	ms.items = map[string]*core.Model{}
 	ms.names = map[string]struct{}{}
 }
 

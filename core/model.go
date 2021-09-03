@@ -31,6 +31,14 @@ type (
 		ViewAs(e Engine) (string, error)
 	}
 
+	// TableNamer 表或是视图必须实现的接口
+	TableNamer interface {
+		// 返回表或是视图的名称
+		//
+		// 如果需要带表名前缀，请以 # 开头返回。
+		TableName() string
+	}
+
 	// Metaer 用于指定数据模型的元数据
 	Metaer interface {
 		Meta(*Model) error
