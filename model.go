@@ -6,9 +6,6 @@ import "github.com/issue9/orm/v3/core"
 
 type (
 	// Metaer 用于指定一个表级别的元数据
-	//
-	// 如表名，存储引擎等：
-	//  "name(tbl_name);engine(myISAM);charset(utf8)"
 	Metaer = core.Metaer
 
 	// Model 表示一个数据库的表模型
@@ -23,9 +20,7 @@ type (
 // NewModel 从一个 obj 声明一个 Model 实例
 //
 // obj 可以是一个 struct 实例或是指针。
-func (db *DB) NewModel(obj interface{}) (*Model, error) {
-	return db.models.New(obj)
-}
+func (db *DB) NewModel(obj interface{}) (*Model, error) { return db.models.New(obj) }
 
 // NewModel 从一个 obj 声明一个 Model 实例
 //

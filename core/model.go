@@ -131,7 +131,7 @@ func (m *Model) Reset() {
 	m.Checks = map[string]string{}
 	m.ForeignKeys = map[string]*ForeignKey{}
 	m.AutoIncrement = nil
-	m.PrimaryKey = []*Column{}
+	m.PrimaryKey = m.PrimaryKey[:0]
 }
 
 // AIName 当前模型中自增列的名称

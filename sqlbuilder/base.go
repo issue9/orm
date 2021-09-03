@@ -78,21 +78,13 @@ func newDDLStmt(e core.Engine, sql DDLSQLer) *ddlStmt {
 	}
 }
 
-func (stmt *baseStmt) Dialect() core.Dialect {
-	return stmt.engine.Dialect()
-}
+func (stmt *baseStmt) Dialect() core.Dialect { return stmt.engine.Dialect() }
 
-func (stmt *baseStmt) Engine() core.Engine {
-	return stmt.engine
-}
+func (stmt *baseStmt) Engine() core.Engine { return stmt.engine }
 
-func (stmt *baseStmt) Err() error {
-	return stmt.err
-}
+func (stmt *baseStmt) Err() error { return stmt.err }
 
-func (stmt *baseStmt) Reset() {
-	stmt.err = nil
-}
+func (stmt *baseStmt) Reset() { stmt.err = nil }
 
 func (stmt ddlStmt) Exec() error {
 	return stmt.ExecContext(context.Background())
