@@ -15,7 +15,7 @@
 // 默认情况下，orm 包并不会加载任何数据库的实例。所以想要用哪个数据库，需要手动初始化：
 //  import (
 //      _ github.com/mattn/go-sqlite3       // 加载数据库驱动
-//      _ github.com/issue9/orm/v3/dialect  // sqlite3 的 dialect 声明在此处
+//      _ github.com/issue9/orm/v4/dialect  // sqlite3 的 dialect 声明在此处
 //  )
 //
 //  // 初始化一个 DB，表前缀为 prefix_

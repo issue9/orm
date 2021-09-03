@@ -6,8 +6,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/sqlbuilder"
+	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
 // Tx 事务对象

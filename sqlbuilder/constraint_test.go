@@ -7,9 +7,9 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/internal/test"
-	"github.com/issue9/orm/v3/sqlbuilder"
+	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v4/internal/test"
+	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
 func TestConstraint(t *testing.T) {

@@ -5,9 +5,9 @@ package orm
 import (
 	"database/sql"
 
-	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/fetch"
-	"github.com/issue9/orm/v3/sqlbuilder"
+	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v4/fetch"
+	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
 // Unix 表示 Unix 时间戳的数据样式

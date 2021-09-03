@@ -2,7 +2,7 @@
 
 package orm
 
-import "github.com/issue9/orm/v3/core"
+import "github.com/issue9/orm/v4/core"
 
 type (
 	ApplyModeler = core.ApplyModeler

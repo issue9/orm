@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v4/core"
 )
 
 // MysqlTable 从 create table 中获取的表信息

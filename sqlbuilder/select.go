@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/fetch"
+	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v4/fetch"
 )
 
 // ErrNoData 在 Select.QueryInt 等函数中，

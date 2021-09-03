@@ -9,10 +9,10 @@ import (
 	"github.com/issue9/assert"
 	"github.com/issue9/sliceutil"
 
-	"github.com/issue9/orm/v3"
-	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/dialect"
-	"github.com/issue9/orm/v3/internal/flagtest"
+	"github.com/issue9/orm/v4"
+	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v4/dialect"
+	"github.com/issue9/orm/v4/internal/flagtest"
 
 	// 测试入口，数据库也在此初始化
 	_ "github.com/go-sql-driver/mysql"

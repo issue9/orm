@@ -61,9 +61,10 @@ type (
 	Model struct {
 		GoType reflect.Type
 
-		// 模型的名称，可以以 # 符号开头，表示该表名带有一个表名前缀。
-		// 在生成 SQL 语句时，该符号会被转换成 Engine.TablePrefix()
-		// 返回的值。
+		// 模型的名称
+		//
+		// 可以以 # 符号开头，表示该表名带有一个表名前缀，
+		// 在生成 SQL 语句时，该符号会被转换成 Engine.TablePrefix() 返回的值。
 		Name string
 
 		// 如果当前模型是视图，那么此值表示的是视图的 select 语句，

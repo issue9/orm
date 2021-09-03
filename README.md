@@ -2,7 +2,7 @@ orm
 [![Go version](https://img.shields.io/badge/Go-1.13-brightgreen.svg?style=flat)](https://golang.org)
 [![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/orm)
 [![codecov](https://codecov.io/gh/issue9/orm/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/orm)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/orm/v3)](https://pkg.go.dev/github.com/issue9/orm/v3)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/orm/v4)](https://pkg.go.dev/github.com/issue9/orm/v4)
 ======
 
 目前内置了对以下数据库的支持：
@@ -25,7 +25,7 @@ postgres  | postgres github.com/lib/pq              | [![Postgres](https://githu
 
 ```go
 import (
-    github.com/issue9/orm/v3/dialect  // sqlite3 的 dialect 声明在此处
+    github.com/issue9/orm/v4/dialect  // sqlite3 的 dialect 声明在此处
     _ github.com/mattn/go-sqlite3     // 加载数据库驱动
 )
 

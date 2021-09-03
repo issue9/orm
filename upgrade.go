@@ -5,7 +5,7 @@ package orm
 import (
 	"fmt"
 
-	"github.com/issue9/orm/v3/sqlbuilder"
+	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
 // Upgrader 更新数据库对象

@@ -10,8 +10,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v3/internal/flagtest"
-	"github.com/issue9/orm/v3/internal/test"
+	"github.com/issue9/orm/v4/internal/flagtest"
+	"github.com/issue9/orm/v4/internal/test"
 )
 
 func TestMain(m *testing.M) {

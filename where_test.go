@@ -7,7 +7,7 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v3/internal/test"
+	"github.com/issue9/orm/v4/internal/test"
 )
 
 func TestWhereStmt_Delete(t *testing.T) {

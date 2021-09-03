@@ -8,8 +8,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v3/internal/test"
-	"github.com/issue9/orm/v3/sqlbuilder"
+	"github.com/issue9/orm/v4/internal/test"
+	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
 // 测试性能的数据库驱动名称

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v4/core"
 )
 
 var quoteReplacer = strings.NewReplacer("{", "", "}", "")

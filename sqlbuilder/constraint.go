@@ -2,7 +2,7 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v3/core"
+import "github.com/issue9/orm/v4/core"
 
 // AddConstraintStmtHooker AddConstraintStmt.DDLSQL 的钩子函数
 type AddConstraintStmtHooker interface {

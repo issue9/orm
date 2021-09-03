@@ -9,7 +9,7 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v3/core"
+	"github.com/issue9/orm/v4/core"
 )
 
 func TestNewColumn(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v3"
-	"github.com/issue9/orm/v3/internal/test"
+	"github.com/issue9/orm/v4"
+	"github.com/issue9/orm/v4/internal/test"
 )
 
 var (

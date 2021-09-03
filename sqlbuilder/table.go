@@ -2,7 +2,7 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v3/core"
+import "github.com/issue9/orm/v4/core"
 
 // CreateTableStmt 创建表的语句
 type CreateTableStmt struct {

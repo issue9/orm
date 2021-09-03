@@ -7,11 +7,11 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v3/core"
-	"github.com/issue9/orm/v3/dialect"
-	"github.com/issue9/orm/v3/internal/sqltest"
-	"github.com/issue9/orm/v3/internal/test"
-	"github.com/issue9/orm/v3/sqlbuilder"
+	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v4/dialect"
+	"github.com/issue9/orm/v4/internal/sqltest"
+	"github.com/issue9/orm/v4/internal/test"
+	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
 func TestPostgres_VersionSQL(t *testing.T) {
