@@ -10,8 +10,9 @@ type User struct {
     Last     *Last          `orm:"name(last);len(-1);default(192.168.1.1,2019-07-29T17:11:01)"`
 }
 
-func(u *User) Meta(m*core.Model) string {
-    m.Name = "#users"
+func(u *User) TableName() string { return "#users" }
+
+func(u *User) ApplyModel(m*core.Model) error {
     m.Meta["mysql_charset"] = []string{"utf8"}
     return m.NewCheck("id_great_zero", "id>0")
 }
@@ -87,20 +88,24 @@ refTable 如果需要表名前缀，需要添加 # 符号。
 #### check(chk_name, expr)
 
 check 约束。chk_name 为约束名，expr 为该约束的表达式。
-check 约束只能在 model.Metaer 接口中指定，而不是像其它约束一样，
+check 约束只能在 `ApplyModeler` 接口中指定，而不是像其它约束一样，
 通过字段的 struct tag 指定。
 因为 check 约束的表达式可以通过 and 或是 or 等符号连接多条基本表达式，
 在字段 struct tag 中指定会显得有点怪异。
 
 ### 接口
 
-#### Metaer
+#### TableNamer
 
-通过 Metaer 接口可以指定一些表级别的属性值。
+指定表名，视图和数据表都需要实现此接口。
+
+#### ApplyModeler
+
+通过 ApplyModeler 接口可以指定一些表级别的属性值。
 
 #### Viewer
 
-如果需要将模型定义为视图，则在实现 Metaer 接口的同时，还需要实现此接口，
+如果需要将模型定义为视图，则需要实现此接口，
 Viewer 接口返回一条 `SELECT` 语句，用于指定创建视图时的 `SELECT` 部分语句。
 实现都需要保证接口中返回的列与模型中列的定义要对应。
 

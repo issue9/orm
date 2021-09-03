@@ -39,9 +39,12 @@ type (
 		TableName() string
 	}
 
-	// Metaer 用于指定数据模型的元数据
-	Metaer interface {
-		Meta(*Model) error
+	// ApplyModeler 加载数据模型
+	//
+	// 当一个对象实现此接口时，那么在将对象转换成 Model 类型时，
+	// 会调用 ApplyModel 方法，给予用户修改 Model 的机会。
+	ApplyModeler interface {
+		ApplyModel(*Model) error
 	}
 
 	// ForeignKey 外键

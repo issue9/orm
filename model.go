@@ -5,7 +5,7 @@ package orm
 import "github.com/issue9/orm/v3/core"
 
 type (
-	Metaer = core.Metaer
+	ApplyModeler = core.ApplyModeler
 
 	// Model 表示一个数据库的表模型
 	Model = core.Model

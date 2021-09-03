@@ -24,7 +24,7 @@ type user struct {
 	Version int64  `orm:"name(version);default(0)"`
 }
 
-func (u *user) Meta(m *core.Model) error {
+func (u *user) ApplyModel(m *core.Model) error {
 	m.Name = "#users"
 	return nil
 }

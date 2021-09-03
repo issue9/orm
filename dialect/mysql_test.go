@@ -21,6 +21,7 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 	address varchar(200) not null,
 	CONSTRAINT fk_table_pk PRIMARY KEY(id)
 	)`,
+
 	`CREATE TABLE usr (
 	id bigint NOT NULL,
 	created bigint NOT NULL,
@@ -59,11 +60,6 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	suite.ForEach(func(t *test.Driver) {
 		db := t.DB
 
-		for _, query := range mysqlCreateTable {
-			_, err := db.Exec(query)
-			t.NotError(err)
-		}
-
 		defer func() {
 			_, err := db.Exec("DROP TABLE `usr`")
 			t.NotError(err)
@@ -71,6 +67,11 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 			_, err = db.Exec("DROP TABLE `fk_table`")
 			t.NotError(err)
 		}()
+
+		for _, query := range mysqlCreateTable {
+			_, err := db.Exec(query)
+			t.NotError(err)
+		}
 
 		testDialectDropConstraintStmtHook(t)
 	})

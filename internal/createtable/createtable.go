@@ -18,6 +18,7 @@ func lines(sql string) []string {
 	var deep, start int
 	var lines []string
 
+LOOP:
 	for index, c := range sql {
 		switch c {
 		case ',':
@@ -36,7 +37,7 @@ func lines(sql string) []string {
 				if start != index {
 					lines = append(lines, strings.TrimSpace(sql[start:index]))
 				}
-				break
+				break LOOP
 			}
 		} // end switch
 	} // end for

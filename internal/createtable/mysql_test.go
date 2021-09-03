@@ -13,10 +13,11 @@ import (
 	"github.com/issue9/orm/v3/internal/test"
 )
 
-var mysqlCreateTable = []string{`CREATE TABLE fk_table(
+var mysqlCreateTable = []string{`CREATE TABLE fk_table (
 	id BIGINT(20) NOT NULL,
 	PRIMARY KEY(id)
 	)`,
+
 	`CREATE TABLE users (
 	id BIGINT(20) NOT NULL,
 	created BIGINT NOT NULL,
@@ -50,6 +51,7 @@ func TestParseMysqlCreateTable(t *testing.T) {
 			_, err = t.DB.Exec("DROP TABLE fk_table")
 			a.NotError(err)
 		}()
+
 		for _, query := range mysqlCreateTable {
 			_, err := t.DB.Exec(query)
 			t.NotError(err)
@@ -94,6 +96,7 @@ func TestParseMysqlCreateTable_mariadb(t *testing.T) {
 			_, err = t.DB.Exec("DROP TABLE fk_table")
 			a.NotError(err)
 		}()
+
 		for _, query := range mysqlCreateTable {
 			_, err := t.DB.Exec(query)
 			t.NotError(err)

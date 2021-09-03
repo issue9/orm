@@ -67,7 +67,7 @@ type Admin1 struct {
 func (u *User) TableName() string { return "#users" }
 
 // Meta 指定表属性
-func (u *User) Meta(m *core.Model) error {
+func (u *User) ApplyModel(m *core.Model) error {
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
 	return nil
@@ -83,7 +83,7 @@ type Admin struct {
 func (a *Admin) TableName() string { return "#administrators" }
 
 // Meta 指定表属性
-func (a *Admin) Meta(m *core.Model) error {
+func (a *Admin) ApplyModel(m *core.Model) error {
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
 	return m.NewCheck("admin_chk_name", "{group}>0")

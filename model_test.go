@@ -42,7 +42,7 @@ func (u *User) TableName() string { return "#users" }
 func (u *UserInfo) TableName() string { return "#user_info" }
 
 // Meta 指定表属性
-func (u *UserInfo) Meta(m *core.Model) error {
+func (u *UserInfo) ApplyModel(m *core.Model) error {
 	m.NewCheck("user_info_chk_name", "uid>0")
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
@@ -59,7 +59,7 @@ type Admin struct {
 func (a *Admin) TableName() string { return "#administrators" }
 
 // Meta 指定表属性
-func (a *Admin) Meta(m *core.Model) error {
+func (a *Admin) ApplyModel(m *core.Model) error {
 	m.NewCheck("admin_chk_name", "{group}>0")
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
