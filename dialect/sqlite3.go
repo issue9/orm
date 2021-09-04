@@ -314,15 +314,7 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 		return s.buildType("REAL", col)
 	case core.RawBytes, core.Bytes:
 		return s.buildType("BLOB", col)
-	case core.NullBool:
-		return s.buildType("INTEGER", col)
-	case core.NullFloat64:
-		return s.buildType("REAL", col)
-	case core.NullInt64:
-		return s.buildType("INTEGER", col)
-	case core.NullString:
-		return s.buildType("TEXT", col)
-	case core.Time, core.NullTime:
+	case core.Time:
 		return s.buildType("TIMESTAMP", col)
 	}
 

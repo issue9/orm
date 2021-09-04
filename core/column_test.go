@@ -17,9 +17,6 @@ func TestNewColumn(t *testing.T) {
 	col, err = NewColumn(Bool)
 	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Bool)
 
-	col, err = NewColumn(NullFloat64)
-	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, NullFloat64)
-
 	col, err = NewColumn(Auto)
 	a.ErrorIs(err, ErrInvalidColumnType).Nil(col)
 

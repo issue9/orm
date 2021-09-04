@@ -69,13 +69,13 @@ func TestPostgres_SQLType(t *testing.T) {
 
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullInt64,
+				PrimitiveType: core.Int64,
 				AI:            true,
 			},
 			SQLType: "BIGSERIAL NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.NullInt64},
+			col:     &core.Column{PrimitiveType: core.Int64},
 			SQLType: "BIGINT NOT NULL",
 		},
 
@@ -132,14 +132,14 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullFloat64,
+				PrimitiveType: core.Float64,
 				Length:        []int{5, 9},
 			},
 			SQLType: "NUMERIC(5,9) NOT NULL",
 		},
 		{ // 长度必须为 2
 			col: &core.Column{
-				PrimitiveType: core.NullFloat64,
+				PrimitiveType: core.Float64,
 			},
 			err: true,
 		},
@@ -154,19 +154,19 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 
 		{
-			col:     &core.Column{PrimitiveType: core.NullString},
+			col:     &core.Column{PrimitiveType: core.String},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullString,
+				PrimitiveType: core.String,
 				Length:        []int{-1, 111},
 			},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullString,
+				PrimitiveType: core.String,
 				Length:        []int{99, 111},
 			},
 			SQLType: "VARCHAR(99) NOT NULL",

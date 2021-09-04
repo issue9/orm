@@ -60,6 +60,11 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	suite.ForEach(func(t *test.Driver) {
 		db := t.DB
 
+		for _, query := range mysqlCreateTable {
+			_, err := db.Exec(query)
+			t.NotError(err)
+		}
+
 		defer func() {
 			_, err := db.Exec("DROP TABLE `usr`")
 			t.NotError(err)
@@ -67,11 +72,6 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 			_, err = db.Exec("DROP TABLE `fk_table`")
 			t.NotError(err)
 		}()
-
-		for _, query := range mysqlCreateTable {
-			_, err := db.Exec(query)
-			t.NotError(err)
-		}
 
 		testDialectDropConstraintStmtHook(t)
 	})
@@ -272,38 +272,38 @@ func TestMysql_SQLType(t *testing.T) {
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullFloat64,
+				PrimitiveType: core.Float64,
 				Length:        []int{5},
 			},
 			err: true,
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullFloat64,
+				PrimitiveType: core.Float64,
 				Length:        []int{5, 7},
 			},
 			SQLType: "DOUBLE(5,7) NOT NULL",
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullInt64,
+				PrimitiveType: core.Int64,
 				Length:        []int{5},
 			},
 			SQLType: "BIGINT(5) NOT NULL",
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullString,
+				PrimitiveType: core.String,
 				Length:        []int{5},
 			},
 			SQLType: "VARCHAR(5) NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.NullString},
+			col:     &core.Column{PrimitiveType: core.String},
 			SQLType: "LONGTEXT NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.NullBool},
+			col:     &core.Column{PrimitiveType: core.Bool},
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{ // sql.RawBytes 会被转换成 []byte

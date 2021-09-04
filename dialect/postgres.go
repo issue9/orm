@@ -177,24 +177,7 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 		return p.buildType("VARCHAR", col, 1)
 	case core.RawBytes, core.Bytes:
 		return p.buildType("BYTEA", col, 0)
-	case core.NullBool:
-		return p.buildType("BOOLEAN", col, 0)
-	case core.NullFloat64:
-		if len(col.Length) != 2 {
-			return "", errMissLength
-		}
-		return p.buildType("NUMERIC", col, 2)
-	case core.NullInt64:
-		if col.AI {
-			return p.buildType("BIGSERIAL", col, 0)
-		}
-		return p.buildType("BIGINT", col, 0)
-	case core.NullString:
-		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
-			return p.buildType("TEXT", col, 0)
-		}
-		return p.buildType("VARCHAR", col, 1)
-	case core.Time, core.NullTime:
+	case core.Time:
 		if len(col.Length) == 0 {
 			return p.buildType("TIMESTAMP", col, 0)
 		}

@@ -198,7 +198,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.NullBool},
+			col:     &core.Column{PrimitiveType: core.Bool},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
@@ -210,34 +210,34 @@ func TestSqlite3_SQLType(t *testing.T) {
 			SQLType: "BLOB NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.NullInt64},
+			col:     &core.Column{PrimitiveType: core.Int64},
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.NullFloat64},
+			col:     &core.Column{PrimitiveType: core.Float64},
 			SQLType: "REAL NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.NullString},
+			col:     &core.Column{PrimitiveType: core.String},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullString,
+				PrimitiveType: core.String,
 				Nullable:      true,
 			},
 			SQLType: "TEXT",
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullString,
+				PrimitiveType: core.String,
 				Default:       "123",
 			},
 			SQLType: "TEXT NOT NULL",
 		},
 		{
 			col: &core.Column{
-				PrimitiveType: core.NullString,
+				PrimitiveType: core.String,
 				Default:       "123",
 				HasDefault:    true,
 			},
@@ -266,7 +266,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 			SQLType: "REAL NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.NullInt64},
+			col:     &core.Column{PrimitiveType: core.Int64},
 			SQLType: "INTEGER NOT NULL",
 		},
 

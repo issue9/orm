@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// 所有的 PrimitiveType
 const (
 	Auto PrimitiveType = iota
 	Bool
@@ -25,43 +24,38 @@ const (
 	Float32
 	Float64
 	String
-	NullString
-	NullInt64
-	NullInt32
-	NullBool
-	NullFloat64
 	Bytes
 	RawBytes
 	Time
-	NullTime
 	maxPrimitiveType
 )
 
 var (
 	types = map[reflect.Type]PrimitiveType{
-		reflect.TypeOf(true):              Bool,
-		reflect.TypeOf(int(1)):            Int,
-		reflect.TypeOf(int8(1)):           Int8,
-		reflect.TypeOf(int16(1)):          Int16,
-		reflect.TypeOf(int32(1)):          Int32,
-		reflect.TypeOf(int64(1)):          Int64,
-		reflect.TypeOf(uint(1)):           Uint,
-		reflect.TypeOf(uint8(1)):          Uint8,
-		reflect.TypeOf(uint16(1)):         Uint16,
-		reflect.TypeOf(uint32(1)):         Uint32,
-		reflect.TypeOf(uint64(1)):         Uint64,
-		reflect.TypeOf(float32(1)):        Float32,
-		reflect.TypeOf(float64(1)):        Float64,
-		reflect.TypeOf(""):                String,
-		reflect.TypeOf(sql.NullString{}):  NullString,
-		reflect.TypeOf(sql.NullInt64{}):   NullInt64,
-		reflect.TypeOf(sql.NullInt32{}):   NullInt32,
-		reflect.TypeOf(sql.NullBool{}):    NullBool,
-		reflect.TypeOf(sql.NullFloat64{}): NullFloat64,
-		reflect.TypeOf([]byte{}):          Bytes,
-		reflect.TypeOf(sql.RawBytes{}):    RawBytes,
-		reflect.TypeOf(time.Time{}):       Time,
-		reflect.TypeOf(sql.NullTime{}):    NullTime,
+		reflect.TypeOf(true):           Bool,
+		reflect.TypeOf(int(1)):         Int,
+		reflect.TypeOf(int8(1)):        Int8,
+		reflect.TypeOf(int16(1)):       Int16,
+		reflect.TypeOf(int32(1)):       Int32,
+		reflect.TypeOf(int64(1)):       Int64,
+		reflect.TypeOf(uint(1)):        Uint,
+		reflect.TypeOf(uint8(1)):       Uint8,
+		reflect.TypeOf(uint16(1)):      Uint16,
+		reflect.TypeOf(uint32(1)):      Uint32,
+		reflect.TypeOf(uint64(1)):      Uint64,
+		reflect.TypeOf(float32(1)):     Float32,
+		reflect.TypeOf(float64(1)):     Float64,
+		reflect.TypeOf(""):             String,
+		reflect.TypeOf([]byte{}):       Bytes,
+		reflect.TypeOf(sql.RawBytes{}): RawBytes,
+		reflect.TypeOf(time.Time{}):    Time,
+
+		reflect.TypeOf(sql.NullString{}):  String,
+		reflect.TypeOf(sql.NullInt64{}):   Int64,
+		reflect.TypeOf(sql.NullInt32{}):   Int32,
+		reflect.TypeOf(sql.NullBool{}):    Bool,
+		reflect.TypeOf(sql.NullFloat64{}): Float64,
+		reflect.TypeOf(sql.NullTime{}):    Time,
 	}
 
 	kinds = map[reflect.Kind]PrimitiveType{
@@ -98,7 +92,9 @@ type PrimitiveTyper interface {
 	PrimitiveType() PrimitiveType
 }
 
-// PrimitiveType 表示支持转换成数据库类型的 Go 类型信息
+// PrimitiveType 表示数据类型
+//
+// dialect 需要实现所有定义的 PrimitiveType 与数据库的转换。
 type PrimitiveType int
 
 // GetPrimitiveType 获取 t 所关联的 PrimitiveType 值

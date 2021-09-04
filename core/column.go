@@ -68,7 +68,7 @@ func (c *Column) Check() error {
 		return fmt.Errorf("AutoIncrement 列 %s 不能同时带 NULL 约束", c.Name)
 	}
 
-	if c.PrimitiveType == String || c.PrimitiveType == NullString {
+	if c.PrimitiveType == String {
 		if len(c.Length) > 0 && (c.Length[0] < -1 || c.Length[0] == 0) {
 			return fmt.Errorf("列 %s 的长度只能是 -1 或是 >0", c.Name)
 		}

@@ -269,21 +269,7 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 		return m.buildType("VARCHAR", col, false, 1)
 	case core.RawBytes, core.Bytes:
 		return m.buildType("BLOB", col, false, 0)
-	case core.NullBool:
-		return m.buildType("BOOLEAN", col, false, 0)
-	case core.NullFloat64:
-		if len(col.Length) != 2 {
-			return "", errMissLength
-		}
-		return m.buildType("DOUBLE", col, false, 2)
-	case core.NullInt64:
-		return m.buildType("BIGINT", col, false, 1)
-	case core.NullString:
-		if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
-			return m.buildType("LONGTEXT", col, false, 0)
-		}
-		return m.buildType("VARCHAR", col, false, 1)
-	case core.Time, core.NullTime:
+	case core.Time:
 		if len(col.Length) == 0 {
 			return m.buildType("DATETIME", col, false, 0)
 		}

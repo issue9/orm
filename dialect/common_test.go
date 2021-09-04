@@ -104,13 +104,13 @@ func testTypes(t *test.Driver) {
 		Column("float32", core.Float32, false, false, false, nil, 5, 3).
 		Column("float64", core.Float64, false, false, false, nil, 5, 3).
 		Column("string", core.String, false, false, false, nil, 100).
-		Column("null_string", core.NullString, false, false, false, nil, 100).
-		Column("null_int64", core.NullInt64, false, false, false, nil).
-		Column("null_bool", core.NullBool, false, false, false, nil).
-		Column("null_float64", core.NullFloat64, false, false, false, nil, 5, 3).
+		Column("null_string", core.String, false, false, false, nil, 100).
+		Column("null_int64", core.Int64, false, false, false, nil).
+		Column("null_bool", core.Bool, false, false, false, nil).
+		Column("null_float64", core.Float64, false, false, false, nil, 5, 3).
 		Column("raw_bytes", core.RawBytes, false, false, false, nil).
 		Column("time", core.Time, false, false, false, nil).
-		Column("null_time", core.NullTime, false, false, false, nil, 5).
+		Column("null_time", core.Time, false, false, false, nil, 5).
 		Column("unix", (core.Unix{}).PrimitiveType(), false, false, false, nil).
 		Table(tableName)
 	t.NotError(creator.Exec())
@@ -264,10 +264,10 @@ func testTypesDefault(t *test.Driver) {
 		Column("float32", core.Float32, false, false, true, -3.2, 5, 3).
 		Column("float64", core.Float64, false, false, true, 6.654321, 15, 7).
 		Column("string", core.String, false, false, true, "str", 100).
-		Column("null_string", core.NullString, false, false, true, "null_str", 100).
-		Column("null_int64", core.NullInt64, false, true, true, sql.NullInt64{Int64: 64, Valid: false}).
-		Column("null_bool", core.NullBool, false, false, true, sql.NullBool{Bool: true, Valid: true}).
-		Column("null_float64", core.NullFloat64, false, true, true, nil, 5, 3).
+		Column("null_string", core.String, false, false, true, "null_str", 100).
+		Column("null_int64", core.Int64, false, true, true, sql.NullInt64{Int64: 64, Valid: false}).
+		Column("null_bool", core.Bool, false, false, true, sql.NullBool{Bool: true, Valid: true}).
+		Column("null_float64", core.Float64, false, true, true, nil, 5, 3).
 		Column("bytes", core.Bytes, false, true, false, []byte("bytes")).           // 默认值无效
 		Column("raw_bytes", core.RawBytes, false, true, false, []byte("rawBytes")). // 默认值无效
 		Column("time", core.Time, false, false, true, now).
