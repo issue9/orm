@@ -125,6 +125,20 @@ func TestPostgres_SQLType(t *testing.T) {
 			SQLType: "DOUBLE PRECISION NOT NULL",
 		},
 		{
+			col: &core.Column{
+				PrimitiveType: core.Decimal,
+				Length:        []int{5, 9},
+			},
+			SQLType: "decimal(5,9) NOT NULL",
+		},
+		{
+			col: &core.Column{
+				PrimitiveType: core.Decimal,
+				Length:        []int{5},
+			},
+			err: true,
+		},
+		{
 			col:     &core.Column{PrimitiveType: core.String},
 			SQLType: "TEXT NOT NULL",
 		},

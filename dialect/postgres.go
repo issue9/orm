@@ -169,6 +169,11 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 		return p.buildType("REAL", col, 0)
 	case core.Float64:
 		return p.buildType("DOUBLE PRECISION", col, 0)
+	case core.Decimal:
+		if len(col.Length) != 2 {
+			return "", errMissLength
+		}
+		return p.buildType("DECIMAL", col, 2)
 	case core.String:
 		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
 			return p.buildType("TEXT", col, 0)

@@ -222,6 +222,10 @@ func TestSqlite3_SQLType(t *testing.T) {
 			SQLType: "TEXT NOT NULL",
 		},
 		{
+			col:     &core.Column{PrimitiveType: core.Decimal},
+			SQLType: "NUMERIC NOT NULL",
+		},
+		{
 			col: &core.Column{
 				PrimitiveType: core.String,
 				Nullable:      true,

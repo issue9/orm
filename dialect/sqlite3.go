@@ -312,6 +312,8 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 		return s.buildType("INTEGER", col)
 	case core.Float32, core.Float64:
 		return s.buildType("REAL", col)
+	case core.Decimal:
+		return s.buildType("NUMERIC", col)
 	case core.RawBytes, core.Bytes:
 		return s.buildType("BLOB", col)
 	case core.Time:

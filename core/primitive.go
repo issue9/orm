@@ -27,6 +27,7 @@ const (
 	Bytes
 	RawBytes
 	Time
+	Decimal
 	maxPrimitiveType
 )
 
