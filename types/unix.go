@@ -34,27 +34,25 @@ func (n *Unix) Scan(src interface{}) (err error) {
 	}
 
 	unix := int64(0)
-	if src != nil {
-		switch v := src.(type) {
-		case int64:
-			unix = v
-		case []byte:
-			if unix, err = strconv.ParseInt(string(v), 10, 64); err != nil {
-				return err
-			}
-		case string:
-			if unix, err = strconv.ParseInt(v, 10, 64); err != nil {
-				return err
-			}
-		default:
-			return core.ErrInvalidColumnType
+	switch v := src.(type) {
+	case int64:
+		unix = v
+	case []byte:
+		if unix, err = strconv.ParseInt(string(v), 10, 64); err != nil {
+			return err
 		}
+	case string:
+		if unix, err = strconv.ParseInt(v, 10, 64); err != nil {
+			return err
+		}
+	default:
+		return core.ErrInvalidColumnType
 	}
+
 	n.Time = time.Unix(unix, 0)
 	return nil
 }
 
-// Value implements the driver.Valuer
 func (n Unix) Value() (driver.Value, error) {
 	if n.IsNull {
 		return nil, nil
@@ -85,14 +83,10 @@ func (n *Unix) ParseDefault(v string) error {
 	return nil
 }
 
-// PrimitiveType 实现 core.PrimitiveTyper 接口
-func (n Unix) PrimitiveType() core.PrimitiveType {
-	return core.Int64
-}
+func (n Unix) PrimitiveType() core.PrimitiveType { return core.Int64 }
 
 var unixNull = []byte("null")
 
-// MarshalText encoding.TextMarshaler
 func (n Unix) MarshalText() ([]byte, error) {
 	if n.IsNull {
 		return unixNull, nil
@@ -100,7 +94,6 @@ func (n Unix) MarshalText() ([]byte, error) {
 	return n.Time.MarshalText()
 }
 
-// MarshalJSON implements json.Marshaler
 func (n Unix) MarshalJSON() ([]byte, error) {
 	if n.IsNull {
 		return unixNull, nil
@@ -108,7 +101,6 @@ func (n Unix) MarshalJSON() ([]byte, error) {
 	return n.Time.MarshalJSON()
 }
 
-// MarshalBinary implements encoding.BinaryMarshaler
 func (n Unix) MarshalBinary() ([]byte, error) {
 	if n.IsNull {
 		return unixNull, nil
@@ -116,7 +108,6 @@ func (n Unix) MarshalBinary() ([]byte, error) {
 	return n.Time.MarshalBinary()
 }
 
-// UnmarshalText encoding.TextUnmarshaler
 func (n *Unix) UnmarshalText(data []byte) error {
 	if bytes.Equal(unixNull, bytes.ToLower(data)) {
 		n.IsNull = true
@@ -127,7 +118,6 @@ func (n *Unix) UnmarshalText(data []byte) error {
 	return n.Time.UnmarshalText(data)
 }
 
-// UnmarshalJSON implements json.Unmarshaler
 func (n *Unix) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(unixNull, bytes.ToLower(data)) {
 		n.IsNull = true
@@ -138,7 +128,6 @@ func (n *Unix) UnmarshalJSON(data []byte) error {
 	return n.Time.UnmarshalJSON(data)
 }
 
-// UnmarshalBinary implements encoding.BinaryUnmarshaler
 func (n *Unix) UnmarshalBinary(data []byte) error {
 	if bytes.Equal(unixNull, bytes.ToLower(data)) {
 		n.IsNull = true
