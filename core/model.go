@@ -152,37 +152,6 @@ func (m *Model) AIName() string { return AIName(m.Name) }
 // PKName 当前模型中主键约束的名称
 func (m *Model) PKName() string { return PKName(m.Name) }
 
-// AddColumns 添加新列
-func (m *Model) AddColumns(col ...*Column) error {
-	for _, c := range col {
-		if err := m.AddColumn(c); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// AddColumn 添加新列
-//
-// 按添加顺序确定位置，越早添加的越在前。
-func (m *Model) AddColumn(col *Column) error {
-	if col.Name == "" {
-		return errors.New("列必须存在名称")
-	}
-
-	if m.FindColumn(col.Name) != nil {
-		return errColumnExists(col.Name)
-	}
-
-	m.Columns = append(m.Columns, col)
-
-	if col.AI {
-		return m.SetAutoIncrement(col)
-	}
-	return nil
-}
-
 // SetAutoIncrement 将 col 列设置为自增列
 //
 // 如果已经存在自增列或是主键，返回错误。
@@ -244,7 +213,7 @@ func (m *Model) SetOCC(col *Column) error {
 	}
 
 	if !m.columnExists(col) {
-		return errColumnNotFound(col.Name)
+		return fmt.Errorf("列 %s 未找到", col.Name)
 	}
 	m.OCC = col
 	return nil

@@ -24,6 +24,30 @@ func TestNewColumn(t *testing.T) {
 	a.ErrorIs(err, ErrInvalidColumnType).Nil(col)
 }
 
+func TestModel_AddColumns(t *testing.T) {
+	a := assert.New(t)
+	m := NewModel(Table, "m1", 10)
+	a.NotNil(m)
+
+	ai, err := NewColumn(Int)
+	a.NotError(err).NotNil(ai)
+	ai.AI = true
+	a.Error(m.AddColumns(ai)) // 没有名称
+
+	col, err := NewColumn(Int)
+	a.NotError(err).NotNil(col)
+
+	// 同名
+	ai.Name = "ai"
+	col.Name = "ai"
+	a.Error(m.AddColumns(ai, col))
+
+	// 正常
+	m.Reset()
+	col.Name = "col"
+	a.NotError(m.AddColumns(ai, col))
+}
+
 func TestColumn_Clone(t *testing.T) {
 	a := assert.New(t)
 

@@ -83,6 +83,37 @@ func (c *Column) Check() error {
 	return nil
 }
 
+// AddColumns 添加新列
+func (m *Model) AddColumns(col ...*Column) error {
+	for _, c := range col {
+		if err := m.AddColumn(c); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// AddColumn 添加新列
+//
+// 按添加顺序确定位置，越早添加的越在前。
+func (m *Model) AddColumn(col *Column) error {
+	if col.Name == "" {
+		return errors.New("列必须存在名称")
+	}
+
+	if m.FindColumn(col.Name) != nil {
+		return fmt.Errorf("列 %s 已经存在", col.Name)
+	}
+
+	m.Columns = append(m.Columns, col)
+
+	if col.AI {
+		return m.SetAutoIncrement(col)
+	}
+	return nil
+}
+
 // FindColumn 查找指定名称的列
 //
 // 不存在该列则返回 nil
@@ -93,14 +124,6 @@ func (m *Model) FindColumn(name string) *Column {
 		}
 	}
 	return nil
-}
-
-func errColumnNotFound(col string) error {
-	return fmt.Errorf("列 %s 未找到", col)
-}
-
-func errColumnExists(col string) error {
-	return fmt.Errorf("列 %s 已经存在", col)
 }
 
 func (m *Model) columnExists(col *Column) bool {
