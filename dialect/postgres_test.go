@@ -115,35 +115,15 @@ func TestPostgres_SQLType(t *testing.T) {
 				PrimitiveType: core.Float32,
 				Length:        []int{5, 9},
 			},
-			SQLType: "NUMERIC(5,9) NOT NULL",
-		},
-		{ // 长度必须为 2
-			col: &core.Column{
-				PrimitiveType: core.Float32,
-			},
-			err: true,
-		},
-		{ // 长度必须为 2
-			col: &core.Column{
-				PrimitiveType: core.Float64,
-				Length:        []int{1},
-			},
-			err: true,
+			SQLType: "REAL NOT NULL",
 		},
 		{
 			col: &core.Column{
 				PrimitiveType: core.Float64,
 				Length:        []int{5, 9},
 			},
-			SQLType: "NUMERIC(5,9) NOT NULL",
+			SQLType: "DOUBLE PRECISION NOT NULL",
 		},
-		{ // 长度必须为 2
-			col: &core.Column{
-				PrimitiveType: core.Float64,
-			},
-			err: true,
-		},
-
 		{
 			col:     &core.Column{PrimitiveType: core.String},
 			SQLType: "TEXT NOT NULL",

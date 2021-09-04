@@ -261,28 +261,14 @@ func TestMysql_SQLType(t *testing.T) {
 				PrimitiveType: core.Float32,
 				Length:        []int{5, 6},
 			},
-			SQLType: "DOUBLE(5,6) NOT NULL",
-		},
-		{
-			col: &core.Column{
-				PrimitiveType: core.Float64,
-				Length:        []int{5},
-			},
-			err: true,
-		},
-		{
-			col: &core.Column{
-				PrimitiveType: core.Float64,
-				Length:        []int{5},
-			},
-			err: true,
+			SQLType: "FLOAT NOT NULL",
 		},
 		{
 			col: &core.Column{
 				PrimitiveType: core.Float64,
 				Length:        []int{5, 7},
 			},
-			SQLType: "DOUBLE(5,7) NOT NULL",
+			SQLType: "DOUBLE PRECISION NOT NULL",
 		},
 		{
 			col: &core.Column{

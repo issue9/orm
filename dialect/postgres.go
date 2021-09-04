@@ -165,11 +165,10 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 			return p.buildType("BIGSERIAL", col, 0)
 		}
 		return p.buildType("BIGINT", col, 0)
-	case core.Float32, core.Float64:
-		if len(col.Length) != 2 {
-			return "", errMissLength
-		}
-		return p.buildType("NUMERIC", col, 2)
+	case core.Float32:
+		return p.buildType("REAL", col, 0)
+	case core.Float64:
+		return p.buildType("DOUBLE PRECISION", col, 0)
 	case core.String:
 		if len(col.Length) == 0 || (col.Length[0] == -1 || col.Length[0] > 65533) {
 			return p.buildType("TEXT", col, 0)

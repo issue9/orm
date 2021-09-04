@@ -16,7 +16,6 @@ import (
 
 var (
 	errColIsNil              = errors.New("参数 col 参数是个空值")
-	errMissLength            = errors.New("缺少长度")
 	errTimeFractionalInvalid = errors.New("时间精度只能介于 [0,6] 之间")
 
 	datetimeLayouts = []string{

@@ -257,11 +257,10 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 		return m.buildType("INT", col, true, 1)
 	case core.Uint64, core.Uint:
 		return m.buildType("BIGINT", col, true, 1)
-	case core.Float32, core.Float64:
-		if len(col.Length) != 2 {
-			return "", errMissLength
-		}
-		return m.buildType("DOUBLE", col, false, 2)
+	case core.Float32:
+		return m.buildType("FLOAT", col, false, 0)
+	case core.Float64:
+		return m.buildType("DOUBLE PRECISION", col, false, 0)
 	case core.String:
 		if len(col.Length) == 0 || col.Length[0] == -1 || col.Length[0] > 65533 {
 			return m.buildType("LONGTEXT", col, false, 0)
