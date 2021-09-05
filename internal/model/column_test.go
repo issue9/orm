@@ -10,6 +10,7 @@ import (
 	"github.com/issue9/assert"
 
 	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v4/types"
 )
 
 func TestNewColumn(t *testing.T) {
@@ -169,7 +170,7 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// col == core.Unix
 
-	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(core.Unix{})})
+	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(types.Unix{})})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
@@ -177,11 +178,11 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// 格式正确，但类型被转换成 *core.Unix，而不初始的 core.Unix
 	a.NotError(col.setDefault([]string{f}))
-	a.Equal(col.Default.(*core.Unix).Time.Unix(), now.Unix())
+	a.Equal(col.Default.(*types.Unix).Time.Unix(), now.Unix())
 
 	// col == &core.Unix
 
-	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&core.Unix{})})
+	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&types.Unix{})})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
@@ -189,11 +190,11 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// 格式正确
 	a.NotError(col.setDefault([]string{f}))
-	a.Equal(col.Default.(*core.Unix).Time.Unix(), now.Unix())
+	a.Equal(col.Default.(*types.Unix).Time.Unix(), now.Unix())
 
 	// col == &&core.Unix
 
-	u := &core.Unix{}
+	u := &types.Unix{}
 	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&u)})
 	a.NotError(err).NotNil(col)
 
@@ -202,5 +203,5 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// 格式正确
 	a.NotError(col.setDefault([]string{f}))
-	a.Equal(col.Default.(*core.Unix).Time.Unix(), now.Unix())
+	a.Equal(col.Default.(*types.Unix).Time.Unix(), now.Unix())
 }

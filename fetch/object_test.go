@@ -9,9 +9,9 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/fetch"
 	"github.com/issue9/orm/v4/internal/test"
+	"github.com/issue9/orm/v4/types"
 )
 
 type FetchEmail struct {
@@ -30,10 +30,10 @@ type FetchUser struct {
 func (u *FetchUser) TableName() string { return "#user" }
 
 type Log struct {
-	ID      int       `orm:"name(id);ai"`
-	Content string    `orm:"name(content);len(1024)"`
-	Created core.Unix `orm:"name(created)"`
-	UID     int       `orm:"name(uid)"`
+	ID      int        `orm:"name(id);ai"`
+	Content string     `orm:"name(content);len(1024)"`
+	Created types.Unix `orm:"name(created)"`
+	UID     int        `orm:"name(uid)"`
 }
 
 func (l *Log) TableName() string { return "#logs" }
@@ -63,7 +63,7 @@ func initDB(t *test.Driver) {
 	stmt, err = tx.Prepare("INSERT INTO #logs(id, created,content,uid) values(?, ?, ?, ?)")
 	t.NotError(err).NotNil(stmt)
 	for i := 1; i < 100; i++ {
-		_, err = stmt.Exec(i, core.Unix{Time: time.Now()}, fmt.Sprintf("content-%d", i), i)
+		_, err = stmt.Exec(i, types.Unix{Time: time.Now()}, fmt.Sprintf("content-%d", i), i)
 		t.NotError(err)
 	}
 	t.NotError(stmt.Close())
