@@ -118,9 +118,7 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 }
 
 // Dialect 返回对应的 Dialect 实例
-func (tx *Tx) Dialect() Dialect {
-	return tx.db.Dialect()
-}
+func (tx *Tx) Dialect() Dialect { return tx.db.Dialect() }
 
 // LastInsertID 插入数据，并获取其自增的 ID
 func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
@@ -128,19 +126,13 @@ func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
 }
 
 // Insert 插入一个或多个数据
-func (tx *Tx) Insert(v TableNamer) (sql.Result, error) {
-	return insert(tx, v)
-}
+func (tx *Tx) Insert(v TableNamer) (sql.Result, error) { return insert(tx, v) }
 
 // Select 读数据
-func (tx *Tx) Select(v TableNamer) error {
-	return find(tx, v)
-}
+func (tx *Tx) Select(v TableNamer) error { return find(tx, v) }
 
 // ForUpdate 读数据并锁定
-func (tx *Tx) ForUpdate(v TableNamer) error {
-	return forUpdate(tx, v)
-}
+func (tx *Tx) ForUpdate(v TableNamer) error { return forUpdate(tx, v) }
 
 func (tx *Tx) InsertMany(max int, v ...TableNamer) error {
 	if len(v) == 0 {
@@ -172,31 +164,21 @@ func (tx *Tx) Update(v TableNamer, cols ...string) (sql.Result, error) {
 }
 
 // Delete 删除一条数据
-func (tx *Tx) Delete(v TableNamer) (sql.Result, error) {
-	return del(tx, v)
-}
+func (tx *Tx) Delete(v TableNamer) (sql.Result, error) { return del(tx, v) }
 
 // Create 创建数据表或是视图
-func (tx *Tx) Create(v TableNamer) error {
-	return create(tx, v)
-}
+func (tx *Tx) Create(v TableNamer) error { return create(tx, v) }
 
 // Drop 删除表或视图
-func (tx *Tx) Drop(v TableNamer) error {
-	return drop(tx, v)
-}
+func (tx *Tx) Drop(v TableNamer) error { return drop(tx, v) }
 
 // Truncate 清除表内容
 //
 // 会重置 ai，但保留表结构。
-func (tx *Tx) Truncate(v TableNamer) error {
-	return truncate(tx, v)
-}
+func (tx *Tx) Truncate(v TableNamer) error { return truncate(tx, v) }
 
 // SQLBuilder 返回 SQL 实例
-func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder {
-	return tx.sqlBuilder
-}
+func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder { return tx.sqlBuilder }
 
 // MultInsert 插入一个或多个数据
 func (tx *Tx) MultInsert(objs ...TableNamer) error {
@@ -234,14 +216,10 @@ func (tx *Tx) MultDelete(objs ...TableNamer) error {
 }
 
 // MultCreate 创建数据表
-func (tx *Tx) MultCreate(objs ...TableNamer) error {
-	return tx.multDo(tx.Create, objs...)
-}
+func (tx *Tx) MultCreate(objs ...TableNamer) error { return tx.multDo(tx.Create, objs...) }
 
 // MultDrop 删除表结构及数据
-func (tx *Tx) MultDrop(objs ...TableNamer) error {
-	return tx.multDo(tx.Drop, objs...)
-}
+func (tx *Tx) MultDrop(objs ...TableNamer) error { return tx.multDo(tx.Drop, objs...) }
 
 // MultTruncate 清除表内容
 //

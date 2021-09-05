@@ -61,23 +61,17 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 }
 
 // TablePrefix 返回表名前缀内容内容
-func (db *DB) TablePrefix() string {
-	return db.tablePrefix
-}
+func (db *DB) TablePrefix() string { return db.tablePrefix }
 
 // Debug 指定调输出调试内容通道
 //
 // 如果 l 不为 nil，则每次 SQL 调用都会输出 SQL 语句，
 // 预编译的语句，仅在预编译时输出；
 // 如果为 nil，则表示关闭调试。
-func (db *DB) Debug(l *log.Logger) {
-	db.sqlLogger = l
-}
+func (db *DB) Debug(l *log.Logger) { db.sqlLogger = l }
 
 // Dialect 返回对应的 Dialect 接口实例
-func (db *DB) Dialect() Dialect {
-	return db.dialect
-}
+func (db *DB) Dialect() Dialect { return db.dialect }
 
 // Close 关闭连接
 //
@@ -199,9 +193,7 @@ func (db *DB) Insert(v TableNamer) (sql.Result, error) {
 //
 // 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 // 若两者都不存在，则将返回 error
-func (db *DB) Delete(v TableNamer) (sql.Result, error) {
-	return del(db, v)
-}
+func (db *DB) Delete(v TableNamer) (sql.Result, error) { return del(db, v) }
 
 // Update 更新数据
 //
@@ -221,19 +213,13 @@ func (db *DB) Update(v TableNamer, cols ...string) (sql.Result, error) {
 //
 // 查找条件的查找顺序是为 自增 > 主键 > 唯一约束，
 // 如果同时存在多个唯一约束满足条件，则返回错误信息。
-func (db *DB) Select(v TableNamer) error {
-	return find(db, v)
-}
+func (db *DB) Select(v TableNamer) error { return find(db, v) }
 
 // Create 创建一张表或是视图
-func (db *DB) Create(v TableNamer) error {
-	return create(db, v)
-}
+func (db *DB) Create(v TableNamer) error { return create(db, v) }
 
 // Drop 删除一张表或视图
-func (db *DB) Drop(v TableNamer) error {
-	return drop(db, v)
-}
+func (db *DB) Drop(v TableNamer) error { return drop(db, v) }
 
 // Truncate 清空一张表
 func (db *DB) Truncate(v TableNamer) error {
