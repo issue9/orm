@@ -70,10 +70,10 @@ type User struct {
     Group       string     `orm:"name(group)"`
 }
 
+func(u *User) TableName() string { return "#user" }
+
 // 通过 orm.ApplyModeler 接口，指定表的额外数据。若不需要，可不用实现该接口
-// 表名 user 会被自动加上表名前缀。
 func(u *User) ApplyModel(m *core.Model) error {
-    m.Name = "#user"
     m.Meta["mysql_engine"] = []string{"innodb"}
     m.Meta["mysql_charset"] = []string{"utf8"}
     return nil
@@ -137,40 +137,13 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
 refTable 如果需要表名前缀，需要添加 # 符号。
 
-##### check(chk_name, expr):
-
-check 约束。chk_name 为约束名，expr 为该约束的表达式。
-check 约束只能在 ApplyModeler 接口中指定，而不是像其它约束一样，通过字段的 struct tag 指定。
-因为 check 约束的表达式可以通过 and 或是 or 等符号连接多条基本表达式，
-在字段 struct tag 中指定会显得有点怪异。
-
 #### 接口:
 
-##### ApplyModeler
-
-在 Go 不能将 struct tag 作用于结构体，所以为了指定一些表级别的属性，
-只能通过接口的形式，在接口方法中返回一段类似于 struct tag 的字符串，
-以达到相同的目的。
-
-在 ApplyModeler 每种数据库可以指定一些自定义的属性，这些属性都将会被保存到
-Model.Meta 中，各个数据库的自定义属性以其名称开头，比如 mysql 的 charset 属性，
-可以使用 mysql_charset。
-
-同时还包含了以下几种通用的属性信息：
-
-- check(expr): 指定 check 约束内容。
-
-##### AfterFetcher
-
-在拉到数据之后，对该对象执行的一些额外操作。如果需要根据字段做额外工作的，可以使用该接口。
-
-##### BeforeInserter
-
-在执行插入之前，需要执行的操作。
-
-##### BeforeUpdater
-
-在执行更新之前，需要执行的操作。
+- TableNamer 指定表名；
+- ApplyModeler 通过 ApplyModeler 接口可以指定一些表级别的属性值；
+- AfterFetcher 在拉到数据之后，对该对象执行的一些额外操作。如果需要根据字段做额外工作的，可以使用该接口；
+- BeforeInserter 在执行插入之前，需要执行的操作；
+- BeforeUpdater 在执行更新之前，需要执行的操作；
 
 #### 约束名：
 

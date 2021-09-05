@@ -20,4 +20,4 @@ ORM 支持对自定义类型的存储和读取，需要实现以下几个接口�
 - core.DefaultParser 表示在 struct tag 中的 Default 标签中值该如果解析，可以不实现，如果未实现，则采用 `sql.Scanner` 接口；
 - core.TableNamer 指定表名；
 
-可以查找 core.Unix 的实现方式。
+可以参考 types 下的各个自定义类型的实现。
