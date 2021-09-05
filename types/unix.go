@@ -3,8 +3,8 @@
 package types
 
 import (
-	"bytes"
 	"database/sql/driver"
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -69,71 +69,49 @@ func (n *Unix) FromTime(t time.Time) {
 
 // ParseDefault 实现 DefaultParser 接口
 func (n *Unix) ParseDefault(v string) error {
-	if bytes.Equal(unixNull, bytes.ToLower([]byte(v))) {
-		n.IsNull = true
+	n.IsNull = len(v) == 0
+	if n.IsNull {
 		return nil
 	}
 
 	t, err := time.Parse(core.TimeFormatLayout, v)
 	if err != nil {
+		n.IsNull = false
 		return err
 	}
+
 	n.FromTime(t)
-	n.IsNull = false
 	return nil
 }
 
 func (n Unix) PrimitiveType() core.PrimitiveType { return core.Int64 }
 
-var unixNull = []byte("null")
-
 func (n Unix) MarshalText() ([]byte, error) {
 	if n.IsNull {
-		return unixNull, nil
+		return nil, nil
 	}
 	return n.Time.MarshalText()
 }
 
 func (n Unix) MarshalJSON() ([]byte, error) {
 	if n.IsNull {
-		return unixNull, nil
+		return json.Marshal(nil)
 	}
 	return n.Time.MarshalJSON()
 }
 
-func (n Unix) MarshalBinary() ([]byte, error) {
-	if n.IsNull {
-		return unixNull, nil
-	}
-	return n.Time.MarshalBinary()
-}
-
 func (n *Unix) UnmarshalText(data []byte) error {
-	if bytes.Equal(unixNull, bytes.ToLower(data)) {
-		n.IsNull = true
+	n.IsNull = len(data) == 0
+	if n.IsNull {
 		return nil
 	}
-
-	n.IsNull = false
 	return n.Time.UnmarshalText(data)
 }
 
 func (n *Unix) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(unixNull, bytes.ToLower(data)) {
-		n.IsNull = true
+	n.IsNull = len(data) == 0
+	if n.IsNull {
 		return nil
 	}
-
-	n.IsNull = false
 	return n.Time.UnmarshalJSON(data)
-}
-
-func (n *Unix) UnmarshalBinary(data []byte) error {
-	if bytes.Equal(unixNull, bytes.ToLower(data)) {
-		n.IsNull = true
-		return nil
-	}
-
-	n.IsNull = false
-	return n.Time.UnmarshalBinary(data)
 }

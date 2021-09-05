@@ -15,14 +15,14 @@ import (
 type Decimal struct {
 	Decimal   decimal.Decimal
 	Precision int32
-	Valid     bool
+	IsNull    bool
 }
 
 // StringDecimal 从浮点数还原 Decimal 对象
 //
 // percision 表示输出的精度。
 func FloatDecimal(f float64, precision int32) Decimal {
-	return Decimal{Decimal: decimal.NewFromFloat(f), Precision: precision, Valid: true}
+	return Decimal{Decimal: decimal.NewFromFloat(f), Precision: precision}
 }
 
 // StringDecimal 从字符串还原 Decimal 对象
@@ -33,7 +33,7 @@ func StringDecimal(s string, precision int32) (Decimal, error) {
 	if err != nil {
 		return Decimal{}, err
 	}
-	return Decimal{Decimal: d, Precision: precision, Valid: true}, nil
+	return Decimal{Decimal: d, Precision: precision}, nil
 }
 
 // StringDecimalWithPercision 从字符串还原 Decimal 对象
@@ -51,10 +51,9 @@ func StringDecimalWithPercision(s string) (Decimal, error) {
 
 // Scan implements the Scanner.Scan
 func (n *Decimal) Scan(src interface{}) (err error) {
-	n.Valid = src != nil
-	if n.Valid {
+	if n.IsNull = src == nil; !n.IsNull {
 		if err = n.Decimal.Scan(src); err != nil {
-			n.Valid = false
+			n.IsNull = false
 			return err
 		}
 	}
@@ -62,7 +61,7 @@ func (n *Decimal) Scan(src interface{}) (err error) {
 }
 
 func (n Decimal) Value() (driver.Value, error) {
-	if !n.Valid {
+	if n.IsNull {
 		return nil, nil
 	}
 	return n.Decimal.StringFixed(n.Precision), nil
@@ -74,30 +73,28 @@ func (n *Decimal) ParseDefault(v string) error { return n.UnmarshalText([]byte(v
 func (n Decimal) PrimitiveType() core.PrimitiveType { return core.Decimal }
 
 func (n Decimal) MarshalText() ([]byte, error) {
-	if !n.Valid {
+	if n.IsNull {
 		return nil, nil
 	}
 	return []byte(n.Decimal.StringFixed(n.Precision)), nil
 }
 
 func (n Decimal) MarshalJSON() ([]byte, error) {
-	if !n.Valid {
+	if n.IsNull {
 		return json.Marshal(nil)
 	}
 	return json.Marshal(n.Decimal.StringFixed(n.Precision))
 }
 
 func (n *Decimal) UnmarshalText(data []byte) error {
-	n.Valid = len(data) > 0
-	if !n.Valid {
+	if n.IsNull = len(data) == 0; n.IsNull {
 		return nil
 	}
 	return n.Decimal.UnmarshalText(data)
 }
 
 func (n *Decimal) UnmarshalJSON(data []byte) error {
-	n.Valid = len(data) > 0
-	if !n.Valid {
+	if n.IsNull = len(data) == 0; n.IsNull {
 		return nil
 	}
 	return n.Decimal.UnmarshalJSON(data)
