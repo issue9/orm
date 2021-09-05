@@ -85,14 +85,6 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
 refTable 如果需要表名前缀，需要添加 # 符号。
 
-#### check(chk_name, expr)
-
-check 约束。chk_name 为约束名，expr 为该约束的表达式。
-check 约束只能在 `ApplyModeler` 接口中指定，而不是像其它约束一样，
-通过字段的 struct tag 指定。
-因为 check 约束的表达式可以通过 and 或是 or 等符号连接多条基本表达式，
-在字段 struct tag 中指定会显得有点怪异。
-
 ### 接口
 
 #### TableNamer

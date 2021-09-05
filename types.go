@@ -19,6 +19,8 @@ type (
 
 	Rat = types.Rat
 
+	Decimal = types.Decimal
+
 	// AfterFetcher 从数据库查询到数据之后需要执行的操作
 	AfterFetcher = fetch.AfterFetcher
 
