@@ -25,6 +25,18 @@ var (
 	_ encoding.TextUnmarshaler = &Rat{}
 )
 
+func TestRational(t *testing.T) {
+	a := assert.New(t)
+
+	r := Rational(3, 4)
+	a.False(r.IsNull())
+	val, err := r.Value()
+	a.NotError(err).Equal(val, "3/4")
+
+	r = Rat{}
+	a.True(r.IsNull())
+}
+
 func TestRat_SQL(t *testing.T) {
 	a := assert.New(t)
 
@@ -44,6 +56,12 @@ func TestRat_SQL(t *testing.T) {
 	a.ErrorIs(r.Scan(1), core.ErrInvalidColumnType)
 	val, err = r.Value()
 	a.Nil(val).NotError(err)
+
+	r2 := Rational(3, 4)
+	a.NotError(r2.Scan("1/3"))
+	a.Equal(r2.Rat().String(), "1/3")
+	val, err = r2.Value()
+	a.Equal(val, "1/3").NotError(err)
 }
 
 func TestRat_ParseDefault(t *testing.T) {

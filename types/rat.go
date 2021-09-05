@@ -18,6 +18,8 @@ type Rat struct {
 	rat *big.Rat
 }
 
+func Rational(a, b int64) Rat { return Rat{rat: big.NewRat(a, b)} }
+
 // Scan implements the Scanner.Scan
 func (n *Rat) Scan(src interface{}) (err error) {
 	// The src value will be of one of the following types:
@@ -44,7 +46,7 @@ func (n *Rat) Scan(src interface{}) (err error) {
 	}
 }
 
-func (n *Rat) Value() (driver.Value, error) {
+func (n Rat) Value() (driver.Value, error) {
 	if n.IsNull() {
 		return nil, nil
 	}
@@ -52,7 +54,7 @@ func (n *Rat) Value() (driver.Value, error) {
 }
 
 // Rat 返回标准库中 math/big.Rat 的实例
-func (n *Rat) Rat() *big.Rat { return n.rat }
+func (n Rat) Rat() *big.Rat { return n.rat }
 
 // ParseDefault 实现 DefaultParser 接口
 func (n *Rat) ParseDefault(v string) error { return n.UnmarshalText([]byte(v)) }
@@ -78,4 +80,4 @@ func (n *Rat) UnmarshalText(data []byte) error {
 	return n.Rat().UnmarshalText(data)
 }
 
-func (n *Rat) IsNull() bool { return n.Rat() == nil }
+func (n Rat) IsNull() bool { return n.Rat() == nil }
