@@ -13,9 +13,7 @@ type AddColumnStmt struct {
 }
 
 // AddColumn 声明一条添加列的语句
-func (sql *SQLBuilder) AddColumn() *AddColumnStmt {
-	return AddColumn(sql.engine)
-}
+func (sql *SQLBuilder) AddColumn() *AddColumnStmt { return AddColumn(sql.engine) }
 
 // AddColumn 声明一条添加列的语句
 func AddColumn(e core.Engine) *AddColumnStmt {

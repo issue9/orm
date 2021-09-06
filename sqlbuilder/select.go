@@ -47,9 +47,7 @@ type unionSelect struct {
 }
 
 // Select 生成插入语句
-func (sql *SQLBuilder) Select() *SelectStmt {
-	return Select(sql.engine)
-}
+func (sql *SQLBuilder) Select() *SelectStmt { return Select(sql.engine) }
 
 // Select 声明一条 Select 语句
 func Select(e core.Engine) *SelectStmt {
@@ -289,9 +287,7 @@ func (stmt *SelectStmt) Having(expr string, args ...interface{}) *SelectStmt {
 }
 
 // WhereStmt 实现 WhereStmter 接口
-func (stmt *SelectStmt) WhereStmt() *WhereStmt {
-	return stmt.where
-}
+func (stmt *SelectStmt) WhereStmt() *WhereStmt { return stmt.where }
 
 // Join 添加一条 Join 语句
 func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
@@ -600,14 +596,10 @@ func (stmt *SelectStmt) OrNotIn(col string, v ...interface{}) *SelectStmt {
 }
 
 // AndGroup 开始一个子条件语句
-func (stmt *SelectStmt) AndGroup() *WhereStmt {
-	return stmt.where.AndGroup()
-}
+func (stmt *SelectStmt) AndGroup() *WhereStmt { return stmt.where.AndGroup() }
 
 // OrGroup 开始一个子条件语句
-func (stmt *SelectStmt) OrGroup() *WhereStmt {
-	return stmt.where.OrGroup()
-}
+func (stmt *SelectStmt) OrGroup() *WhereStmt { return stmt.where.OrGroup() }
 
 // Select 生成 select 语句
 func (stmt *WhereStmt) Select(e core.Engine) *SelectStmt {

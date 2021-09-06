@@ -18,7 +18,7 @@ type Sqlite3Table struct {
 
 // Sqlite3Index 表的索引信息
 //
-// 在 sqlite 中，索引是在创建表之后，别外提交的。
+// 在 sqlite 中，索引是在创建表之后，另外提交的。
 // 在修改表结构时，需要保存索引，方便之后重建。
 type Sqlite3Index struct {
 	Type core.Index

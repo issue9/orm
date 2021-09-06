@@ -12,9 +12,7 @@ type DeleteStmt struct {
 }
 
 // Delete 生成删除语句
-func (sql *SQLBuilder) Delete() *DeleteStmt {
-	return Delete(sql.engine)
-}
+func (sql *SQLBuilder) Delete() *DeleteStmt { return Delete(sql.engine) }
 
 // Delete 声明一条删除语句
 func Delete(e core.Engine) *DeleteStmt {
@@ -66,9 +64,7 @@ func (stmt *DeleteStmt) Reset() *DeleteStmt {
 }
 
 // WhereStmt 实现 WhereStmter 接口
-func (stmt *DeleteStmt) WhereStmt() *WhereStmt {
-	return stmt.where
-}
+func (stmt *DeleteStmt) WhereStmt() *WhereStmt { return stmt.where }
 
 // Where DeleteStmt.And 的别名
 func (stmt *DeleteStmt) Where(cond string, args ...interface{}) *DeleteStmt {

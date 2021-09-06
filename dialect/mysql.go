@@ -61,13 +61,9 @@ func newMysql(isMariadb bool, name, driverName string) core.Dialect {
 	}
 }
 
-func (m *mysql) DBName() string {
-	return m.dbName
-}
+func (m *mysql) DBName() string { return m.dbName }
 
-func (m *mysql) DriverName() string {
-	return m.driverName
-}
+func (m *mysql) DriverName() string { return m.driverName }
 
 func (m *mysql) Fix(query string, args []interface{}) (string, []interface{}, error) {
 	query = ReplaceNamedArgs(query, args)
@@ -78,9 +74,7 @@ func (m *mysql) LastInsertIDSQL(table, col string) (sql string, append bool) {
 	return "", false
 }
 
-func (m *mysql) VersionSQL() string {
-	return `select version();`
-}
+func (m *mysql) VersionSQL() string { return `select version();` }
 
 func (m *mysql) Prepare(query string) (string, map[string]int, error) {
 	query, orders, err := PrepareNamedArgs(query)

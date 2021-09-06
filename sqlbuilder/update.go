@@ -29,9 +29,7 @@ type updateSet struct {
 }
 
 // Update 生成更新语句
-func (sql *SQLBuilder) Update() *UpdateStmt {
-	return Update(sql.engine)
-}
+func (sql *SQLBuilder) Update() *UpdateStmt { return Update(sql.engine) }
 
 // Update 声明一条 UPDATE 的 SQL 语句
 func Update(e core.Engine) *UpdateStmt {
@@ -91,9 +89,7 @@ func (stmt *UpdateStmt) OCC(col string, val interface{}) *UpdateStmt {
 }
 
 // WhereStmt 实现 WhereStmter 接口
-func (stmt *UpdateStmt) WhereStmt() *WhereStmt {
-	return stmt.where
-}
+func (stmt *UpdateStmt) WhereStmt() *WhereStmt { return stmt.where }
 
 // Reset 重置语句
 func (stmt *UpdateStmt) Reset() *UpdateStmt {

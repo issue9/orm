@@ -42,13 +42,9 @@ func Sqlite3(driverName string) core.Dialect {
 	}
 }
 
-func (s *sqlite3) DBName() string {
-	return "sqlite3"
-}
+func (s *sqlite3) DBName() string { return "sqlite3" }
 
-func (s *sqlite3) DriverName() string {
-	return s.driverName
-}
+func (s *sqlite3) DriverName() string { return s.driverName }
 
 func (s *sqlite3) Fix(query string, args []interface{}) (string, []interface{}, error) {
 	query = ReplaceNamedArgs(query, args)
@@ -59,9 +55,7 @@ func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {
 	return "", false
 }
 
-func (s *sqlite3) VersionSQL() string {
-	return `select sqlite_version();`
-}
+func (s *sqlite3) VersionSQL() string { return `select sqlite_version();` }
 
 func (s *sqlite3) Prepare(query string) (string, map[string]int, error) {
 	query, orders, err := PrepareNamedArgs(query)

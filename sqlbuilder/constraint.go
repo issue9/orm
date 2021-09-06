@@ -245,16 +245,16 @@ func (stmt *DropConstraintStmt) Constraint(name string) *DropConstraintStmt {
 }
 
 // PK 当前删除的是否为主键
+//
+// mysql 没有主键名称，所以当主键名称不符合规范时，
+// dialect 中将无法找到相应的主键约束，只能通过 IsPK
+// 根据约束类型来查找。
+// 目前该属性只针对 mysql 设置，其它的 dialect 实现不用。
 func (stmt *DropConstraintStmt) PK() *DropConstraintStmt {
-	// mysql 没有主键名称，所以当主键名称不符合规范时，
-	// dialect 中将无法找到相应的主键约束，只能通过 IsPK
-	// 根据约束类型来查找。
-	// 目前该属性只针对 mysql 设置，其它的 dialect 实现不用。
 	stmt.IsPK = true
 	return stmt
 }
 
-// DDLSQL 获取 SQL 语句以及对应的参数
 func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 	if stmt.err != nil {
 		return nil, stmt.Err()

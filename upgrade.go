@@ -50,14 +50,10 @@ func (db *DB) Upgrade(v TableNamer) (*Upgrader, error) {
 }
 
 // DB 返回关联的 DB 实例
-func (u *Upgrader) DB() *DB {
-	return u.db
-}
+func (u *Upgrader) DB() *DB { return u.db }
 
 // Err 返回执行过程中的错误信息
-func (u *Upgrader) Err() error {
-	return u.err
-}
+func (u *Upgrader) Err() error { return u.err }
 
 // AddColumn 添加表中的列
 //

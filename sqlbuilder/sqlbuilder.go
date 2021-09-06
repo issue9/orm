@@ -54,6 +54,4 @@ type SQLBuilder struct {
 }
 
 // New 声明 SQLBuilder 实例
-func New(e core.Engine) *SQLBuilder {
-	return &SQLBuilder{engine: e}
-}
+func New(e core.Engine) *SQLBuilder { return &SQLBuilder{engine: e} }

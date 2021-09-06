@@ -32,17 +32,11 @@ func Postgres(driverName string) core.Dialect {
 	}
 }
 
-func (p *postgres) DBName() string {
-	return "postgres"
-}
+func (p *postgres) DBName() string { return "postgres" }
 
-func (p *postgres) DriverName() string {
-	return p.driverName
-}
+func (p *postgres) DriverName() string { return p.driverName }
 
-func (p *postgres) VersionSQL() string {
-	return `SHOW server_version;`
-}
+func (p *postgres) VersionSQL() string { return `SHOW server_version;` }
 
 func (p *postgres) Prepare(query string) (string, map[string]int, error) {
 	query, orders, err := PrepareNamedArgs(query)
