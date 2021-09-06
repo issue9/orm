@@ -19,16 +19,16 @@ func TestMain(m *testing.M) {
 func TestMysqlLimitSQL(t *testing.T) {
 	a := assert.New(t)
 
-	query, ret := MysqlLimitSQL(5, 0)
+	query, ret := mysqlLimitSQL(5, 0)
 	a.Equal(ret, []int{5, 0})
 	sqltest.Equal(a, query, " LIMIT ? OFFSET ? ")
 
-	query, ret = MysqlLimitSQL(5)
+	query, ret = mysqlLimitSQL(5)
 	a.Equal(ret, []int{5})
 	sqltest.Equal(a, query, "LIMIT ?")
 
 	// 带 sql.namedArg
-	query, ret = MysqlLimitSQL(sql.Named("limit", 1), 2)
+	query, ret = mysqlLimitSQL(sql.Named("limit", 1), 2)
 	a.Equal(ret, []interface{}{sql.Named("limit", 1), 2})
 	sqltest.Equal(a, query, "LIMIT @limit offset ?")
 }
@@ -36,16 +36,16 @@ func TestMysqlLimitSQL(t *testing.T) {
 func TestOracleLimitSQL(t *testing.T) {
 	a := assert.New(t)
 
-	query, ret := OracleLimitSQL(5, 0)
+	query, ret := oracleLimitSQL(5, 0)
 	a.Equal(ret, []int{0, 5})
 	sqltest.Equal(a, query, " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ")
 
-	query, ret = OracleLimitSQL(5)
+	query, ret = oracleLimitSQL(5)
 	a.Equal(ret, []int{5})
 	sqltest.Equal(a, query, "FETCH NEXT ? ROWS ONLY ")
 
 	// 带 sql.namedArg
-	query, ret = OracleLimitSQL(sql.Named("limit", 1), 2)
+	query, ret = oracleLimitSQL(sql.Named("limit", 1), 2)
 	a.Equal(ret, []interface{}{2, sql.Named("limit", 1)})
 	sqltest.Equal(a, query, "offset ? rows fetch next @limit rows only")
 }
@@ -102,7 +102,7 @@ func TestReplaceNamedArgs(t *testing.T) {
 	}
 
 	for _, item := range data {
-		output := ReplaceNamedArgs(item.inputQuery, item.inputArgs)
+		output := replaceNamedArgs(item.inputQuery, item.inputArgs)
 		sqltest.Equal(a, output, item.outputQuery)
 		a.Equal(item.inputArgs, item.outputArgs)
 	}
@@ -163,7 +163,7 @@ func TestPrepareNamedArgs(t *testing.T) {
 	}
 
 	for _, item := range data {
-		q, o, err := PrepareNamedArgs(item.input)
+		q, o, err := prepareNamedArgs(item.input)
 
 		if item.err {
 			a.Error(err).Nil(o).Empty(q)

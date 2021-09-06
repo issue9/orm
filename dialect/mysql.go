@@ -41,9 +41,7 @@ var (
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql(driverName string) core.Dialect {
-	return newMysql(false, "mysql", driverName)
-}
+func Mysql(driverName string) core.Dialect { return newMysql(false, "mysql", driverName) }
 
 // Mariadb 返回一个适配 mariadb 的 Dialect 接口
 //
@@ -66,7 +64,7 @@ func (m *mysql) DBName() string { return m.dbName }
 func (m *mysql) DriverName() string { return m.driverName }
 
 func (m *mysql) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query = ReplaceNamedArgs(query, args)
+	query = replaceNamedArgs(query, args)
 	return m.replacer.Replace(query), args, nil
 }
 
@@ -77,7 +75,7 @@ func (m *mysql) LastInsertIDSQL(table, col string) (sql string, append bool) {
 func (m *mysql) VersionSQL() string { return `select version();` }
 
 func (m *mysql) Prepare(query string) (string, map[string]int, error) {
-	query, orders, err := PrepareNamedArgs(query)
+	query, orders, err := prepareNamedArgs(query)
 	if err != nil {
 		return "", nil, err
 	}
@@ -105,7 +103,7 @@ func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]stri
 }
 
 func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
-	return MysqlLimitSQL(limit, offset...)
+	return mysqlLimitSQL(limit, offset...)
 }
 
 func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {

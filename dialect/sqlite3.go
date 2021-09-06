@@ -47,7 +47,7 @@ func (s *sqlite3) DBName() string { return "sqlite3" }
 func (s *sqlite3) DriverName() string { return s.driverName }
 
 func (s *sqlite3) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query = ReplaceNamedArgs(query, args)
+	query = replaceNamedArgs(query, args)
 	return s.replacer.Replace(query), args, nil
 }
 
@@ -58,7 +58,7 @@ func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {
 func (s *sqlite3) VersionSQL() string { return `select sqlite_version();` }
 
 func (s *sqlite3) Prepare(query string) (string, map[string]int, error) {
-	query, orders, err := PrepareNamedArgs(query)
+	query, orders, err := prepareNamedArgs(query)
 	if err != nil {
 		return "", nil, err
 	}
@@ -83,7 +83,7 @@ func (s *sqlite3) CreateTableOptionsSQL(w *core.Builder, options map[string][]st
 }
 
 func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
-	return MysqlLimitSQL(limit, offset...)
+	return mysqlLimitSQL(limit, offset...)
 }
 
 // https://www.sqlite.org/lang_altertable.html

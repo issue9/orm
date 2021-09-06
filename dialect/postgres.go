@@ -39,7 +39,7 @@ func (p *postgres) DriverName() string { return p.driverName }
 func (p *postgres) VersionSQL() string { return `SHOW server_version;` }
 
 func (p *postgres) Prepare(query string) (string, map[string]int, error) {
-	query, orders, err := PrepareNamedArgs(query)
+	query, orders, err := prepareNamedArgs(query)
 	if err != nil {
 		return "", nil, err
 	}
@@ -58,7 +58,7 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 
 // 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
 func (p *postgres) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query = ReplaceNamedArgs(query, args)
+	query = replaceNamedArgs(query, args)
 	query, err := p.replace(query)
 	if err != nil {
 		return "", nil, err
@@ -114,7 +114,7 @@ func (p *postgres) CreateTableOptionsSQL(w *core.Builder, options map[string][]s
 }
 
 func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
-	return MysqlLimitSQL(limit, offset...)
+	return mysqlLimitSQL(limit, offset...)
 }
 
 func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {

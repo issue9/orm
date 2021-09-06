@@ -34,10 +34,10 @@ func errUncovert(col *core.Column) error {
 	return fmt.Errorf("不支持的列类型: %s", col.Name)
 }
 
-// MysqlLimitSQL mysql 系列数据库分页语法的实现
+// mysqlLimitSQL mysql 系列数据库分页语法的实现
 //
 // 支持以下数据库：MySQL, H2, HSQLDB, Postgres, SQLite3
-func MysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+func mysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	query := " LIMIT "
 
 	if named, ok := limit.(sql.NamedArg); ok && named.Name != "" {
@@ -61,10 +61,10 @@ func MysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interfac
 	return query + " ", []interface{}{limit, offset[0]}
 }
 
-// OracleLimitSQL oracle 系列数据库分页语法的实现
+// oracleLimitSQL oracle 系列数据库分页语法的实现
 //
 // 支持以下数据库：Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
-func OracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
 	query := "FETCH NEXT "
 
 	if named, ok := limit.(sql.NamedArg); ok && named.Name != "" {
@@ -93,8 +93,8 @@ type namedArg struct {
 	index int
 }
 
-// ReplaceNamedArgs 替换 SQL 语句中的命名参数为标准的 ? 符号
-func ReplaceNamedArgs(query string, args []interface{}) string {
+// replaceNamedArgs 替换 SQL 语句中的命名参数为标准的 ? 符号
+func replaceNamedArgs(query string, args []interface{}) string {
 	as := make([]namedArg, 0, len(args))
 
 	for index, arg := range args {
@@ -127,10 +127,10 @@ func ReplaceNamedArgs(query string, args []interface{}) string {
 	return query
 }
 
-// PrepareNamedArgs 对命名参数进行预处理
+// prepareNamedArgs 对命名参数进行预处理
 //
 // 返回符合 core.Dialect.Prepare 方法的数据。
-func PrepareNamedArgs(query string) (string, map[string]int, error) {
+func prepareNamedArgs(query string) (string, map[string]int, error) {
 	orders := map[string]int{}
 	builder := core.NewBuilder("")
 	start := -1
