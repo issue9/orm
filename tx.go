@@ -135,10 +135,6 @@ func (tx *Tx) Select(v TableNamer) error { return find(tx, v) }
 func (tx *Tx) ForUpdate(v TableNamer) error { return forUpdate(tx, v) }
 
 func (tx *Tx) InsertMany(max int, v ...TableNamer) error {
-	if len(v) == 0 {
-		return nil
-	}
-
 	l := len(v)
 	for i := 0; i < l; i += max {
 		j := i + max

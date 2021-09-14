@@ -69,7 +69,7 @@ func (n *Unix) FromTime(t time.Time) {
 
 // ParseDefault 实现 DefaultParser 接口
 func (n *Unix) ParseDefault(v string) error {
-	n.IsNull = len(v) == 0
+	n.IsNull = isNULL(v)
 	if n.IsNull {
 		return nil
 	}
