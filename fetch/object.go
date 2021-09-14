@@ -195,7 +195,9 @@ func fetchOnceObj(strict bool, val reflect.Value, rows *sql.Rows) (int, error) {
 		return 0, err
 	}
 
-	rows.Next()
+	if !rows.Next() {
+		return 0, rows.Err()
+	}
 	if err := rows.Scan(buff...); err != nil {
 		return 0, err
 	}
