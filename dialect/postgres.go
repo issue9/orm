@@ -235,27 +235,10 @@ func (p *postgres) formatSQL(col *core.Column) (f string, err error) {
 	case string:
 		return "'" + vv + "'", nil
 	case time.Time: // timestamp
-		return p.formatTime(col, vv)
+		return formatTime(col, vv)
 	case sql.NullTime: // timestamp
-		return p.formatTime(col, vv.Time)
+		return formatTime(col, vv.Time)
 	}
 
 	return fmt.Sprint(v), nil
-}
-
-func (p *postgres) formatTime(col *core.Column, t time.Time) (string, error) {
-	t = t.In(time.UTC)
-
-	if len(col.Length) == 0 {
-		return "'" + t.Format(datetimeLayouts[6]) + "'", nil
-	}
-	if len(col.Length) > 1 {
-		return "", invalidTimeFractional(col)
-	}
-
-	index := col.Length[0]
-	if index < 0 || index > 6 {
-		return "", invalidTimeFractional(col)
-	}
-	return "'" + t.Format(datetimeLayouts[index]) + "'", nil
 }

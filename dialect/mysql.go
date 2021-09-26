@@ -338,15 +338,15 @@ func (m *mysql) formatSQL(col *core.Column) (f string, err error) {
 	case string:
 		return "'" + vv + "'", nil
 	case time.Time: // datetime
-		return m.formatTime(col, vv)
+		return formatTime(col, vv)
 	case sql.NullTime: // datetime
-		return m.formatTime(col, vv.Time)
+		return formatTime(col, vv.Time)
 	}
 
 	return fmt.Sprint(v), nil
 }
 
-func (m *mysql) formatTime(col *core.Column, t time.Time) (string, error) {
+func formatTime(col *core.Column, t time.Time) (string, error) {
 	t = t.In(time.UTC)
 
 	if len(col.Length) == 0 {
