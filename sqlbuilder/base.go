@@ -9,47 +9,51 @@ import (
 	"github.com/issue9/orm/v4/core"
 )
 
-// SQLer 定义 SQL 语句的基本接口
-type SQLer interface {
-	// 将当前实例转换成 SQL 语句返回
+type (
+	// SQLer 定义 SQL 语句的基本接口
+	SQLer interface {
+		// SQL 将当前实例转换成 SQL 语句返回
+		//
+		// query 表示 SQL 语句，而 args 表示语句各个参数占位符对应的参数值。
+		SQL() (query string, args []interface{}, err error)
+	}
+
+	// DDLSQLer SQL 中 DDL 语句的基本接口
 	//
-	// query 表示 SQL 语句，而 args 表示语句各个参数占位符对应的参数值。
-	SQL() (query string, args []interface{}, err error)
-}
+	// 大部分数据的 DDL 操作是有多条语句组成，比如 CREATE TABLE
+	// 可能包含了额外的定义信息。
+	DDLSQLer interface {
+		DDLSQL() ([]string, error)
+	}
 
-// DDLSQLer SQL 中 DDL 语句的基本接口
-//
-// 大部分数据的 DDL 操作是有多条语句组成，比如 CREATE TABLE
-// 可能包含了额外的定义信息。
-type DDLSQLer interface {
-	DDLSQL() ([]string, error)
-}
+	baseStmt struct {
+		engine core.Engine
 
-type baseStmt struct {
-	engine core.Engine
+		// err 用于保存在生成语句中的错误信息
+		//
+		// 一旦有错误生成，那么后续的调用需要保证该 err 值不会被覆盖，
+		// 即所有可能改变 err 的方法中，都要先判断 err 是否为空，
+		// 如果不为空，则应该立即退出函数。
+		err error
+	}
 
-	// err 用于保存在生成语句中的错误信息
-	//
-	// 一旦有错误生成，那么后续的调用需要保证该 err 值不会被覆盖，
-	// 即所有可能改变 err 的方法中，都要先判断 err 是否为空，
-	// 如果不为空，则应该立即退出函数。
-	err error
-}
+	queryStmt struct {
+		SQLer
+		baseStmt
+	}
 
-type queryStmt struct {
-	SQLer
-	baseStmt
-}
+	execStmt struct {
+		SQLer
+		baseStmt
+	}
 
-type execStmt struct {
-	SQLer
-	baseStmt
-}
+	ddlStmt struct {
+		DDLSQLer
+		baseStmt
+	}
 
-type ddlStmt struct {
-	DDLSQLer
-	baseStmt
-}
+	multipleDDLStmt []DDLSQLer
+)
 
 func newQueryStmt(e core.Engine, sql SQLer) *queryStmt {
 	return &queryStmt{
@@ -182,4 +186,21 @@ func (stmt *queryStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 	}
 
 	return stmt.Engine().QueryContext(ctx, query, args...)
+}
+
+// MergeDDL 合并多个 DDLSQLer 对象
+func MergeDDL(ddl ...DDLSQLer) DDLSQLer { return multipleDDLStmt(ddl) }
+
+func (stmt multipleDDLStmt) DDLSQL() ([]string, error) {
+	queries := make([]string, 0, len(stmt))
+
+	for _, d := range stmt {
+		q, e := d.DDLSQL()
+		if e != nil {
+			return nil, e
+		}
+		queries = append(queries, q...)
+	}
+
+	return queries, nil
 }

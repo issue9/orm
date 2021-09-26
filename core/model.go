@@ -27,13 +27,13 @@ type (
 	//
 	// 当一个模型实现了该接口，会被识别为视图模型，不再在数据库中创建普通的数据表。
 	Viewer interface {
-		// 返回视图所需的 Select 语句
+		// ViewAs 返回视图所需的 Select 语句
 		ViewAs(e Engine) (string, error)
 	}
 
 	// TableNamer 表或是视图必须实现的接口
 	TableNamer interface {
-		// 返回表或是视图的名称
+		// TableName 返回表或是视图的名称
 		//
 		// 如果需要带表名前缀，请以 # 开头返回。
 		TableName() string
@@ -276,7 +276,7 @@ func (m *Model) NewForeignKey(name string, fk *ForeignKey) error {
 
 // Sanitize 对整个对象做一次修正和检测，查看是否合法
 //
-// 必须要在 Model 初始化完成之后调用。
+// 必需在 Model 初始化完成之后调用。
 func (m *Model) Sanitize() error {
 	if m.Name == "" {
 		return errors.New("缺少模型名称")
