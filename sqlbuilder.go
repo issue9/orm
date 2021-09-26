@@ -100,7 +100,7 @@ func create(e Engine, v TableNamer) error {
 		return createView(e, m)
 	}
 
-	sb := sqlbuilder.CreateTable(e)
+	sb := e.SQLBuilder().CreateTable()
 	sb.Table(m.Name)
 	for _, col := range m.Columns {
 		if col.AI {
@@ -146,7 +146,7 @@ func create(e Engine, v TableNamer) error {
 }
 
 func createView(e Engine, m *core.Model) error {
-	stmt := sqlbuilder.CreateView(e).Name(m.Name)
+	stmt := e.SQLBuilder().CreateView().Name(m.Name)
 
 	for _, col := range m.Columns {
 		stmt.Column(col.Name)
@@ -165,7 +165,7 @@ func truncate(e Engine, v TableNamer) error {
 		return fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	stmt := sqlbuilder.TruncateTable(e)
+	stmt := e.SQLBuilder().TruncateTable()
 	if m.AutoIncrement != nil {
 		stmt.Table(m.Name, m.AutoIncrement.Name)
 	} else {
@@ -186,7 +186,7 @@ func drop(e Engine, v TableNamer) error {
 		return sqlbuilder.DropView(e).Name(m.Name).Exec()
 	}
 
-	return sqlbuilder.DropTable(e).Table(m.Name).Exec()
+	return e.SQLBuilder().DropTable().Table(m.Name).Exec()
 }
 
 func lastInsertID(e Engine, v TableNamer) (int64, error) {
@@ -209,7 +209,7 @@ func lastInsertID(e Engine, v TableNamer) (int64, error) {
 		}
 	}
 
-	stmt := sqlbuilder.Insert(e).Table(m.Name)
+	stmt := e.SQLBuilder().Insert().Table(m.Name)
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -243,7 +243,7 @@ func insert(e Engine, v TableNamer) (sql.Result, error) {
 		}
 	}
 
-	stmt := sqlbuilder.Insert(e).Table(m.Name)
+	stmt := e.SQLBuilder().Insert().Table(m.Name)
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -271,7 +271,7 @@ func find(e Engine, v TableNamer) error {
 		return err
 	}
 
-	stmt := sqlbuilder.Select(e).
+	stmt := e.SQLBuilder().Select().
 		Column("*").
 		From(m.Name)
 	if err = where(stmt, m, rval); err != nil {
@@ -317,7 +317,7 @@ func forUpdate(tx *Tx, v TableNamer) error {
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
 func update(e Engine, v TableNamer, cols ...string) (sql.Result, error) {
-	stmt := sqlbuilder.Update(e)
+	stmt := e.SQLBuilder().Update()
 
 	m, rval, err := getUpdateColumns(e, v, stmt, cols...)
 	if err != nil {
@@ -390,7 +390,7 @@ func del(e Engine, v TableNamer) (sql.Result, error) {
 		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	stmt := sqlbuilder.Delete(e).Table(m.Name)
+	stmt := e.SQLBuilder().Delete().Table(m.Name)
 	if err = where(stmt, m, rval); err != nil {
 		return nil, err
 	}

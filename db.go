@@ -332,9 +332,7 @@ func (db *DB) MultTruncate(objs ...TableNamer) error {
 }
 
 // SQLBuilder 返回 SQL 实例
-func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder {
-	return db.sqlBuilder
-}
+func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }
 
 func (db *DB) tx(f func(tx *Tx) error) error {
 	tx, err := db.Begin()

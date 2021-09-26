@@ -148,7 +148,7 @@ func (stmt *CreateTableStmt) Unique(name string, col ...string) *CreateTableStmt
 	return stmt
 }
 
-// Check check 约束
+// Check 指定 check 约束
 func (stmt *CreateTableStmt) Check(name string, expr string) *CreateTableStmt {
 	if stmt.err != nil {
 		return stmt

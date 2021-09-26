@@ -44,6 +44,8 @@ type (
 	Engine interface {
 		core.Engine
 
+		// LastInsertID 插入一条数据并返回其自增 ID
+		//
 		// 理论上功能等同于以下两步操作：
 		//  rslt, err := engine.Insert(obj)
 		//  id, err := rslt.LastInsertId()

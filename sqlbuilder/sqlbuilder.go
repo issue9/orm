@@ -48,7 +48,7 @@ var (
 	ErrUnionColumnNotMatch = errors.New("union 列长度不相同")
 )
 
-// SQLBuilder 提供了 sqlbuilder 下的各类语句的创建方法。
+// SQLBuilder 提供了 sqlbuilder 下的各类语句的创建方法
 type SQLBuilder struct {
 	engine core.Engine
 }
