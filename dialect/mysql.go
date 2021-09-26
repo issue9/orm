@@ -255,7 +255,7 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 		return m.buildType("DOUBLE PRECISION", col, false, 0)
 	case core.Decimal:
 		if len(col.Length) != 2 {
-			return "", errMissLength
+			return "", missLength(col)
 		}
 		return m.buildType("DECIMAL", col, false, 2)
 	case core.String:
@@ -270,7 +270,7 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 			return m.buildType("DATETIME", col, false, 0)
 		}
 		if col.Length[0] < 0 || col.Length[0] > 6 {
-			return "", errTimeFractionalInvalid
+			return "", invalidTimeFractional(col)
 		}
 		return m.buildType("DATETIME", col, false, 1)
 	}
@@ -306,7 +306,7 @@ func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (s
 	}
 
 	if col.HasDefault {
-		v, err := m.formatSQL(col.Default, col.Length...)
+		v, err := m.formatSQL(col)
 		if err != nil {
 			return "", err
 		}
@@ -316,7 +316,8 @@ func (m *mysql) buildType(typ string, col *core.Column, unsigned bool, l int) (s
 	return w.String()
 }
 
-func (m *mysql) formatSQL(v interface{}, length ...int) (f string, err error) {
+func (m *mysql) formatSQL(col *core.Column) (f string, err error) {
+	v := col.Default
 	if vv, ok := v.(driver.Valuer); ok {
 		v, err = vv.Value()
 		if err != nil {
@@ -337,27 +338,27 @@ func (m *mysql) formatSQL(v interface{}, length ...int) (f string, err error) {
 	case string:
 		return "'" + vv + "'", nil
 	case time.Time: // datetime
-		return m.formatTime(vv, length...)
+		return m.formatTime(col, vv)
 	case sql.NullTime: // datetime
-		return m.formatTime(vv.Time, length...)
+		return m.formatTime(col, vv.Time)
 	}
 
 	return fmt.Sprint(v), nil
 }
 
-func (m *mysql) formatTime(t time.Time, length ...int) (string, error) {
+func (m *mysql) formatTime(col *core.Column, t time.Time) (string, error) {
 	t = t.In(time.UTC)
 
-	if len(length) == 0 {
+	if len(col.Length) == 0 {
 		return "'" + t.Format(datetimeLayouts[0]) + "'", nil
 	}
-	if len(length) > 1 {
-		return "", errTimeFractionalInvalid
+	if len(col.Length) > 1 {
+		return "", invalidTimeFractional(col)
 	}
 
-	index := length[0]
+	index := col.Length[0]
 	if index < 0 || index > 6 {
-		return "", errTimeFractionalInvalid
+		return "", invalidTimeFractional(col)
 	}
 	return "'" + t.Format(datetimeLayouts[index]) + "'", nil
 }

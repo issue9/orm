@@ -15,9 +15,7 @@ import (
 )
 
 var (
-	errColIsNil              = errors.New("参数 col 参数是个空值")
-	errMissLength            = errors.New("缺少长度")
-	errTimeFractionalInvalid = errors.New("时间精度只能介于 [0,6] 之间")
+	errColIsNil = errors.New("参数 col 参数是个空值")
 
 	datetimeLayouts = []string{
 		"2006-01-02 15:04:05",
@@ -29,6 +27,14 @@ var (
 		"2006-01-02 15:04:05.999999",
 	}
 )
+
+func missLength(col *core.Column) error {
+	return fmt.Errorf("列 %s 缺少长度数据", col.Name)
+}
+
+func invalidTimeFractional(col *core.Column) error {
+	return fmt.Errorf("列 %s 时间精度只能介于 [0,6] 之间", col.Name)
+}
 
 func errUncovert(col *core.Column) error {
 	return fmt.Errorf("不支持的列类型: %s", col.Name)

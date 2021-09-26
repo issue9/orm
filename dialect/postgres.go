@@ -56,7 +56,7 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 	return " RETURNING " + col, true
 }
 
-// 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
+// Fix 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
 func (p *postgres) Fix(query string, args []interface{}) (string, []interface{}, error) {
 	query = replaceNamedArgs(query, args)
 	query, err := p.replace(query)
@@ -165,7 +165,7 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 		return p.buildType("DOUBLE PRECISION", col, 0)
 	case core.Decimal:
 		if len(col.Length) != 2 {
-			return "", errMissLength
+			return "", missLength(col)
 		}
 		return p.buildType("DECIMAL", col, 2)
 	case core.String:
@@ -180,7 +180,7 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 			return p.buildType("TIMESTAMP", col, 0)
 		}
 		if col.Length[0] < 0 || col.Length[0] > 6 {
-			return "", errTimeFractionalInvalid
+			return "", invalidTimeFractional(col)
 		}
 		return p.buildType("TIMESTAMP", col, 1)
 	}
@@ -208,7 +208,7 @@ func (p *postgres) buildType(typ string, col *core.Column, l int) (string, error
 	}
 
 	if col.HasDefault {
-		v, err := p.formatSQL(col.Default, col.Length...)
+		v, err := p.formatSQL(col)
 		if err != nil {
 			return "", err
 		}
@@ -218,7 +218,8 @@ func (p *postgres) buildType(typ string, col *core.Column, l int) (string, error
 	return w.String()
 }
 
-func (p *postgres) formatSQL(v interface{}, length ...int) (f string, err error) {
+func (p *postgres) formatSQL(col *core.Column) (f string, err error) {
+	v := col.Default
 	if vv, ok := v.(driver.Valuer); ok {
 		v, err = vv.Value()
 		if err != nil {
@@ -234,27 +235,27 @@ func (p *postgres) formatSQL(v interface{}, length ...int) (f string, err error)
 	case string:
 		return "'" + vv + "'", nil
 	case time.Time: // timestamp
-		return p.formatTime(vv, length...)
+		return p.formatTime(col, vv)
 	case sql.NullTime: // timestamp
-		return p.formatTime(vv.Time, length...)
+		return p.formatTime(col, vv.Time)
 	}
 
 	return fmt.Sprint(v), nil
 }
 
-func (p *postgres) formatTime(t time.Time, length ...int) (string, error) {
+func (p *postgres) formatTime(col *core.Column, t time.Time) (string, error) {
 	t = t.In(time.UTC)
 
-	if len(length) == 0 {
+	if len(col.Length) == 0 {
 		return "'" + t.Format(datetimeLayouts[6]) + "'", nil
 	}
-	if len(length) > 1 {
-		return "", errTimeFractionalInvalid
+	if len(col.Length) > 1 {
+		return "", invalidTimeFractional(col)
 	}
 
-	index := length[0]
+	index := col.Length[0]
 	if index < 0 || index > 6 {
-		return "", errTimeFractionalInvalid
+		return "", invalidTimeFractional(col)
 	}
 	return "'" + t.Format(datetimeLayouts[index]) + "'", nil
 }

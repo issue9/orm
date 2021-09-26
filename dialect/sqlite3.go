@@ -290,6 +290,8 @@ func (s *sqlite3) TransactionalDDL() bool {
 	return true
 }
 
+// SQLType 将 col 转换成符合 sqlite3 的类型
+//
 // 具体规则参照:http://www.sqlite.org/datatype3.html
 func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 	if col == nil {
