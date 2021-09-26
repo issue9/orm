@@ -343,7 +343,7 @@ func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 	return w.String()
 }
 
-func (s *sqlite3) formatSQL(v interface{}, length ...int) (f string, err error) {
+func (s *sqlite3) formatSQL(v interface{}) (f string, err error) {
 	if vv, ok := v.(driver.Valuer); ok {
 		v, err = vv.Value()
 		if err != nil {

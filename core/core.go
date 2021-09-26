@@ -59,24 +59,24 @@ type Engine interface {
 // Dialect 的实现者除了要实现 Dialect 之外，
 // 还需要根据数据库的支持情况实现 sqlbuilder 下的部分 *Hooker 接口。
 type Dialect interface {
-	// 当前关联的数据库名称
+	// DBName 当前关联的数据库名称
 	//
 	// 数据库名称和驱动名未必相同。比如 mysql 和 mariadb 可能采用相同的驱动名；
 	DBName() string
 
-	// 与当前实例关联的驱动名称
+	// DriverName 与当前实例关联的驱动名称
 	//
 	// 原则上驱动名和 Dialect 应该是一一对应的，但是也会有例外，比如：
 	// github.com/lib/pq 和 github.com/jackc/pgx/v4/stdlib 功能上是相同的，
 	// 仅注册的名称的不同。
 	DriverName() string
 
-	// 将列转换成数据支持的类型表达式
+	// SQLType 将列转换成数据支持的类型表达式
 	//
 	// 必须实现对所有 PrimitiveType 类型的转换。
 	SQLType(*Column) (string, error)
 
-	// 是否允许在事务中执行 DDL
+	// TransactionalDDL 是否允许在事务中执行 DDL
 	//
 	// 比如在 postgresql 中，如果创建一个带索引的表，会采用在事务中，
 	// 分多条语句创建表。
@@ -84,10 +84,10 @@ type Dialect interface {
 	// 依次提交语句。
 	TransactionalDDL() bool
 
-	// 查询服务器版本号的 SQL 语句
+	// VersionSQL 查询服务器版本号的 SQL 语句
 	VersionSQL() string
 
-	// 生成 `LIMIT N OFFSET M` 或是相同的语意的语句
+	// LimitSQL 生成 `LIMIT N OFFSET M` 或是相同的语意的语句
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
 	// 返回的是对应数据库的 limit 语句以及语句中占位符对应的值。
@@ -95,7 +95,7 @@ type Dialect interface {
 	// limit 和 offset 可以是 SQL.NamedArg 类型。
 	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
 
-	// 自定义获取 LastInsertID 的获取方式
+	// LastInsertIDSQL 自定义获取 LastInsertID 的获取方式
 	//
 	// 类似于 postgresql 等都需要额外定义。
 	//
@@ -104,17 +104,17 @@ type Dialect interface {
 	// 如果为 true 表示直接添加在插入语句之后，否则为一条新的语句。
 	LastInsertIDSQL(table, col string) (sql string, append bool)
 
-	// 创建表时根据附加信息返回的部分 SQL 语句
+	// CreateTableOptionsSQL 创建表时根据附加信息返回的部分 SQL 语句
 	CreateTableOptionsSQL(sql *Builder, meta map[string][]string) error
 
-	// 对 sql 语句作调整
+	// Fix 对 sql 语句作调整
 	//
 	// 比如替换 {} 符号；处理 sql.NamedArgs；
 	// postgresql 需要将 ? 改成 $1 等形式。
 	// 以及对 args 的参数作校正，比如 lib/pq 对 time.Time 处理有问题，也可以在此处作调整。
 	Fix(query string, args []interface{}) (string, []interface{}, error)
 
-	// 对预编译的内容进行处理
+	// Prepare 对预编译的内容进行处理
 	//
 	// 目前大部分驱动都不支持 sql.NamedArgs，为了支持该功能，
 	// 需要在预编译之前，对语句进行如下处理：
