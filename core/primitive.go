@@ -29,7 +29,6 @@ const (
 	Float64
 	String
 	Bytes
-	RawBytes
 	Time
 	Decimal
 	maxPrimitiveType
@@ -52,7 +51,7 @@ var (
 		reflect.TypeOf(float64(1)):     Float64,
 		reflect.TypeOf(""):             String,
 		reflect.TypeOf([]byte{}):       Bytes,
-		reflect.TypeOf(sql.RawBytes{}): RawBytes,
+		reflect.TypeOf(sql.RawBytes{}): Bytes,
 		reflect.TypeOf(time.Time{}):    Time,
 
 		reflect.TypeOf(sql.NullString{}):  String,
@@ -97,9 +96,12 @@ type PrimitiveTyper interface {
 	PrimitiveType() PrimitiveType
 }
 
-// PrimitiveType 表示数据类型
+// PrimitiveType 表示 Dialect 支持的数据类型
 //
-// dialect 需要实现所有定义的 PrimitiveType 与数据库的转换。
+// 所有 Go 对象需要指定一种类型作为其在数据库中的存储方式，
+// 内置的 Go 类型除去 complex 之外将作为相应在的定义，可通过 GetPrimitiveType 获取。
+//
+// Dialect 的实现者也需要在 SQLType 中实现对所有 PrimitiveType 在数据库中的真实类型。
 type PrimitiveType int
 
 // GetPrimitiveType 获取 t 所关联的 PrimitiveType 值

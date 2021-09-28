@@ -232,7 +232,7 @@ func TestMysql_SQLType(t *testing.T) {
 			SQLType: "SMALLINT NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.RawBytes},
+			col:     &core.Column{PrimitiveType: core.Bytes},
 			SQLType: "BLOB NOT NULL",
 		},
 		{
@@ -307,7 +307,7 @@ func TestMysql_SQLType(t *testing.T) {
 			SQLType: "BOOLEAN NOT NULL",
 		},
 		{ // sql.RawBytes 会被转换成 []byte
-			col:     &core.Column{PrimitiveType: core.RawBytes},
+			col:     &core.Column{PrimitiveType: core.Bytes},
 			SQLType: "BLOB NOT NULL",
 		},
 		{

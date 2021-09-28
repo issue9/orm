@@ -263,7 +263,7 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 			return m.buildType("LONGTEXT", col, false, 0)
 		}
 		return m.buildType("VARCHAR", col, false, 1)
-	case core.RawBytes, core.Bytes:
+	case core.Bytes:
 		return m.buildType("BLOB", col, false, 0)
 	case core.Time:
 		if len(col.Length) == 0 {

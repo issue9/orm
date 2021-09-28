@@ -310,7 +310,7 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 		return s.buildType("REAL", col)
 	case core.Decimal:
 		return s.buildType("NUMERIC", col)
-	case core.RawBytes, core.Bytes:
+	case core.Bytes:
 		return s.buildType("BLOB", col)
 	case core.Time:
 		return s.buildType("TIMESTAMP", col)

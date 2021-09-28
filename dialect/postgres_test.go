@@ -143,7 +143,7 @@ func TestPostgres_SQLType(t *testing.T) {
 			SQLType: "TEXT NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.RawBytes},
+			col:     &core.Column{PrimitiveType: core.Bytes},
 			SQLType: "BYTEA NOT NULL",
 		},
 
@@ -182,7 +182,7 @@ func TestPostgres_SQLType(t *testing.T) {
 		},
 
 		{
-			col:     &core.Column{PrimitiveType: core.RawBytes},
+			col:     &core.Column{PrimitiveType: core.Bytes},
 			SQLType: "BYTEA NOT NULL",
 		},
 

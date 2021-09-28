@@ -109,7 +109,7 @@ func testTypes(t *test.Driver) {
 		Column("null_int64", core.Int64, false, false, false, nil).
 		Column("null_bool", core.Bool, false, false, false, nil).
 		Column("null_float64", core.Float64, false, false, false, nil, 5, 3).
-		Column("raw_bytes", core.RawBytes, false, false, false, nil).
+		Column("raw_bytes", core.Bytes, false, false, false, nil).
 		Column("time", core.Time, false, false, false, nil).
 		Column("null_time", core.Time, false, false, false, nil, 5).
 		Column("unix", (types.Unix{}).PrimitiveType(), false, false, false, nil).
@@ -269,8 +269,8 @@ func testTypesDefault(t *test.Driver) {
 		Column("null_int64", core.Int64, false, true, true, sql.NullInt64{Int64: 64, Valid: false}).
 		Column("null_bool", core.Bool, false, false, true, sql.NullBool{Bool: true, Valid: true}).
 		Column("null_float64", core.Float64, false, true, true, nil, 5, 3).
-		Column("bytes", core.Bytes, false, true, false, []byte("bytes")).           // 默认值无效
-		Column("raw_bytes", core.RawBytes, false, true, false, []byte("rawBytes")). // 默认值无效
+		Column("bytes", core.Bytes, false, true, false, []byte("bytes")).        // 默认值无效
+		Column("raw_bytes", core.Bytes, false, true, false, []byte("rawBytes")). // 默认值无效
 		Column("time", core.Time, false, false, true, now).
 		Column("time_with_len", core.Time, false, false, true, now, 5).
 		Column("unix", core.Int64, false, false, true, types.Unix{Time: now}).

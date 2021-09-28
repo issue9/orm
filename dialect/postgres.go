@@ -173,7 +173,7 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 			return p.buildType("TEXT", col, 0)
 		}
 		return p.buildType("VARCHAR", col, 1)
-	case core.RawBytes, core.Bytes:
+	case core.Bytes:
 		return p.buildType("BYTEA", col, 0)
 	case core.Time:
 		if len(col.Length) == 0 {

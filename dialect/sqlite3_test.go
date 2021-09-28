@@ -206,7 +206,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 			SQLType: "INTEGER NOT NULL",
 		},
 		{
-			col:     &core.Column{PrimitiveType: core.RawBytes},
+			col:     &core.Column{PrimitiveType: core.Bytes},
 			SQLType: "BLOB NOT NULL",
 		},
 		{
