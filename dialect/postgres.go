@@ -138,25 +138,11 @@ func (p *postgres) CreateViewSQL(replace, temporary bool, name, selectQuery stri
 		builder.WString(" TEMPORARY ")
 	}
 
-	builder.WString(" VIEW ").QuoteKey(name)
-
-	if len(cols) > 0 {
-		builder.WBytes('(')
-		for _, col := range cols {
-			builder.QuoteKey(col).
-				WBytes(',')
-		}
-		builder.TruncateLast(1).WBytes(')')
-	}
-
-	query, err := builder.WString(" AS ").
-		WString(selectQuery).
-		String()
+	q, err := appendViewBody(builder, name, selectQuery, cols)
 	if err != nil {
 		return nil, err
 	}
-
-	return []string{query}, nil
+	return []string{q}, nil
 }
 
 func (p *postgres) TransactionalDDL() bool { return true }

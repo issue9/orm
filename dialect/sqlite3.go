@@ -263,31 +263,15 @@ func (s *sqlite3) CreateViewSQL(replace, temporary bool, name, selectQuery strin
 	}
 
 	builder := core.NewBuilder("CREATE ")
-
 	if temporary {
 		builder.WString(" TEMPORARY ")
 	}
 
-	builder.WString(" VIEW ").QuoteKey(name)
-
-	if len(cols) > 0 {
-		builder.WBytes('(')
-		for _, col := range cols {
-			builder.QuoteKey(col).
-				WBytes(',')
-		}
-		builder.TruncateLast(1).WBytes(')')
-	}
-
-	query, err := builder.WString(" AS ").
-		WString(selectQuery).
-		String()
+	q, err := appendViewBody(builder, name, selectQuery, cols)
 	if err != nil {
 		return nil, err
 	}
-	ret = append(ret, query)
-
-	return ret, nil
+	return append(ret, q), nil
 }
 
 func (s *sqlite3) TransactionalDDL() bool { return true }

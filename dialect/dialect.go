@@ -199,3 +199,20 @@ func stdDropIndex(index string) (string, error) {
 		QuoteKey(index).
 		String()
 }
+
+func appendViewBody(builder *core.Builder, name, selectQuery string, cols []string) (string, error) {
+	builder.WString(" VIEW ").QuoteKey(name)
+
+	if len(cols) > 0 {
+		builder.WBytes('(')
+		for _, col := range cols {
+			builder.QuoteKey(col).
+				WBytes(',')
+		}
+		builder.TruncateLast(1).WBytes(')')
+	}
+
+	return builder.WString(" AS ").
+		WString(selectQuery).
+		String()
+}

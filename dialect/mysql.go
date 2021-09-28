@@ -188,24 +188,11 @@ func (m *mysql) CreateViewSQL(replace, temporary bool, name, selectQuery string,
 		builder.WString(" ALGORITHM=TEMPTABLE ")
 	}
 
-	builder.WString(" VIEW ").QuoteKey(name)
-
-	if len(cols) > 0 {
-		builder.WBytes('(')
-		for _, col := range cols {
-			builder.QuoteKey(col).
-				WBytes(',')
-		}
-		builder.TruncateLast(1).WBytes(')')
-	}
-
-	builder.WString(" AS ").WString(selectQuery)
-
-	query, err := builder.String()
+	q, err := appendViewBody(builder, name, selectQuery, cols)
 	if err != nil {
 		return nil, err
 	}
-	return []string{query}, nil
+	return []string{q}, nil
 }
 
 func (m *mysql) InsertDefaultValueHook(table string) (string, []interface{}, error) {
