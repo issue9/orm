@@ -117,20 +117,15 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	})
 }
 
-func TestMysql_DropIndexStmtHook(t *testing.T) {
+func TestMysql_DropIndexSQL(t *testing.T) {
 	a := assert.New(t)
 
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
-		stmt := sqlbuilder.DropIndex(t.DB).Table("tbl").Name("index_name")
-		a.NotNil(stmt)
-
-		hook, ok := t.DB.Dialect().(sqlbuilder.DropIndexStmtHooker)
-		a.True(ok).NotNil(hook)
-		qs, err := hook.DropIndexStmtHook(stmt)
-		a.NotError(err).Equal(qs, []string{"ALTER TABLE {tbl} DROP INDEX {index_name}"})
+		qs, err := t.DB.Dialect().DropIndexSQL("tbl", "index_name")
+		a.NotError(err).Equal(qs, "ALTER TABLE {tbl} DROP INDEX {index_name}")
 	})
 }
 

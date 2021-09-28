@@ -161,6 +161,10 @@ func (p *postgres) CreateViewSQL(replace, temporary bool, name, selectQuery stri
 
 func (p *postgres) TransactionalDDL() bool { return true }
 
+func (p *postgres) DropIndexSQL(table, index string) (string, error) {
+	return stdDropIndex(index)
+}
+
 func (p *postgres) SQLType(col *core.Column) (string, error) {
 	if col == nil {
 		return "", errColIsNil

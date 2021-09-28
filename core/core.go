@@ -115,6 +115,12 @@ type Dialect interface {
 	// CreateViewSQL 生成创建视图的 SQL 语句
 	CreateViewSQL(replace, temporary bool, name, selectQuery string, cols []string) ([]string, error)
 
+	// DropIndexSQL 生成删除索引的语句
+	//
+	// table 为表名，部分数据库需要；
+	// index 表示索引名；
+	DropIndexSQL(table, index string) (string, error)
+
 	// Fix 对 sql 语句作调整
 	//
 	// 比如替换 {} 符号；处理 sql.NamedArgs；

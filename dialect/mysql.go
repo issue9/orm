@@ -29,7 +29,6 @@ type mysql struct {
 }
 
 var (
-	_ sqlbuilder.DropIndexStmtHooker      = &mysql{}
 	_ sqlbuilder.DropConstraintStmtHooker = &mysql{}
 	_ sqlbuilder.InsertDefaultValueHooker = &mysql{}
 )
@@ -153,17 +152,19 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 	return []string{query}, nil
 }
 
-func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, error) {
-	builder := core.NewBuilder("ALTER TABLE ").
-		QuoteKey(stmt.TableName).
-		WString(" DROP INDEX ").
-		QuoteKey(stmt.IndexName)
-
-	query, err := builder.String()
-	if err != nil {
-		return nil, err
+func (m *mysql) DropIndexSQL(table, index string) (string, error) {
+	if table == "" {
+		return "", sqlbuilder.ErrTableIsEmpty
 	}
-	return []string{query}, nil
+	if index == "" {
+		return "", sqlbuilder.ErrColumnsIsEmpty
+	}
+
+	return core.NewBuilder("ALTER TABLE ").
+		QuoteKey(table).
+		WString(" DROP INDEX ").
+		QuoteKey(index).
+		String()
 }
 
 func (m *mysql) TruncateTableSQL(table, ai string) ([]string, error) {

@@ -109,22 +109,15 @@ func (stmt *CreateIndexStmt) Reset() *CreateIndexStmt {
 	return stmt
 }
 
-// DropIndexStmtHooker DropIndexStmt.DDLSQL 的勾子函数
-type DropIndexStmtHooker interface {
-	DropIndexStmtHook(*DropIndexStmt) ([]string, error)
-}
-
 // DropIndexStmt 删除索引
 type DropIndexStmt struct {
 	*ddlStmt
-	TableName string
-	IndexName string
+	tableName string
+	indexName string
 }
 
 // DropIndex 生成删除索引的语句
-func (sql *SQLBuilder) DropIndex() *DropIndexStmt {
-	return DropIndex(sql.engine)
-}
+func (sql *SQLBuilder) DropIndex() *DropIndexStmt { return DropIndex(sql.engine) }
 
 // DropIndex 声明一条 DropIndexStmt 语句
 func DropIndex(e core.Engine) *DropIndexStmt {
@@ -135,47 +128,29 @@ func DropIndex(e core.Engine) *DropIndexStmt {
 
 // Table 指定表名
 func (stmt *DropIndexStmt) Table(tbl string) *DropIndexStmt {
-	stmt.TableName = tbl
+	stmt.tableName = tbl
 	return stmt
 }
 
 // Name 指定索引名
 func (stmt *DropIndexStmt) Name(col string) *DropIndexStmt {
-	stmt.IndexName = col
+	stmt.indexName = col
 	return stmt
 }
 
 // DDLSQL 生成 SQL 语句
 func (stmt *DropIndexStmt) DDLSQL() ([]string, error) {
-	if stmt.err != nil {
-		return nil, stmt.Err()
-	}
-
-	if stmt.TableName == "" {
-		return nil, ErrTableIsEmpty
-	}
-
-	if stmt.IndexName == "" {
-		return nil, ErrColumnsIsEmpty
-	}
-
-	if hook, ok := stmt.Dialect().(DropIndexStmtHooker); ok {
-		return hook.DropIndexStmtHook(stmt)
-	}
-
-	query, err := core.NewBuilder("DROP INDEX ").
-		QuoteKey(stmt.IndexName).
-		String()
+	q, err := stmt.Dialect().DropIndexSQL(stmt.tableName, stmt.indexName)
 	if err != nil {
 		return nil, err
 	}
-	return []string{query}, nil
+	return []string{q}, nil
 }
 
 // Reset 重置
 func (stmt *DropIndexStmt) Reset() *DropIndexStmt {
 	stmt.baseStmt.Reset()
-	stmt.TableName = ""
-	stmt.IndexName = ""
+	stmt.tableName = ""
+	stmt.indexName = ""
 	return stmt
 }

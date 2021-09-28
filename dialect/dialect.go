@@ -12,6 +12,7 @@ import (
 	"unicode"
 
 	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
 var (
@@ -187,4 +188,14 @@ func prepareNamedArgs(query string) (string, map[string]int, error) {
 		return "", nil, err
 	}
 	return q, orders, nil
+}
+
+func stdDropIndex(index string) (string, error) {
+	if index == "" {
+		return "", sqlbuilder.ErrColumnsIsEmpty
+	}
+
+	return core.NewBuilder("DROP INDEX ").
+		QuoteKey(index).
+		String()
 }

@@ -220,6 +220,10 @@ func (s *sqlite3) buildSQLS(e core.Engine, table *createtable.Sqlite3Table, tabl
 	return ret, nil
 }
 
+func (s *sqlite3) DropIndexSQL(table, index string) (string, error) {
+	return stdDropIndex(index)
+}
+
 func (s *sqlite3) TruncateTableSQL(table, ai string) ([]string, error) {
 	builder := core.NewBuilder("DELETE FROM ").
 		QuoteKey(table)
