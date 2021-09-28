@@ -112,6 +112,9 @@ type Dialect interface {
 	// ai 表示自增列的名称，可以为空，表示没有自去列。
 	TruncateTableSQL(table, ai string) ([]string, error)
 
+	// CreateViewSQL 生成创建视图的 SQL 语句
+	CreateViewSQL(replace, temporary bool, name, selectQuery string, cols []string) ([]string, error)
+
 	// Fix 对 sql 语句作调整
 	//
 	// 比如替换 {} 符号；处理 sql.NamedArgs；

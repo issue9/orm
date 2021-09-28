@@ -31,7 +31,6 @@ type mysql struct {
 var (
 	_ sqlbuilder.DropIndexStmtHooker      = &mysql{}
 	_ sqlbuilder.DropConstraintStmtHooker = &mysql{}
-	_ sqlbuilder.CreateViewStmtHooker     = &mysql{}
 	_ sqlbuilder.InsertDefaultValueHooker = &mysql{}
 )
 
@@ -177,29 +176,29 @@ func (m *mysql) TruncateTableSQL(table, ai string) ([]string, error) {
 	return []string{query}, nil
 }
 
-func (m *mysql) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, error) {
+func (m *mysql) CreateViewSQL(replace, temporary bool, name, selectQuery string, cols []string) ([]string, error) {
 	builder := core.NewBuilder("CREATE ")
 
-	if stmt.IsReplace {
+	if replace {
 		builder.WString(" OR REPLACE ")
 	}
 
-	if stmt.IsTemporary {
+	if temporary {
 		builder.WString(" ALGORITHM=TEMPTABLE ")
 	}
 
-	builder.WString(" VIEW ").QuoteKey(stmt.ViewName)
+	builder.WString(" VIEW ").QuoteKey(name)
 
-	if len(stmt.Columns) > 0 {
+	if len(cols) > 0 {
 		builder.WBytes('(')
-		for _, col := range stmt.Columns {
+		for _, col := range cols {
 			builder.QuoteKey(col).
 				WBytes(',')
 		}
 		builder.TruncateLast(1).WBytes(')')
 	}
 
-	builder.WString(" AS ").WString(stmt.SelectQuery)
+	builder.WString(" AS ").WString(selectQuery)
 
 	query, err := builder.String()
 	if err != nil {

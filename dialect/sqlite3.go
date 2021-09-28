@@ -27,7 +27,6 @@ var (
 	_ sqlbuilder.DropColumnStmtHooker     = &sqlite3{}
 	_ sqlbuilder.DropConstraintStmtHooker = &sqlite3{}
 	_ sqlbuilder.AddConstraintStmtHooker  = &sqlite3{}
-	_ sqlbuilder.CreateViewStmtHooker     = &sqlite3{}
 )
 
 // Sqlite3 返回一个适配 sqlite3 的 Dialect 接口
@@ -247,27 +246,29 @@ func (s *sqlite3) TruncateTableSQL(table, ai string) ([]string, error) {
 	return ret, nil
 }
 
-func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string, error) {
+func (s *sqlite3) CreateViewSQL(replace, temporary bool, name, selectQuery string, cols []string) ([]string, error) {
 	ret := make([]string, 0, 2)
-	if stmt.IsReplace {
-		query, err := sqlbuilder.DropView(stmt.Engine()).Name(stmt.ViewName).DDLSQL()
+	if replace {
+		query, err := core.NewBuilder("DROP VIEW IF EXISTS ").
+			QuoteKey(name).
+			String()
 		if err != nil {
 			return nil, err
 		}
-		ret = append(ret, query...)
+		ret = append(ret, query)
 	}
 
 	builder := core.NewBuilder("CREATE ")
 
-	if stmt.IsTemporary {
+	if temporary {
 		builder.WString(" TEMPORARY ")
 	}
 
-	builder.WString(" VIEW ").QuoteKey(stmt.ViewName)
+	builder.WString(" VIEW ").QuoteKey(name)
 
-	if len(stmt.Columns) > 0 {
+	if len(cols) > 0 {
 		builder.WBytes('(')
-		for _, col := range stmt.Columns {
+		for _, col := range cols {
 			builder.QuoteKey(col).
 				WBytes(',')
 		}
@@ -275,7 +276,7 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 	}
 
 	query, err := builder.WString(" AS ").
-		WString(stmt.SelectQuery).
+		WString(selectQuery).
 		String()
 	if err != nil {
 		return nil, err
@@ -285,9 +286,7 @@ func (s *sqlite3) CreateViewStmtHook(stmt *sqlbuilder.CreateViewStmt) ([]string,
 	return ret, nil
 }
 
-func (s *sqlite3) TransactionalDDL() bool {
-	return true
-}
+func (s *sqlite3) TransactionalDDL() bool { return true }
 
 // SQLType 将 col 转换成符合 sqlite3 的类型
 //

@@ -9,15 +9,10 @@ type CreateViewStmt struct {
 	*ddlStmt
 
 	SelectQuery string
-	ViewName    string
-	Columns     []string
-	IsTemporary bool
-	IsReplace   bool
-}
-
-// CreateViewStmtHooker CreateViewStmt.DDLSQL 的钩子函数
-type CreateViewStmtHooker interface {
-	CreateViewStmtHook(*CreateViewStmt) ([]string, error)
+	name        string
+	columns     []string
+	temporary   bool
+	replace     bool
 }
 
 // CreateView 创建视图
@@ -43,41 +38,41 @@ func (stmt *SelectStmt) View(name string) *CreateViewStmt {
 // Reset 重置对象
 func (stmt *CreateViewStmt) Reset() *CreateViewStmt {
 	stmt.baseStmt.Reset()
-	stmt.ViewName = ""
+	stmt.name = ""
 	stmt.SelectQuery = ""
-	stmt.Columns = stmt.Columns[:0]
-	stmt.IsTemporary = false
-	stmt.IsReplace = false
+	stmt.columns = stmt.columns[:0]
+	stmt.temporary = false
+	stmt.replace = false
 
 	return stmt
 }
 
 // Column 指定视图的列，如果未指定，则会直接采用 Select 中的列信息
 func (stmt *CreateViewStmt) Column(col ...string) *CreateViewStmt {
-	if stmt.Columns == nil {
-		stmt.Columns = col
+	if stmt.columns == nil {
+		stmt.columns = col
 		return stmt
 	}
 
-	stmt.Columns = append(stmt.Columns, col...)
+	stmt.columns = append(stmt.columns, col...)
 	return stmt
 }
 
 // Name 指定视图名称
 func (stmt *CreateViewStmt) Name(name string) *CreateViewStmt {
-	stmt.ViewName = name
+	stmt.name = name
 	return stmt
 }
 
 // Temporary 临时视图
 func (stmt *CreateViewStmt) Temporary() *CreateViewStmt {
-	stmt.IsTemporary = true
+	stmt.temporary = true
 	return stmt
 }
 
 // Replace 如果已经存在，则更新视图内容
 func (stmt *CreateViewStmt) Replace() *CreateViewStmt {
-	stmt.IsReplace = true
+	stmt.replace = true
 	return stmt
 }
 
@@ -99,47 +94,7 @@ func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
 
 // DDLSQL 返回创建视图的 SQL 语句
 func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
-	if stmt.err != nil {
-		return nil, stmt.Err()
-	}
-
-	if stmt.ViewName == "" {
-		return nil, ErrTableIsEmpty
-	}
-
-	if hook, ok := stmt.Dialect().(CreateViewStmtHooker); ok {
-		return hook.CreateViewStmtHook(stmt)
-	}
-
-	builder := core.NewBuilder("CREATE ")
-
-	if stmt.IsReplace {
-		builder.WString(" OR REPLACE ")
-	}
-
-	if stmt.IsTemporary {
-		builder.WString(" TEMPORARY ")
-	}
-
-	builder.WString(" VIEW ").QuoteKey(stmt.ViewName)
-
-	if len(stmt.Columns) > 0 {
-		builder.WBytes('(')
-		for _, col := range stmt.Columns {
-			builder.QuoteKey(col).
-				WBytes(',')
-		}
-		builder.TruncateLast(1).WBytes(')')
-	}
-
-	query, err := builder.WString(" AS ").
-		WString(stmt.SelectQuery).
-		String()
-	if err != nil {
-		return nil, err
-	}
-
-	return []string{query}, nil
+	return stmt.Dialect().CreateViewSQL(stmt.replace, stmt.temporary, stmt.name, stmt.SelectQuery, stmt.columns)
 }
 
 // DropViewStmt 删除视图

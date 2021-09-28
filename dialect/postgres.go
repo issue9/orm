@@ -127,9 +127,39 @@ func (p *postgres) TruncateTableSQL(table, ai string) ([]string, error) {
 	return []string{query}, nil
 }
 
-func (p *postgres) TransactionalDDL() bool {
-	return true
+func (p *postgres) CreateViewSQL(replace, temporary bool, name, selectQuery string, cols []string) ([]string, error) {
+	builder := core.NewBuilder("CREATE ")
+
+	if replace {
+		builder.WString(" OR REPLACE ")
+	}
+
+	if temporary {
+		builder.WString(" TEMPORARY ")
+	}
+
+	builder.WString(" VIEW ").QuoteKey(name)
+
+	if len(cols) > 0 {
+		builder.WBytes('(')
+		for _, col := range cols {
+			builder.QuoteKey(col).
+				WBytes(',')
+		}
+		builder.TruncateLast(1).WBytes(')')
+	}
+
+	query, err := builder.WString(" AS ").
+		WString(selectQuery).
+		String()
+	if err != nil {
+		return nil, err
+	}
+
+	return []string{query}, nil
 }
+
+func (p *postgres) TransactionalDDL() bool { return true }
 
 func (p *postgres) SQLType(col *core.Column) (string, error) {
 	if col == nil {

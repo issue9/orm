@@ -347,8 +347,8 @@ func (stmt *CreateTableStmt) createCheckSQL(buf *core.Builder, name, expr string
 // TruncateTableStmt 清空表，并重置 AI
 type TruncateTableStmt struct {
 	*ddlStmt
-	TableName    string
-	AIColumnName string
+	tableName    string
+	aiColumnName string
 }
 
 // TruncateTable 生成清空表的语句，同时重置 AI 计算
@@ -366,8 +366,8 @@ func TruncateTable(e core.Engine) *TruncateTableStmt {
 // Reset 重置内容
 func (stmt *TruncateTableStmt) Reset() *TruncateTableStmt {
 	stmt.baseStmt.Reset()
-	stmt.TableName = ""
-	stmt.AIColumnName = ""
+	stmt.tableName = ""
+	stmt.aiColumnName = ""
 	return stmt
 }
 
@@ -375,8 +375,8 @@ func (stmt *TruncateTableStmt) Reset() *TruncateTableStmt {
 //
 // aiColumn 表示自增列；
 func (stmt *TruncateTableStmt) Table(t, aiColumn string) *TruncateTableStmt {
-	stmt.TableName = t
-	stmt.AIColumnName = aiColumn
+	stmt.tableName = t
+	stmt.aiColumnName = aiColumn
 	return stmt
 }
 
@@ -386,7 +386,7 @@ func (stmt *TruncateTableStmt) DDLSQL() ([]string, error) {
 		return nil, stmt.Err()
 	}
 
-	return stmt.Dialect().TruncateTableSQL(stmt.TableName, stmt.AIColumnName)
+	return stmt.Dialect().TruncateTableSQL(stmt.tableName, stmt.aiColumnName)
 }
 
 // DropTableStmt 删除表语句
