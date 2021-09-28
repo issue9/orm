@@ -344,11 +344,6 @@ func (stmt *CreateTableStmt) createCheckSQL(buf *core.Builder, name, expr string
 		WBytes(')')
 }
 
-// TruncateTableStmtHooker TruncateTableStmt.DDLSQL 的钩子函数
-type TruncateTableStmtHooker interface {
-	TruncateTableStmtHook(*TruncateTableStmt) ([]string, error)
-}
-
 // TruncateTableStmt 清空表，并重置 AI
 type TruncateTableStmt struct {
 	*ddlStmt
@@ -391,11 +386,7 @@ func (stmt *TruncateTableStmt) DDLSQL() ([]string, error) {
 		return nil, stmt.Err()
 	}
 
-	if hook, ok := stmt.Dialect().(TruncateTableStmtHooker); ok {
-		return hook.TruncateTableStmtHook(stmt)
-	}
-
-	return nil, ErrNotImplemented
+	return stmt.Dialect().TruncateTableSQL(stmt.TableName, stmt.AIColumnName)
 }
 
 // DropTableStmt 删除表语句

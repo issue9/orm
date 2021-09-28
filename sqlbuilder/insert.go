@@ -223,8 +223,8 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 		return 0, errors.New("多行插入语句，无法获取 LastInsertIDContext")
 	}
 
-	sql, append := stmt.Dialect().LastInsertIDSQL(stmt.table, col)
-	if sql == "" {
+	q, append := stmt.Dialect().LastInsertIDSQL(stmt.table, col)
+	if q == "" {
 		rslt, err := stmt.ExecContext(ctx)
 		if err != nil {
 			return 0, err
@@ -240,18 +240,18 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 			return 0, err
 		}
 
-		err = stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id)
+		err = stmt.engine.QueryRowContext(ctx, q, args...).Scan(&id)
 		return id, err
 	}
 
-	// 当 append 为 true 时，将 sql 添加到 query 之后，合并为一条语句
+	// 当 append 为 true 时，将 q 添加到 query 之后，合并为一条语句
 	query, as, err := stmt.SQL()
 	if err != nil {
 		return 0, err
 	}
-	sql = query + sql
+	q = query + q
 	args = as
 
-	err = stmt.engine.QueryRowContext(ctx, sql, args...).Scan(&id)
+	err = stmt.engine.QueryRowContext(ctx, q, args...).Scan(&id)
 	return
 }

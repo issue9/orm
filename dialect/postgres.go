@@ -12,17 +12,12 @@ import (
 	"time"
 
 	"github.com/issue9/orm/v4/core"
-	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
 type postgres struct {
 	driverName string
 	replacer   *strings.Replacer
 }
-
-var (
-	_ sqlbuilder.TruncateTableStmtHooker = &postgres{}
-)
 
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
 func Postgres(driverName string) core.Dialect {
@@ -117,11 +112,11 @@ func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, [
 	return mysqlLimitSQL(limit, offset...)
 }
 
-func (p *postgres) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
+func (p *postgres) TruncateTableSQL(table, ai string) ([]string, error) {
 	builder := core.NewBuilder("TRUNCATE TABLE ").
-		QuoteKey(stmt.TableName)
+		QuoteKey(table)
 
-	if stmt.AIColumnName != "" {
+	if ai != "" {
 		builder.WString(" RESTART IDENTITY")
 	}
 

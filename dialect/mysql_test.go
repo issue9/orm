@@ -134,20 +134,14 @@ func TestMysql_DropIndexStmtHook(t *testing.T) {
 	})
 }
 
-func TestMysql_TruncateTableStmtHook(t *testing.T) {
+func TestMysql_TruncateTableSQL(t *testing.T) {
 	a := assert.New(t)
 
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
-		// mysql 不需要 ai 的相关设置
-		stmt := sqlbuilder.TruncateTable(t.DB).Table("tbl", "")
-		a.NotNil(stmt)
-
-		hook, ok := t.DB.Dialect().(sqlbuilder.TruncateTableStmtHooker)
-		a.True(ok).NotNil(hook)
-		qs, err := hook.TruncateTableStmtHook(stmt)
+		qs, err := t.DB.Dialect().TruncateTableSQL("tbl", "")
 		a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE {tbl}"})
 	})
 }

@@ -24,7 +24,6 @@ type sqlite3 struct {
 }
 
 var (
-	_ sqlbuilder.TruncateTableStmtHooker  = &sqlite3{}
 	_ sqlbuilder.DropColumnStmtHooker     = &sqlite3{}
 	_ sqlbuilder.DropConstraintStmtHooker = &sqlite3{}
 	_ sqlbuilder.AddConstraintStmtHooker  = &sqlite3{}
@@ -222,16 +221,16 @@ func (s *sqlite3) buildSQLS(e core.Engine, table *createtable.Sqlite3Table, tabl
 	return ret, nil
 }
 
-func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
+func (s *sqlite3) TruncateTableSQL(table, ai string) ([]string, error) {
 	builder := core.NewBuilder("DELETE FROM ").
-		QuoteKey(stmt.TableName)
+		QuoteKey(table)
 
 	query, err := builder.String()
 	if err != nil {
 		return nil, err
 	}
 
-	if stmt.AIColumnName == "" {
+	if ai == "" {
 		return []string{query}, nil
 	}
 
@@ -239,7 +238,7 @@ func (s *sqlite3) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]s
 	ret[0] = query
 
 	ret[1], err = builder.Reset().WString("DELETE FROM SQLITE_SEQUENCE WHERE name=").
-		Quote(stmt.TableName, '\'', '\'').
+		Quote(table, '\'', '\'').
 		String()
 	if err != nil {
 		return nil, err

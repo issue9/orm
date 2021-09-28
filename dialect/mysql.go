@@ -29,7 +29,6 @@ type mysql struct {
 }
 
 var (
-	_ sqlbuilder.TruncateTableStmtHooker  = &mysql{}
 	_ sqlbuilder.DropIndexStmtHooker      = &mysql{}
 	_ sqlbuilder.DropConstraintStmtHooker = &mysql{}
 	_ sqlbuilder.CreateViewStmtHooker     = &mysql{}
@@ -168,8 +167,8 @@ func (m *mysql) DropIndexStmtHook(stmt *sqlbuilder.DropIndexStmt) ([]string, err
 	return []string{query}, nil
 }
 
-func (m *mysql) TruncateTableStmtHook(stmt *sqlbuilder.TruncateTableStmt) ([]string, error) {
-	builder := core.NewBuilder("TRUNCATE TABLE ").QuoteKey(stmt.TableName)
+func (m *mysql) TruncateTableSQL(table, ai string) ([]string, error) {
+	builder := core.NewBuilder("TRUNCATE TABLE ").QuoteKey(table)
 
 	query, err := builder.String()
 	if err != nil {

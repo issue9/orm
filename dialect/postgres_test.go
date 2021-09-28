@@ -209,25 +209,20 @@ func TestPostgres_SQLType(t *testing.T) {
 	testSQLType(a, dialect.Postgres("postgres_driver"), data)
 }
 
-func TestPostgres_TruncateTableStmtHooker(t *testing.T) {
+func TestPostgres_TruncateTableSQL(t *testing.T) {
 	a := assert.New(t)
 
 	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
 
 	suite.ForEach(func(t *test.Driver) {
-		hook, ok := t.DB.Dialect().(sqlbuilder.TruncateTableStmtHooker)
-		a.True(ok).NotNil(hook)
-
 		stmt := sqlbuilder.TruncateTable(t.DB).Table("tbl", "")
 		a.NotNil(stmt)
-		qs, err := hook.TruncateTableStmtHook(stmt)
+		qs, err := t.DB.Dialect().TruncateTableSQL("tbl", "")
 		a.NotError(err).Equal(1, len(qs))
 		sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl}`)
 
-		stmt = sqlbuilder.TruncateTable(t.DB).Table("tbl", "id")
-		a.NotNil(stmt)
-		qs, err = hook.TruncateTableStmtHook(stmt)
+		qs, err = t.DB.Dialect().TruncateTableSQL("tbl", "id")
 		a.NotError(err).Equal(1, len(qs))
 		sqltest.Equal(a, qs[0], `TRUNCATE TABLE {tbl} RESTART IDENTITY`)
 	})
