@@ -18,16 +18,16 @@ type Decimal struct {
 	IsNull    bool
 }
 
-// StringDecimal 从浮点数还原 Decimal 对象
+// FloatDecimal 从浮点数还原 Decimal 对象
 //
-// percision 表示输出的精度。
+// precision 表示输出的精度。
 func FloatDecimal(f float64, precision int32) Decimal {
 	return Decimal{Decimal: decimal.NewFromFloat(f), Precision: precision}
 }
 
 // StringDecimal 从字符串还原 Decimal 对象
 //
-// percision 表示输出的精度。
+// precision 表示输出的精度。
 func StringDecimal(s string, precision int32) (Decimal, error) {
 	d, err := decimal.NewFromString(s)
 	if err != nil {
@@ -36,10 +36,10 @@ func StringDecimal(s string, precision int32) (Decimal, error) {
 	return Decimal{Decimal: d, Precision: precision}, nil
 }
 
-// StringDecimalWithPercision 从字符串还原 Decimal 对象
+// StringDecimalWithPrecision 从字符串还原 Decimal 对象
 //
 // 输出精度从 s 获取，如果 s 不包含小数位，则小数长度为 0
-func StringDecimalWithPercision(s string) (Decimal, error) {
+func StringDecimalWithPrecision(s string) (Decimal, error) {
 	var p int32
 	index := strings.IndexByte(s, '.')
 	if index >= 0 {

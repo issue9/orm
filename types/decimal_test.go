@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/orm/v4/core"
 	"github.com/shopspring/decimal"
+
+	"github.com/issue9/orm/v4/core"
 )
 
 var (
@@ -26,19 +27,19 @@ var (
 	_ json.Unmarshaler         = &Decimal{}
 )
 
-func TestStringDecimalWithPercision(t *testing.T) {
+func TestStringDecimalWithPrecision(t *testing.T) {
 	a := assert.New(t)
 
-	d, err := StringDecimalWithPercision("3.222")
+	d, err := StringDecimalWithPrecision("3.222")
 	a.NotError(err).Equal(d.Precision, 3).False(d.IsNull)
 
-	d, err = StringDecimalWithPercision(".222")
+	d, err = StringDecimalWithPrecision(".222")
 	a.NotError(err).Equal(d.Precision, 3).False(d.IsNull)
 
-	d, err = StringDecimalWithPercision("222")
+	d, err = StringDecimalWithPrecision("222")
 	a.NotError(err).Equal(d.Precision, 0).False(d.IsNull)
 
-	d, err = StringDecimalWithPercision("")
+	d, err = StringDecimalWithPrecision("")
 	a.Error(err).False(d.IsNull)
 }
 
@@ -63,12 +64,12 @@ func TestParseDefault(t *testing.T) {
 	a := assert.New(t)
 
 	d := Decimal{Decimal: decimal.New(1, 2), Precision: 1}
-	d.ParseDefault("3.333")
+	a.NotError(d.ParseDefault("3.333"))
 	val, err := d.MarshalText()
 	a.NotError(err).Equal(string(val), "3.3")
 
 	dd := &Decimal{Decimal: decimal.New(1, 2), Precision: 1}
-	dd.ParseDefault("3.333")
+	a.NotError(dd.ParseDefault("3.333"))
 	val, err = dd.MarshalText()
 	a.NotError(err).Equal(string(val), "3.3")
 }
