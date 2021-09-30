@@ -177,17 +177,13 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 	case core.ConstraintPK:
 		builder.WString(" PRIMARY KEY(")
 		for _, col := range stmt.Data {
-			builder.
-				QuoteKey(col).
-				WBytes(',')
+			builder.QuoteKey(col).WBytes(',')
 		}
 		builder.TruncateLast(1).WBytes(')')
 	case core.ConstraintUnique:
 		builder.WString(" UNIQUE(")
 		for _, col := range stmt.Data {
-			builder.
-				QuoteKey(col).
-				WBytes(',')
+			builder.QuoteKey(col).WBytes(',')
 		}
 		builder.TruncateLast(1).WBytes(')')
 	default:

@@ -207,9 +207,7 @@ func (m *mysql) InsertDefaultValueHook(table string) (string, []interface{}, err
 	return query, nil, nil
 }
 
-func (m *mysql) TransactionalDDL() bool {
-	return false
-}
+func (m *mysql) TransactionalDDL() bool { return false }
 
 func (m *mysql) SQLType(col *core.Column) (string, error) {
 	if col == nil {

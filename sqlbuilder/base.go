@@ -109,8 +109,7 @@ func (stmt *ddlStmt) ExecContext(ctx context.Context) error {
 	return nil
 }
 
-// CombineSQL 将 SQLer.SQL 中返回的参数替换掉 query 中的占位符，
-// 形成一条完整的查询语句。
+// CombineSQL 合并 SQLer.SQL 返回的 query 和 args 参数
 func (stmt *execStmt) CombineSQL() (query string, err error) {
 	query, args, err := stmt.SQL()
 	if err != nil {
