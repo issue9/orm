@@ -76,7 +76,7 @@ func (stmt *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.R
 	if err != nil {
 		return nil, err
 	}
-	return stmt.Stmt.QueryContext(context.Background(), args...)
+	return stmt.Stmt.QueryContext(ctx, args...)
 }
 
 // QueryRow 以指定的参数执行预编译的语句
@@ -91,7 +91,7 @@ func (stmt *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql
 		panic(err)
 	}
 
-	return stmt.Stmt.QueryRowContext(context.Background(), args...)
+	return stmt.Stmt.QueryRowContext(ctx, args...)
 }
 
 var errArgsNotMatch = errors.New("参数数量不匹配")

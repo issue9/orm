@@ -22,7 +22,7 @@ var ErrInvalidColumnType = errors.New("无效的列类型")
 // 如果用户不提供该接口实现，那么默认情况下，
 // 系统会采用 github.com/issue9/conv.Value() 函数作默认转换。
 type DefaultParser interface {
-	// 将默认值从字符串解析成 t 类型的值
+	// ParseDefault 将默认值从字符串解析成 t 类型的值
 	ParseDefault(v string) error
 }
 
