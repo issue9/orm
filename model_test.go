@@ -43,10 +43,9 @@ func (u *UserInfo) TableName() string { return "#user_info" }
 
 // Meta 指定表属性
 func (u *UserInfo) ApplyModel(m *core.Model) error {
-	m.NewCheck("user_info_chk_name", "uid>0")
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
-	return nil
+	return m.NewCheck("user_info_chk_name", "uid>0")
 }
 
 // Admin 带自增和两个唯一约束
@@ -60,10 +59,9 @@ func (a *Admin) TableName() string { return "#administrators" }
 
 // Meta 指定表属性
 func (a *Admin) ApplyModel(m *core.Model) error {
-	m.NewCheck("admin_chk_name", "{group}>0")
 	m.Meta["mysql_engine"] = []string{"innodb"}
 	m.Meta["mysql_charset"] = []string{"utf8"}
-	return nil
+	return m.NewCheck("admin_chk_name", "{group}>0")
 }
 
 // Account 带一个 OCC 字段
