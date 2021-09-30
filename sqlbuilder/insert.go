@@ -21,9 +21,7 @@ type InsertStmt struct {
 }
 
 // Insert 生成插入语句
-func (sql *SQLBuilder) Insert() *InsertStmt {
-	return Insert(sql.engine)
-}
+func (sql *SQLBuilder) Insert() *InsertStmt { return Insert(sql.engine) }
 
 // Insert 声明一条插入语句
 func Insert(e core.Engine) *InsertStmt {
@@ -133,11 +131,9 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 
 	builder.WBytes('(')
 	for _, col := range stmt.cols {
-		builder.QuoteKey(col).
-			WBytes(',')
+		builder.QuoteKey(col).WBytes(',')
 	}
-	builder.TruncateLast(1)
-	builder.WBytes(')')
+	builder.TruncateLast(1).WBytes(')')
 
 	args := make([]interface{}, 0, len(stmt.cols)*len(stmt.args))
 	builder.WString(" VALUES ")
@@ -145,16 +141,14 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 		builder.WBytes('(')
 		for _, v := range vals {
 			if named, ok := v.(sql.NamedArg); ok && named.Name != "" {
-				builder.WBytes('@')
-				builder.WString(named.Name)
+				builder.WBytes('@').WString(named.Name)
 			} else {
 				builder.WBytes('?')
 			}
 			builder.WBytes(',')
 			args = append(args, v)
 		}
-		builder.TruncateLast(1) // 去掉最后的逗号
-		builder.WString("),")
+		builder.TruncateLast(1).WString("),")
 	}
 	builder.TruncateLast(1)
 

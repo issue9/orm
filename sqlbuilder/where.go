@@ -251,8 +251,7 @@ func (stmt *WhereStmt) in(and, not bool, col string, v ...interface{}) *WhereStm
 	for range v {
 		stmt.builder.WBytes('?', ',')
 	}
-	stmt.builder.TruncateLast(1)
-	stmt.builder.WBytes(')')
+	stmt.builder.TruncateLast(1).WBytes(')')
 
 	stmt.args = append(stmt.args, v...)
 

@@ -396,9 +396,7 @@ type DropTableStmt struct {
 }
 
 // DropTable 生成删除表的语句
-func (sql *SQLBuilder) DropTable() *DropTableStmt {
-	return DropTable(sql.engine)
-}
+func (sql *SQLBuilder) DropTable() *DropTableStmt { return DropTable(sql.engine) }
 
 // DropTable 声明一条删除表的语句
 func DropTable(e core.Engine) *DropTableStmt {
