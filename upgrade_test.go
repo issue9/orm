@@ -16,6 +16,7 @@ type u2 struct {
 	Name     string `orm:"name(name);len(50);index(index_name)"`
 	UserName string `orm:"name(username);len(50);pk"`
 	Modified int64  `orm:"name(modified);default(0)"`
+	Created  string `orm:"name(created);nullable"`
 }
 
 func (u *u2) TableName() string { return "#upgrades" }
@@ -45,18 +46,18 @@ func TestUpgrader(t *testing.T) {
 			t.NotError(t.DB.Drop(&u2{}))
 		}(t.DriverName)
 
-		//t.DB.ccl
-
 		u, err := t.DB.Upgrade(&u2{})
 		t.NotError(err, "%s@%s", err, t.DriverName).
 			NotNil(u)
 
 		err = u.DropConstraint("u_username", "chk_id").
-			DropColumn("created").
 			DropIndex("i_name").
-			AddConstraint("u_id", "chk_username").
+			DropColumn("created").
 			AddColumn("modified").
+			AddPK().
+			AddConstraint("u_id", "chk_username").
 			AddIndex("index_name").
+			AddColumn("created"). // 同名不同类型
 			Do()
 		t.NotError(err, "%s@%s", err, t.DriverName)
 	})
