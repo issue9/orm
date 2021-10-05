@@ -50,64 +50,6 @@ func TestOracleLimitSQL(t *testing.T) {
 	sqltest.Equal(a, query, "offset ? rows fetch next @limit rows only")
 }
 
-func TestReplaceNamedArgs(t *testing.T) {
-	a := assert.New(t)
-
-	var data = []*struct {
-		inputQuery  string
-		inputArgs   []interface{}
-		outputQuery string
-		outputArgs  []interface{}
-	}{
-		{
-			inputQuery:  "select * from table",
-			outputQuery: "select * from table",
-		},
-		{
-			inputQuery:  "select * from table where id=?",
-			inputArgs:   []interface{}{1},
-			outputQuery: "select * from table where id=?",
-			outputArgs:  []interface{}{1},
-		},
-		{
-			inputQuery:  "select * from table where id=@id",
-			inputArgs:   []interface{}{sql.Named("id", 1)},
-			outputQuery: "select * from table where id=?",
-			outputArgs:  []interface{}{1},
-		},
-		{
-			inputQuery:  "select * from table where id=@id and id=? and id=1",
-			inputArgs:   []interface{}{sql.Named("id", 1), 2},
-			outputQuery: "select * from table where id=? and id=? and id=1",
-			outputArgs:  []interface{}{1, 2},
-		},
-		{
-			inputQuery:  "select * from table where id=@id and id=? and id=1",
-			inputArgs:   []interface{}{&sql.NamedArg{Name: "id", Value: 1}, 2},
-			outputQuery: "select * from table where id=? and id=? and id=1",
-			outputArgs:  []interface{}{1, 2},
-		},
-		{ // 参数名称是另一个参数名称的一部分
-			inputQuery:  "select * from table where id=@id and id=@idMax and id=1",
-			inputArgs:   []interface{}{sql.Named("id", 1), sql.Named("idMax", 2)},
-			outputQuery: "select * from table where id=? and id=? and id=1",
-			outputArgs:  []interface{}{1, 2},
-		},
-		{ // 参数名称是另一个参数名称的一部分
-			inputQuery:  "select * from table where id=@idMax and id=@id and id=1",
-			inputArgs:   []interface{}{sql.Named("id", 1), sql.Named("idMax", 2)},
-			outputQuery: "select * from table where id=? and id=? and id=1",
-			outputArgs:  []interface{}{1, 2},
-		},
-	}
-
-	for _, item := range data {
-		output := replaceNamedArgs(item.inputQuery, item.inputArgs)
-		sqltest.Equal(a, output, item.outputQuery)
-		a.Equal(item.inputArgs, item.outputArgs)
-	}
-}
-
 func TestPrepareNamedArgs(t *testing.T) {
 	a := assert.New(t)
 
@@ -152,18 +94,24 @@ func TestPrepareNamedArgs(t *testing.T) {
 			query:  "INSERT INTO users({id},{name}) VALUES (?,?)",
 			orders: map[string]int{},
 		},
+		{
+			input:  "select * from table where id=1 and id=@id and id=1",
+			query:  "select * from table where id=? and id=? and id=1",
+			orders: map[string]int{"id": 1},
+		},
+		{ // 参数名称是另一个参数名称的一部分
+			input:  "select * from table where id=@id and id=@idMax and id=1",
+			query:  "select * from table where id=? and id=? and id=1",
+			orders: map[string]int{"id": 0, "idMax": 1},
+		},
 		{ // 参数名相同
 			input: "INSERT INTO users({id},{name}) VALUES (@id,@id)",
-			err:   true,
-		},
-		{ // 同时两种参数
-			input: "INSERT INTO users({id},{name}) VALUES (@id,?)",
 			err:   true,
 		},
 	}
 
 	for _, item := range data {
-		q, o, err := prepareNamedArgs(item.input)
+		q, o, err := PrepareNamedArgs(item.input)
 
 		if item.err {
 			a.Error(err).Nil(o).Empty(q)

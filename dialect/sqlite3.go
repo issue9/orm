@@ -45,7 +45,10 @@ func (s *sqlite3) DBName() string { return "sqlite3" }
 func (s *sqlite3) DriverName() string { return s.driverName }
 
 func (s *sqlite3) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query = replaceNamedArgs(query, args)
+	query, _, err := PrepareNamedArgs(query)
+	if err != nil {
+		return "", nil, err
+	}
 	return s.replacer.Replace(query), args, nil
 }
 
@@ -56,7 +59,7 @@ func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {
 func (s *sqlite3) VersionSQL() string { return `select sqlite_version();` }
 
 func (s *sqlite3) Prepare(query string) (string, map[string]int, error) {
-	query, orders, err := prepareNamedArgs(query)
+	query, orders, err := PrepareNamedArgs(query)
 	if err != nil {
 		return "", nil, err
 	}

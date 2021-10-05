@@ -325,14 +325,10 @@ func (stmt *UpdateStmt) OrNotIn(col string, v ...interface{}) *UpdateStmt {
 }
 
 // AndGroup 开始一个子条件语句
-func (stmt *UpdateStmt) AndGroup() *WhereStmt {
-	return stmt.where.AndGroup()
-}
+func (stmt *UpdateStmt) AndGroup() *WhereStmt { return stmt.where.AndGroup() }
 
 // OrGroup 开始一个子条件语句
-func (stmt *UpdateStmt) OrGroup() *WhereStmt {
-	return stmt.where.OrGroup()
-}
+func (stmt *UpdateStmt) OrGroup() *WhereStmt { return stmt.where.OrGroup() }
 
 // Update 更新指定条件内容
 func (stmt *WhereStmt) Update(e core.Engine) *UpdateStmt {

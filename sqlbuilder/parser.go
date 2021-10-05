@@ -21,6 +21,11 @@ func fillArgs(query string, args []interface{}) (string, error) {
 	for _, arg := range args {
 		if n, ok := arg.(sql.NamedArg); ok {
 			named[n.Name] = n.Value
+			continue
+		}
+
+		if n, ok := arg.(*sql.NamedArg); ok {
+			named[n.Name] = n.Value
 		}
 	}
 

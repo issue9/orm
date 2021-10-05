@@ -7,8 +7,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"sort"
-	"strings"
 	"unicode"
 
 	"github.com/issue9/orm/v4/core"
@@ -95,49 +93,11 @@ func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interfa
 	return query, []interface{}{offset[0], limit}
 }
 
-type namedArg struct {
-	sql.NamedArg
-	index int
-}
-
-// replaceNamedArgs 替换 SQL 语句中的命名参数为标准的 ? 符号
-func replaceNamedArgs(query string, args []interface{}) string {
-	as := make([]namedArg, 0, len(args))
-
-	for index, arg := range args {
-		if named, ok := arg.(sql.NamedArg); ok {
-			as = append(as, namedArg{
-				NamedArg: named,
-				index:    index,
-			})
-			continue
-		}
-
-		if named, ok := arg.(*sql.NamedArg); ok {
-			as = append(as, namedArg{
-				NamedArg: *named,
-				index:    index,
-			})
-		}
-	}
-
-	// 将名称长的排到前面，确保可以正确替换
-	sort.SliceStable(as, func(i, j int) bool {
-		return len(as[i].Name) > len(as[j].Name)
-	})
-
-	for _, arg := range as {
-		query = strings.Replace(query, "@"+arg.Name, "?", 1)
-		args[arg.index] = arg.Value
-	}
-
-	return query
-}
-
-// prepareNamedArgs 对命名参数进行预处理
+// PrepareNamedArgs 对命名参数进行预处理
 //
-// 返回符合 core.Dialect.Prepare 方法的数据。
-func prepareNamedArgs(query string) (string, map[string]int, error) {
+// 命名参数替换成 ?，并返回参数名称对应在语句的位置，起始位置为 0。
+// 对非命名参数不会作任何处理。
+func PrepareNamedArgs(query string) (string, map[string]int, error) {
 	orders := map[string]int{}
 	builder := core.NewBuilder("")
 	start := -1
@@ -153,7 +113,6 @@ func prepareNamedArgs(query string) (string, map[string]int, error) {
 		return nil
 	}
 
-	var qm bool // 是否存在问号
 	for index, c := range query {
 		switch {
 		case c == '@':
@@ -167,14 +126,7 @@ func prepareNamedArgs(query string) (string, map[string]int, error) {
 			start = -1
 		case start == -1:
 			builder.WRunes(c)
-			if c == '?' {
-				qm = true
-			}
 		}
-	}
-
-	if qm && len(orders) > 0 {
-		return "", nil, errors.New("命名参数与 ? 不能同时存在")
 	}
 
 	if start > -1 {

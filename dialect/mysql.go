@@ -61,7 +61,10 @@ func (m *mysql) DBName() string { return m.dbName }
 func (m *mysql) DriverName() string { return m.driverName }
 
 func (m *mysql) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query = replaceNamedArgs(query, args)
+	query, _, err := PrepareNamedArgs(query)
+	if err != nil {
+		return "", nil, err
+	}
 	return m.replacer.Replace(query), args, nil
 }
 
@@ -72,7 +75,7 @@ func (m *mysql) LastInsertIDSQL(table, col string) (sql string, append bool) {
 func (m *mysql) VersionSQL() string { return `select version();` }
 
 func (m *mysql) Prepare(query string) (string, map[string]int, error) {
-	query, orders, err := prepareNamedArgs(query)
+	query, orders, err := PrepareNamedArgs(query)
 	if err != nil {
 		return "", nil, err
 	}

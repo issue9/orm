@@ -34,7 +34,11 @@ func (p *postgres) DriverName() string { return p.driverName }
 func (p *postgres) VersionSQL() string { return `SHOW server_version;` }
 
 func (p *postgres) Prepare(query string) (string, map[string]int, error) {
-	query, orders, err := prepareNamedArgs(query)
+	return p.prepare(query)
+}
+
+func (p *postgres) prepare(query string) (string, map[string]int, error) {
+	query, orders, err := PrepareNamedArgs(query)
 	if err != nil {
 		return "", nil, err
 	}
@@ -53,8 +57,7 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 
 // Fix 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
 func (p *postgres) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query = replaceNamedArgs(query, args)
-	query, err := p.replace(query)
+	query, _, err := p.prepare(query)
 	if err != nil {
 		return "", nil, err
 	}
