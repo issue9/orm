@@ -96,8 +96,8 @@ func TestPrepareNamedArgs(t *testing.T) {
 		},
 		{
 			input:  "select * from table where id=1 and id=@id and id=1",
-			query:  "select * from table where id=? and id=? and id=1",
-			orders: map[string]int{"id": 1},
+			query:  "select * from table where id=1 and id=? and id=1",
+			orders: map[string]int{"id": 0},
 		},
 		{ // 参数名称是另一个参数名称的一部分
 			input:  "select * from table where id=@id and id=@idMax and id=1",

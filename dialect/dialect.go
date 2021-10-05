@@ -95,7 +95,7 @@ func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interfa
 
 // PrepareNamedArgs 对命名参数进行预处理
 //
-// 命名参数替换成 ?，并返回参数名称对应在语句的位置，起始位置为 0。
+// 命名参数替换成 ?，并返回参数名称对应在语句的位置，第一个命名参数为 0。
 // 对非命名参数不会作任何处理。
 func PrepareNamedArgs(query string) (string, map[string]int, error) {
 	orders := map[string]int{}
