@@ -3,6 +3,7 @@
 package sqlbuilder_test
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -61,6 +62,56 @@ func TestSelect(t *testing.T) {
 		stmt.Column("*").
 			From("users").
 			Where("id<?", -100).
+			Desc("id")
+		id, err = stmt.QueryInt("id")
+		a.ErrorType(err, sqlbuilder.ErrNoData).Empty(id)
+	})
+}
+
+func TestSelectWithNamedParam(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		initDB(t)
+		defer clearDB(t)
+
+		stmt := sqlbuilder.Select(t.DB).Column("*").
+			From("users").
+			Where("id<@id", sql.Named("id", 5)).
+			Desc("id")
+
+		id, err := stmt.QueryInt("id")
+		a.NotError(err).
+			Equal(id, 4)
+
+		f, err := stmt.QueryFloat("id")
+		a.NotError(err).
+			Equal(f, 4.0)
+
+		// 不存在的列
+		f, err = stmt.QueryFloat("id_not_exists")
+		a.Error(err).Empty(f)
+
+		name, err := stmt.QueryString("name")
+		a.NotError(err).
+			Equal(name, "4")
+
+		obj := &user{}
+		size, err := stmt.QueryObject(true, obj)
+		a.NotError(err).Equal(1, size)
+		a.Equal(obj.ID, 4)
+
+		cnt, err := stmt.Count("count(*) as cnt").QueryInt("cnt")
+		a.NotError(err).
+			Equal(cnt, 4)
+
+		// 没有符合条件的数据
+		stmt.Reset()
+		stmt.Column("*").
+			From("users").
+			Where("id<@id", sql.Named("id", -100)).
 			Desc("id")
 		id, err = stmt.QueryInt("id")
 		a.ErrorType(err, sqlbuilder.ErrNoData).Empty(id)

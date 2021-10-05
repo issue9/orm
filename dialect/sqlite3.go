@@ -45,10 +45,6 @@ func (s *sqlite3) DBName() string { return "sqlite3" }
 func (s *sqlite3) DriverName() string { return s.driverName }
 
 func (s *sqlite3) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query, _, err := PrepareNamedArgs(query)
-	if err != nil {
-		return "", nil, err
-	}
 	return s.replacer.Replace(query), args, nil
 }
 
