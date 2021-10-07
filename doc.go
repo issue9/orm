@@ -19,10 +19,10 @@
 //  )
 //
 //  // 初始化一个 DB，表前缀为 prefix_
-//  db1 := orm.NewDB("./db1", "prefix_", dialect.Sqlite3("sqlite3"))
+//  db1 := orm.NewDB("./db1", dialect.Sqlite3("sqlite3", "prefix_"))
 //
 //  // 另一个 DB 实例
-//  db2 := orm.NewDB("./db2", "db2_", dialect.Sqlite3("sqlite3"))
+//  db2 := orm.NewDB("./db2", dialect.Sqlite3("sqlite3", "db2_"))
 //
 //
 //

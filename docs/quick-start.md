@@ -23,7 +23,7 @@ func (u *User) ApplyModel(m*core.Model) error {
 }
 
 func main() {
-    db, err := orm.NewDB("./test.db", "test_", dialect.Sqlite3())
+    db, err := orm.NewDB("./test.db", dialect.Sqlite3("sqlite3", "test_"))
     if err !=nil {
         panic(err)
     }
