@@ -24,7 +24,7 @@ const sqlite3DBFile = "orm_test.db"
 
 var (
 	// Sqlite3 Dialect 实例
-	Sqlite3 = dialect.Sqlite3("sqlite3", "prefix_") // 保证 preifx_ 与配置中的相同
+	Sqlite3 = dialect.Sqlite3("sqlite3", "prefix_") // 保证 prefix_ 与配置中的相同
 
 	// Mysql Dialect 实例
 	Mysql = dialect.Mysql("mysql", "prefix_")
@@ -40,27 +40,22 @@ var (
 //
 // 部分设置项需要与 action 中的设置相同才能正常启动，比如端口号等。
 var cases = []struct {
-	prefix  string
 	dsn     string
 	dialect orm.Dialect
 }{
 	{
-		prefix:  "prefix_",
 		dsn:     "./" + sqlite3DBFile + "?_fk=true&_loc=UTC",
 		dialect: dialect.Sqlite3("sqlite3", "prefix_"),
 	},
 	{
-		prefix:  "prefix_",
 		dsn:     "user=postgres password=postgres dbname=orm_test sslmode=disable",
 		dialect: Postgres,
 	},
 	{
-		prefix:  "prefix_",
 		dsn:     "root:root@/orm_test?charset=utf8&parseTime=true",
 		dialect: Mysql,
 	},
 	{
-		prefix:  "prefix_",
 		dsn:     "root:root@/orm_test?charset=utf8&parseTime=true",
 		dialect: Mariadb,
 	},
@@ -101,7 +96,7 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 			continue
 		}
 
-		db, err := orm.NewDB(c.dsn, c.prefix, c.dialect)
+		db, err := orm.NewDB(c.dsn, c.dialect)
 		a.NotError(err).NotNil(db)
 
 		s.drivers = append(s.drivers, &Driver{

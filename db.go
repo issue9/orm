@@ -30,20 +30,20 @@ type DB struct {
 // 那么建议将保存时的时区都统一设置为 UTC：
 // postgres 已经固定为 UTC，sqlite3 可以在 dsn 中通过 _loc=UTC 指定，
 // mysql 默认是 UTC，也可以在 DSN 中通过 loc=UTC 指定。
-func NewDB(dsn, tablePrefix string, dialect Dialect) (*DB, error) {
+func NewDB(dsn string, dialect Dialect) (*DB, error) {
 	db, err := sql.Open(dialect.DriverName(), dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewDBWithStdDB(db, tablePrefix, dialect)
+	return NewDBWithStdDB(db, dialect)
 }
 
 // NewDBWithStdDB 从 sql.DB 构建 DB 实例
 //
 // NOTE: 请确保用于打开 db 的 driverName 参数与 dialect.DriverName() 是相同的，
 // 否则后续操作的结果是未知的。
-func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
+func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
 	inst := &DB{
 		DB:      db,
 		dialect: dialect,
