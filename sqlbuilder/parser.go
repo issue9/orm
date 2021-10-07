@@ -23,10 +23,6 @@ func fillArgs(query string, args []interface{}) (string, error) {
 			named[n.Name] = n.Value
 			continue
 		}
-
-		if n, ok := arg.(*sql.NamedArg); ok {
-			named[n.Name] = n.Value
-		}
 	}
 
 	w := func(builder *core.Builder, name string) error {

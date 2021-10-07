@@ -181,15 +181,6 @@ func fixQueryAndArgs(query string, args []interface{}) (string, []interface{}, e
 	// 整理返回参数
 	named := make(map[int]interface{}, len(orders))
 	for _, arg := range args {
-		if n, ok := arg.(*sql.NamedArg); ok {
-			i, found := orders[n.Name]
-			if !found {
-				panic(fmt.Sprintf("不存在指定名称的参数 %s", n.Name))
-			}
-			delete(orders, n.Name)
-			named[i] = n.Value
-			continue
-		}
 		if n, ok := arg.(sql.NamedArg); ok {
 			i, found := orders[n.Name]
 			if !found {

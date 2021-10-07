@@ -23,26 +23,24 @@ type Stmt struct {
 // 如果 orders 为空，则 Stmt 的表现和 sql.Stmt 是完全相同的，
 // 如果不为空，则可以处理 sql.NamedArg 类型的参数。
 func NewStmt(stmt *sql.Stmt, orders map[string]int) *Stmt {
-	ret := &Stmt{Stmt: stmt}
+	if len(orders) > 0 {
+		vals := make([]int, 0, len(orders))
+		for _, v := range orders {
+			vals = append(vals, v)
+		}
+		sort.Ints(vals)
 
-	if len(orders) == 0 {
-		return ret
-	}
-
-	vals := make([]int, 0, len(orders))
-	for _, v := range orders {
-		vals = append(vals, v)
-	}
-	sort.Ints(vals)
-
-	for k, v := range vals {
-		if k != v {
-			panic(fmt.Sprintf("orders 并不是连续的参数，缺少了 %d", k))
+		for k, v := range vals {
+			if k != v {
+				panic(fmt.Sprintf("orders 并不是连续的参数，缺少了 %d", k))
+			}
 		}
 	}
 
-	ret.orders = orders
-	return ret
+	return &Stmt{
+		Stmt:   stmt,
+		orders: orders,
+	}
 }
 
 // Close 关闭 Stmt 实例
