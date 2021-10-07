@@ -61,7 +61,7 @@ func (m *mysql) DBName() string { return m.dbName }
 func (m *mysql) DriverName() string { return m.driverName }
 
 func (m *mysql) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query, _, err := PrepareNamedArgs(query)
+	query, args, err := fixQueryAndArgs(query, args)
 	if err != nil {
 		return "", nil, err
 	}

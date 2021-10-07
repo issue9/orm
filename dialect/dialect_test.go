@@ -95,18 +95,14 @@ func TestPrepareNamedArgs(t *testing.T) {
 			orders: map[string]int{},
 		},
 		{
-			input:  "select * from table where id=1 and id=@id and id=1",
-			query:  "select * from table where id=1 and id=? and id=1",
-			orders: map[string]int{"id": 0},
+			input:  "select * from table where id=? and id=@id and id=1",
+			query:  "select * from table where id=? and id=? and id=1",
+			orders: map[string]int{"id": 1},
 		},
 		{ // 参数名称是另一个参数名称的一部分
-			input:  "select * from table where id=@id and id=@idMax and id=1",
-			query:  "select * from table where id=? and id=? and id=1",
-			orders: map[string]int{"id": 0, "idMax": 1},
-		},
-		{ // 参数名相同
-			input: "INSERT INTO users({id},{name}) VALUES (@id,@id)",
-			err:   true,
+			input:  "select * from table where id=@id and id=? and id=@id2",
+			query:  "select * from table where id=? and id=? and id=?",
+			orders: map[string]int{"id": 0, "id2": 2},
 		},
 	}
 
@@ -122,4 +118,52 @@ func TestPrepareNamedArgs(t *testing.T) {
 			Equal(o, item.orders)
 		sqltest.Equal(a, q, item.query)
 	}
+
+	a.Panic(func() {
+		PrepareNamedArgs("INSERT INTO users({id},{name}) VALUES (@id,@id)")
+	})
+}
+
+func TestFixQueryAndArgs(t *testing.T) {
+	a := assert.New(t)
+
+	data := []*struct {
+		query       string
+		args        []interface{}
+		err         bool
+		outputQuery string
+		outputArgs  []interface{}
+	}{
+		{
+			query:       "select * from table where id=? and id=@id and id=1",
+			args:        []interface{}{1, sql.Named("id", 2)},
+			outputQuery: "select * from table where id=? and id=? and id=1",
+			outputArgs:  []interface{}{1, 2},
+		},
+		{
+			query:       "select * from table where id=@id and id=? and id=@id2",
+			args:        []interface{}{sql.Named("id2", 1), 1, sql.Named("id", 2)},
+			outputQuery: "select * from table where id=? and id=? and id=?",
+			outputArgs:  []interface{}{2, 1, 1},
+		},
+	}
+
+	for _, item := range data {
+		query, args, err := fixQueryAndArgs(item.query, item.args)
+		a.NotError(err).
+			Equal(args, item.outputArgs)
+		sqltest.Equal(a, query, item.outputQuery)
+	}
+
+	a.Panic(func() {
+		fixQueryAndArgs("select * from table where id=@id and id=? and id=@id2", []interface{}{sql.Named("id2", 1), 1, sql.Named("id3", 2)})
+	})
+
+	a.Panic(func() {
+		fixQueryAndArgs("select * from table where id=@id and id=? and id=@id2", []interface{}{sql.Named("id2", 1), 1, sql.Named("not-exists", 2)})
+	})
+
+	a.Panic(func() {
+		fixQueryAndArgs("select * from table where id=@id and id=? and id=@id", []interface{}{sql.Named("id", 1), 1, sql.Named("id2", 2)})
+	})
 }

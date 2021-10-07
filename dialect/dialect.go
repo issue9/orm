@@ -95,19 +95,18 @@ func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interfa
 
 // PrepareNamedArgs 对命名参数进行预处理
 //
-// 命名参数替换成 ?，并返回参数名称对应在语句的位置，第一个命名参数为 0。
-// 对非命名参数不会作任何处理。
+// 命名参数替换成 ?，并返回参数名称对应在语句的位置，包括 ? 在内。
 func PrepareNamedArgs(query string) (string, map[string]int, error) {
 	orders := map[string]int{}
 	builder := core.NewBuilder("")
 	start := -1
 	cnt := 0
 
-	write := func(name string, val int) error {
+	write := func(name string) error {
 		builder.WString(" ? ")
 
 		if _, found := orders[name]; found {
-			return fmt.Errorf("存在相同的参数名：%s", name)
+			panic(fmt.Sprintf("存在相同的参数名：%s", name))
 		}
 		orders[name] = cnt
 		return nil
@@ -117,8 +116,8 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 		switch {
 		case c == '@':
 			start = index + 1
-		case start != -1 && !unicode.IsLetter(c):
-			if err := write(query[start:index], cnt); err != nil {
+		case start != -1 && !(unicode.IsLetter(c) || unicode.IsDigit(c)):
+			if err := write(query[start:index]); err != nil {
 				return "", nil, err
 			}
 			builder.WRunes(c) // 当前的字符不能丢
@@ -126,11 +125,14 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 			start = -1
 		case start == -1:
 			builder.WRunes(c)
+			if c == '?' {
+				cnt++
+			}
 		}
 	}
 
 	if start > -1 {
-		if err := write(query[start:], cnt); err != nil {
+		if err := write(query[start:]); err != nil {
 			return "", nil, err
 		}
 	}
@@ -167,4 +169,45 @@ func appendViewBody(builder *core.Builder, name, selectQuery string, cols []stri
 	return builder.WString(" AS ").
 		WString(selectQuery).
 		String()
+}
+
+// 修正查询语句和查询参数的位置
+func fixQueryAndArgs(query string, args []interface{}) (string, []interface{}, error) {
+	query, orders, err := PrepareNamedArgs(query)
+	if err != nil {
+		return "", nil, err
+	}
+
+	// 整理返回参数
+	named := make(map[int]interface{}, len(orders))
+	for _, arg := range args {
+		if n, ok := arg.(*sql.NamedArg); ok {
+			i, found := orders[n.Name]
+			if !found {
+				panic(fmt.Sprintf("不存在指定名称的参数 %s", n.Name))
+			}
+			delete(orders, n.Name)
+			named[i] = n.Value
+			continue
+		}
+		if n, ok := arg.(sql.NamedArg); ok {
+			i, found := orders[n.Name]
+			if !found {
+				panic(fmt.Sprintf("不存在指定名称的参数 %s", n.Name))
+			}
+			delete(orders, n.Name)
+			named[i] = n.Value
+			continue
+		}
+	}
+
+	if len(orders) > 0 {
+		panic("占位符与命名参数的数量不相同")
+	}
+
+	for index, val := range named {
+		args[index] = val
+	}
+
+	return query, args, nil
 }

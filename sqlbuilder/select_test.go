@@ -118,6 +118,34 @@ func TestSelectWithNamedParam(t *testing.T) {
 	})
 }
 
+// 多个乱序命名参数
+func TestSelectWithMultNamedParam(t *testing.T) {
+	a := assert.New(t)
+	suite := test.NewSuite(a)
+	defer suite.Close()
+
+	suite.ForEach(func(t *test.Driver) {
+		initDB(t)
+		defer clearDB(t)
+
+		stmt := sqlbuilder.Select(t.DB).Column("*").
+			From("users").
+			Where("id<@id", sql.Named("id", 5)).
+			And("name<@name", sql.Named("name", "5")).
+			Desc("id")
+
+		id, err := stmt.QueryInt("id")
+		a.NotError(err).
+			Equal(id, 4)
+
+		p, err := stmt.Prepare()
+		a.NotError(err).NotNil(p)
+		rows, err := p.Query(sql.Named("name", "xxrTODOf"), sql.Named("id", 5))
+		a.NotError(err).NotNil(rows)
+		// TODO
+	})
+}
+
 func TestSelectStmt_Join(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
