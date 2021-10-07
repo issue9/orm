@@ -28,10 +28,6 @@ func Postgres(driverName, tablePrefix string) core.Dialect {
 func (p *postgres) VersionSQL() string { return `SHOW server_version;` }
 
 func (p *postgres) Prepare(query string) (string, map[string]int, error) {
-	return p.prepare(query)
-}
-
-func (p *postgres) prepare(query string) (string, map[string]int, error) {
 	query, orders, err := PrepareNamedArgs(query)
 	if err != nil {
 		return "", nil, err
@@ -51,7 +47,12 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 
 // Fix 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
 func (p *postgres) Fix(query string, args []interface{}) (string, []interface{}, error) {
-	query, _, err := p.prepare(query)
+	query, args, err := fixQueryAndArgs(query, args)
+	if err != nil {
+		return "", nil, err
+	}
+
+	query, err = p.replace(query)
 	if err != nil {
 		return "", nil, err
 	}
