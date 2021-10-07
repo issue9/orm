@@ -16,11 +16,10 @@ import (
 // DB 数据库操作实例
 type DB struct {
 	*sql.DB
-	dialect     Dialect
-	tablePrefix string
-	sqlBuilder  *sqlbuilder.SQLBuilder
-	models      *model.Models
-	version     string
+	dialect    Dialect
+	sqlBuilder *sqlbuilder.SQLBuilder
+	models     *model.Models
+	version    string
 
 	sqlLogger *log.Logger
 }
@@ -46,9 +45,8 @@ func NewDB(dsn, tablePrefix string, dialect Dialect) (*DB, error) {
 // 否则后续操作的结果是未知的。
 func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
 	inst := &DB{
-		DB:          db,
-		dialect:     dialect,
-		tablePrefix: tablePrefix,
+		DB:      db,
+		dialect: dialect,
 	}
 
 	inst.models = model.NewModels(inst)
@@ -58,7 +56,7 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 }
 
 // TablePrefix 返回表名前缀内容内容
-func (db *DB) TablePrefix() string { return db.tablePrefix }
+func (db *DB) TablePrefix() string { return db.Dialect().TablePrefix() }
 
 // Debug 指定调输出调试内容通道
 //

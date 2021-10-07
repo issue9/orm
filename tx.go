@@ -39,7 +39,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 }
 
 // TablePrefix 返回表名前缀内容内容
-func (tx *Tx) TablePrefix() string { return tx.db.tablePrefix }
+func (tx *Tx) TablePrefix() string { return tx.db.TablePrefix() }
 
 // Query 执行一条查询语句
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {

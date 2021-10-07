@@ -71,6 +71,11 @@ type Dialect interface {
 	// 仅注册的名称的不同。
 	DriverName() string
 
+	// TablePrefix 表名前缀
+	//
+	// 表名前缀由构建 Dialect 时传递给对象，可以由此方法返回。
+	TablePrefix() string
+
 	// SQLType 将列转换成数据支持的类型表达式
 	//
 	// 必须实现对所有 PrimitiveType 类型的转换。
