@@ -24,7 +24,7 @@ const sqlite3DBFile = "orm_test.db"
 
 var (
 	// Sqlite3 Dialect 实例
-	Sqlite3 = dialect.Sqlite3("sqlite3", "prefix_") // 保证 prefix_ 与配置中的相同
+	Sqlite3 = dialect.Sqlite3("sqlite3", "prefix_")
 
 	// Mysql Dialect 实例
 	Mysql = dialect.Mysql("mysql", "prefix_")
@@ -45,7 +45,7 @@ var cases = []struct {
 }{
 	{
 		dsn:     "./" + sqlite3DBFile + "?_fk=true&_loc=UTC",
-		dialect: dialect.Sqlite3("sqlite3", "prefix_"),
+		dialect: Sqlite3,
 	},
 	{
 		dsn:     "user=postgres password=postgres dbname=orm_test sslmode=disable",

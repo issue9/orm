@@ -73,7 +73,6 @@ func (db *DB) Dialect() Dialect { return db.dialect }
 // 同时会清除缓存的模型数据
 func (db *DB) Close() error {
 	db.models.Clear()
-
 	return db.DB.Close()
 }
 

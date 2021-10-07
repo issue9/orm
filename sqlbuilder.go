@@ -69,7 +69,7 @@ RET:
 	}
 
 	for index, key := range keys {
-		sb.WhereStmt().And("{"+key+"}=?", vals[index])
+		sb.WhereStmt().And(string(core.QuoteLeft)+key+string(core.QuoteRight)+"=?", vals[index])
 	}
 
 	return nil
