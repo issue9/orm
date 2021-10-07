@@ -22,10 +22,8 @@ const (
 )
 
 type mysql struct {
-	isMariadb  bool
-	dbName     string
-	driverName string
-	replacer   *strings.Replacer
+	base
+	isMariadb bool
 }
 
 var (
@@ -38,27 +36,23 @@ var (
 // 支持以下 meta 属性
 //  charset 字符集，语法为： charset(utf-8)
 //  engine 使用的引擎，语法为： engine(innodb)
-func Mysql(driverName string) core.Dialect { return newMysql(false, "mysql", driverName) }
+func Mysql(driverName, tablePrefix string) core.Dialect {
+	return newMysql(false, "mysql", driverName, tablePrefix)
+}
 
 // Mariadb 返回一个适配 mariadb 的 Dialect 接口
 //
-// meta 属性可参考 mysql，大部分内容增多与 Mysql 相同。
-func Mariadb(driverName string) core.Dialect {
-	return newMysql(true, "mariadb", driverName)
+// meta 属性可参考 mysql，大部分内容与 Mysql 相同。
+func Mariadb(driverName, tablePrefix string) core.Dialect {
+	return newMysql(true, "mariadb", driverName, tablePrefix)
 }
 
-func newMysql(isMariadb bool, name, driverName string) core.Dialect {
+func newMysql(isMariadb bool, dbName, driverName, tablePrefix string) core.Dialect {
 	return &mysql{
-		isMariadb:  isMariadb,
-		dbName:     name,
-		driverName: driverName,
-		replacer:   strings.NewReplacer("{", "`", "}", "`"),
+		base:      newBase(dbName, driverName, tablePrefix, "`", "`"),
+		isMariadb: isMariadb,
 	}
 }
-
-func (m *mysql) DBName() string { return m.dbName }
-
-func (m *mysql) DriverName() string { return m.driverName }
 
 func (m *mysql) Fix(query string, args []interface{}) (string, []interface{}, error) {
 	query, args, err := fixQueryAndArgs(query, args)

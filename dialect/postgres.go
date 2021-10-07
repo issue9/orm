@@ -15,21 +15,15 @@ import (
 )
 
 type postgres struct {
-	driverName string
-	replacer   *strings.Replacer
+	base
 }
 
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
-func Postgres(driverName string) core.Dialect {
+func Postgres(driverName, tablePrefix string) core.Dialect {
 	return &postgres{
-		driverName: driverName,
-		replacer:   strings.NewReplacer("{", `"`, "}", `"`),
+		base: newBase("postgres", driverName, tablePrefix, `"`, `"`),
 	}
 }
-
-func (p *postgres) DBName() string { return "postgres" }
-
-func (p *postgres) DriverName() string { return p.driverName }
 
 func (p *postgres) VersionSQL() string { return `SHOW server_version;` }
 

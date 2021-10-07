@@ -5,10 +5,11 @@ package core
 import "github.com/issue9/errwrap"
 
 // 作用于表名，列名等非关键字上的引号占位符。
-// 在 Dialect.SQL 中会自动替换成该数据相应的符号。
+// 在 Dialect.Fix 中会自动替换成该数据相应的符号。
 const (
-	QuoteLeft  = '{'
-	QuoteRight = '}'
+	QuoteLeft   = '{'
+	QuoteRight  = '}'
+	TablePrefix = '#'
 )
 
 // Builder 用于构建 SQL 语句

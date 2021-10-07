@@ -24,16 +24,16 @@ const sqlite3DBFile = "orm_test.db"
 
 var (
 	// Sqlite3 Dialect 实例
-	Sqlite3 = dialect.Sqlite3("sqlite3")
+	Sqlite3 = dialect.Sqlite3("sqlite3", "prefix_") // 保证 preifx_ 与配置中的相同
 
 	// Mysql Dialect 实例
-	Mysql = dialect.Mysql("mysql")
+	Mysql = dialect.Mysql("mysql", "prefix_")
 
 	// Mariadb Dialect 实例
-	Mariadb = dialect.Mariadb("mysql")
+	Mariadb = dialect.Mariadb("mysql", "prefix_")
 
 	// Postgres Dialect 实例
-	Postgres = dialect.Postgres("postgres")
+	Postgres = dialect.Postgres("postgres", "prefix_")
 )
 
 // 以驱动为单的测试用例
@@ -47,7 +47,7 @@ var cases = []struct {
 	{
 		prefix:  "prefix_",
 		dsn:     "./" + sqlite3DBFile + "?_fk=true&_loc=UTC",
-		dialect: Sqlite3,
+		dialect: dialect.Sqlite3("sqlite3", "prefix_"),
 	},
 	{
 		prefix:  "prefix_",

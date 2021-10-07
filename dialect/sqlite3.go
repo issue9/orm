@@ -19,8 +19,7 @@ import (
 const sqlite3RowID = "sqlite3_rowid"
 
 type sqlite3 struct {
-	driverName string
-	replacer   *strings.Replacer
+	base
 }
 
 var (
@@ -33,16 +32,11 @@ var (
 //
 // Meta 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
-func Sqlite3(driverName string) core.Dialect {
+func Sqlite3(driverName, tablePrefix string) core.Dialect {
 	return &sqlite3{
-		driverName: driverName,
-		replacer:   strings.NewReplacer("{", "`", "}", "`"),
+		base: newBase("sqlite3", driverName, tablePrefix, "`", "`"),
 	}
 }
-
-func (s *sqlite3) DBName() string { return "sqlite3" }
-
-func (s *sqlite3) DriverName() string { return s.driverName }
 
 func (s *sqlite3) Fix(query string, args []interface{}) (string, []interface{}, error) {
 	return s.replacer.Replace(query), args, nil

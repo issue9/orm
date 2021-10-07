@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/model"
@@ -19,7 +18,6 @@ type DB struct {
 	*sql.DB
 	dialect     Dialect
 	tablePrefix string
-	replacer    *strings.Replacer
 	sqlBuilder  *sqlbuilder.SQLBuilder
 	models      *model.Models
 	version     string
@@ -51,7 +49,6 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 		DB:          db,
 		dialect:     dialect,
 		tablePrefix: tablePrefix,
-		replacer:    strings.NewReplacer("#", tablePrefix),
 	}
 
 	inst.models = model.NewModels(inst)
@@ -113,7 +110,6 @@ func (db *DB) printDebug(query string) {
 // 如果生成语句出错，则会 panic
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	db.printDebug(query)
-	query = db.replacer.Replace(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		panic(err)
@@ -130,7 +126,6 @@ func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 // QueryContext 执行一条查询语句
 func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	db.printDebug(query)
-	query = db.replacer.Replace(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		return nil, err
@@ -147,7 +142,6 @@ func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 // ExecContext 执行 SQL 语句
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	db.printDebug(query)
-	query = db.replacer.Replace(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		return nil, err
@@ -164,7 +158,6 @@ func (db *DB) Prepare(query string) (*core.Stmt, error) {
 // PrepareContext 预编译查询语句
 func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
 	db.printDebug(query)
-	query = db.replacer.Replace(query)
 	query, orders, err := db.Dialect().Prepare(query)
 	if err != nil {
 		return nil, err
