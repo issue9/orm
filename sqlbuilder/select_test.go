@@ -119,7 +119,7 @@ func TestSelectWithNamedParam(t *testing.T) {
 }
 
 // 多个乱序命名参数
-func TestSelectWithMultNamedParam(t *testing.T) {
+func TestSelectQuery(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)
 	defer suite.Close()
@@ -135,14 +135,15 @@ func TestSelectWithMultNamedParam(t *testing.T) {
 			Desc("id")
 
 		id, err := stmt.QueryInt("id")
-		a.NotError(err).
-			Equal(id, 4)
+		a.NotError(err).Equal(id, 4)
 
 		p, err := stmt.Prepare()
 		a.NotError(err).NotNil(p)
-		rows, err := p.Query(sql.Named("name", "xxrTODOf"), sql.Named("id", 5))
-		a.NotError(err).NotNil(rows)
-		// TODO
+		id, err = p.QueryInt("id", sql.Named("name", "5"), sql.Named("id", 5))
+		a.NotError(err).Equal(id, 4)
+
+		id, err = p.QueryInt("id", sql.Named("name", "5"), sql.Named("id", 3))
+		a.NotError(err).Equal(id, 2)
 	})
 }
 

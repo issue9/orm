@@ -3,6 +3,8 @@
 package sqlbuilder
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
@@ -14,6 +16,11 @@ import (
 // ErrNoData 在 Select.QueryInt 等函数中，
 // 如果没有符合条件的数据，则返回此错误。
 var ErrNoData = errors.New("不存在符合和条件的数据")
+
+// SelectQuery 预编译之后的查询语句
+type SelectQuery struct {
+	stmt *core.Stmt
+}
 
 // SelectStmt 查询语句
 type SelectStmt struct {
@@ -282,7 +289,6 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 func (stmt *SelectStmt) Having(expr string, args ...interface{}) *SelectStmt {
 	stmt.havingQuery = expr
 	stmt.havingVals = args
-
 	return stmt
 }
 
@@ -426,13 +432,7 @@ func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (size int, er
 	if err != nil {
 		return 0, err
 	}
-	defer func() {
-		if err1 := rows.Close(); err1 != nil {
-			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-		}
-	}()
-
-	return fetch.Object(strict, rows, objs)
+	return queryObject(rows, strict, objs)
 }
 
 // QueryString 查询指定列的第一行数据，并将其转换成 string
@@ -441,22 +441,7 @@ func (stmt *SelectStmt) QueryString(colName string) (v string, err error) {
 	if err != nil {
 		return "", err
 	}
-	defer func() {
-		if err1 := rows.Close(); err1 != nil {
-			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-		}
-	}()
-
-	cols, err := fetch.ColumnString(true, colName, rows)
-	if err != nil {
-		return "", err
-	}
-
-	if len(cols) == 0 {
-		return "", ErrNoData
-	}
-
-	return cols[0], nil
+	return queryString(rows, colName)
 }
 
 // QueryFloat 查询指定列的第一行数据，并将其转换成 float64
@@ -606,4 +591,90 @@ func (stmt *WhereStmt) Select(e core.Engine) *SelectStmt {
 	sel := Select(e)
 	sel.where = stmt
 	return sel
+}
+
+func (stmt *SelectStmt) PrepareContext(ctx context.Context) (*SelectQuery, error) {
+	s, err := stmt.queryStmt.PrepareContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &SelectQuery{stmt: s}, nil
+}
+
+func (stmt *SelectStmt) Prepare() (*SelectQuery, error) {
+	return stmt.PrepareContext(context.Background())
+}
+
+// QueryObject 将符合当前条件的所有记录依次写入 objs 中。
+//
+// 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Object 函数的相关介绍。
+func (stmt *SelectQuery) QueryObject(strict bool, objs interface{}, arg ...interface{}) (size int, err error) {
+	rows, err := stmt.stmt.Query(arg...)
+	if err != nil {
+		return 0, err
+	}
+	return queryObject(rows, strict, objs)
+}
+
+// QueryString 查询指定列的第一行数据，并将其转换成 string
+func (stmt *SelectQuery) QueryString(colName string, arg ...interface{}) (v string, err error) {
+	rows, err := stmt.stmt.Query(arg...)
+	if err != nil {
+		return "", err
+	}
+	return queryString(rows, colName)
+}
+
+// QueryFloat 查询指定列的第一行数据，并将其转换成 float64
+func (stmt *SelectQuery) QueryFloat(colName string, arg ...interface{}) (float64, error) {
+	v, err := stmt.QueryString(colName, arg...)
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.ParseFloat(v, 64)
+}
+
+// QueryInt 查询指定列的第一行数据，并将其转换成 int64
+func (stmt *SelectQuery) QueryInt(colName string, arg ...interface{}) (int64, error) {
+	// NOTE: 可能会出现浮点数的情况。比如：
+	// select avg(xx) as avg form xxx where xxx
+	// 查询 avg 的值可能是 5.000 等值。
+	v, err := stmt.QueryString(colName, arg...)
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.ParseInt(v, 10, 64)
+}
+
+func (stmt *SelectQuery) Close() error { return stmt.stmt.Close() }
+
+func queryObject(rows *sql.Rows, strict bool, objs interface{}) (size int, err error) {
+	defer func() {
+		if err1 := rows.Close(); err1 != nil {
+			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
+		}
+	}()
+
+	return fetch.Object(strict, rows, objs)
+}
+
+func queryString(rows *sql.Rows, colName string) (v string, err error) {
+	defer func() {
+		if err1 := rows.Close(); err1 != nil {
+			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
+		}
+	}()
+
+	cols, err := fetch.ColumnString(true, colName, rows)
+	if err != nil {
+		return "", err
+	}
+
+	if len(cols) == 0 {
+		return "", ErrNoData
+	}
+
+	return cols[0], nil
 }
