@@ -21,7 +21,7 @@ type Flag struct {
 
 // Main 供测试的 TestMain 调用
 func Main(m *testing.M) {
-	dbString := flag.String("dbs", "", "指定需要测试的数据库，格式为 dbName,driverName:dbName,driverName")
+	dbString := flag.String("dbs", "sqlite3,sqlite3", "指定需要测试的数据库，格式为 dbName,driverName:dbName,driverName")
 
 	flag.Parse()
 
