@@ -103,14 +103,13 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 	start := -1
 	cnt := 0
 
-	write := func(name string) error {
-		builder.WString(" ? ")
-
+	write := func(name string) {
 		if _, found := orders[name]; found {
 			panic("存在相同的参数名：" + name)
 		}
+
+		builder.WString(" ? ")
 		orders[name] = cnt
-		return nil
 	}
 
 	for index, c := range query {
@@ -118,9 +117,7 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 		case c == '@':
 			start = index + 1
 		case start != -1 && !(unicode.IsLetter(c) || unicode.IsDigit(c)):
-			if err := write(query[start:index]); err != nil {
-				return "", nil, err
-			}
+			write(query[start:index])
 			builder.WRunes(c) // 当前的字符不能丢
 			cnt++
 			start = -1
@@ -133,9 +130,7 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 	}
 
 	if start > -1 {
-		if err := write(query[start:]); err != nil {
-			return "", nil, err
-		}
+		write(query[start:])
 	}
 
 	q, err := builder.String()
