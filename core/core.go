@@ -131,6 +131,8 @@ type Dialect interface {
 	// 比如替换 {} 符号；处理 sql.NamedArgs；
 	// postgresql 需要将 ? 改成 $1 等形式。
 	// 以及对 args 的参数作校正，比如 lib/pq 对 time.Time 处理有问题，也可以在此处作调整。
+	//
+	// NOTE: query 中不能同时存在 ? 和命名参数。因为如果是命名参数，则 args 的顺序可以是随意的。
 	Fix(query string, args []interface{}) (string, []interface{}, error)
 
 	// Prepare 对预编译的内容进行处理
@@ -141,5 +143,7 @@ type Dialect interface {
 	//  2. 将 sql 中的 @xx 在 sql 中的位置进行记录，并通过 orders 返回。
 	// query 为处理后的 SQL 语句；
 	// orders 为参数名在 query 中对应的位置，第一个位置为 0，依次增加。
+	//
+	// NOTE: query 中不能同时存在 ? 和命名参数。因为如果是命名参数，则 Exec 等的参数顺序可以是随意的。
 	Prepare(sql string) (query string, orders map[string]int, err error)
 }

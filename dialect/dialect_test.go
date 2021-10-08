@@ -89,20 +89,15 @@ func TestPrepareNamedArgs(t *testing.T) {
 			query:  "INSERT INTO users({id},{name}) VALUES (?,?)",
 			orders: map[string]int{"id": 0, "name": 1},
 		},
-		{
+		{ // 没有命名参数
 			input:  "INSERT INTO users({id},{name}) VALUES (?,?)",
 			query:  "INSERT INTO users({id},{name}) VALUES (?,?)",
 			orders: map[string]int{},
 		},
-		{
-			input:  "select * from table where id=? and id=@id and id=1",
-			query:  "select * from table where id=? and id=? and id=1",
-			orders: map[string]int{"id": 1},
-		},
 		{ // 参数名称是另一个参数名称的一部分
-			input:  "select * from table where id=@id and id=? and id=@id2",
-			query:  "select * from table where id=? and id=? and id=?",
-			orders: map[string]int{"id": 0, "id2": 2},
+			input:  "select * from table where id=@id and id=1 and id=@id2",
+			query:  "select * from table where id=? and id=1 and id=?",
+			orders: map[string]int{"id": 0, "id2": 1},
 		},
 	}
 
@@ -119,9 +114,13 @@ func TestPrepareNamedArgs(t *testing.T) {
 		sqltest.Equal(a, q, item.query)
 	}
 
-	a.Panic(func() {
+	a.PanicString(func() {
 		PrepareNamedArgs("INSERT INTO users({id},{name}) VALUES (@id,@id)")
-	})
+	}, "存在相同的参数名")
+
+	a.PanicString(func() {
+		PrepareNamedArgs("INSERT INTO users({id},{name}) VALUES (@id,?)")
+	}, "不能同时存在 ? 和命名参数")
 }
 
 func TestFixQueryAndArgs(t *testing.T) {
@@ -135,16 +134,16 @@ func TestFixQueryAndArgs(t *testing.T) {
 		outputArgs  []interface{}
 	}{
 		{
-			query:       "select * from table where id=? and id=@id and id=1",
-			args:        []interface{}{1, sql.Named("id", 2)},
-			outputQuery: "select * from table where id=? and id=? and id=1",
-			outputArgs:  []interface{}{1, 2},
+			query:       "select * from table where id=1 and id=@id",
+			args:        []interface{}{sql.Named("id", 2)},
+			outputQuery: "select * from table where id=1 and id=?",
+			outputArgs:  []interface{}{2},
 		},
 		{
-			query:       "select * from table where id=@id and id=? and id=@id2",
-			args:        []interface{}{sql.Named("id2", 1), 1, sql.Named("id", 2)},
-			outputQuery: "select * from table where id=? and id=? and id=?",
-			outputArgs:  []interface{}{2, 1, 1},
+			query:       "select * from table where id=@id and id=1 and id=@id2",
+			args:        []interface{}{sql.Named("id2", 1), sql.Named("id", 2)},
+			outputQuery: "select * from table where id=? and id=1 and id=?",
+			outputArgs:  []interface{}{2, 1},
 		},
 	}
 
@@ -156,14 +155,18 @@ func TestFixQueryAndArgs(t *testing.T) {
 	}
 
 	a.Panic(func() {
-		fixQueryAndArgs("select * from table where id=@id and id=? and id=@id2", []interface{}{sql.Named("id2", 1), 1, sql.Named("id3", 2)})
+		fixQueryAndArgs("select * from table where id=@id  and id=@id2", []interface{}{sql.Named("id2", 1), sql.Named("id3", 2)})
 	})
 
 	a.Panic(func() {
-		fixQueryAndArgs("select * from table where id=@id and id=? and id=@id2", []interface{}{sql.Named("id2", 1), 1, sql.Named("not-exists", 2)})
+		fixQueryAndArgs("select * from table where id=@id and  id=@id2", []interface{}{sql.Named("id2", 1), sql.Named("not-exists", 2)})
 	})
 
 	a.Panic(func() {
-		fixQueryAndArgs("select * from table where id=@id and id=? and id=@id", []interface{}{sql.Named("id", 1), 1, sql.Named("id2", 2)})
+		fixQueryAndArgs("select * from table where id=@id and id=@id", []interface{}{sql.Named("id", 1), sql.Named("id2", 2)})
+	})
+
+	a.Panic(func() {
+		fixQueryAndArgs("select * from table where id=@id  and id=?", []interface{}{sql.Named("id", 1)})
 	})
 }

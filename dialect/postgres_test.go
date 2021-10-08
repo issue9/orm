@@ -3,6 +3,7 @@
 package dialect_test
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -228,36 +229,65 @@ func TestPostgres_TruncateTableSQL(t *testing.T) {
 	})
 }
 
-func TestPostgres_SQL(t *testing.T) {
+func TestPostgres_Fix(t *testing.T) {
 	a := assert.New(t)
 	p := dialect.Postgres("driver_name", "")
 	a.NotNil(p)
 
-	eq := func(s1, s2 string) {
-		ret, _, err := p.Fix(s1, nil)
+	data := []*struct {
+		input, output string
+		args          []interface{}
+	}{
+		{
+			input:  "abc",
+			output: "abc",
+		},
+		{ // 未包含 ? 的情况下，不会触发 p.replace 可以有 $
+			input:  "abc$",
+			output: "abc$",
+		},
+		{
+			input:  "abc @id abc",
+			output: "abc $1 abc",
+			args:   []interface{}{sql.Named("id", 1)},
+		},
+		{
+			input:  "@id1 abc @id2 abc @id3",
+			output: "$1 abc $2 abc $3",
+			args:   []interface{}{sql.Named("id1", 1), sql.Named("id2", 1), sql.Named("id3", 1)},
+		},
+		{
+			input:  "abc @id1 abc @id2 def",
+			output: "abc $1 abc $2 def",
+			args:   []interface{}{sql.Named("id1", 1), sql.Named("id2", 1)},
+		},
+		{
+			input:  "中文 @id1 abc @id2 def",
+			output: "中文 $1 abc $2 def",
+			args:   []interface{}{sql.Named("id1", 1), sql.Named("id2", 1)},
+		},
+	}
+
+	for _, item := range data {
+		output, _, err := p.Fix(item.input, item.args)
 		a.NotError(err)
-		a.Equal(ret, s2)
+		sqltest.Equal(a, output, item.output)
 	}
 
-	err := func(s1 string) {
-		ret, _, err := p.Fix(s1, nil)
-		a.Error(err).Empty(ret)
-	}
+	_, _, err := p.Fix("$a @id1 bc", []interface{}{sql.Named("id1", 1)})
+	a.Error(err)
 
-	eq("abc", "abc")
-	eq("abc$", "abc$") // 未包含?的情况下，不会触发ReplaceMarks，可以有$
-	eq("abc?abc", "abc$1abc")
-	eq("?abc?abc?", "$1abc$2abc$3")
-	eq("abc?abc?def", "abc$1abc$2def")
-	eq("中文?abc?def", "中文$1abc$2def")
+	_, _, err = p.Fix("@id1 $abc$", []interface{}{sql.Named("id1", 1)})
+	a.Error(err)
 
-	err("$a?bc")
-	err("?$abc$")
-	err("a?bc$abc$abc")
-	err("?中$文")
+	_, _, err = p.Fix("a @id1 bc$abc$abc", []interface{}{sql.Named("id1", 1)})
+	a.Error(err)
+
+	_, _, err = p.Fix("@id1 中$文", []interface{}{sql.Named("id1", 1)})
+	a.Error(err)
 }
 
-func BenchmarkPostgres_SQL(b *testing.B) {
+func BenchmarkPostgres_Fix(b *testing.B) {
 	a := assert.New(b)
 	p := dialect.Postgres("postgres_driver_name", "")
 	a.NotNil(p)

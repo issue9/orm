@@ -95,7 +95,8 @@ func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interfa
 
 // PrepareNamedArgs 对命名参数进行预处理
 //
-// 命名参数替换成 ?，并返回参数名称对应在语句的位置，包括 ? 在内。
+// 命名参数替换成 ?，并返回参数名称对应在语句的位置。
+// query 中不能同时包含命名参数和 ?，否则将 panic。
 func PrepareNamedArgs(query string) (string, map[string]int, error) {
 	orders := map[string]int{}
 	builder := core.NewBuilder("")
@@ -106,7 +107,7 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 		builder.WString(" ? ")
 
 		if _, found := orders[name]; found {
-			panic(fmt.Sprintf("存在相同的参数名：%s", name))
+			panic("存在相同的参数名：" + name)
 		}
 		orders[name] = cnt
 		return nil
@@ -125,8 +126,8 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 			start = -1
 		case start == -1:
 			builder.WRunes(c)
-			if c == '?' {
-				cnt++
+			if c == '?' && cnt > 0 {
+				panic("不能同时存在 ? 和命名参数")
 			}
 		}
 	}
@@ -149,9 +150,7 @@ func stdDropIndex(index string) (string, error) {
 		return "", sqlbuilder.ErrColumnsIsEmpty
 	}
 
-	return core.NewBuilder("DROP INDEX ").
-		QuoteKey(index).
-		String()
+	return core.NewBuilder("DROP INDEX ").QuoteKey(index).String()
 }
 
 func appendViewBody(builder *core.Builder, name, selectQuery string, cols []string) (string, error) {
@@ -160,15 +159,12 @@ func appendViewBody(builder *core.Builder, name, selectQuery string, cols []stri
 	if len(cols) > 0 {
 		builder.WBytes('(')
 		for _, col := range cols {
-			builder.QuoteKey(col).
-				WBytes(',')
+			builder.QuoteKey(col).WBytes(',')
 		}
 		builder.TruncateLast(1).WBytes(')')
 	}
 
-	return builder.WString(" AS ").
-		WString(selectQuery).
-		String()
+	return builder.WString(" AS ").WString(selectQuery).String()
 }
 
 // 修正查询语句和查询参数的位置
