@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	_ sqlbuilder.DDLSQLer = &sqlbuilder.CreateIndexStmt{}
-	_ sqlbuilder.DDLSQLer = &sqlbuilder.DropIndexStmt{}
+	_ sqlbuilder.DDLStmt = &sqlbuilder.CreateIndexStmt{}
+	_ sqlbuilder.DDLStmt = &sqlbuilder.DropIndexStmt{}
 )
 
 func TestIndex(t *testing.T) {

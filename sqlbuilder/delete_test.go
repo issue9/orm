@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	_ sqlbuilder.SQLer       = &sqlbuilder.DeleteStmt{}
+	_ sqlbuilder.ExecStmt    = &sqlbuilder.DeleteStmt{}
 	_ sqlbuilder.WhereStmter = &sqlbuilder.DeleteStmt{}
 )
 

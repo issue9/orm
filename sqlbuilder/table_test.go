@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	_ sqlbuilder.DDLSQLer = &sqlbuilder.CreateTableStmt{}
-	_ sqlbuilder.DDLSQLer = &sqlbuilder.DropTableStmt{}
-	_ sqlbuilder.DDLSQLer = &sqlbuilder.TruncateTableStmt{}
+	_ sqlbuilder.DDLStmt = &sqlbuilder.CreateTableStmt{}
+	_ sqlbuilder.DDLStmt = &sqlbuilder.DropTableStmt{}
+	_ sqlbuilder.DDLStmt = &sqlbuilder.TruncateTableStmt{}
 )
 
 func TestCreateTableStmt(t *testing.T) {

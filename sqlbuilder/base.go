@@ -10,22 +10,6 @@ import (
 )
 
 type (
-	// SQLer 定义 SQL 语句的基本接口
-	SQLer interface {
-		// SQL 将当前实例转换成 SQL 语句返回
-		//
-		// query 表示 SQL 语句，而 args 表示语句各个参数占位符对应的参数值。
-		SQL() (query string, args []interface{}, err error)
-	}
-
-	// DDLSQLer SQL 中 DDL 语句的基本接口
-	//
-	// 大部分数据的 DDL 操作是有多条语句组成，比如 CREATE TABLE
-	// 可能包含了额外的定义信息。
-	DDLSQLer interface {
-		DDLSQL() ([]string, error)
-	}
-
 	baseStmt struct {
 		engine core.Engine
 

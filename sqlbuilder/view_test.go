@@ -11,6 +11,8 @@ import (
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
+var _ sqlbuilder.DDLStmt = &sqlbuilder.CreateTableStmt{}
+
 func TestCreateView(t *testing.T) {
 	a := assert.New(t)
 	suite := test.NewSuite(a)

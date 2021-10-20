@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	_ sqlbuilder.DDLSQLer = &sqlbuilder.AddColumnStmt{}
-	_ sqlbuilder.DDLSQLer = &sqlbuilder.DropColumnStmt{}
+	_ sqlbuilder.DDLStmt = &sqlbuilder.AddColumnStmt{}
+	_ sqlbuilder.DDLStmt = &sqlbuilder.DropColumnStmt{}
 )
 
 func TestColumn(t *testing.T) {
