@@ -15,10 +15,13 @@ import (
 // varchar(50) 和 text 在 sqlite3 是相同的，但是在其它数据库可能是稍微有差别的，
 // 所以 Upgrader 并不会自动对数据表进行更新，所有更新还是要手动调用相关的函数。
 type Upgrader struct {
-	db    *DB
 	model *Model
 	err   error
-	ddl   []sqlbuilder.DDLSQLer
+	ddl   []sqlbuilder.DDLStmt
+
+	e        Engine
+	commit   func() error
+	rollback func() error
 }
 
 // Upgrade 生成 Upgrader 对象
@@ -32,15 +35,32 @@ func (db *DB) Upgrade(v TableNamer) (*Upgrader, error) {
 		return nil, err
 	}
 
+	var e Engine = db
+	commit := func() error { return nil }
+	rollback := func() error { return nil }
+
+	if db.Dialect().TransactionalDDL() {
+		tx, err := db.Begin()
+		if err != nil {
+			return nil, err
+		}
+		e = tx
+
+		commit = func() error { return tx.Commit() }
+		rollback = func() error { return tx.Rollback() }
+	}
+
 	return &Upgrader{
-		db:    db,
 		model: m,
-		ddl:   make([]sqlbuilder.DDLSQLer, 0, 10),
+		ddl:   make([]sqlbuilder.DDLStmt, 0, 10),
+
+		e:        e,
+		commit:   commit,
+		rollback: rollback,
 	}, nil
 }
 
-// DB 返回关联的 DB 实例
-func (u *Upgrader) DB() *DB { return u.db }
+func (u *Upgrader) Engine() Engine { return u.e }
 
 // Err 返回执行过程中的错误信息
 func (u *Upgrader) Err() error { return u.err }
@@ -65,7 +85,7 @@ func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 			return u
 		}
 
-		sql := sqlbuilder.AddColumn(u.DB()).
+		sql := sqlbuilder.AddColumn(u.Engine()).
 			Table(u.model.Name).
 			Column(col.Name, col.PrimitiveType, col.AI, col.Nullable, col.HasDefault, col.Default, col.Length...)
 		u.ddl = append(u.ddl, sql)
@@ -80,7 +100,7 @@ func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 func (u *Upgrader) DropColumn(name ...string) *Upgrader {
 	if u.err == nil {
 		for _, n := range name {
-			sql := sqlbuilder.DropColumn(u.DB()).Table(u.model.Name).Column(n)
+			sql := sqlbuilder.DropColumn(u.Engine()).Table(u.model.Name).Column(n)
 			u.ddl = append(u.ddl, sql)
 		}
 	}
@@ -102,7 +122,7 @@ LOOP:
 				continue
 			}
 
-			sql := sqlbuilder.AddConstraint(u.DB())
+			sql := sqlbuilder.AddConstraint(u.Engine())
 			sql.Table(u.model.Name)
 			sql.FK(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 
@@ -115,7 +135,7 @@ LOOP:
 				continue
 			}
 
-			sql := sqlbuilder.AddConstraint(u.DB())
+			sql := sqlbuilder.AddConstraint(u.Engine())
 			sql.Table(u.model.Name)
 			cols := make([]string, 0, len(unique))
 			for _, col := range unique {
@@ -132,7 +152,7 @@ LOOP:
 				continue
 			}
 
-			sql := sqlbuilder.AddConstraint(u.DB())
+			sql := sqlbuilder.AddConstraint(u.Engine())
 			sql.Table(u.model.Name)
 			sql.Check(name, expr)
 
@@ -148,7 +168,7 @@ LOOP:
 func (u *Upgrader) DropConstraint(conts ...string) *Upgrader {
 	if u.err == nil {
 		for _, n := range conts {
-			sql := sqlbuilder.DropConstraint(u.DB()).Table(u.model.Name).Constraint(n)
+			sql := sqlbuilder.DropConstraint(u.Engine()).Table(u.model.Name).Constraint(n)
 			u.ddl = append(u.ddl, sql)
 		}
 	}
@@ -167,7 +187,7 @@ func (u *Upgrader) AddPK() *Upgrader {
 			cols = append(cols, col.Name)
 		}
 
-		sql := sqlbuilder.AddConstraint(u.DB()).Table(u.model.Name).PK(cols...)
+		sql := sqlbuilder.AddConstraint(u.Engine()).Table(u.model.Name).PK(cols...)
 		u.ddl = append(u.ddl, sql)
 	}
 
@@ -177,7 +197,7 @@ func (u *Upgrader) AddPK() *Upgrader {
 // DropPK 删除主键约束
 func (u *Upgrader) DropPK() *Upgrader {
 	if u.err == nil {
-		sql := sqlbuilder.DropConstraint(u.DB()).Table(u.model.Name).PK()
+		sql := sqlbuilder.DropConstraint(u.Engine()).Table(u.model.Name).PK()
 		u.ddl = append(u.ddl, sql)
 	}
 	return u
@@ -185,12 +205,12 @@ func (u *Upgrader) DropPK() *Upgrader {
 
 // AddIndex 添加索引信息
 func (u *Upgrader) AddIndex(name ...string) *Upgrader {
-	if u.err != nil {
+	if u.Err() != nil {
 		return u
 	}
 
 	for _, index := range name {
-		sql := sqlbuilder.CreateIndex(u.DB())
+		sql := sqlbuilder.CreateIndex(u.Engine())
 		sql.Table(u.model.Name)
 
 		for name, cols := range u.model.Indexes {
@@ -217,7 +237,7 @@ func (u *Upgrader) AddIndex(name ...string) *Upgrader {
 func (u *Upgrader) DropIndex(name ...string) *Upgrader {
 	if u.Err() == nil {
 		for _, index := range name {
-			sql := sqlbuilder.DropIndex(u.DB()).Table(u.model.Name).Name(index)
+			sql := sqlbuilder.DropIndex(u.Engine()).Table(u.model.Name).Name(index)
 			u.ddl = append(u.ddl, sql)
 		}
 	}
@@ -225,55 +245,17 @@ func (u *Upgrader) DropIndex(name ...string) *Upgrader {
 }
 
 // Do 执行操作
-//
-// 此操作会尽量在一个事务中完成，但是如果数据不支持 DDL 模式，则可能是多次提交。
 func (u *Upgrader) Do() error {
 	if u.Err() != nil {
 		return u.Err()
 	}
 
-	rollback := func() error {
-		return nil
-	}
-	commit := func() error {
-		return nil
-	}
-	var e Engine = u.DB()
-
 	for _, ddl := range u.ddl {
-		query, err := ddl.DDLSQL()
-		if err != nil {
-			return err
-		}
-
-		if u.DB().Dialect().TransactionalDDL() {
-			tx, err := u.DB().Begin()
-			if err != nil {
-				return err
-			}
-
-			rollback = func() error {
-				return tx.Rollback()
-			}
-			commit = func() error {
-				return tx.Commit()
-			}
-			e = tx
-		}
-
-		for _, q := range query {
-			if _, err := e.Exec(q); err != nil {
-				if err2 := rollback(); err2 != nil {
-					err = fmt.Errorf("返回错误 %w 时再次发生错误 %s", err, err2.Error())
-				}
-				return err
-			}
-		}
-
-		if err := commit(); err != nil {
+		if err := ddl.Exec(); err != nil {
+			u.rollback()
 			return err
 		}
 	}
 
-	return nil
+	return u.commit()
 }
