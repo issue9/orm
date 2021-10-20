@@ -116,10 +116,6 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	if len(stmt.columns) == 0 && stmt.countExpr == "" {
-		return "", nil, ErrColumnsIsEmpty
-	}
-
 	builder := core.NewBuilder("SELECT ")
 	args := make([]interface{}, 0, 10)
 
@@ -218,14 +214,20 @@ func (stmt *SelectStmt) buildColumns(builder *core.Builder) {
 		builder.WString("DISTINCT ")
 	}
 
+	if len(stmt.columns) == 0 {
+		builder.WBytes('*')
+		return
+	}
+
 	for _, col := range stmt.columns {
 		builder.WString(col).WBytes(',')
 	}
-
 	builder.TruncateLast(1)
 }
 
-// Column 指定列，一次只能指定一列。
+// Column 指定列
+//
+// 一次只能指定一列，当未指定任何列时，默认会采用 *。
 //
 // col 表示列名，可以是以下形式：
 //  *
@@ -240,7 +242,7 @@ func (stmt *SelectStmt) Column(col string) *SelectStmt {
 	return stmt
 }
 
-// Columns 指定列名，可以指定多列。
+// Columns 指定列名
 //
 // 相当于按参数顺序依次调用 Select.Column，如果存在别名，
 // 可以使用 col AS alias 的方式指定每一个参数。
@@ -315,7 +317,7 @@ func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 
 // Desc 倒序查询
 //
-// col 为分组的列名，格式可以单纯的列名，或是带表名的列：
+// col 为分组的列名，格式可以是单纯的列名，或是带表名的列：
 //  col
 //  table.col
 // table 和 col 都可以是关键字，系统会自动处理。
@@ -325,7 +327,7 @@ func (stmt *SelectStmt) Desc(col ...string) *SelectStmt {
 
 // Asc 正序查询
 //
-// col 为分组的列名，格式可以单纯的列名，或是带表名的列：
+// col 为分组的列名，格式可以是单纯的列名，或是带表名的列：
 //  col
 //  table.col
 // table 和 col 都可以是关键字，系统会自动处理。
@@ -390,9 +392,10 @@ func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectS
 	return stmt
 }
 
-// Count 指定 Count 表达式，如果指定了 count 表达式，则会造成 limit 失效。
+// Count 指定 Count 表达式
 //
-// 如果设置为空值，则取消 count，恢复普通的 select
+// 如果指定了 count 表达式，则会造成 limit 失效，
+// 如果设置为空值，则取消 count，恢复普通的 select 。
 func (stmt *SelectStmt) Count(expr string) *SelectStmt {
 	stmt.countExpr = expr
 
@@ -424,7 +427,7 @@ func (stmt *SelectStmt) Union(all bool, sel ...*SelectStmt) *SelectStmt {
 	return stmt
 }
 
-// QueryObject 将符合当前条件的所有记录依次写入 objs 中。
+// QueryObject 将符合当前条件的所有记录依次写入 objs 中
 //
 // 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Object 函数的相关介绍。
 func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (size int, err error) {

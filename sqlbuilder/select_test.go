@@ -27,7 +27,7 @@ func TestSelect(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		stmt := sqlbuilder.Select(t.DB).Column("*").
+		stmt := sqlbuilder.Select(t.DB).
 			From("users").
 			Where("id<?", 5).
 			Desc("id")
@@ -142,8 +142,8 @@ func TestSelectQuery(t *testing.T) {
 		id, err = p.QueryInt("id", sql.Named("name", "5"), sql.Named("id", 5))
 		a.NotError(err).Equal(id, 4)
 
-		id, err = p.QueryInt("id", sql.Named("name", "5"), sql.Named("id", 3))
-		a.NotError(err).Equal(id, 2)
+		idF, err := p.QueryFloat("id", sql.Named("name", "5"), sql.Named("id", 3))
+		a.NotError(err).Equal(idF, 2.0)
 	})
 }
 

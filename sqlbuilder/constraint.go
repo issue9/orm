@@ -163,9 +163,7 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 			QuoteKey(stmt.Data[0]).
 			WString(") REFERENCES ").
 			QuoteKey(stmt.Data[1]).
-			WBytes('(').
-			QuoteKey(stmt.Data[2]).
-			WBytes(')')
+			Quote(stmt.Data[2], '(', ')')
 
 		if stmt.Data[3] != "" {
 			builder.WString(" ON UPDATE ").WString(stmt.Data[3])
