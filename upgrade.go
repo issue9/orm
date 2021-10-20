@@ -8,22 +8,20 @@ import (
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
-// Upgrader 更新数据库对象
+// Upgrader 更新数据表对象
 //
 // 主要针对线上数据与本地模型不相同时，可执行的一些操作。
+// 并没有准确的方法判断线上字段与本地定义的是否相同，比如：
+// varchar(50) 和 text 在 sqlite3 是相同的，但是在其它数据库可能是稍微有差别的，
+// 所以 Upgrader 并不会自动对数据表进行更新，所有更新还是要手动调用相关的函数。
 type Upgrader struct {
-	db    *DB
 	model *Model
 	err   error
+	ddl   []sqlbuilder.DDLStmt
 
-	addCols  []*Column
-	dropCols []string
-
-	addConts  []string
-	dropConts []string
-
-	addIdxs  []string
-	dropIdxs []string
+	e        Engine
+	commit   func() error
+	rollback func() error
 }
 
 // Upgrade 生成 Upgrader 对象
@@ -37,20 +35,32 @@ func (db *DB) Upgrade(v TableNamer) (*Upgrader, error) {
 		return nil, err
 	}
 
+	var e Engine = db
+	commit := func() error { return nil }
+	rollback := func() error { return nil }
+
+	if db.Dialect().TransactionalDDL() {
+		tx, err := db.Begin()
+		if err != nil {
+			return nil, err
+		}
+		e = tx
+
+		commit = func() error { return tx.Commit() }
+		rollback = func() error { return tx.Rollback() }
+	}
+
 	return &Upgrader{
-		db:        db,
-		model:     m,
-		addCols:   []*Column{},
-		dropCols:  []string{},
-		addConts:  []string{},
-		dropConts: []string{},
-		addIdxs:   []string{},
-		dropIdxs:  []string{},
+		model: m,
+		ddl:   make([]sqlbuilder.DDLStmt, 0, 10),
+
+		e:        e,
+		commit:   commit,
+		rollback: rollback,
 	}, nil
 }
 
-// DB 返回关联的 DB 实例
-func (u *Upgrader) DB() *DB { return u.db }
+func (u *Upgrader) Engine() Engine { return u.e }
 
 // Err 返回执行过程中的错误信息
 func (u *Upgrader) Err() error { return u.err }
@@ -59,17 +69,26 @@ func (u *Upgrader) Err() error { return u.err }
 //
 // 列名必须存在于表模型中。
 func (u *Upgrader) AddColumn(name ...string) *Upgrader {
-	if u.err != nil {
-		return u
-	}
-
 	for _, n := range name {
+		if u.err != nil {
+			return u
+		}
+
 		col := u.model.FindColumn(n)
 		if col == nil {
 			u.err = fmt.Errorf("列名 %s 不存在", n)
+			return u
 		}
 
-		u.addCols = append(u.addCols, col)
+		if !col.HasDefault && !col.Nullable {
+			u.err = fmt.Errorf("新增列 %s 必须指定默认值或是 Nullable 属性", col.Name)
+			return u
+		}
+
+		sql := sqlbuilder.AddColumn(u.Engine()).
+			Table(u.model.Name).
+			Column(col.Name, col.PrimitiveType, col.AI, col.Nullable, col.HasDefault, col.Default, col.Length...)
+		u.ddl = append(u.ddl, sql)
 	}
 
 	return u
@@ -79,16 +98,12 @@ func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 //
 // 列名可以不存在于表模型，只在数据库中的表包含该列名，就会被删除。
 func (u *Upgrader) DropColumn(name ...string) *Upgrader {
-	if u.err != nil {
-		return u
+	if u.err == nil {
+		for _, n := range name {
+			sql := sqlbuilder.DropColumn(u.Engine()).Table(u.model.Name).Column(n)
+			u.ddl = append(u.ddl, sql)
+		}
 	}
-
-	if u.dropCols == nil {
-		u.dropCols = name
-		return u
-	}
-
-	u.dropCols = append(u.dropCols, name...)
 	return u
 }
 
@@ -100,252 +115,35 @@ func (u *Upgrader) AddConstraint(name ...string) *Upgrader {
 		return u
 	}
 
-	if u.addConts == nil {
-		u.addConts = name
-		return u
-	}
-
-	u.addConts = append(u.addConts, name...)
-
-	return u
-}
-
-// DropConstraint 删除约束
-func (u *Upgrader) DropConstraint(conts ...string) *Upgrader {
-	if u.err != nil {
-		return u
-	}
-
-	if u.dropConts == nil {
-		u.dropConts = conts
-		return u
-	}
-
-	u.dropConts = append(u.dropConts, conts...)
-	return u
-}
-
-// AddIndex 添加索引信息
-func (u *Upgrader) AddIndex(name ...string) *Upgrader {
-	if u.err != nil {
-		return u
-	}
-
-	if u.addIdxs == nil {
-		u.addIdxs = name
-		return u
-	}
-
-	u.addIdxs = append(u.addIdxs, name...)
-	return u
-}
-
-// DropIndex 删除索引
-func (u *Upgrader) DropIndex(name ...string) *Upgrader {
-	if u.Err() != nil {
-		return u
-	}
-
-	if u.dropIdxs == nil {
-		u.dropIdxs = name
-		return u
-	}
-
-	u.dropIdxs = append(u.dropIdxs, name...)
-	return u
-}
-
-// Do 执行操作
-//
-// 此操作会尽量在一个事务中完成，但是如果数据不支持 DDL 模式，则可能是多次提交。
-func (u *Upgrader) Do() error {
-	if u.Err() != nil {
-		return u.Err()
-	}
-
-	rollback := func() error {
-		return nil
-	}
-
-	commit := func() error {
-		return nil
-	}
-
-	var e Engine = u.DB()
-	if u.DB().Dialect().TransactionalDDL() {
-		tx, err := u.DB().Begin()
-		if err != nil {
-			return err
-		}
-
-		rollback = func() error {
-			return tx.Rollback()
-		}
-		commit = func() error {
-			return tx.Commit()
-		}
-		e = tx
-	}
-
-	if len(u.dropConts) > 0 {
-		if err := u.dropConstraints(e); err != nil {
-			if err1 := rollback(); err1 != nil {
-				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-			}
-			return err
-		}
-	}
-
-	if len(u.dropIdxs) > 0 {
-		if err := u.dropIndexes(e); err != nil {
-			if err1 := rollback(); err1 != nil {
-				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-			}
-			return err
-		}
-	}
-
-	// 约束可能正好依赖被删除的列。
-	// 所以要在删除约束之后，再删除列信息。
-	if len(u.dropCols) > 0 {
-		if err := u.dropColumns(e); err != nil {
-			if err1 := rollback(); err1 != nil {
-				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-			}
-			return err
-		}
-	}
-
-	// 先添加列，再添加约束和索引。后者可能依赖添加的列信息。
-	if len(u.addCols) > 0 {
-		if err := u.addColumns(e); err != nil {
-			if err1 := rollback(); err1 != nil {
-				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-			}
-			return err
-		}
-	}
-
-	if len(u.addConts) > 0 {
-		if err := u.addConstraints(e); err != nil {
-			if err1 := rollback(); err1 != nil {
-				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-			}
-			return err
-		}
-	}
-
-	if len(u.addIdxs) > 0 {
-		if err := u.addIndexes(e); err != nil {
-			if err1 := rollback(); err1 != nil {
-				return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-			}
-			return err
-		}
-	}
-
-	return commit()
-}
-
-func (u *Upgrader) addColumns(e Engine) error {
-	sql := sqlbuilder.AddColumn(e)
-
-	for _, col := range u.addCols {
-		if !col.HasDefault && !col.Nullable {
-			return fmt.Errorf("新增列 %s 必须指定默认值或是 Nullable 属性", col.Name)
-		}
-		sql.Reset()
-
-		err := sql.Table(u.model.Name).
-			Column(col.Name, col.PrimitiveType, col.AI, col.Nullable, col.HasDefault, col.Default, col.Length...).
-			Exec()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (u *Upgrader) dropColumns(e Engine) error {
-	sql := sqlbuilder.DropColumn(e)
-
-	for _, n := range u.dropCols {
-		sql.Reset()
-		err := sql.Table(u.model.Name).
-			Column(n).
-			Exec()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (u *Upgrader) dropConstraints(e Engine) error {
-	sql := sqlbuilder.DropConstraint(e)
-
-	for _, n := range u.dropConts {
-		sql.Reset()
-		err := sql.Table(u.model.Name).
-			Constraint(n).
-			Exec()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (u *Upgrader) addConstraints(e Engine) error {
-	stmt := sqlbuilder.AddConstraint(e)
-
 LOOP:
-	for _, c := range u.addConts {
-		stmt.Reset().Table(u.model.Name)
-
+	for _, c := range name {
 		for name, fk := range u.model.ForeignKeys {
 			if name != c {
 				continue
 			}
 
-			stmt.FK(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
-			if err := stmt.Exec(); err != nil {
-				return err
-			}
+			sql := sqlbuilder.AddConstraint(u.Engine())
+			sql.Table(u.model.Name)
+			sql.FK(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+
+			u.ddl = append(u.ddl, sql)
 			continue LOOP
 		}
 
-		for name, u := range u.model.Uniques {
+		for name, unique := range u.model.Uniques {
 			if name != c {
 				continue
 			}
 
-			cols := make([]string, 0, len(u))
-			for _, col := range u {
+			sql := sqlbuilder.AddConstraint(u.Engine())
+			sql.Table(u.model.Name)
+			cols := make([]string, 0, len(unique))
+			for _, col := range unique {
 				cols = append(cols, col.Name)
 			}
-			stmt.Unique(name, cols...)
+			sql.Unique(name, cols...)
 
-			if err := stmt.Exec(); err != nil {
-				return err
-			}
-
-			continue LOOP
-		}
-
-		if u.model.PrimaryKey != nil {
-			cols := make([]string, 0, len(u.model.PrimaryKey))
-			for _, col := range u.model.PrimaryKey {
-				cols = append(cols, col.Name)
-			}
-			stmt.PK(cols...)
-
-			if err := stmt.Exec(); err != nil {
-				return err
-			}
+			u.ddl = append(u.ddl, sql)
 			continue LOOP
 		}
 
@@ -354,22 +152,66 @@ LOOP:
 				continue
 			}
 
-			stmt.Check(name, expr)
-			if err := stmt.Exec(); err != nil {
-				return err
-			}
+			sql := sqlbuilder.AddConstraint(u.Engine())
+			sql.Table(u.model.Name)
+			sql.Check(name, expr)
+
+			u.ddl = append(u.ddl, sql)
 			continue LOOP
 		}
 	}
 
-	return nil
+	return u
 }
 
-func (u *Upgrader) addIndexes(e Engine) error {
-	stmt := sqlbuilder.CreateIndex(e)
+// DropConstraint 删除约束
+func (u *Upgrader) DropConstraint(conts ...string) *Upgrader {
+	if u.err == nil {
+		for _, n := range conts {
+			sql := sqlbuilder.DropConstraint(u.Engine()).Table(u.model.Name).Constraint(n)
+			u.ddl = append(u.ddl, sql)
+		}
+	}
+	return u
+}
 
-	for _, index := range u.addIdxs {
-		stmt.Reset().Table(u.model.Name)
+// AddPK 添加主键约束
+func (u *Upgrader) AddPK() *Upgrader {
+	if u.err != nil {
+		return u
+	}
+
+	if u.model.PrimaryKey != nil {
+		cols := make([]string, 0, len(u.model.PrimaryKey))
+		for _, col := range u.model.PrimaryKey {
+			cols = append(cols, col.Name)
+		}
+
+		sql := sqlbuilder.AddConstraint(u.Engine()).Table(u.model.Name).PK(cols...)
+		u.ddl = append(u.ddl, sql)
+	}
+
+	return u
+}
+
+// DropPK 删除主键约束
+func (u *Upgrader) DropPK() *Upgrader {
+	if u.err == nil {
+		sql := sqlbuilder.DropConstraint(u.Engine()).Table(u.model.Name).PK()
+		u.ddl = append(u.ddl, sql)
+	}
+	return u
+}
+
+// AddIndex 添加索引信息
+func (u *Upgrader) AddIndex(name ...string) *Upgrader {
+	if u.Err() != nil {
+		return u
+	}
+
+	for _, index := range name {
+		sql := sqlbuilder.CreateIndex(u.Engine())
+		sql.Table(u.model.Name)
 
 		for name, cols := range u.model.Indexes {
 			if name != index {
@@ -381,26 +223,39 @@ func (u *Upgrader) addIndexes(e Engine) error {
 				cs = append(cs, c.Name)
 			}
 
-			stmt.Name(name)
-			stmt.Columns(cs...)
+			sql.Name(name)
+			sql.Columns(cs...)
 		}
-		if err := stmt.Exec(); err != nil {
-			return err
-		}
+
+		u.ddl = append(u.ddl, sql)
 	}
 
-	return nil
+	return u
 }
 
-func (u *Upgrader) dropIndexes(e Engine) error {
-	stmt := sqlbuilder.DropIndex(e)
+// DropIndex 删除索引
+func (u *Upgrader) DropIndex(name ...string) *Upgrader {
+	if u.Err() == nil {
+		for _, index := range name {
+			sql := sqlbuilder.DropIndex(u.Engine()).Table(u.model.Name).Name(index)
+			u.ddl = append(u.ddl, sql)
+		}
+	}
+	return u
+}
 
-	for _, index := range u.dropIdxs {
-		stmt.Reset().Table(u.model.Name).Name(index)
-		if err := stmt.Exec(); err != nil {
+// Do 执行操作
+func (u *Upgrader) Do() error {
+	if u.Err() != nil {
+		return u.Err()
+	}
+
+	for _, ddl := range u.ddl {
+		if err := ddl.Exec(); err != nil {
+			u.rollback()
 			return err
 		}
 	}
 
-	return nil
+	return u.commit()
 }

@@ -8,6 +8,8 @@
 package sqlbuilder
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/issue9/orm/v4/core"
@@ -48,10 +50,50 @@ var (
 	ErrUnionColumnNotMatch = errors.New("union 列长度不相同")
 )
 
-// SQLBuilder 提供了 sqlbuilder 下的各类语句的创建方法
-type SQLBuilder struct {
-	engine core.Engine
-}
+type (
+	// SQLBuilder 提供了 sqlbuilder 下的各类语句的创建方法
+	SQLBuilder struct {
+		engine core.Engine
+	}
+
+	// SQLer 定义 SQL 语句的基本接口
+	SQLer interface {
+		// SQL 将当前实例转换成 SQL 语句返回
+		//
+		// query 表示 SQL 语句，而 args 表示语句各个参数占位符对应的参数值。
+		SQL() (query string, args []interface{}, err error)
+	}
+
+	// DDLSQLer SQL 中 DDL 语句的基本接口
+	//
+	// 大部分数据的 DDL 操作是有多条语句组成，比如 CREATE TABLE
+	// 可能包含了额外的定义信息。
+	DDLSQLer interface {
+		DDLSQL() ([]string, error)
+	}
+
+	QueryStmt interface {
+		SQLer
+		Prepare() (*core.Stmt, error)
+		PrepareContext(ctx context.Context) (*core.Stmt, error)
+		Query() (*sql.Rows, error)
+		QueryContext(ctx context.Context) (*sql.Rows, error)
+	}
+
+	ExecStmt interface {
+		SQLer
+		Prepare() (*core.Stmt, error)
+		PrepareContext(ctx context.Context) (*core.Stmt, error)
+		Exec() (sql.Result, error)
+		ExecContext(ctx context.Context) (sql.Result, error)
+	}
+
+	DDLStmt interface {
+		DDLSQLer
+		Exec() error
+		ExecContext(ctx context.Context) error
+	}
+)
 
 // New 声明 SQLBuilder 实例
 func New(e core.Engine) *SQLBuilder { return &SQLBuilder{engine: e} }

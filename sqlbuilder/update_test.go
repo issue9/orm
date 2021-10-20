@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	_ sqlbuilder.SQLer       = &sqlbuilder.UpdateStmt{}
+	_ sqlbuilder.ExecStmt    = &sqlbuilder.UpdateStmt{}
 	_ sqlbuilder.WhereStmter = &sqlbuilder.UpdateStmt{}
 )
 
