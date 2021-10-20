@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	_ sqlbuilder.QueryStmt   = &sqlbuilder.SelectStmt{}
+	_ sqlbuilder.SQLer       = &sqlbuilder.SelectStmt{}
 	_ sqlbuilder.WhereStmter = &sqlbuilder.SelectStmt{}
 )
 

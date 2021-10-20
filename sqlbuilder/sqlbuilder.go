@@ -72,14 +72,6 @@ type (
 		DDLSQL() ([]string, error)
 	}
 
-	QueryStmt interface {
-		SQLer
-		Prepare() (*core.Stmt, error)
-		PrepareContext(ctx context.Context) (*core.Stmt, error)
-		Query() (*sql.Rows, error)
-		QueryContext(ctx context.Context) (*sql.Rows, error)
-	}
-
 	ExecStmt interface {
 		SQLer
 		Prepare() (*core.Stmt, error)
