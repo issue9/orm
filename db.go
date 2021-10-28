@@ -5,7 +5,6 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/issue9/orm/v4/core"
@@ -217,7 +216,7 @@ func (db *DB) Truncate(v TableNamer) error {
 		return truncate(db, v)
 	}
 
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return truncate(tx, v)
 	})
 }
@@ -226,7 +225,7 @@ func (db *DB) Truncate(v TableNamer) error {
 //
 // 会自动转换成事务进行处理。
 func (db *DB) InsertMany(max int, v ...TableNamer) error {
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return tx.InsertMany(max, v...)
 	})
 }
@@ -235,7 +234,7 @@ func (db *DB) InsertMany(max int, v ...TableNamer) error {
 //
 // 会自动转换成事务进行处理。
 func (db *DB) MultInsert(objs ...TableNamer) error {
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return tx.MultInsert(objs...)
 	})
 }
@@ -244,7 +243,7 @@ func (db *DB) MultInsert(objs ...TableNamer) error {
 //
 // 会自动转换成事务进行处理。
 func (db *DB) MultSelect(objs ...TableNamer) error {
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return tx.MultSelect(objs...)
 	})
 }
@@ -253,7 +252,7 @@ func (db *DB) MultSelect(objs ...TableNamer) error {
 //
 // 会自动转换成事务进行处理。
 func (db *DB) MultUpdate(objs ...TableNamer) error {
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return tx.MultUpdate(objs...)
 	})
 }
@@ -262,7 +261,7 @@ func (db *DB) MultUpdate(objs ...TableNamer) error {
 //
 // 会自动转换成事务进行处理。
 func (db *DB) MultDelete(objs ...TableNamer) error {
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return tx.MultDelete(objs...)
 	})
 }
@@ -280,7 +279,7 @@ func (db *DB) MultCreate(objs ...TableNamer) error {
 		return nil
 	}
 
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return tx.MultCreate(objs...)
 	})
 }
@@ -298,7 +297,7 @@ func (db *DB) MultDrop(objs ...TableNamer) error {
 		return nil
 	}
 
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return tx.MultDrop(objs...)
 	})
 }
@@ -316,26 +315,10 @@ func (db *DB) MultTruncate(objs ...TableNamer) error {
 		return nil
 	}
 
-	return db.tx(func(tx *Tx) error {
+	return db.DoTransaction(func(tx *Tx) error {
 		return tx.MultTruncate(objs...)
 	})
 }
 
 // SQLBuilder 返回 SQL 实例
 func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }
-
-func (db *DB) tx(f func(tx *Tx) error) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	if err := f(tx); err != nil {
-		if err1 := tx.Rollback(); err1 != nil {
-			return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-		}
-		return err
-	}
-
-	return tx.Commit()
-}
