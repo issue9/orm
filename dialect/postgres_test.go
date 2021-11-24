@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/dialect"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestPostgres_VersionSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
 
@@ -26,7 +26,7 @@ func TestPostgres_VersionSQL(t *testing.T) {
 }
 
 func TestPostgres_SQLType(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	var data = []*sqlTypeTester{
 		{ // col.PrimitiveType = Auto
@@ -211,7 +211,7 @@ func TestPostgres_SQLType(t *testing.T) {
 }
 
 func TestPostgres_TruncateTableSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
@@ -230,7 +230,7 @@ func TestPostgres_TruncateTableSQL(t *testing.T) {
 }
 
 func TestPostgres_Fix(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	p := dialect.Postgres("driver_name", "")
 	a.NotNil(p)
 
@@ -288,19 +288,20 @@ func TestPostgres_Fix(t *testing.T) {
 }
 
 func BenchmarkPostgres_Fix(b *testing.B) {
-	a := assert.New(b)
+	a := assert.New(b, false)
 	p := dialect.Postgres("postgres_driver_name", "")
 	a.NotNil(p)
 
 	s1 := "SELECT * FROM tbl WHERE uid>? AND group=? AND username LIKE ?"
 
 	for i := 0; i < b.N; i++ {
-		a.NotError(p.Fix(s1, nil))
+		_, _, err := p.Fix(s1, nil)
+		a.NotError(err)
 	}
 }
 
 func TestPostgres_Types(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
 
@@ -310,7 +311,7 @@ func TestPostgres_Types(t *testing.T) {
 }
 
 func TestPostgres_TypesDefault(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Postgres)
 	defer suite.Close()
 

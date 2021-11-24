@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/test"
@@ -16,7 +16,7 @@ import (
 var _ sqlbuilder.SQLer = &sqlbuilder.InsertStmt{}
 
 func TestInsert(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	s := test.NewSuite(a)
 	defer s.Close()
 	tableName := "users"
@@ -51,11 +51,11 @@ func TestInsert(t *testing.T) {
 
 		i.Reset().Columns("id", "name")
 		_, err = i.Exec()
-		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
 
 		i.Reset().Table(tableName).Columns("id", "name").Values("100")
 		_, err = i.Exec()
-		a.ErrorType(err, sqlbuilder.ErrArgsNotMatch)
+		a.ErrorIs(err, sqlbuilder.ErrArgsNotMatch)
 
 		// default value
 		_, err = i.Reset().Table(tableName).Exec()
@@ -64,7 +64,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestInsert_NamedArgs(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	s := test.NewSuite(a)
 	defer s.Close()
 	tableName := "users"

@@ -5,7 +5,7 @@ package orm_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4"
 	"github.com/issue9/orm/v4/internal/test"
@@ -61,7 +61,7 @@ func (o *beforeObject2) BeforeUpdate() error {
 }
 
 func TestBeforeInsertUpdate(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -74,14 +74,16 @@ func TestBeforeInsertUpdate(t *testing.T) {
 
 		// insert
 		o := &beforeObject1{ID: 1, Name: "name1"}
-		t.NotError(t.DB.Insert(o))
+		_, err := t.DB.Insert(o)
+		t.NotError(err)
 		o = &beforeObject1{ID: 1}
 		t.NotError(t.DB.Select(o))
 		t.Equal(o.Name, "insert-name1")
 
 		// update
 		o = &beforeObject1{ID: 1, Name: "name11"}
-		t.NotError(t.DB.Update(o))
+		_, err = t.DB.Update(o)
+		t.NotError(err)
 		o = &beforeObject1{ID: 1}
 		t.NotError(t.DB.Select(o))
 		t.Equal(o.Name, "update-name11")
@@ -89,7 +91,7 @@ func TestBeforeInsertUpdate(t *testing.T) {
 }
 
 func TestBeforeInsertUpdate_Mult(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 

@@ -5,7 +5,7 @@ package sqlbuilder_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/test"
@@ -18,7 +18,7 @@ var (
 )
 
 func TestIndex(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -70,17 +70,14 @@ func TestIndex(t *testing.T) {
 		t.NotError(err, "cc")
 
 		createStmt.Reset()
-		a.ErrorType(createStmt.Exec(), sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(createStmt.Exec(), sqlbuilder.ErrTableIsEmpty)
 
 		createStmt.Reset()
 		createStmt.Table("test")
-		a.ErrorType(createStmt.Exec(), sqlbuilder.ErrColumnsIsEmpty)
-
-		dropStmt.Reset()
-		a.ErrorType(dropStmt.Exec(), sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(createStmt.Exec(), sqlbuilder.ErrColumnsIsEmpty)
 
 		dropStmt.Reset()
 		dropStmt.Table("test")
-		a.ErrorType(dropStmt.Exec(), sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(dropStmt.Exec(), sqlbuilder.ErrColumnsIsEmpty)
 	})
 }

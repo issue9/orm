@@ -5,14 +5,14 @@ package fetch_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/fetch"
 	"github.com/issue9/orm/v4/internal/test"
 )
 
 func BenchmarkObject(b *testing.B) {
-	a := assert.New(b)
+	a := assert.New(b, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -38,7 +38,7 @@ func BenchmarkObject(b *testing.B) {
 }
 
 func BenchmarkMap(b *testing.B) {
-	a := assert.New(b)
+	a := assert.New(b, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 

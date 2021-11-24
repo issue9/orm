@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/flagtest"
 )
@@ -37,7 +37,7 @@ type Log struct {
 }
 
 func TestParseObject(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	obj := &Log{ID: 5}
 	mapped := map[string]reflect.Value{}
 
@@ -87,7 +87,7 @@ func TestParseObject(t *testing.T) {
 }
 
 func TestGetColumns(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	obj := &FetchUser{}
 
 	cols, err := getColumns(reflect.ValueOf(obj), []string{"id"})

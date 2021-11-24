@@ -5,7 +5,7 @@ package sqlbuilder_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/test"
@@ -19,7 +19,7 @@ var (
 )
 
 func TestCreateTableStmt(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	table := "create_table_test"
 	suite := test.NewSuite(a)
 	defer suite.Close()
@@ -86,7 +86,7 @@ func TestCreateTableStmt(t *testing.T) {
 }
 
 func TestTruncateTable(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -125,7 +125,7 @@ func TestTruncateTable(t *testing.T) {
 }
 
 func TestDropTable(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 

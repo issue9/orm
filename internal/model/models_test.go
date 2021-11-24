@@ -5,11 +5,11 @@ package model
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestModels(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	ms := NewModels(nil)
 	a.NotNil(ms)
@@ -36,7 +36,7 @@ func TestModels(t *testing.T) {
 }
 
 func TestModels_addNames(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	ms := NewModels(nil)
 	a.NotNil(ms)
 

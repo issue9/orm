@@ -5,7 +5,7 @@ package sqlbuilder_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/test"
@@ -18,7 +18,7 @@ var (
 )
 
 func TestColumn(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -48,13 +48,13 @@ func TestColumn(t *testing.T) {
 		t.NotError(err, "%s@%s", err, t.DriverName)
 
 		err = addStmt.Reset().Exec()
-		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
 
 		err = addStmt.Reset().Table("users").Exec()
-		a.ErrorType(err, sqlbuilder.ErrColumnsIsEmpty)
+		a.ErrorIs(err, sqlbuilder.ErrColumnsIsEmpty)
 
 		err = dropStmt.Reset().Exec()
-		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
 	})
 
 	// 添加主键

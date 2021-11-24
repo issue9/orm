@@ -5,7 +5,7 @@ package sqlbuilder_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/test"
@@ -18,7 +18,7 @@ var (
 )
 
 func TestConstraint(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a)
 	defer suite.Close()
@@ -48,18 +48,18 @@ func TestConstraint(t *testing.T) {
 		a.Error(err, "并未出错 @%s", t.DriverName)
 
 		err = dropStmt.Reset().Exec()
-		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
 
 		err = dropStmt.Reset().Table("tbl").Exec()
-		a.ErrorType(err, sqlbuilder.ErrConstraintIsEmpty)
+		a.ErrorIs(err, sqlbuilder.ErrColumnsIsEmpty)
 
-		a.ErrorType(addStmt.Reset().Unique("", "name").Exec(), sqlbuilder.ErrTableIsEmpty)
-		a.ErrorType(addStmt.Reset().Table("users").Unique("", "name").Exec(), sqlbuilder.ErrConstraintIsEmpty)
+		a.ErrorIs(addStmt.Reset().Unique("", "name").Exec(), sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(addStmt.Reset().Table("users").Unique("", "name").Exec(), sqlbuilder.ErrConstraintIsEmpty)
 	})
 }
 
 func TestConstraint_Check(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -82,7 +82,7 @@ func TestConstraint_Check(t *testing.T) {
 }
 
 func TestConstraint_PK(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -176,7 +176,7 @@ func TestConstraint_PK(t *testing.T) {
 }
 
 func TestConstraint_FK(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 

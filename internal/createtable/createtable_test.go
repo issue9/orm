@@ -5,7 +5,7 @@ package createtable
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/flagtest"
 )
@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestLines(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	query := `create table tb1(
 	id int not null primary key,
 	name string not null,

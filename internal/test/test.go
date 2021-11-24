@@ -6,7 +6,7 @@ package test
 import (
 	"os"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 	"github.com/issue9/sliceutil"
 
 	"github.com/issue9/orm/v4"

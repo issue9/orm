@@ -259,7 +259,7 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 	}
 
 	if stmt.Name == "" {
-		return nil, ErrValueIsEmpty
+		return nil, ErrColumnsIsEmpty
 	}
 
 	if hook, ok := stmt.Dialect().(DropConstraintStmtHooker); ok {

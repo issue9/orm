@@ -5,7 +5,7 @@ package createtable_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/createtable"
@@ -38,7 +38,7 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table (
 }
 
 func TestParseMysqlCreateTable(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Mysql)
 	defer suite.Close()
@@ -83,7 +83,7 @@ func TestParseMysqlCreateTable(t *testing.T) {
 
 // mariadb 稍微和 mysql 有点不一样
 func TestParseMysqlCreateTable_mariadb(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Mariadb)
 	defer suite.Close()

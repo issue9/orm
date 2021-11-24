@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/fetch"
 	"github.com/issue9/orm/v4/internal/test"
@@ -75,7 +75,7 @@ func clearDB(t *test.Driver) {
 }
 
 func TestObject_strict(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -209,7 +209,7 @@ func TestObject_strict(t *testing.T) {
 }
 
 func TestObject_no_strict(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -352,7 +352,7 @@ func TestObject_no_strict(t *testing.T) {
 }
 
 func TestObjectNest(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -384,7 +384,7 @@ func TestObjectNest(t *testing.T) {
 }
 
 func TestObjectNotFound(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 

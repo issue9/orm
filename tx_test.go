@@ -5,14 +5,14 @@ package orm_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/test"
 )
 
 func TestTx_InsertMany(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -99,7 +99,7 @@ func TestTx_InsertMany(t *testing.T) {
 }
 
 func TestTx_LastInsertID(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -123,7 +123,7 @@ func TestTx_LastInsertID(t *testing.T) {
 }
 
 func TestTx_Insert(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -167,7 +167,7 @@ func TestTx_Insert(t *testing.T) {
 }
 
 func TestTx_Update(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -203,7 +203,7 @@ func TestTx_Update(t *testing.T) {
 }
 
 func TestTx_MultDelete(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -230,7 +230,8 @@ func TestTx_MultDelete(t *testing.T) {
 		hasCount(tx, t.Assertion, "administrators", 0)
 
 		// delete 并不会重置 ai 计数
-		t.NotError(tx.Insert(&Admin{Group: 1, Email: "email1"}))
+		_, err = tx.Insert(&Admin{Group: 1, Email: "email1"})
+		t.NotError(err)
 
 		t.NotError(tx.Commit())
 
@@ -241,7 +242,7 @@ func TestTx_MultDelete(t *testing.T) {
 }
 
 func TestTx_Truncate(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -262,7 +263,8 @@ func TestTx_Truncate(t *testing.T) {
 
 		tx, err = t.DB.Begin()
 		t.NotError(err)
-		t.NotError(tx.Insert(&Admin{Group: 1, Email: "email1"}))
+		_, err = tx.Insert(&Admin{Group: 1, Email: "email1"})
+		t.NotError(err)
 		t.NotError(tx.Commit())
 		a1 := &Admin{Email: "email1"}
 		t.NotError(t.DB.Select(a1))
@@ -271,7 +273,7 @@ func TestTx_Truncate(t *testing.T) {
 }
 
 func TestTX(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -286,18 +288,24 @@ func TestTX(t *testing.T) {
 		// 回滚事务
 		tx, err := t.DB.Begin()
 		t.NotError(err).NotNil(tx)
-		t.NotError(tx.Insert(&User{Username: "u1"}))
-		t.NotError(tx.Insert(&User{Username: "u2"}))
-		t.NotError(tx.Insert(&User{Username: "u3"}))
+		_, err = tx.Insert(&User{Username: "u1"})
+		t.NotError(err)
+		_, err = tx.Insert(&User{Username: "u2"})
+		t.NotError(err)
+		_, err = tx.Insert(&User{Username: "u3"})
+		t.NotError(err)
 		t.NotError(tx.Rollback())
 		hasCount(t.DB, a, "users", 0) // tx 已经结束
 
 		// 正常提交
 		tx, err = t.DB.Begin()
 		t.NotError(err).NotNil(tx)
-		t.NotError(tx.Insert(&User{Username: "u1"}))
-		t.NotError(tx.Insert(&User{Username: "u2"}))
-		t.NotError(tx.Insert(&User{Username: "u3"}))
+		_, err = tx.Insert(&User{Username: "u1"})
+		t.NotError(err)
+		_, err = tx.Insert(&User{Username: "u2"})
+		t.NotError(err)
+		_, err = tx.Insert(&User{Username: "u3"})
+		t.NotError(err)
 		t.NotError(tx.Commit())
 		hasCount(t.DB, a, "users", 3)
 	})

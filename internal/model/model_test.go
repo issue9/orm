@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/flagtest"
@@ -112,7 +112,7 @@ func (v *viewObject) ViewAs(e core.Engine) (string, error) {
 }
 
 func TestModels_New(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	ms := NewModels(nil)
 	a.NotNil(ms)
 
@@ -185,7 +185,7 @@ func TestModels_New(t *testing.T) {
 }
 
 func TestModel_setOCC(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := core.NewModel(core.Table, "m1", 10)
 
 	c, err := core.NewColumn(core.Int)
@@ -206,7 +206,7 @@ func TestModel_setOCC(t *testing.T) {
 }
 
 func TestModel_setPK(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := core.NewModel(core.Table, "m1", 10)
 	a.NotNil(m)
 	c, err := core.NewColumn(core.Int8)
@@ -218,7 +218,7 @@ func TestModel_setPK(t *testing.T) {
 }
 
 func TestModel_setAI(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := core.NewModel(core.Table, "m1", 10)
 	a.NotNil(m)
 

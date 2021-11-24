@@ -6,11 +6,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestSQLBuilder(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	b := NewBuilder()
 	b.WBytes('1')

@@ -6,11 +6,11 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestNewStmt(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	a.NotPanic(func() {
 		stmt := NewStmt(nil, nil)
@@ -37,7 +37,7 @@ func TestNewStmt(t *testing.T) {
 }
 
 func TestStmt_buildArgs(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	data := []*struct {
 		orders map[string]int

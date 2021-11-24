@@ -5,7 +5,7 @@ package flagtest
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestMain(m *testing.M) {
@@ -13,7 +13,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestFlags(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	a.NotNil(Flags)
 }

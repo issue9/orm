@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestGetPrimitiveType(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	a.Equal(GetPrimitiveType(reflect.TypeOf(1)), Int)
 	a.Equal(GetPrimitiveType(reflect.TypeOf([]byte{1, 2})), Bytes)

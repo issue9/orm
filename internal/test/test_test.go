@@ -5,7 +5,7 @@ package test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 	"github.com/issue9/sliceutil"
 
 	"github.com/issue9/orm/v4/core"
@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestSuite_ForEach(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	s := NewSuite(a)
 	defer s.Close()
@@ -35,7 +35,7 @@ func TestSuite_ForEach(t *testing.T) {
 }
 
 func TestSuite_ForEach_withDialect(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	// 不再限定 Flags
 	flagtest.Flags = []*flagtest.Flag{

@@ -5,7 +5,7 @@ package sqlbuilder_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/sqltest"
 	"github.com/issue9/orm/v4/internal/test"
@@ -18,7 +18,7 @@ var (
 )
 
 func TestDelete_Exec(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -37,16 +37,16 @@ func TestDelete_Exec(t *testing.T) {
 			Where("id=?").
 			Or("name=?", "xx")
 		_, err = sql.Exec()
-		a.ErrorType(err, sqlbuilder.ErrArgsNotMatch)
+		a.ErrorIs(err, sqlbuilder.ErrArgsNotMatch)
 
 		sql.Reset()
 		_, err = sql.Exec()
-		a.ErrorType(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
 	})
 }
 
 func TestWhereStmt_Delete(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 

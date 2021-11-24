@@ -5,7 +5,7 @@ package sqlbuilder_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/test"
 	"github.com/issue9/orm/v4/sqlbuilder"
@@ -17,7 +17,7 @@ var (
 )
 
 func TestUpdate_columnsHasDup(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -27,12 +27,12 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 			Set("c1", "v1").
 			Set("c1", "v1")
 		_, err := u.Exec()
-		a.ErrorType(err, sqlbuilder.ErrDupColumn)
+		a.ErrorIs(err, sqlbuilder.ErrDupColumn)
 	})
 }
 
 func TestUpdate(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -62,7 +62,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestUpdateStmt_Increase(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -75,7 +75,8 @@ func TestUpdateStmt_Increase(t *testing.T) {
 			Increase("age", 5).
 			Where("id=?", 1)
 		t.NotNil(u)
-		t.NotError(u.Exec())
+		_, err := u.Exec()
+		t.NotError(err)
 
 		sel := sqlbuilder.Select(t.DB).
 			Column("age").
@@ -95,7 +96,8 @@ func TestUpdateStmt_Increase(t *testing.T) {
 			Decrease("age", 3).
 			Where("id=?", 1)
 		t.NotNil(u)
-		t.NotError(u.Exec())
+		_, err = u.Exec()
+		t.NotError(err)
 		sel.Reset().
 			Column("age").
 			From("users").
@@ -110,7 +112,7 @@ func TestUpdateStmt_Increase(t *testing.T) {
 }
 
 func TestUpdateStmt_OCC(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 

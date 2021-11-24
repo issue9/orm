@@ -261,7 +261,7 @@ func insert(e Engine, v TableNamer) (sql.Result, error) {
 	return stmt.Exec()
 }
 
-// 查找数据。
+// 查找数据
 //
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。

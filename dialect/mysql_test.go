@@ -5,7 +5,7 @@ package dialect_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/dialect"
@@ -43,7 +43,7 @@ var mysqlCreateTable = []string{`CREATE TABLE fk_table(
 }
 
 func TestMysql_VersionSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
@@ -53,7 +53,7 @@ func TestMysql_VersionSQL(t *testing.T) {
 }
 
 func TestMysql_DropConstrainStmtHook(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
@@ -118,7 +118,7 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 }
 
 func TestMysql_DropIndexSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
@@ -130,7 +130,7 @@ func TestMysql_DropIndexSQL(t *testing.T) {
 }
 
 func TestMysql_TruncateTableSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
@@ -142,7 +142,7 @@ func TestMysql_TruncateTableSQL(t *testing.T) {
 }
 
 func TestMysql_CreateTableOptions(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	builder := core.NewBuilder("")
 	a.NotNil(builder)
 	var m = dialect.Mysql("mysql_driver_name", "")
@@ -164,7 +164,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 }
 
 func TestMysql_SQLType(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	var data = []*sqlTypeTester{
 		{ // col.PrimitiveType = auto
@@ -319,7 +319,7 @@ func TestMysql_SQLType(t *testing.T) {
 }
 
 func TestMysql_Types(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
@@ -329,7 +329,7 @@ func TestMysql_Types(t *testing.T) {
 }
 
 func TestMysql_TypesDefault(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 

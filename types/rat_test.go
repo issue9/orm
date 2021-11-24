@@ -9,7 +9,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 )
@@ -26,7 +26,7 @@ var (
 )
 
 func TestRational(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	r := Rational(3, 4)
 	a.False(r.IsNull())
@@ -38,7 +38,7 @@ func TestRational(t *testing.T) {
 }
 
 func TestRat_SQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	r := &Rat{}
 	a.NotError(r.Scan("1/3"))
@@ -65,7 +65,7 @@ func TestRat_SQL(t *testing.T) {
 }
 
 func TestRat_ParseDefault(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	r := &Rat{}
 	a.True(r.IsNull())

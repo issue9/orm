@@ -5,11 +5,11 @@ package core
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestNewModel(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
@@ -20,7 +20,7 @@ func TestNewModel(t *testing.T) {
 }
 
 func TestModel_SetAutoIncrement(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
@@ -51,13 +51,13 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.NotError(err).NotNil(ai2)
 	ai2.Name = "ai2"
 	a.NotError(m.AddColumns(ai2))
-	a.ErrorType(m.SetAutoIncrement(ai2), ErrColumnMustNumber)
+	a.ErrorIs(m.SetAutoIncrement(ai2), ErrColumnMustNumber)
 
 	// 存在主键
 	m.Reset()
 	a.NotError(m.AddColumns(ai2))
 	a.NotError(m.AddPrimaryKey(ai2)) // 主键
-	a.ErrorType(m.SetAutoIncrement(ai), ErrAutoIncrementPrimaryKeyConflict)
+	a.ErrorIs(m.SetAutoIncrement(ai), ErrAutoIncrementPrimaryKeyConflict)
 
 	// ai 不存在
 	m.Reset()
@@ -65,7 +65,7 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 }
 
 func TestModel_AddPrimaryKey(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
@@ -101,7 +101,7 @@ func TestModel_AddPrimaryKey(t *testing.T) {
 }
 
 func TestModel_SetOCC(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
@@ -128,7 +128,7 @@ func TestModel_SetOCC(t *testing.T) {
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai"
 	a.NotError(m.AddColumn(ai))
-	a.ErrorType(m.SetOCC(ai), ErrColumnMustNumber)
+	a.ErrorIs(m.SetOCC(ai), ErrColumnMustNumber)
 
 	// 正常
 	ai, err = NewColumn(Int)
@@ -146,7 +146,7 @@ func TestModel_SetOCC(t *testing.T) {
 }
 
 func TestModel_AddIndex(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
@@ -184,7 +184,7 @@ func TestModel_AddIndex(t *testing.T) {
 }
 
 func TestModel_NewCheck(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
@@ -193,7 +193,7 @@ func TestModel_NewCheck(t *testing.T) {
 }
 
 func TestModel_NewForeignKey(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
@@ -216,7 +216,7 @@ func TestModel_NewForeignKey(t *testing.T) {
 }
 
 func TestModel_Sanitize(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	ai, err := NewColumn(Int)
 	a.NotError(err).NotNil(ai)

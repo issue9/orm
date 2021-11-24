@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/types"
 )
 
 func TestNewColumn(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	c, err := newColumn(reflect.StructField{Name: "name", Type: reflect.TypeOf(5)})
 	a.NotError(err).NotNil(c).
@@ -44,7 +44,7 @@ func TestNewColumn(t *testing.T) {
 }
 
 func TestColumn_parseTags(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := &core.Model{
 		Columns: []*core.Column{},
 	}
@@ -66,7 +66,7 @@ func TestColumn_parseTags(t *testing.T) {
 }
 
 func TestColumn_SetLen(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	col := &column{Column: &core.Column{}}
 
 	a.NotError(col.setLen([]string{})).Empty(col.Length)
@@ -79,7 +79,7 @@ func TestColumn_SetLen(t *testing.T) {
 }
 
 func TestColumn_setNullable(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	col := &column{Column: &core.Column{}}
 
@@ -101,7 +101,7 @@ func TestColumn_setNullable(t *testing.T) {
 }
 
 func TestColumn_setDefault(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := core.NewModel(core.Table, "m1", 10)
 
 	// col == int

@@ -5,7 +5,7 @@ package sqlbuilder_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/internal/test"
@@ -13,7 +13,7 @@ import (
 )
 
 func TestMergeDDL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a)
 	defer suite.Close()

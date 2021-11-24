@@ -5,7 +5,7 @@ package dialect_test
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/dialect"
@@ -50,7 +50,7 @@ func clearSqlite3CreateTable(t *test.Driver, db core.Engine) {
 }
 
 func TestSqlite3_VersionSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
@@ -60,7 +60,7 @@ func TestSqlite3_VersionSQL(t *testing.T) {
 }
 
 func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
@@ -85,7 +85,7 @@ func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 }
 
 func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
@@ -105,7 +105,7 @@ func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 }
 
 func TestSqlite3_DropColumnStmtHook(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
@@ -132,7 +132,7 @@ func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 }
 
 func TestSqlite3_CreateTableOptions(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	builder := core.NewBuilder("")
 	a.NotNil(builder)
 	var s = dialect.Sqlite3("sqlite3_driver", "")
@@ -158,7 +158,7 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 }
 
 func TestSqlite3_TruncateTableSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
@@ -176,7 +176,7 @@ func TestSqlite3_TruncateTableSQL(t *testing.T) {
 }
 
 func TestSqlite3_SQLType(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	var data = []*sqlTypeTester{
 		{ // col == nil
@@ -277,7 +277,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 }
 
 func TestSqlite3_Types(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 
@@ -287,7 +287,7 @@ func TestSqlite3_Types(t *testing.T) {
 }
 
 func TestSqlite3_TypesDefault(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
 	defer suite.Close()
 

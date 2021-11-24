@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 	"github.com/shopspring/decimal"
 
 	"github.com/issue9/orm/v4/core"
@@ -28,7 +28,7 @@ var (
 )
 
 func TestStringDecimalWithPrecision(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	d, err := StringDecimalWithPrecision("3.222")
 	a.NotError(err).Equal(d.Precision, 3).False(d.IsNull)
@@ -44,7 +44,7 @@ func TestStringDecimalWithPrecision(t *testing.T) {
 }
 
 func TestSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	d := FloatDecimal(2.22, 3)
 	a.NotError(d.Scan([]byte("3.3333")))
@@ -61,7 +61,7 @@ func TestSQL(t *testing.T) {
 }
 
 func TestParseDefault(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	d := Decimal{Decimal: decimal.New(1, 2), Precision: 1}
 	a.NotError(d.ParseDefault("3.333"))

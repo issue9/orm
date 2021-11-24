@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/flagtest"
 	"github.com/issue9/orm/v4/internal/sqltest"
@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestMysqlLimitSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	query, ret := mysqlLimitSQL(5, 0)
 	a.Equal(ret, []int{5, 0})
@@ -34,7 +34,7 @@ func TestMysqlLimitSQL(t *testing.T) {
 }
 
 func TestOracleLimitSQL(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	query, ret := oracleLimitSQL(5, 0)
 	a.Equal(ret, []int{0, 5})
@@ -51,7 +51,7 @@ func TestOracleLimitSQL(t *testing.T) {
 }
 
 func TestPrepareNamedArgs(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	var data = []*struct {
 		input  string
@@ -124,7 +124,7 @@ func TestPrepareNamedArgs(t *testing.T) {
 }
 
 func TestFixQueryAndArgs(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	data := []*struct {
 		query       string

@@ -5,7 +5,7 @@ package tags
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/flagtest"
 )
@@ -73,14 +73,15 @@ var tests = []*testData{
 }
 
 func TestReplace(t *testing.T) {
+	a := assert.New(t, false)
 	tag1 := "name,abc;name2,;;name3,n1,n2;name3,n1,n2"
 	tag2 := "name(abc);name2,;;name3(n1,n2);name3(n1,n2)"
 	tag := styleReplace.Replace(tag2)
-	assert.Equal(t, tag, tag1)
+	a.Equal(tag, tag1)
 }
 
 func TestParse(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	for _, test := range tests {
 		m := Parse(test.tag)
@@ -93,7 +94,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	for _, test := range tests {
 		for _, items := range test.data {
@@ -113,7 +114,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestMustGet(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	for _, test := range tests {
 		for _, items := range test.data {
@@ -131,7 +132,7 @@ func TestMustGet(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	for _, test := range tests {
 		for _, item := range test.data {

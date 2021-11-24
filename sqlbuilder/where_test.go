@@ -5,7 +5,7 @@ package sqlbuilder
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/sqltest"
 )
@@ -13,7 +13,7 @@ import (
 var _ SQLer = &WhereStmt{}
 
 func TestWhere(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	w := Where()
 	a.NotNil(w)
 
@@ -45,7 +45,7 @@ func TestWhere(t *testing.T) {
 }
 
 func TestWhereStmt_IsNull(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	w := Where()
 
 	w.AndIsNull("col1")
@@ -71,7 +71,7 @@ func TestWhereStmt_IsNull(t *testing.T) {
 }
 
 func TestWhereStmt_Like(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	w := Where()
 
 	w.AndLike("col1", "%str1")
@@ -101,7 +101,7 @@ func TestWhereStmt_Like(t *testing.T) {
 }
 
 func TestWhereStmt_Between(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	w := Where()
 
 	// AndBetween
@@ -135,7 +135,7 @@ func TestWhereStmt_Between(t *testing.T) {
 }
 
 func TestWhereStmt_In(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	w := Where()
 
 	w.OrIn("col1", 1, 2, 3)
@@ -165,7 +165,7 @@ func TestWhereStmt_In(t *testing.T) {
 }
 
 func TestWhere_Group(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	w := Where()
 
 	w.AndGroup().And("id=?", 4)

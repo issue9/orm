@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/core"
 )
@@ -30,7 +30,7 @@ var (
 )
 
 func TestUnix_ParseDefault(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	u := &Unix{}
 	a.Error(u.ParseDefault("2020"))
@@ -41,7 +41,7 @@ func TestUnix_ParseDefault(t *testing.T) {
 }
 
 func TestUnix_Scan(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	u := &Unix{}
 	a.NotError(u.Scan(int64(1))).
@@ -76,7 +76,7 @@ func TestUnix_Scan(t *testing.T) {
 }
 
 func TestUnix_Unmarshal(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	now := time.Now()
 	format := now.Format(time.RFC3339)

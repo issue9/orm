@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/fetch"
 	"github.com/issue9/orm/v4/internal/test"
@@ -19,7 +19,7 @@ var (
 )
 
 func TestSelect(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -64,12 +64,12 @@ func TestSelect(t *testing.T) {
 			Where("id<?", -100).
 			Desc("id")
 		id, err = stmt.QueryInt("id")
-		a.ErrorType(err, sqlbuilder.ErrNoData).Empty(id)
+		a.ErrorIs(err, sqlbuilder.ErrNoData).Empty(id)
 	})
 }
 
 func TestSelectWithNamedParam(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -114,13 +114,13 @@ func TestSelectWithNamedParam(t *testing.T) {
 			Where("id<@id", sql.Named("id", -100)).
 			Desc("id")
 		id, err = stmt.QueryInt("id")
-		a.ErrorType(err, sqlbuilder.ErrNoData).Empty(id)
+		a.ErrorIs(err, sqlbuilder.ErrNoData).Empty(id)
 	})
 }
 
 // 多个乱序命名参数
 func TestSelectQuery(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -148,7 +148,7 @@ func TestSelectQuery(t *testing.T) {
 }
 
 func TestSelectStmt_Join(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -184,7 +184,7 @@ func TestSelectStmt_Join(t *testing.T) {
 }
 
 func TestSelectStmt_Group(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -210,7 +210,7 @@ func TestSelectStmt_Group(t *testing.T) {
 }
 
 func TestSelectStmt_Union(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -249,12 +249,12 @@ func TestSelectStmt_Union(t *testing.T) {
 		// 添加了一个新的列名。导致长度不相同
 		sel2.Column("name")
 		rs, err := sel1.Query() // 不能命名为 rows，否则会影响上面 rows.Close 的执行
-		a.ErrorType(err, sqlbuilder.ErrUnionColumnNotMatch).Nil(rs)
+		a.ErrorIs(err, sqlbuilder.ErrUnionColumnNotMatch).Nil(rs)
 	})
 }
 
 func TestSelectStmt_UnionAll(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 

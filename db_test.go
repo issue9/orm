@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/flagtest"
 	"github.com/issue9/orm/v4/internal/test"
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestDB_LastInsertID(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -47,7 +47,7 @@ type defvalues struct {
 func (v *defvalues) TableName() string { return "#defvalues" }
 
 func TestDB_InsertDefaultValues(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -57,16 +57,18 @@ func TestDB_InsertDefaultValues(t *testing.T) {
 			d.NotError(d.DB.Drop(&defvalues{}))
 		}()
 
-		a.NotError(d.DB.Insert(&defvalues{}))
+		_, err := d.DB.Insert(&defvalues{})
+		a.NotError(err)
 		hasCount(d.DB, a, "defvalues", 1)
 
-		a.NotError(d.DB.Insert(&defvalues{}))
+		_, err = d.DB.Insert(&defvalues{})
+		a.NotError(err)
 		hasCount(d.DB, a, "defvalues", 2)
 	})
 }
 
 func TestDB_Update(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -108,7 +110,7 @@ func TestDB_Update(t *testing.T) {
 }
 
 func TestDB_Update_occ(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -161,7 +163,7 @@ func TestDB_Update_occ(t *testing.T) {
 }
 
 func TestDB_Update_error(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -187,7 +189,7 @@ func TestDB_Update_error(t *testing.T) {
 }
 
 func TestDB_Delete(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -231,7 +233,7 @@ func TestDB_Delete(t *testing.T) {
 }
 
 func TestDB_Truncate(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -261,7 +263,7 @@ func TestDB_Truncate(t *testing.T) {
 }
 
 func TestDB_Drop(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -277,7 +279,7 @@ func TestDB_Drop(t *testing.T) {
 }
 
 func TestDB_Version(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -289,7 +291,7 @@ func TestDB_Version(t *testing.T) {
 }
 
 func TestDB_Debug(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
 
@@ -298,9 +300,11 @@ func TestDB_Debug(t *testing.T) {
 		l := log.New(buf, "[SQL]", 0)
 
 		t.DB.Debug(l)
-		t.NotError(t.DB.Query("select 1+1"))
+		_, err := t.DB.Query("select 1+1")
+		t.NotError(err)
 		t.DB.Debug(nil)
-		t.NotError(t.DB.Query("select 2+2"))
+		_, err = t.DB.Query("select 2+2")
+		t.NotError(err)
 
 		t.True(strings.Contains(buf.String(), "select 1+1")).
 			False(strings.Contains(buf.String(), "select 2+2"))

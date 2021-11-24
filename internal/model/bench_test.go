@@ -5,11 +5,11 @@ package model
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func BenchmarkNewModelNoCached(b *testing.B) {
-	a := assert.New(b)
+	a := assert.New(b, false)
 	ms := NewModels(nil)
 	a.NotNil(ms)
 
@@ -21,7 +21,7 @@ func BenchmarkNewModelNoCached(b *testing.B) {
 }
 
 func BenchmarkNewModelCached(b *testing.B) {
-	a := assert.New(b)
+	a := assert.New(b, false)
 	ms := NewModels(nil)
 	a.NotNil(ms)
 

@@ -5,11 +5,11 @@ package core
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestNewColumn(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	col, err := NewColumn(Int)
 	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Int)
@@ -25,7 +25,7 @@ func TestNewColumn(t *testing.T) {
 }
 
 func TestModel_AddColumns(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 
@@ -49,7 +49,7 @@ func TestModel_AddColumns(t *testing.T) {
 }
 
 func TestColumn_Clone(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	col, err := NewColumn(Int)
 	a.NotError(err).NotNil(col)
@@ -61,7 +61,7 @@ func TestColumn_Clone(t *testing.T) {
 }
 
 func TestColumn_Check(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	col, err := NewColumn(String)
 	a.NotError(err).NotNil(col)

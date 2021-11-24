@@ -7,7 +7,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v4/internal/sqltest"
 )
@@ -15,7 +15,7 @@ import (
 var _ bufio.SplitFunc = splitWithAS
 
 func TestFillArgs(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	var data = []*struct {
 		query  string
@@ -79,7 +79,7 @@ func TestFillArgs(t *testing.T) {
 }
 
 func TestGetColumnName(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	var data = []*struct {
 		input  string
