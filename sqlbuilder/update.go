@@ -12,14 +12,16 @@ import (
 // UpdateStmt 更新语句
 type UpdateStmt struct {
 	*execStmt
+	*updateWhere
 
 	table  string
-	where  *WhereStmt
 	values []*updateSet
 
 	occColumn string      // 乐观锁的列名
 	occValue  interface{} // 乐观锁的当前值
 }
+
+type updateWhere = whereStmtOf[UpdateStmt]
 
 // 表示一条 SET 语句。比如 set key=val
 type updateSet struct {
@@ -35,7 +37,7 @@ func (sql *SQLBuilder) Update() *UpdateStmt { return Update(sql.engine) }
 func Update(e core.Engine) *UpdateStmt {
 	stmt := &UpdateStmt{values: []*updateSet{}}
 	stmt.execStmt = newExecStmt(e, stmt)
-	stmt.where = Where()
+	stmt.updateWhere = newWhereStmtOf(stmt)
 
 	return stmt
 }
@@ -88,15 +90,12 @@ func (stmt *UpdateStmt) OCC(col string, val interface{}) *UpdateStmt {
 	return stmt
 }
 
-// WhereStmt 实现 WhereStmter 接口
-func (stmt *UpdateStmt) WhereStmt() *WhereStmt { return stmt.where }
-
 // Reset 重置语句
 func (stmt *UpdateStmt) Reset() *UpdateStmt {
 	stmt.baseStmt.Reset()
 
 	stmt.table = ""
-	stmt.where.Reset()
+	stmt.WhereStmt().Reset()
 	stmt.values = stmt.values[:0]
 
 	stmt.occColumn = ""
@@ -157,11 +156,11 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 
 func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
 	if stmt.occColumn == "" {
-		return stmt.where.SQL()
+		return stmt.WhereStmt().SQL()
 	}
 
 	w := Where()
-	w.appendGroup(true, stmt.where)
+	w.appendGroup(true, stmt.WhereStmt())
 
 	occ := w.AndGroup()
 	if named, ok := stmt.occValue.(sql.NamedArg); ok && named.Name != "" {
@@ -211,128 +210,9 @@ func (stmt *UpdateStmt) columnsHasDup() bool {
 	return false
 }
 
-// Where UpdateStmt.And 的别名
-func (stmt *UpdateStmt) Where(cond string, args ...interface{}) *UpdateStmt {
-	return stmt.And(cond, args...)
-}
-
-// And 添加一条 and 语句
-func (stmt *UpdateStmt) And(cond string, args ...interface{}) *UpdateStmt {
-	stmt.where.And(cond, args...)
-	return stmt
-}
-
-// Or 添加一条 OR 语句
-func (stmt *UpdateStmt) Or(cond string, args ...interface{}) *UpdateStmt {
-	stmt.where.Or(cond, args...)
-	return stmt
-}
-
-// AndIsNull 指定 WHERE ... AND col IS NULL
-func (stmt *UpdateStmt) AndIsNull(col string) *UpdateStmt {
-	stmt.where.AndIsNull(col)
-	return stmt
-}
-
-// OrIsNull 指定 WHERE ... OR col IS NULL
-func (stmt *UpdateStmt) OrIsNull(col string) *UpdateStmt {
-	stmt.where.OrIsNull(col)
-	return stmt
-}
-
-// AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
-func (stmt *UpdateStmt) AndIsNotNull(col string) *UpdateStmt {
-	stmt.where.AndIsNotNull(col)
-	return stmt
-}
-
-// OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
-func (stmt *UpdateStmt) OrIsNotNull(col string) *UpdateStmt {
-	stmt.where.OrIsNotNull(col)
-	return stmt
-}
-
-// AndBetween 指定 WHERE ... AND col BETWEEN v1 AND v2
-func (stmt *UpdateStmt) AndBetween(col string, v1, v2 interface{}) *UpdateStmt {
-	stmt.where.AndBetween(col, v1, v2)
-	return stmt
-}
-
-// OrBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
-func (stmt *UpdateStmt) OrBetween(col string, v1, v2 interface{}) *UpdateStmt {
-	stmt.where.OrBetween(col, v1, v2)
-	return stmt
-}
-
-// AndNotBetween 指定 WHERE ... AND col NOT BETWEEN v1 AND v2
-func (stmt *UpdateStmt) AndNotBetween(col string, v1, v2 interface{}) *UpdateStmt {
-	stmt.where.AndNotBetween(col, v1, v2)
-	return stmt
-}
-
-// OrNotBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
-func (stmt *UpdateStmt) OrNotBetween(col string, v1, v2 interface{}) *UpdateStmt {
-	stmt.where.OrNotBetween(col, v1, v2)
-	return stmt
-}
-
-// AndLike 指定 WHERE ... AND col LIKE content
-func (stmt *UpdateStmt) AndLike(col string, content interface{}) *UpdateStmt {
-	stmt.where.AndLike(col, content)
-	return stmt
-}
-
-// OrLike 指定 WHERE ... OR col LIKE content
-func (stmt *UpdateStmt) OrLike(col string, content interface{}) *UpdateStmt {
-	stmt.where.OrLike(col, content)
-	return stmt
-}
-
-// AndNotLike 指定 WHERE ... AND col NOT LIKE content
-func (stmt *UpdateStmt) AndNotLike(col string, content interface{}) *UpdateStmt {
-	stmt.where.AndNotLike(col, content)
-	return stmt
-}
-
-// OrNotLike 指定 WHERE ... OR col NOT LIKE content
-func (stmt *UpdateStmt) OrNotLike(col string, content interface{}) *UpdateStmt {
-	stmt.where.OrNotLike(col, content)
-	return stmt
-}
-
-// AndIn 指定 WHERE ... AND col IN(v...)
-func (stmt *UpdateStmt) AndIn(col string, v ...interface{}) *UpdateStmt {
-	stmt.where.AndIn(col, v...)
-	return stmt
-}
-
-// OrIn 指定 WHERE ... OR col IN(v...)
-func (stmt *UpdateStmt) OrIn(col string, v ...interface{}) *UpdateStmt {
-	stmt.where.OrIn(col, v...)
-	return stmt
-}
-
-// AndNotIn 指定 WHERE ... AND col NOT IN(v...)
-func (stmt *UpdateStmt) AndNotIn(col string, v ...interface{}) *UpdateStmt {
-	stmt.where.AndNotIn(col, v...)
-	return stmt
-}
-
-// OrNotIn 指定 WHERE ... OR col IN(v...)
-func (stmt *UpdateStmt) OrNotIn(col string, v ...interface{}) *UpdateStmt {
-	stmt.where.OrNotIn(col, v...)
-	return stmt
-}
-
-// AndGroup 开始一个子条件语句
-func (stmt *UpdateStmt) AndGroup() *WhereStmt { return stmt.where.AndGroup() }
-
-// OrGroup 开始一个子条件语句
-func (stmt *UpdateStmt) OrGroup() *WhereStmt { return stmt.where.OrGroup() }
-
 // Update 更新指定条件内容
 func (stmt *WhereStmt) Update(e core.Engine) *UpdateStmt {
 	upd := Update(e)
-	upd.where = stmt
+	upd.updateWhere.w = stmt
 	return upd
 }

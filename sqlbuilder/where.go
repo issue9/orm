@@ -4,20 +4,27 @@ package sqlbuilder
 
 import "github.com/issue9/orm/v4/core"
 
-// WhereStmter 带 Where 语句的 SQL
-type WhereStmter interface {
-	WhereStmt() *WhereStmt
-}
+type (
+	// WhereStmter 带 Where 语句的 SQL
+	WhereStmter interface {
+		WhereStmt() *WhereStmt
+	}
 
-// WhereStmt SQL 语句的 where 部分
-type WhereStmt struct {
-	parent    *WhereStmt
-	andGroups []*WhereStmt
-	orGroups  []*WhereStmt
+	// WhereStmt SQL 语句的 where 部分
+	WhereStmt struct {
+		parent    *WhereStmt
+		andGroups []*WhereStmt
+		orGroups  []*WhereStmt
 
-	builder *core.Builder
-	args    []interface{}
-}
+		builder *core.Builder
+		args    []interface{}
+	}
+
+	whereStmtOf[T any] struct {
+		w *WhereStmt
+		t *T
+	}
+)
 
 // Where 生成 Where 语句
 func (sql *SQLBuilder) Where() *WhereStmt { return Where() }
@@ -300,3 +307,126 @@ func (stmt *WhereStmt) EndGroup() (parent *WhereStmt) {
 
 	return stmt.parent
 }
+
+func newWhereStmtOf[T any](t *T) *whereStmtOf[T] {
+	return &whereStmtOf[T]{w: Where(), t: t}
+}
+
+func (stmt *whereStmtOf[T]) Where(cond string, args ...interface{}) *T {
+	return stmt.And(cond, args...)
+}
+
+func (stmt *whereStmtOf[T]) And(cond string, args ...interface{}) *T {
+	stmt.w.And(cond, args...)
+	return stmt.t
+}
+
+// Or 添加一条 OR 语句
+func (stmt *whereStmtOf[T]) Or(cond string, args ...interface{}) *T {
+	stmt.w.Or(cond, args...)
+	return stmt.t
+}
+
+// AndIsNull 指定 WHERE ... AND col IS NULL
+func (stmt *whereStmtOf[T]) AndIsNull(col string) *T {
+	stmt.w.AndIsNull(col)
+	return stmt.t
+}
+
+// OrIsNull 指定 WHERE ... OR col IS NULL
+func (stmt *whereStmtOf[T]) OrIsNull(col string) *T {
+	stmt.w.OrIsNull(col)
+	return stmt.t
+}
+
+// AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
+func (stmt *whereStmtOf[T]) AndIsNotNull(col string) *T {
+	stmt.w.AndIsNotNull(col)
+	return stmt.t
+}
+
+// OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
+func (stmt *whereStmtOf[T]) OrIsNotNull(col string) *T {
+	stmt.w.OrIsNotNull(col)
+	return stmt.t
+}
+
+// AndBetween 指定 WHERE ... AND col BETWEEN v1 AND v2
+func (stmt *whereStmtOf[T]) AndBetween(col string, v1, v2 interface{}) *T {
+	stmt.w.AndBetween(col, v1, v2)
+	return stmt.t
+}
+
+// OrBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
+func (stmt *whereStmtOf[T]) OrBetween(col string, v1, v2 interface{}) *T {
+	stmt.w.OrBetween(col, v1, v2)
+	return stmt.t
+}
+
+// AndNotBetween 指定 WHERE ... AND col NOT BETWEEN v1 AND v2
+func (stmt *whereStmtOf[T]) AndNotBetween(col string, v1, v2 interface{}) *T {
+	stmt.w.AndNotBetween(col, v1, v2)
+	return stmt.t
+}
+
+// OrNotBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
+func (stmt *whereStmtOf[T]) OrNotBetween(col string, v1, v2 interface{}) *T {
+	stmt.w.OrNotBetween(col, v1, v2)
+	return stmt.t
+}
+
+// AndLike 指定 WHERE ... AND col LIKE content
+func (stmt *whereStmtOf[T]) AndLike(col string, content interface{}) *T {
+	stmt.w.AndLike(col, content)
+	return stmt.t
+}
+
+// OrLike 指定 WHERE ... OR col LIKE content
+func (stmt *whereStmtOf[T]) OrLike(col string, content interface{}) *T {
+	stmt.w.OrLike(col, content)
+	return stmt.t
+}
+
+// AndNotLike 指定 WHERE ... AND col NOT LIKE content
+func (stmt *whereStmtOf[T]) AndNotLike(col string, content interface{}) *T {
+	stmt.w.AndNotLike(col, content)
+	return stmt.t
+}
+
+// OrNotLike 指定 WHERE ... OR col NOT LIKE content
+func (stmt *whereStmtOf[T]) OrNotLike(col string, content interface{}) *T {
+	stmt.w.OrNotLike(col, content)
+	return stmt.t
+}
+
+// AndIn 指定 WHERE ... AND col IN(v...)
+func (stmt *whereStmtOf[T]) AndIn(col string, v ...interface{}) *T {
+	stmt.w.AndIn(col, v...)
+	return stmt.t
+}
+
+// OrIn 指定 WHERE ... OR col IN(v...)
+func (stmt *whereStmtOf[T]) OrIn(col string, v ...interface{}) *T {
+	stmt.w.OrIn(col, v...)
+	return stmt.t
+}
+
+// AndNotIn 指定 WHERE ... AND col NOT IN(v...)
+func (stmt *whereStmtOf[T]) AndNotIn(col string, v ...interface{}) *T {
+	stmt.w.AndNotIn(col, v...)
+	return stmt.t
+}
+
+// OrNotIn 指定 WHERE ... OR col IN(v...)
+func (stmt *whereStmtOf[T]) OrNotIn(col string, v ...interface{}) *T {
+	stmt.w.OrNotIn(col, v...)
+	return stmt.t
+}
+
+// AndGroup 开始一个子条件语句
+func (stmt *whereStmtOf[T]) AndGroup() *WhereStmt { return stmt.w.AndGroup() }
+
+// OrGroup 开始一个子条件语句
+func (stmt *whereStmtOf[T]) OrGroup() *WhereStmt { return stmt.w.OrGroup() }
+
+func (stmt *whereStmtOf[T]) WhereStmt() *WhereStmt { return stmt.w }
