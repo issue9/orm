@@ -87,12 +87,12 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 		name := c.dialect.DBName()
 		driver := c.dialect.DriverName()
 
-		if len(dialect) > 0 && sliceutil.Count(dialect, func(i int) bool { return dialect[i].DBName() == name && dialect[i].DriverName() == driver }) <= 0 {
+		if len(dialect) > 0 && sliceutil.Count(dialect, func(i core.Dialect) bool { return i.DBName() == name && i.DriverName() == driver }) <= 0 {
 			continue
 		}
 
 		fs := flagtest.Flags
-		if len(fs) > 0 && sliceutil.Count(fs, func(i int) bool { return fs[i].DBName == name && fs[i].DriverName == driver }) <= 0 {
+		if len(fs) > 0 && sliceutil.Count(fs, func(i *flagtest.Flag) bool { return i.DBName == name && i.DriverName == driver }) <= 0 {
 			continue
 		}
 

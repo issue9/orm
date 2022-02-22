@@ -60,8 +60,8 @@ func TestSuite_ForEach_withDialect(t *testing.T) {
 			Equal(t.Assertion, a)
 
 		d := t.DB.Dialect()
-		a.Equal(sliceutil.Count(dialects, func(i int) bool {
-			return dialects[i].DBName() == d.DBName() && dialects[i].DriverName() == d.DriverName()
+		a.Equal(sliceutil.Count(dialects, func(i core.Dialect) bool {
+			return i.DBName() == d.DBName() && i.DriverName() == d.DriverName()
 		}), 1)
 
 		size++
