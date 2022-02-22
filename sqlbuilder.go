@@ -271,9 +271,7 @@ func find(e Engine, v TableNamer) error {
 		return err
 	}
 
-	stmt := e.SQLBuilder().Select().
-		Column("*").
-		From(m.Name)
+	stmt := e.SQLBuilder().Select().Column("*").From(m.Name)
 	if err = where(stmt, m, rval); err != nil {
 		return err
 	}
@@ -299,10 +297,7 @@ func forUpdate(tx *Tx, v TableNamer) error {
 		}
 	}
 
-	stmt := tx.SQLBuilder().Select().
-		Column("*").
-		From(m.Name).
-		ForUpdate()
+	stmt := tx.SQLBuilder().Select().Column("*").From(m.Name).ForUpdate()
 	if err = where(stmt, m, rval); err != nil {
 		return err
 	}

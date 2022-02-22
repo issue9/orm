@@ -180,14 +180,10 @@ func (stmt *DeleteStmt) OrNotIn(col string, v ...interface{}) *DeleteStmt {
 }
 
 // AndGroup 开始一个子条件语句
-func (stmt *DeleteStmt) AndGroup() *WhereStmt {
-	return stmt.where.AndGroup()
-}
+func (stmt *DeleteStmt) AndGroup() *WhereStmt { return stmt.where.AndGroup() }
 
 // OrGroup 开始一个子条件语句
-func (stmt *DeleteStmt) OrGroup() *WhereStmt {
-	return stmt.where.OrGroup()
-}
+func (stmt *DeleteStmt) OrGroup() *WhereStmt { return stmt.where.OrGroup() }
 
 // Delete 删除指定条件的内容
 func (stmt *WhereStmt) Delete(e core.Engine) *DeleteStmt {

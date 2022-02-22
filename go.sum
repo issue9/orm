@@ -1,7 +1,8 @@
 github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=
 github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
-github.com/issue9/assert/v2 v2.0.0 h1:vN7fr70g5ND6zM39tPZk/E4WCyjGMqApmFbujSTmEo0=
 github.com/issue9/assert/v2 v2.0.0/go.mod h1:rKr1eVGzXUhAo2af1thiKAhIA8uiSK9Wyn7mcZ4BzAg=
+github.com/issue9/assert/v2 v2.2.1 h1:XQEnAFrGiT1Z55Tav39muM/Jg9ECiSLm7ehHQWoCHmA=
+github.com/issue9/assert/v2 v2.2.1/go.mod h1:rKr1eVGzXUhAo2af1thiKAhIA8uiSK9Wyn7mcZ4BzAg=
 github.com/issue9/conv v1.2.2 h1:DlvooVwcCgHxGxgVNSt4LFGxIVzWbMV8E2dmQlrGHNA=
 github.com/issue9/conv v1.2.2/go.mod h1:uDqE/xgXbZ5UjC2J5+HLIoguE0qOKGzv7EzLzkvoRPE=
 github.com/issue9/errwrap v0.2.1 h1:hrzBGbOCRs8acitpWSg54xNl2oaLGA/WZEf71bKaiEU=

@@ -167,16 +167,12 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 }
 
 // LastInsertID 插入数据并获取其自增的 ID
-func (db *DB) LastInsertID(v TableNamer) (int64, error) {
-	return lastInsertID(db, v)
-}
+func (db *DB) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(db, v) }
 
 // Insert 插入数据
 //
 // NOTE: 若需一次性插入多条数据，请使用 tx.Insert()。
-func (db *DB) Insert(v TableNamer) (sql.Result, error) {
-	return insert(db, v)
-}
+func (db *DB) Insert(v TableNamer) (sql.Result, error) { return insert(db, v) }
 
 // Delete 删除符合条件的数据
 //
