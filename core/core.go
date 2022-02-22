@@ -33,6 +33,7 @@ func AIName(table string) string { return table + defaultAINameSuffix }
 //
 // orm.DB 和 orm.Tx 应该实现此接口。
 type Engine interface {
+	// TablePrefix 返回表名前缀
 	TablePrefix() string
 
 	Dialect() Dialect

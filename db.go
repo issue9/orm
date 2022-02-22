@@ -54,7 +54,6 @@ func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
 	return inst, nil
 }
 
-// TablePrefix 返回表名前缀内容内容
 func (db *DB) TablePrefix() string { return db.Dialect().TablePrefix() }
 
 // Debug 指定调输出调试内容通道
@@ -114,12 +113,10 @@ func (db *DB) QueryRowContext(ctx context.Context, query string, args ...any) *s
 	return db.DB.QueryRowContext(ctx, query, args...)
 }
 
-// Query 执行一条查询语句
 func (db *DB) Query(query string, args ...any) (*sql.Rows, error) {
 	return db.QueryContext(context.Background(), query, args...)
 }
 
-// QueryContext 执行一条查询语句
 func (db *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	db.printDebug(query)
 	query, args, err := db.dialect.Fix(query, args)
@@ -130,12 +127,10 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql
 	return db.DB.QueryContext(ctx, query, args...)
 }
 
-// Exec 执行 SQL 语句
 func (db *DB) Exec(query string, args ...any) (sql.Result, error) {
 	return db.ExecContext(context.Background(), query, args...)
 }
 
-// ExecContext 执行 SQL 语句
 func (db *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	db.printDebug(query)
 	query, args, err := db.dialect.Fix(query, args)
@@ -146,12 +141,10 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.R
 	return db.DB.ExecContext(ctx, query, args...)
 }
 
-// Prepare 预编译查询语句
 func (db *DB) Prepare(query string) (*core.Stmt, error) {
 	return db.PrepareContext(context.Background(), query)
 }
 
-// PrepareContext 预编译查询语句
 func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
 	db.printDebug(query)
 	query, orders, err := db.Dialect().Prepare(query)
@@ -298,9 +291,6 @@ func (db *DB) MultDrop(objs ...TableNamer) error {
 	})
 }
 
-// MultTruncate 清除表内容
-//
-// 重置 ai，但保留表结构。
 func (db *DB) MultTruncate(objs ...TableNamer) error {
 	if !db.Dialect().TransactionalDDL() {
 		for _, v := range objs {

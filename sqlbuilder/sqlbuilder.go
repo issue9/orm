@@ -2,9 +2,8 @@
 
 // Package sqlbuilder 提供一套通过字符串拼接来构成 SQL 语句的工具
 //
-// sqlbuilder 提供了部分 *Hooker 的接口，用于自定义某一条语句的实现。
-// 一般情况下， 如果有多个数据是遵循 SQL 标准的，只有个别有例外，
-// 那么该例外的 Dialect 实现，可以同时实现 Hooker 接口， 自定义该语句的实现。
+// sqlbuilder 提供了部分 *Hooker 的接口，
+// 用于处理大部分数据都有标准实现而只有某个数据库采用了非标准模式的。
 package sqlbuilder
 
 import (

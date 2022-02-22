@@ -37,15 +37,12 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	return inst, nil
 }
 
-// TablePrefix 返回表名前缀内容内容
 func (tx *Tx) TablePrefix() string { return tx.db.TablePrefix() }
 
-// Query 执行一条查询语句
 func (tx *Tx) Query(query string, args ...any) (*sql.Rows, error) {
 	return tx.QueryContext(context.Background(), query, args...)
 }
 
-// QueryContext 执行一条查询语句
 func (tx *Tx) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	tx.db.printDebug(query)
 	query, args, err := tx.Dialect().Fix(query, args)
@@ -76,12 +73,10 @@ func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...any) *s
 	return tx.Tx.QueryRowContext(ctx, query, args...)
 }
 
-// Exec 执行一条 SQL 语句
 func (tx *Tx) Exec(query string, args ...any) (sql.Result, error) {
 	return tx.ExecContext(context.Background(), query, args...)
 }
 
-// ExecContext 执行一条 SQL 语句
 func (tx *Tx) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	tx.db.printDebug(query)
 	query, args, err := tx.Dialect().Fix(query, args)
@@ -92,12 +87,10 @@ func (tx *Tx) ExecContext(ctx context.Context, query string, args ...any) (sql.R
 	return tx.Tx.ExecContext(ctx, query, args...)
 }
 
-// Prepare 将一条 SQL 语句进行预编译
 func (tx *Tx) Prepare(query string) (*core.Stmt, error) {
 	return tx.PrepareContext(context.Background(), query)
 }
 
-// PrepareContext 将一条 SQL 语句进行预编译
 func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
 	tx.db.printDebug(query)
 	query, orders, err := tx.Dialect().Prepare(query)
@@ -105,7 +98,7 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 		return nil, err
 	}
 
-	s, err := tx.db.DB.PrepareContext(ctx, query)
+	s, err := tx.Tx.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -212,9 +205,6 @@ func (tx *Tx) MultCreate(objs ...TableNamer) error { return tx.multDo(tx.Create,
 // MultDrop 删除表结构及数据
 func (tx *Tx) MultDrop(objs ...TableNamer) error { return tx.multDo(tx.Drop, objs...) }
 
-// MultTruncate 清除表内容
-//
-// 会重置 ai，但保留表结构。
 func (tx *Tx) MultTruncate(objs ...TableNamer) error {
 	return tx.multDo(tx.Truncate, objs...)
 }

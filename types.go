@@ -68,6 +68,7 @@ type (
 
 		Drop(v TableNamer) error
 
+		// Truncate 重置 ai保留表结构
 		Truncate(v TableNamer) error
 
 		// InsertMany 插入多条相同的数据
@@ -102,6 +103,7 @@ type (
 
 		MultDrop(objs ...TableNamer) error
 
+		// MultTruncate 重置 ai保留表结构
 		MultTruncate(objs ...TableNamer) error
 
 		SQLBuilder() *sqlbuilder.SQLBuilder
