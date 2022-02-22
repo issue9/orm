@@ -32,7 +32,7 @@ func getModel(e Engine, v TableNamer) (*Model, reflect.Value, error) {
 
 // 根据 Model 中的主键或是唯一索引为 sql 产生 where 语句，
 // 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
-func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
+func where(ws *sqlbuilder.WhereStmt, m *Model, rval reflect.Value) error {
 	var keys []string
 	var vals []any
 	var constraint string
@@ -69,7 +69,7 @@ RET:
 	}
 
 	for index, key := range keys {
-		sb.WhereStmt().And(string(core.QuoteLeft)+key+string(core.QuoteRight)+"=?", vals[index])
+		ws.And(string(core.QuoteLeft)+key+string(core.QuoteRight)+"=?", vals[index])
 	}
 
 	return nil
@@ -272,7 +272,7 @@ func find(e Engine, v TableNamer) error {
 	}
 
 	stmt := e.SQLBuilder().Select().Column("*").From(m.Name)
-	if err = where(stmt, m, rval); err != nil {
+	if err = where(stmt.WhereStmt(), m, rval); err != nil {
 		return err
 	}
 
@@ -298,7 +298,7 @@ func forUpdate(tx *Tx, v TableNamer) error {
 	}
 
 	stmt := tx.SQLBuilder().Select().Column("*").From(m.Name).ForUpdate()
-	if err = where(stmt, m, rval); err != nil {
+	if err = where(stmt.WhereStmt(), m, rval); err != nil {
 		return err
 	}
 
@@ -319,7 +319,7 @@ func update(e Engine, v TableNamer, cols ...string) (sql.Result, error) {
 		return nil, err
 	}
 
-	if err := where(stmt, m, rval); err != nil {
+	if err := where(stmt.WhereStmt(), m, rval); err != nil {
 		return nil, err
 	}
 
@@ -386,7 +386,7 @@ func del(e Engine, v TableNamer) (sql.Result, error) {
 	}
 
 	stmt := e.SQLBuilder().Delete().Table(m.Name)
-	if err = where(stmt, m, rval); err != nil {
+	if err = where(stmt.WhereStmt(), m, rval); err != nil {
 		return nil, err
 	}
 

@@ -11,10 +11,7 @@ import (
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
-var (
-	_ sqlbuilder.ExecStmt    = &sqlbuilder.UpdateStmt{}
-	_ sqlbuilder.WhereStmter = &sqlbuilder.UpdateStmt{}
-)
+var _ sqlbuilder.ExecStmt = &sqlbuilder.UpdateStmt{}
 
 func TestUpdate_columnsHasDup(t *testing.T) {
 	a := assert.New(t, false)

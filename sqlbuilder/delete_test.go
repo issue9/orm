@@ -12,10 +12,7 @@ import (
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
-var (
-	_ sqlbuilder.ExecStmt    = &sqlbuilder.DeleteStmt{}
-	_ sqlbuilder.WhereStmter = &sqlbuilder.DeleteStmt{}
-)
+var _ sqlbuilder.ExecStmt = &sqlbuilder.DeleteStmt{}
 
 func TestDelete_Exec(t *testing.T) {
 	a := assert.New(t, false)

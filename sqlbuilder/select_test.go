@@ -13,10 +13,7 @@ import (
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
-var (
-	_ sqlbuilder.SQLer       = &sqlbuilder.SelectStmt{}
-	_ sqlbuilder.WhereStmter = &sqlbuilder.SelectStmt{}
-)
+var _ sqlbuilder.SQLer = &sqlbuilder.SelectStmt{}
 
 func TestSelect(t *testing.T) {
 	a := assert.New(t, false)

@@ -4,27 +4,20 @@ package sqlbuilder
 
 import "github.com/issue9/orm/v4/core"
 
-type (
-	// WhereStmter 带 Where 语句的 SQL
-	WhereStmter interface {
-		WhereStmt() *WhereStmt
-	}
+// WhereStmt SQL 语句的 where 部分
+type WhereStmt struct {
+	parent    *WhereStmt
+	andGroups []*WhereStmt
+	orGroups  []*WhereStmt
 
-	// WhereStmt SQL 语句的 where 部分
-	WhereStmt struct {
-		parent    *WhereStmt
-		andGroups []*WhereStmt
-		orGroups  []*WhereStmt
+	builder *core.Builder
+	args    []any
+}
 
-		builder *core.Builder
-		args    []any
-	}
-
-	whereStmtOf[T any] struct {
-		w *WhereStmt
-		t *T
-	}
-)
+type whereStmtOf[T any] struct {
+	w *WhereStmt
+	t *T
+}
 
 // Where 生成 Where 语句
 func (sql *SQLBuilder) Where() *WhereStmt { return Where() }
