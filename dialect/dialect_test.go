@@ -29,7 +29,7 @@ func TestMysqlLimitSQL(t *testing.T) {
 
 	// 带 sql.namedArg
 	query, ret = mysqlLimitSQL(sql.Named("limit", 1), 2)
-	a.Equal(ret, []interface{}{sql.Named("limit", 1), 2})
+	a.Equal(ret, []any{sql.Named("limit", 1), 2})
 	sqltest.Equal(a, query, "LIMIT @limit offset ?")
 }
 
@@ -46,7 +46,7 @@ func TestOracleLimitSQL(t *testing.T) {
 
 	// 带 sql.namedArg
 	query, ret = oracleLimitSQL(sql.Named("limit", 1), 2)
-	a.Equal(ret, []interface{}{2, sql.Named("limit", 1)})
+	a.Equal(ret, []any{2, sql.Named("limit", 1)})
 	sqltest.Equal(a, query, "offset ? rows fetch next @limit rows only")
 }
 
@@ -128,22 +128,22 @@ func TestFixQueryAndArgs(t *testing.T) {
 
 	data := []*struct {
 		query       string
-		args        []interface{}
+		args        []any
 		err         bool
 		outputQuery string
-		outputArgs  []interface{}
+		outputArgs  []any
 	}{
 		{
 			query:       "select * from table where id=1 and id=@id",
-			args:        []interface{}{sql.Named("id", 2)},
+			args:        []any{sql.Named("id", 2)},
 			outputQuery: "select * from table where id=1 and id=?",
-			outputArgs:  []interface{}{2},
+			outputArgs:  []any{2},
 		},
 		{
 			query:       "select * from table where id=@id and id=1 and id=@id2",
-			args:        []interface{}{sql.Named("id2", 1), sql.Named("id", 2)},
+			args:        []any{sql.Named("id2", 1), sql.Named("id", 2)},
 			outputQuery: "select * from table where id=? and id=1 and id=?",
-			outputArgs:  []interface{}{2, 1},
+			outputArgs:  []any{2, 1},
 		},
 	}
 
@@ -155,18 +155,18 @@ func TestFixQueryAndArgs(t *testing.T) {
 	}
 
 	a.Panic(func() {
-		fixQueryAndArgs("select * from table where id=@id  and id=@id2", []interface{}{sql.Named("id2", 1), sql.Named("id3", 2)})
+		fixQueryAndArgs("select * from table where id=@id  and id=@id2", []any{sql.Named("id2", 1), sql.Named("id3", 2)})
 	})
 
 	a.Panic(func() {
-		fixQueryAndArgs("select * from table where id=@id and  id=@id2", []interface{}{sql.Named("id2", 1), sql.Named("not-exists", 2)})
+		fixQueryAndArgs("select * from table where id=@id and  id=@id2", []any{sql.Named("id2", 1), sql.Named("not-exists", 2)})
 	})
 
 	a.Panic(func() {
-		fixQueryAndArgs("select * from table where id=@id and id=@id", []interface{}{sql.Named("id", 1), sql.Named("id2", 2)})
+		fixQueryAndArgs("select * from table where id=@id and id=@id", []any{sql.Named("id", 1), sql.Named("id2", 2)})
 	})
 
 	a.Panic(func() {
-		fixQueryAndArgs("select * from table where id=@id  and id=?", []interface{}{sql.Named("id", 1)})
+		fixQueryAndArgs("select * from table where id=@id  and id=?", []any{sql.Named("id", 1)})
 	})
 }

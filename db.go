@@ -91,7 +91,7 @@ func (db *DB) Version() (string, error) {
 // QueryRow 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
-func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
+func (db *DB) QueryRow(query string, args ...any) *sql.Row {
 	return db.QueryRowContext(context.Background(), query, args...)
 }
 
@@ -104,7 +104,7 @@ func (db *DB) printDebug(query string) {
 // QueryRowContext 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
-func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (db *DB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	db.printDebug(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
@@ -115,12 +115,12 @@ func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interfa
 }
 
 // Query 执行一条查询语句
-func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+func (db *DB) Query(query string, args ...any) (*sql.Rows, error) {
 	return db.QueryContext(context.Background(), query, args...)
 }
 
 // QueryContext 执行一条查询语句
-func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (db *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	db.printDebug(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
@@ -131,12 +131,12 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{
 }
 
 // Exec 执行 SQL 语句
-func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (db *DB) Exec(query string, args ...any) (sql.Result, error) {
 	return db.ExecContext(context.Background(), query, args...)
 }
 
 // ExecContext 执行 SQL 语句
-func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (db *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	db.printDebug(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {

@@ -61,7 +61,7 @@ type (
 		// SQL 将当前实例转换成 SQL 语句返回
 		//
 		// query 表示 SQL 语句，而 args 表示语句各个参数占位符对应的参数值。
-		SQL() (query string, args []interface{}, err error)
+		SQL() (query string, args []any, err error)
 	}
 
 	// DDLSQLer SQL 中 DDL 语句的基本接口

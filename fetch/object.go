@@ -57,7 +57,7 @@ func convertError(field, message string) error {
 //  }
 //
 // 第一个参数用于表示有多少数据被正确导入到 obj 中
-func Object(strict bool, rows *sql.Rows, obj interface{}) (int, error) {
+func Object(strict bool, rows *sql.Rows, obj any) (int, error) {
 	val := reflect.ValueOf(obj)
 
 	switch val.Kind() {
@@ -158,8 +158,8 @@ func getName(field reflect.StructField) string {
 	return ""
 }
 
-func getColumns(v reflect.Value, cols []string) ([]interface{}, error) {
-	ret := make([]interface{}, 0, len(cols))
+func getColumns(v reflect.Value, cols []string) ([]any, error) {
+	ret := make([]any, 0, len(cols))
 
 	items := make(map[string]reflect.Value, len(cols))
 	if err := parseObject(v, &items); err != nil {
@@ -170,7 +170,7 @@ func getColumns(v reflect.Value, cols []string) ([]interface{}, error) {
 		if item, found := items[col]; found {
 			ret = append(ret, item.Addr().Interface())
 		} else { // 从数据库导出了该列，但是该列名不存在于模型中
-			var val interface{}
+			var val any
 			ret = append(ret, &val)
 		}
 	}
@@ -423,7 +423,7 @@ func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 	return len(mapped), nil
 }
 
-func afterFetch(v interface{}) error {
+func afterFetch(v any) error {
 	if f, ok := v.(AfterFetcher); ok {
 		if err := f.AfterFetch(); err != nil {
 			return err

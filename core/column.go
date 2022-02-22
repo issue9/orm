@@ -32,7 +32,7 @@ type Column struct {
 	AI         bool
 	Nullable   bool
 	HasDefault bool
-	Default    interface{}
+	Default    any
 	Length     []int
 
 	PrimitiveType PrimitiveType

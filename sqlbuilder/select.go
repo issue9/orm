@@ -44,10 +44,10 @@ type SelectStmt struct {
 	group  string
 
 	havingQuery string
-	havingVals  []interface{}
+	havingVals  []any
 
 	limitQuery string
-	limitVals  []interface{}
+	limitVals  []any
 }
 
 type unionSelect struct {
@@ -109,7 +109,7 @@ func (stmt *SelectStmt) Reset() *SelectStmt {
 }
 
 // SQL 获取 SQL 语句及对应的参数
-func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
+func (stmt *SelectStmt) SQL() (string, []any, error) {
 	if stmt.err != nil {
 		return "", nil, stmt.Err()
 	}
@@ -119,7 +119,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	}
 
 	builder := core.NewBuilder("SELECT ")
-	args := make([]interface{}, 0, 10)
+	args := make([]any, 0, 10)
 
 	stmt.buildColumns(builder)
 
@@ -186,7 +186,7 @@ func (stmt *SelectStmt) SQL() (string, []interface{}, error) {
 	return query, args, nil
 }
 
-func (stmt *SelectStmt) buildUnions(builder *core.Builder) (args []interface{}, err error) {
+func (stmt *SelectStmt) buildUnions(builder *core.Builder) (args []any, err error) {
 	l := len(stmt.columns)
 
 	for _, u := range stmt.unions {
@@ -290,7 +290,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 }
 
 // Having 指定 having 语句
-func (stmt *SelectStmt) Having(expr string, args ...interface{}) *SelectStmt {
+func (stmt *SelectStmt) Having(expr string, args ...any) *SelectStmt {
 	stmt.havingQuery = expr
 	stmt.havingVals = args
 	return stmt
@@ -384,7 +384,7 @@ func (stmt *SelectStmt) Group(col string) *SelectStmt {
 }
 
 // Limit 生成 SQL 的 Limit 语句
-func (stmt *SelectStmt) Limit(limit interface{}, offset ...interface{}) *SelectStmt {
+func (stmt *SelectStmt) Limit(limit any, offset ...any) *SelectStmt {
 	query, vals := stmt.Dialect().LimitSQL(limit, offset...)
 	stmt.limitQuery = query
 	stmt.limitVals = vals
@@ -429,7 +429,7 @@ func (stmt *SelectStmt) Union(all bool, sel ...*SelectStmt) *SelectStmt {
 // QueryObject 将符合当前条件的所有记录依次写入 objs 中
 //
 // 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Object 函数的相关介绍。
-func (stmt *SelectStmt) QueryObject(strict bool, objs interface{}) (size int, err error) {
+func (stmt *SelectStmt) QueryObject(strict bool, objs any) (size int, err error) {
 	rows, err := stmt.Query()
 	if err != nil {
 		return 0, err
@@ -491,7 +491,7 @@ func (stmt *SelectStmt) Prepare() (*SelectQuery, error) {
 // QueryObject 将符合当前条件的所有记录依次写入 objs 中。
 //
 // 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Object 函数的相关介绍。
-func (stmt *SelectQuery) QueryObject(strict bool, objs interface{}, arg ...interface{}) (size int, err error) {
+func (stmt *SelectQuery) QueryObject(strict bool, objs any, arg ...any) (size int, err error) {
 	rows, err := stmt.stmt.Query(arg...)
 	if err != nil {
 		return 0, err
@@ -500,7 +500,7 @@ func (stmt *SelectQuery) QueryObject(strict bool, objs interface{}, arg ...inter
 }
 
 // QueryString 查询指定列的第一行数据，并将其转换成 string
-func (stmt *SelectQuery) QueryString(colName string, arg ...interface{}) (v string, err error) {
+func (stmt *SelectQuery) QueryString(colName string, arg ...any) (v string, err error) {
 	rows, err := stmt.stmt.Query(arg...)
 	if err != nil {
 		return "", err
@@ -509,7 +509,7 @@ func (stmt *SelectQuery) QueryString(colName string, arg ...interface{}) (v stri
 }
 
 // QueryFloat 查询指定列的第一行数据，并将其转换成 float64
-func (stmt *SelectQuery) QueryFloat(colName string, arg ...interface{}) (float64, error) {
+func (stmt *SelectQuery) QueryFloat(colName string, arg ...any) (float64, error) {
 	v, err := stmt.QueryString(colName, arg...)
 	if err != nil {
 		return 0, err
@@ -519,7 +519,7 @@ func (stmt *SelectQuery) QueryFloat(colName string, arg ...interface{}) (float64
 }
 
 // QueryInt 查询指定列的第一行数据，并将其转换成 int64
-func (stmt *SelectQuery) QueryInt(colName string, arg ...interface{}) (int64, error) {
+func (stmt *SelectQuery) QueryInt(colName string, arg ...any) (int64, error) {
 	// NOTE: 可能会出现浮点数的情况。比如：
 	// select avg(xx) as avg form xxx where xxx
 	// 查询 avg 的值可能是 5.000 等值。
@@ -533,7 +533,7 @@ func (stmt *SelectQuery) QueryInt(colName string, arg ...interface{}) (int64, er
 
 func (stmt *SelectQuery) Close() error { return stmt.stmt.Close() }
 
-func queryObject(rows *sql.Rows, strict bool, objs interface{}) (size int, err error) {
+func queryObject(rows *sql.Rows, strict bool, objs any) (size int, err error) {
 	defer func() {
 		if err1 := rows.Close(); err1 != nil {
 			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)

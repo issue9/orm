@@ -15,9 +15,9 @@ import (
 var quoteReplacer = strings.NewReplacer("{", "", "}", "")
 
 // 将参数替换成实际的值
-func fillArgs(query string, args []interface{}) (string, error) {
+func fillArgs(query string, args []any) (string, error) {
 	// 获取所有命名参数列表
-	named := make(map[string]interface{}, len(args))
+	named := make(map[string]any, len(args))
 	for _, arg := range args {
 		if n, ok := arg.(sql.NamedArg); ok {
 			named[n.Name] = n.Value

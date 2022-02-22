@@ -55,7 +55,7 @@ func fields(line string) []string {
 //
 // query 查询 create table 的语句；
 // val 从查询语句中获取的值。
-func scanCreateTable(engine core.Engine, table, query string, val ...interface{}) error {
+func scanCreateTable(engine core.Engine, table, query string, val ...any) error {
 	rows, err := engine.Query(query)
 	if err != nil {
 		return err

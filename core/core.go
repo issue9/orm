@@ -37,17 +37,17 @@ type Engine interface {
 
 	Dialect() Dialect
 
-	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Query(query string, args ...any) (*sql.Rows, error)
 
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 
-	QueryRow(query string, args ...interface{}) *sql.Row
+	QueryRow(query string, args ...any) *sql.Row
 
-	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 
-	Exec(query string, args ...interface{}) (sql.Result, error)
+	Exec(query string, args ...any) (sql.Result, error)
 
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 
 	Prepare(query string) (*Stmt, error)
 
@@ -98,7 +98,7 @@ type Dialect interface {
 	// 返回的是对应数据库的 limit 语句以及语句中占位符对应的值。
 	//
 	// limit 和 offset 可以是 SQL.NamedArg 类型。
-	LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{})
+	LimitSQL(limit any, offset ...any) (string, []any)
 
 	// LastInsertIDSQL 自定义获取 LastInsertID 的获取方式
 	//
@@ -133,7 +133,7 @@ type Dialect interface {
 	// 以及对 args 的参数作校正，比如 lib/pq 对 time.Time 处理有问题，也可以在此处作调整。
 	//
 	// NOTE: query 中不能同时存在 ? 和命名参数。因为如果是命名参数，则 args 的顺序可以是随意的。
-	Fix(query string, args []interface{}) (string, []interface{}, error)
+	Fix(query string, args []any) (string, []any, error)
 
 	// Prepare 对预编译的内容进行处理
 	//

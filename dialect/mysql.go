@@ -54,7 +54,7 @@ func newMysql(isMariadb bool, dbName, driverName, tablePrefix string) core.Diale
 	}
 }
 
-func (m *mysql) Fix(query string, args []interface{}) (string, []interface{}, error) {
+func (m *mysql) Fix(query string, args []any) (string, []any, error) {
 	query, args, err := fixQueryAndArgs(query, args)
 	if err != nil {
 		return "", nil, err
@@ -96,7 +96,7 @@ func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]stri
 	return nil
 }
 
-func (m *mysql) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+func (m *mysql) LimitSQL(limit any, offset ...any) (string, []any) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
@@ -192,7 +192,7 @@ func (m *mysql) CreateViewSQL(replace, temporary bool, name, selectQuery string,
 	return []string{q}, nil
 }
 
-func (m *mysql) InsertDefaultValueHook(table string) (string, []interface{}, error) {
+func (m *mysql) InsertDefaultValueHook(table string) (string, []any, error) {
 	query, err := core.NewBuilder("INSERT INTO").
 		QuoteKey(table).
 		WString("() VALUES ()").

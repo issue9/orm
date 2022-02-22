@@ -41,39 +41,39 @@ func TestStmt_buildArgs(t *testing.T) {
 
 	data := []*struct {
 		orders map[string]int
-		input  []interface{}
-		output []interface{}
+		input  []any
+		output []any
 		err    bool
 	}{
 		{},
 		{ // orders 为空，则原样返回内容
-			input:  []interface{}{1, 2, 3},
-			output: []interface{}{1, 2, 3},
+			input:  []any{1, 2, 3},
+			output: []any{1, 2, 3},
 		},
 		{ // orders 为空，则原样返回内容
 			orders: map[string]int{},
-			input:  []interface{}{1, 2, 3},
-			output: []interface{}{1, 2, 3},
+			input:  []any{1, 2, 3},
+			output: []any{1, 2, 3},
 		},
 		{ // 参数数量不匹配
 			orders: map[string]int{"id": 0},
-			input:  []interface{}{sql.Named("id", 1), 1, 2},
+			input:  []any{sql.Named("id", 1), 1, 2},
 			err:    true,
 		},
 		{ // 输入参数有非 sql.Named 类型
 			orders: map[string]int{"id": 0, "name": 1},
-			input:  []interface{}{sql.Named("id", 1), 1},
+			input:  []any{sql.Named("id", 1), 1},
 			err:    true,
 		},
 		{ // 参数并不在 orders 中
 			orders: map[string]int{"id": 0, "name": 1},
-			input:  []interface{}{sql.Named("id", 1), sql.Named("not-exists-arg", "test")},
+			input:  []any{sql.Named("id", 1), sql.Named("not-exists-arg", "test")},
 			err:    true,
 		},
 		{
 			orders: map[string]int{"name": 1, "id": 0},
-			input:  []interface{}{sql.Named("id", 1), sql.Named("name", "test")},
-			output: []interface{}{1, "test"},
+			input:  []any{sql.Named("id", 1), sql.Named("name", "test")},
+			output: []any{1, "test"},
 		},
 	}
 

@@ -16,16 +16,16 @@ func columnNotExists(col string) error {
 //
 // once 若为 true，则只导出第一条数据。
 // colName 指定需要导出的列名，若指定了不存在的名称，返回 error。
-func Column(once bool, colName string, rows *sql.Rows) ([]interface{}, error) {
+func Column(once bool, colName string, rows *sql.Rows) ([]any, error) {
 	cols, err := rows.Columns()
 	if err != nil {
 		return nil, err
 	}
 
 	index := -1 // colName 列在 rows.Columns() 中的索引号
-	buff := make([]interface{}, len(cols))
+	buff := make([]any, len(cols))
 	for i, v := range cols {
-		var value interface{}
+		var value any
 		buff[i] = &value
 
 		if colName == v { // 获取 index 的值
@@ -37,7 +37,7 @@ func Column(once bool, colName string, rows *sql.Rows) ([]interface{}, error) {
 		return nil, columnNotExists(colName)
 	}
 
-	var data []interface{}
+	var data []any
 	for rows.Next() {
 		if err := rows.Scan(buff...); err != nil {
 			return nil, err
@@ -62,7 +62,7 @@ func ColumnString(once bool, colName string, rows *sql.Rows) ([]string, error) {
 	}
 
 	index := -1 // colName 列在 rows.Columns() 中的索引号
-	buff := make([]interface{}, len(cols))
+	buff := make([]any, len(cols))
 	for i, v := range cols {
 		var value string
 		buff[i] = &value

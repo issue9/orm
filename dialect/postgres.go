@@ -46,7 +46,7 @@ func (p *postgres) LastInsertIDSQL(table, col string) (sql string, append bool) 
 }
 
 // Fix 在有 ? 占位符的情况下，语句中不能包含 $ 字符串
-func (p *postgres) Fix(query string, args []interface{}) (string, []interface{}, error) {
+func (p *postgres) Fix(query string, args []any) (string, []any, error) {
 	query, args, err := fixQueryAndArgs(query, args)
 	if err != nil {
 		return "", nil, err
@@ -106,7 +106,7 @@ func (p *postgres) CreateTableOptionsSQL(w *core.Builder, options map[string][]s
 	return nil
 }
 
-func (p *postgres) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+func (p *postgres) LimitSQL(limit any, offset ...any) (string, []any) {
 	return mysqlLimitSQL(limit, offset...)
 }
 

@@ -41,12 +41,12 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 func (tx *Tx) TablePrefix() string { return tx.db.TablePrefix() }
 
 // Query 执行一条查询语句
-func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
+func (tx *Tx) Query(query string, args ...any) (*sql.Rows, error) {
 	return tx.QueryContext(context.Background(), query, args...)
 }
 
 // QueryContext 执行一条查询语句
-func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (tx *Tx) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	tx.db.printDebug(query)
 	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {
@@ -59,14 +59,14 @@ func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{
 // QueryRow 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
-func (tx *Tx) QueryRow(query string, args ...interface{}) *sql.Row {
+func (tx *Tx) QueryRow(query string, args ...any) *sql.Row {
 	return tx.QueryRowContext(context.Background(), query, args...)
 }
 
 // QueryRowContext 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
-func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	tx.db.printDebug(query)
 	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {
@@ -77,12 +77,12 @@ func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interfa
 }
 
 // Exec 执行一条 SQL 语句
-func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (tx *Tx) Exec(query string, args ...any) (sql.Result, error) {
 	return tx.ExecContext(context.Background(), query, args...)
 }
 
 // ExecContext 执行一条 SQL 语句
-func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (tx *Tx) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	tx.db.printDebug(query)
 	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {

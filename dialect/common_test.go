@@ -143,7 +143,7 @@ func testTypes(t *test.Driver) {
 		"null_time",
 		"unix",
 	}
-	vals := []interface{}{ // 与 cols 一一对应
+	vals := []any{
 		true,
 		-1,
 		-8,

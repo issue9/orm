@@ -42,7 +42,7 @@ func errUncovert(col *core.Column) error {
 // mysqlLimitSQL mysql 系列数据库分页语法的实现
 //
 // 支持以下数据库：MySQL, H2, HSQLDB, Postgres, SQLite3
-func mysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+func mysqlLimitSQL(limit any, offset ...any) (string, []any) {
 	query := " LIMIT "
 
 	if named, ok := limit.(sql.NamedArg); ok && named.Name != "" {
@@ -52,7 +52,7 @@ func mysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interfac
 	}
 
 	if len(offset) == 0 {
-		return query + " ", []interface{}{limit}
+		return query + " ", []any{limit}
 	}
 
 	query += " OFFSET "
@@ -63,13 +63,13 @@ func mysqlLimitSQL(limit interface{}, offset ...interface{}) (string, []interfac
 		query += "?"
 	}
 
-	return query + " ", []interface{}{limit, offset[0]}
+	return query + " ", []any{limit, offset[0]}
 }
 
 // oracleLimitSQL oracle 系列数据库分页语法的实现
 //
 // 支持以下数据库：Derby, SQL Server 2012, Oracle 12c, the SQL 2008 standard
-func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+func oracleLimitSQL(limit any, offset ...any) (string, []any) {
 	query := "FETCH NEXT "
 
 	if named, ok := limit.(sql.NamedArg); ok && named.Name != "" {
@@ -80,7 +80,7 @@ func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interfa
 	query += " ROWS ONLY "
 
 	if len(offset) == 0 {
-		return query, []interface{}{limit}
+		return query, []any{limit}
 	}
 
 	o := offset[0]
@@ -90,7 +90,7 @@ func oracleLimitSQL(limit interface{}, offset ...interface{}) (string, []interfa
 		query = "OFFSET ? ROWS " + query
 	}
 
-	return query, []interface{}{offset[0], limit}
+	return query, []any{offset[0], limit}
 }
 
 // PrepareNamedArgs 对命名参数进行预处理
@@ -163,14 +163,14 @@ func appendViewBody(builder *core.Builder, name, selectQuery string, cols []stri
 }
 
 // 修正查询语句和查询参数的位置
-func fixQueryAndArgs(query string, args []interface{}) (string, []interface{}, error) {
+func fixQueryAndArgs(query string, args []any) (string, []any, error) {
 	query, orders, err := PrepareNamedArgs(query)
 	if err != nil {
 		return "", nil, err
 	}
 
 	// 整理返回参数
-	named := make(map[int]interface{}, len(orders))
+	named := make(map[int]any, len(orders))
 	for _, arg := range args {
 		if n, ok := arg.(sql.NamedArg); ok {
 			i, found := orders[n.Name]

@@ -18,7 +18,7 @@ type Unix struct {
 }
 
 // Scan implements the Scanner.Scan
-func (n *Unix) Scan(src interface{}) (err error) {
+func (n *Unix) Scan(src any) (err error) {
 	// The src value will be of one of the following types:
 	//
 	//    int64

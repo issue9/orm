@@ -16,7 +16,7 @@ type InsertStmt struct {
 
 	table      string
 	cols       []string
-	args       [][]interface{}
+	args       [][]any
 	selectStmt *SelectStmt
 }
 
@@ -27,7 +27,7 @@ func (sql *SQLBuilder) Insert() *InsertStmt { return Insert(sql.engine) }
 func Insert(e core.Engine) *InsertStmt {
 	stmt := &InsertStmt{
 		cols: make([]string, 0, 10),
-		args: make([][]interface{}, 0, 10),
+		args: make([][]any, 0, 10),
 	}
 	stmt.execStmt = newExecStmt(e, stmt)
 
@@ -59,13 +59,13 @@ func (stmt *InsertStmt) Table(table string) *InsertStmt {
 // KeyValue 指定键值对
 //
 // 当通过 Values() 指定多行数据时，再使用 KeyValue 会出错
-func (stmt *InsertStmt) KeyValue(col string, val interface{}) *InsertStmt {
+func (stmt *InsertStmt) KeyValue(col string, val any) *InsertStmt {
 	if len(stmt.args) > 1 {
 		stmt.err = errors.New("多列模式，不能调用 KeyValue 函数")
 	}
 
 	if len(stmt.args) == 0 {
-		stmt.args = append(stmt.args, []interface{}{})
+		stmt.args = append(stmt.args, []any{})
 	}
 
 	stmt.cols = append(stmt.cols, col)
@@ -83,7 +83,7 @@ func (stmt *InsertStmt) Columns(cols ...string) *InsertStmt {
 // Values 指定需要插入的值
 //
 // NOTE: vals 传入时，并不会被解压
-func (stmt *InsertStmt) Values(vals ...interface{}) *InsertStmt {
+func (stmt *InsertStmt) Values(vals ...any) *InsertStmt {
 	stmt.args = append(stmt.args, vals)
 	return stmt
 }
@@ -100,11 +100,11 @@ func (stmt *InsertStmt) Reset() *InsertStmt {
 
 // InsertDefaultValueHooker 插入值全部为默认值时的钩子处理函数
 type InsertDefaultValueHooker interface {
-	InsertDefaultValueHook(tableName string) (string, []interface{}, error)
+	InsertDefaultValueHook(tableName string) (string, []any, error)
 }
 
 // SQL 获取 SQL 的语句及参数部分
-func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
+func (stmt *InsertStmt) SQL() (string, []any, error) {
 	if stmt.err != nil {
 		return "", nil, stmt.Err()
 	}
@@ -135,7 +135,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	}
 	builder.TruncateLast(1).WBytes(')')
 
-	args := make([]interface{}, 0, len(stmt.cols)*len(stmt.args))
+	args := make([]any, 0, len(stmt.cols)*len(stmt.args))
 	builder.WString(" VALUES ")
 	for _, vals := range stmt.args {
 		builder.WBytes('(')
@@ -159,7 +159,7 @@ func (stmt *InsertStmt) SQL() (string, []interface{}, error) {
 	return query, args, nil
 }
 
-func (stmt *InsertStmt) insertDefault(builder *core.Builder) (string, []interface{}, error) {
+func (stmt *InsertStmt) insertDefault(builder *core.Builder) (string, []any, error) {
 	if hook, ok := stmt.Dialect().(InsertDefaultValueHooker); ok {
 		return hook.InsertDefaultValueHook(stmt.table)
 	}
@@ -172,7 +172,7 @@ func (stmt *InsertStmt) insertDefault(builder *core.Builder) (string, []interfac
 	return query, nil, nil
 }
 
-func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []interface{}, error) {
+func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []any, error) {
 	builder.WBytes('(')
 	if len(stmt.cols) > 0 {
 		for _, col := range stmt.cols {
@@ -227,7 +227,7 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 		return rslt.LastInsertId()
 	}
 
-	var args []interface{}
+	var args []any
 	if !append {
 		_, err := stmt.ExecContext(ctx)
 		if err != nil {

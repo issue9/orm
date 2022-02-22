@@ -21,7 +21,7 @@ type Rat struct {
 func Rational(a, b int64) Rat { return Rat{rat: big.NewRat(a, b)} }
 
 // Scan implements the Scanner.Scan
-func (n *Rat) Scan(src interface{}) (err error) {
+func (n *Rat) Scan(src any) (err error) {
 	// The src value will be of one of the following types:
 	//
 	//    int64

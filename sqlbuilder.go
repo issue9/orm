@@ -34,7 +34,7 @@ func getModel(e Engine, v TableNamer) (*Model, reflect.Value, error) {
 // 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
 func where(sb sqlbuilder.WhereStmter, m *Model, rval reflect.Value) error {
 	var keys []string
-	var vals []interface{}
+	var vals []any
 	var constraint string
 
 	if m.AutoIncrement != nil {
@@ -75,7 +75,7 @@ RET:
 	return nil
 }
 
-func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []interface{}) {
+func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []any) {
 	for _, col := range cols {
 		field := rval.FieldByName(col.GoName)
 
@@ -341,7 +341,7 @@ func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols 
 		}
 	}
 
-	var occValue interface{}
+	var occValue any
 	for _, col := range m.Columns {
 		field := rval.FieldByName(col.GoName)
 		if !field.IsValid() {
@@ -437,7 +437,7 @@ func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) 
 				return nil, errInsertHasDifferentType
 			}
 
-			vals := make([]interface{}, 0, len(keys))
+			vals := make([]any, 0, len(keys))
 			for _, name := range keys {
 				col := m.FindColumn(name)
 				if col == nil {

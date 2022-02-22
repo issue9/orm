@@ -236,7 +236,7 @@ func TestPostgres_Fix(t *testing.T) {
 
 	data := []*struct {
 		input, output string
-		args          []interface{}
+		args          []any
 	}{
 		{
 			input:  "abc",
@@ -249,22 +249,22 @@ func TestPostgres_Fix(t *testing.T) {
 		{
 			input:  "abc @id abc",
 			output: "abc $1 abc",
-			args:   []interface{}{sql.Named("id", 1)},
+			args:   []any{sql.Named("id", 1)},
 		},
 		{
 			input:  "@id1 abc @id2 abc @id3",
 			output: "$1 abc $2 abc $3",
-			args:   []interface{}{sql.Named("id1", 1), sql.Named("id2", 1), sql.Named("id3", 1)},
+			args:   []any{sql.Named("id1", 1), sql.Named("id2", 1), sql.Named("id3", 1)},
 		},
 		{
 			input:  "abc @id1 abc @id2 def",
 			output: "abc $1 abc $2 def",
-			args:   []interface{}{sql.Named("id1", 1), sql.Named("id2", 1)},
+			args:   []any{sql.Named("id1", 1), sql.Named("id2", 1)},
 		},
 		{
 			input:  "中文 @id1 abc @id2 def",
 			output: "中文 $1 abc $2 def",
-			args:   []interface{}{sql.Named("id1", 1), sql.Named("id2", 1)},
+			args:   []any{sql.Named("id1", 1), sql.Named("id2", 1)},
 		},
 	}
 
@@ -274,16 +274,16 @@ func TestPostgres_Fix(t *testing.T) {
 		sqltest.Equal(a, output, item.output)
 	}
 
-	_, _, err := p.Fix("$a @id1 bc", []interface{}{sql.Named("id1", 1)})
+	_, _, err := p.Fix("$a @id1 bc", []any{sql.Named("id1", 1)})
 	a.Error(err)
 
-	_, _, err = p.Fix("@id1 $abc$", []interface{}{sql.Named("id1", 1)})
+	_, _, err = p.Fix("@id1 $abc$", []any{sql.Named("id1", 1)})
 	a.Error(err)
 
-	_, _, err = p.Fix("a @id1 bc$abc$abc", []interface{}{sql.Named("id1", 1)})
+	_, _, err = p.Fix("a @id1 bc$abc$abc", []any{sql.Named("id1", 1)})
 	a.Error(err)
 
-	_, _, err = p.Fix("@id1 中$文", []interface{}{sql.Named("id1", 1)})
+	_, _, err = p.Fix("@id1 中$文", []any{sql.Named("id1", 1)})
 	a.Error(err)
 }
 

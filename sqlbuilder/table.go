@@ -42,7 +42,7 @@ func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	return stmt
 }
 
-func newColumn(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def interface{}, length ...int) (*core.Column, error) {
+func newColumn(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def any, length ...int) (*core.Column, error) {
 	col, err := core.NewColumn(p)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func newColumn(name string, p core.PrimitiveType, ai, nullable, hasDefault bool,
 // hasDefault 表示是否拥有默认值，如果为 true，则 v 同时会被当作默认值；
 // def 默认值；
 // length 表示长度信息。
-func (stmt *CreateTableStmt) Column(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def interface{}, length ...int) *CreateTableStmt {
+func (stmt *CreateTableStmt) Column(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def any, length ...int) *CreateTableStmt {
 	if stmt.err != nil {
 		return stmt
 	}

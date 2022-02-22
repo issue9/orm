@@ -17,8 +17,8 @@ type UpdateStmt struct {
 	table  string
 	values []*updateSet
 
-	occColumn string      // 乐观锁的列名
-	occValue  interface{} // 乐观锁的当前值
+	occColumn string // 乐观锁的列名
+	occValue  any    // 乐观锁的当前值
 }
 
 type updateWhere = whereStmtOf[UpdateStmt]
@@ -26,7 +26,7 @@ type updateWhere = whereStmtOf[UpdateStmt]
 // 表示一条 SET 语句。比如 set key=val
 type updateSet struct {
 	column string
-	value  interface{}
+	value  any
 	typ    byte // 类型，可以是 + 自增类型，- 自减类型，或是空值表示正常表达式
 }
 
@@ -51,7 +51,7 @@ func (stmt *UpdateStmt) Table(table string) *UpdateStmt {
 // Set 设置值，若 col 相同，则会覆盖
 //
 // val 可以是 sql.NamedArg 类型
-func (stmt *UpdateStmt) Set(col string, val interface{}) *UpdateStmt {
+func (stmt *UpdateStmt) Set(col string, val any) *UpdateStmt {
 	stmt.values = append(stmt.values, &updateSet{
 		column: col,
 		value:  val,
@@ -61,7 +61,7 @@ func (stmt *UpdateStmt) Set(col string, val interface{}) *UpdateStmt {
 }
 
 // Increase 给列增加值
-func (stmt *UpdateStmt) Increase(col string, val interface{}) *UpdateStmt {
+func (stmt *UpdateStmt) Increase(col string, val any) *UpdateStmt {
 	stmt.values = append(stmt.values, &updateSet{
 		column: col,
 		value:  val,
@@ -71,7 +71,7 @@ func (stmt *UpdateStmt) Increase(col string, val interface{}) *UpdateStmt {
 }
 
 // Decrease 给钱减少值
-func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
+func (stmt *UpdateStmt) Decrease(col string, val any) *UpdateStmt {
 	stmt.values = append(stmt.values, &updateSet{
 		column: col,
 		value:  val,
@@ -83,7 +83,7 @@ func (stmt *UpdateStmt) Decrease(col string, val interface{}) *UpdateStmt {
 // OCC 指定一个用于乐观锁的字段
 //
 // val 表示乐观锁原始的值，更新时如果值不等于 val，将更新失败。
-func (stmt *UpdateStmt) OCC(col string, val interface{}) *UpdateStmt {
+func (stmt *UpdateStmt) OCC(col string, val any) *UpdateStmt {
 	stmt.occColumn = col
 	stmt.occValue = val
 	stmt.Increase(col, 1)
@@ -105,7 +105,7 @@ func (stmt *UpdateStmt) Reset() *UpdateStmt {
 }
 
 // SQL 获取 SQL 语句以及对应的参数
-func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
+func (stmt *UpdateStmt) SQL() (string, []any, error) {
 	if stmt.err != nil {
 		return "", nil, stmt.Err()
 	}
@@ -118,7 +118,7 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	buf.WString(stmt.table)
 	buf.WString(" SET ")
 
-	args := make([]interface{}, 0, len(stmt.values))
+	args := make([]any, 0, len(stmt.values))
 
 	for _, val := range stmt.values {
 		buf.QuoteKey(val.column).WBytes('=')
@@ -154,7 +154,7 @@ func (stmt *UpdateStmt) SQL() (string, []interface{}, error) {
 	return query, args, nil
 }
 
-func (stmt *UpdateStmt) getWhereSQL() (string, []interface{}, error) {
+func (stmt *UpdateStmt) getWhereSQL() (string, []any, error) {
 	if stmt.occColumn == "" {
 		return stmt.WhereStmt().SQL()
 	}

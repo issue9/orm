@@ -62,7 +62,7 @@ func TestWhereStmt_Delete(t *testing.T) {
 
 		query, args, err := sql.SQL()
 		a.NotError(err).
-			Equal(args, []interface{}{1})
+			Equal(args, []any{1})
 		sqltest.Equal(a, query, "DELETE FROM {users} WHERE id=?")
 	})
 }

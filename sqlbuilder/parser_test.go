@@ -19,48 +19,48 @@ func TestFillArgs(t *testing.T) {
 
 	var data = []*struct {
 		query  string
-		args   []interface{}
+		args   []any
 		output string
 		err    bool
 	}{
 		{
 			query:  "select * from tbl",
-			args:   []interface{}{},
+			args:   []any{},
 			output: "select * from tbl",
 		},
 		{
 			query:  "select * from tbl where id=?",
-			args:   []interface{}{1},
+			args:   []any{1},
 			output: "select * from tbl where id='1'",
 		},
 		{
 			query:  "select * from tbl where id=? and name=?",
-			args:   []interface{}{1, "n"},
+			args:   []any{1, "n"},
 			output: "select * from tbl where id='1' and name='n'",
 		},
 		{
 			query:  "select * from tbl where id=? and name=@name",
-			args:   []interface{}{1, sql.Named("name", "n")},
+			args:   []any{1, sql.Named("name", "n")},
 			output: "select * from tbl where id='1' and name='n'",
 		},
 		{
 			query:  "select * from tbl where id=? and name=@name and age>?",
-			args:   []interface{}{1, sql.Named("name", "n"), 18},
+			args:   []any{1, sql.Named("name", "n"), 18},
 			output: "select * from tbl where id='1' and name='n' and age>'18'",
 		},
 		{ // 类型不匹配
 			query: "select * from tbl where id=? and name=@name",
-			args:  []interface{}{1, "n"},
+			args:  []any{1, "n"},
 			err:   true,
 		},
 		{ // 类型不匹配
 			query: "select * from tbl where id=? and name=@name and age>@age",
-			args:  []interface{}{1, "n", sql.Named("age", 18)},
+			args:  []any{1, "n", sql.Named("age", 18)},
 			err:   true,
 		},
 		{ // 名称不存在
 			query: "select * from tbl where id=? and name=@name",
-			args:  []interface{}{1, sql.Named("not-exists", "n")},
+			args:  []any{1, sql.Named("not-exists", "n")},
 			err:   true,
 		},
 	}

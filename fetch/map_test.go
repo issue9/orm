@@ -30,11 +30,11 @@ func TestMap(t *testing.T) {
 		mapped, err := fetch.Map(false, rows)
 		t.NotError(err).NotNil(mapped)
 
-		ok := assert.IsEqual([]map[string]interface{}{
+		ok := assert.IsEqual([]map[string]any{
 			{"id": 1, "email": "email-1"},
 			{"id": 2, "email": "email-2"},
 		}, mapped) ||
-			assert.IsEqual([]map[string]interface{}{
+			assert.IsEqual([]map[string]any{
 				{"id": []byte{'1'}, "email": []byte("email-1")},
 				{"id": []byte{'2'}, "email": []byte("email-2")},
 			}, mapped)
@@ -48,10 +48,10 @@ func TestMap(t *testing.T) {
 		mapped, err = fetch.Map(true, rows)
 		t.NotError(err).NotNil(mapped)
 
-		ok = assert.IsEqual([]map[string]interface{}{
+		ok = assert.IsEqual([]map[string]any{
 			{"id": 1, "email": "email-1"},
 		}, mapped) ||
-			assert.IsEqual([]map[string]interface{}{
+			assert.IsEqual([]map[string]any{
 				{"id": []byte{'1'}, "email": []byte("email-1")},
 			}, mapped)
 		t.True(ok)
@@ -65,7 +65,7 @@ func TestMap(t *testing.T) {
 		mapped, err = fetch.Map(false, rows)
 		t.NotError(err)
 
-		t.Equal([]map[string]interface{}{}, mapped)
+		t.Equal([]map[string]any{}, mapped)
 		t.NotError(rows.Close())
 
 		// 没有匹配的数据，读取一行
@@ -75,7 +75,7 @@ func TestMap(t *testing.T) {
 		mapped, err = fetch.Map(true, rows)
 		t.NotError(err)
 
-		t.Equal([]map[string]interface{}{}, mapped)
+		t.Equal([]map[string]any{}, mapped)
 		t.NotError(rows.Close())
 	})
 }

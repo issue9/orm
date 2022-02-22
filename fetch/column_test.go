@@ -30,8 +30,8 @@ func TestColumn(t *testing.T) {
 		t.NotError(err).NotNil(cols)
 
 		// mysql 返回的是 []byte 类型
-		ok := assert.IsEqual([]interface{}{1, 2}, cols) ||
-			assert.IsEqual([]interface{}{[]byte{'1'}, []byte{'2'}}, cols)
+		ok := assert.IsEqual([]any{1, 2}, cols) ||
+			assert.IsEqual([]any{[]byte{'1'}, []byte{'2'}}, cols)
 		t.True(ok)
 		t.NotError(rows.Close())
 
@@ -42,8 +42,8 @@ func TestColumn(t *testing.T) {
 		cols, err = fetch.Column(true, "id", rows)
 		t.NotError(err).NotNil(cols)
 
-		ok = assert.IsEqual([]interface{}{1}, cols) ||
-			assert.IsEqual([]interface{}{[]byte{'1'}}, cols)
+		ok = assert.IsEqual([]any{1}, cols) ||
+			assert.IsEqual([]any{[]byte{'1'}}, cols)
 		t.True(ok)
 		t.NotError(rows.Close())
 

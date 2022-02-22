@@ -38,7 +38,7 @@ func Sqlite3(driverName, tablePrefix string) core.Dialect {
 	}
 }
 
-func (s *sqlite3) Fix(query string, args []interface{}) (string, []interface{}, error) {
+func (s *sqlite3) Fix(query string, args []any) (string, []any, error) {
 	return s.replacer.Replace(query), args, nil
 }
 
@@ -73,7 +73,7 @@ func (s *sqlite3) CreateTableOptionsSQL(w *core.Builder, options map[string][]st
 	return nil
 }
 
-func (s *sqlite3) LimitSQL(limit interface{}, offset ...interface{}) (string, []interface{}) {
+func (s *sqlite3) LimitSQL(limit any, offset ...any) (string, []any) {
 	return mysqlLimitSQL(limit, offset...)
 }
 
@@ -322,7 +322,7 @@ func (s *sqlite3) buildType(typ string, col *core.Column) (string, error) {
 	return w.String()
 }
 
-func (s *sqlite3) formatSQL(v interface{}) (f string, err error) {
+func (s *sqlite3) formatSQL(v any) (f string, err error) {
 	if vv, ok := v.(driver.Valuer); ok {
 		v, err = vv.Value()
 		if err != nil {

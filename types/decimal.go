@@ -50,7 +50,7 @@ func StringDecimalWithPrecision(s string) (Decimal, error) {
 }
 
 // Scan implements the Scanner.Scan
-func (n *Decimal) Scan(src interface{}) (err error) {
+func (n *Decimal) Scan(src any) (err error) {
 	if n.IsNull = src == nil; !n.IsNull {
 		if err = n.Decimal.Scan(src); err != nil {
 			n.IsNull = false

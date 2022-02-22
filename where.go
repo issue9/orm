@@ -18,7 +18,7 @@ type WhereStmt struct {
 }
 
 // Where 生成 Where 语句
-func (db *DB) Where(cond string, args ...interface{}) *WhereStmt {
+func (db *DB) Where(cond string, args ...any) *WhereStmt {
 	return &WhereStmt{
 		where:  sqlbuilder.Where().And(cond, args...),
 		engine: db,
@@ -26,7 +26,7 @@ func (db *DB) Where(cond string, args ...interface{}) *WhereStmt {
 }
 
 // Where 生成 Where 语句
-func (tx *Tx) Where(cond string, args ...interface{}) *WhereStmt {
+func (tx *Tx) Where(cond string, args ...any) *WhereStmt {
 	return &WhereStmt{
 		where:  sqlbuilder.Where().And(cond, args...),
 		engine: tx,
@@ -34,13 +34,13 @@ func (tx *Tx) Where(cond string, args ...interface{}) *WhereStmt {
 }
 
 // And 添加一条 and 语句
-func (stmt *WhereStmt) And(cond string, args ...interface{}) *WhereStmt {
+func (stmt *WhereStmt) And(cond string, args ...any) *WhereStmt {
 	stmt.where.And(cond, args...)
 	return stmt
 }
 
 // Or 添加一条 OR 语句
-func (stmt *WhereStmt) Or(cond string, args ...interface{}) *WhereStmt {
+func (stmt *WhereStmt) Or(cond string, args ...any) *WhereStmt {
 	stmt.where.Or(cond, args)
 	return stmt
 }
@@ -70,73 +70,73 @@ func (stmt *WhereStmt) OrIsNotNull(col string) *WhereStmt {
 }
 
 // AndBetween 指定 WHERE ... AND col BETWEEN v1 AND v2
-func (stmt *WhereStmt) AndBetween(col string, v1, v2 interface{}) *WhereStmt {
+func (stmt *WhereStmt) AndBetween(col string, v1, v2 any) *WhereStmt {
 	stmt.where.AndBetween(col, v1, v2)
 	return stmt
 }
 
 // OrBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
-func (stmt *WhereStmt) OrBetween(col string, v1, v2 interface{}) *WhereStmt {
+func (stmt *WhereStmt) OrBetween(col string, v1, v2 any) *WhereStmt {
 	stmt.where.OrBetween(col, v1, v2)
 	return stmt
 }
 
 // AndNotBetween 指定 WHERE ... AND col NOT BETWEEN v1 AND v2
-func (stmt *WhereStmt) AndNotBetween(col string, v1, v2 interface{}) *WhereStmt {
+func (stmt *WhereStmt) AndNotBetween(col string, v1, v2 any) *WhereStmt {
 	stmt.where.AndNotBetween(col, v1, v2)
 	return stmt
 }
 
 // OrNotBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
-func (stmt *WhereStmt) OrNotBetween(col string, v1, v2 interface{}) *WhereStmt {
+func (stmt *WhereStmt) OrNotBetween(col string, v1, v2 any) *WhereStmt {
 	stmt.where.OrNotBetween(col, v1, v2)
 	return stmt
 }
 
 // AndLike 指定 WHERE ... AND col LIKE content
-func (stmt *WhereStmt) AndLike(col string, content interface{}) *WhereStmt {
+func (stmt *WhereStmt) AndLike(col string, content any) *WhereStmt {
 	stmt.where.AndLike(col, content)
 	return stmt
 }
 
 // OrLike 指定 WHERE ... OR col LIKE content
-func (stmt *WhereStmt) OrLike(col string, content interface{}) *WhereStmt {
+func (stmt *WhereStmt) OrLike(col string, content any) *WhereStmt {
 	stmt.where.OrLike(col, content)
 	return stmt
 }
 
 // AndNotLike 指定 WHERE ... AND col NOT LIKE content
-func (stmt *WhereStmt) AndNotLike(col string, content interface{}) *WhereStmt {
+func (stmt *WhereStmt) AndNotLike(col string, content any) *WhereStmt {
 	stmt.where.AndNotLike(col, content)
 	return stmt
 }
 
 // OrNotLike 指定 WHERE ... OR col NOT LIKE content
-func (stmt *WhereStmt) OrNotLike(col string, content interface{}) *WhereStmt {
+func (stmt *WhereStmt) OrNotLike(col string, content any) *WhereStmt {
 	stmt.where.OrNotLike(col, content)
 	return stmt
 }
 
 // AndIn 指定 WHERE ... AND col IN(v...)
-func (stmt *WhereStmt) AndIn(col string, v ...interface{}) *WhereStmt {
+func (stmt *WhereStmt) AndIn(col string, v ...any) *WhereStmt {
 	stmt.where.AndIn(col, v...)
 	return stmt
 }
 
 // OrIn 指定 WHERE ... OR col IN(v...)
-func (stmt *WhereStmt) OrIn(col string, v ...interface{}) *WhereStmt {
+func (stmt *WhereStmt) OrIn(col string, v ...any) *WhereStmt {
 	stmt.where.OrIn(col, v...)
 	return stmt
 }
 
 // AndNotIn 指定 WHERE ... AND col NOT IN(v...)
-func (stmt *WhereStmt) AndNotIn(col string, v ...interface{}) *WhereStmt {
+func (stmt *WhereStmt) AndNotIn(col string, v ...any) *WhereStmt {
 	stmt.where.AndNotIn(col, v...)
 	return stmt
 }
 
 // OrNotIn 指定 WHERE ... OR col IN(v...)
-func (stmt *WhereStmt) OrNotIn(col string, v ...interface{}) *WhereStmt {
+func (stmt *WhereStmt) OrNotIn(col string, v ...any) *WhereStmt {
 	stmt.where.OrNotIn(col, v...)
 	return stmt
 }
@@ -183,7 +183,7 @@ func (stmt *WhereStmt) Update(v TableNamer, cols ...string) (sql.Result, error) 
 //
 // v 可能是某个对象的指针，或是一组相同对象指针数组。
 // 表名来自 v，列名为 v 的所有列。
-func (stmt *WhereStmt) Select(strict bool, v interface{}) (int, error) {
+func (stmt *WhereStmt) Select(strict bool, v any) (int, error) {
 	t := reflect.TypeOf(v)
 	for t.Kind() == reflect.Ptr || t.Kind() == reflect.Slice || t.Kind() == reflect.Array {
 		t = t.Elem()

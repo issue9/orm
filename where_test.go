@@ -109,7 +109,7 @@ func TestWhereStmt_Select(t *testing.T) {
 			UserInfo
 		}
 
-		items := []interface{}{
+		items := []any{
 			&UserInfo{},
 			&ui{},
 		}

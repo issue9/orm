@@ -33,7 +33,7 @@ func (stmt *DeleteStmt) Table(table string) *DeleteStmt {
 }
 
 // SQL 获取 SQL 语句，以及其参数对应的具体值
-func (stmt *DeleteStmt) SQL() (string, []interface{}, error) {
+func (stmt *DeleteStmt) SQL() (string, []any, error) {
 	if stmt.err != nil {
 		return "", nil, stmt.Err()
 	}

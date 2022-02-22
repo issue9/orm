@@ -32,7 +32,7 @@ func (stmt *AddColumnStmt) Table(table string) *AddColumnStmt {
 // Column 添加列
 //
 // 参数信息可参考 CreateTableStmt.Column
-func (stmt *AddColumnStmt) Column(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def interface{}, length ...int) *AddColumnStmt {
+func (stmt *AddColumnStmt) Column(name string, p core.PrimitiveType, ai, nullable, hasDefault bool, def any, length ...int) *AddColumnStmt {
 	if stmt.err != nil {
 		return stmt
 	}

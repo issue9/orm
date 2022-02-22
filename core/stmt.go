@@ -50,12 +50,12 @@ func (stmt *Stmt) Close() error {
 }
 
 // Exec 以指定的参数执行预编译的语句
-func (stmt *Stmt) Exec(args ...interface{}) (sql.Result, error) {
+func (stmt *Stmt) Exec(args ...any) (sql.Result, error) {
 	return stmt.ExecContext(context.Background(), args...)
 }
 
 // ExecContext 以指定的参数执行预编译的语句
-func (stmt *Stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error) {
+func (stmt *Stmt) ExecContext(ctx context.Context, args ...any) (sql.Result, error) {
 	args, err := stmt.buildArgs(args)
 	if err != nil {
 		return nil, err
@@ -64,12 +64,12 @@ func (stmt *Stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Res
 }
 
 // Query 以指定的参数执行预编译的语句
-func (stmt *Stmt) Query(args ...interface{}) (*sql.Rows, error) {
+func (stmt *Stmt) Query(args ...any) (*sql.Rows, error) {
 	return stmt.QueryContext(context.Background(), args...)
 }
 
 // QueryContext 以指定的参数执行预编译的语句
-func (stmt *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
+func (stmt *Stmt) QueryContext(ctx context.Context, args ...any) (*sql.Rows, error) {
 	args, err := stmt.buildArgs(args)
 	if err != nil {
 		return nil, err
@@ -78,12 +78,12 @@ func (stmt *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.R
 }
 
 // QueryRow 以指定的参数执行预编译的语句
-func (stmt *Stmt) QueryRow(args ...interface{}) *sql.Row {
+func (stmt *Stmt) QueryRow(args ...any) *sql.Row {
 	return stmt.QueryRowContext(context.Background(), args...)
 }
 
 // QueryRowContext 以指定的参数执行预编译的语句
-func (stmt *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row {
+func (stmt *Stmt) QueryRowContext(ctx context.Context, args ...any) *sql.Row {
 	args, err := stmt.buildArgs(args)
 	if err != nil {
 		panic(err)
@@ -94,7 +94,7 @@ func (stmt *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql
 
 var errArgsNotMatch = errors.New("参数数量不匹配")
 
-func (stmt *Stmt) buildArgs(args []interface{}) ([]interface{}, error) {
+func (stmt *Stmt) buildArgs(args []any) ([]any, error) {
 	if len(stmt.orders) == 0 {
 		return args, nil
 	}
@@ -103,7 +103,7 @@ func (stmt *Stmt) buildArgs(args []interface{}) ([]interface{}, error) {
 		return nil, errArgsNotMatch
 	}
 
-	ret := make([]interface{}, len(args))
+	ret := make([]any, len(args))
 
 	for index, arg := range args {
 		named, ok := arg.(sql.NamedArg)

@@ -17,26 +17,26 @@ import (
 // 将使用 Map() 导出到 []map[string]interface{} 中时，
 // 在 mysql 中，cnt 有可能被处理成一个 []byte (打印输出时，像一个数组，容易造成困惑)，
 // 而在 sqlite3 就有可能是个 int。
-func Map(once bool, rows *sql.Rows) ([]map[string]interface{}, error) {
+func Map(once bool, rows *sql.Rows) ([]map[string]any, error) {
 	cols, err := rows.Columns()
 	if err != nil {
 		return nil, err
 	}
 
 	// 临时缓存，用于保存从 rows 中读取出来的一行。
-	buff := make([]interface{}, len(cols))
+	buff := make([]any, len(cols))
 	for i := range cols {
-		var value interface{}
+		var value any
 		buff[i] = &value
 	}
 
-	var data []map[string]interface{}
+	var data []map[string]any
 	for rows.Next() {
 		if err := rows.Scan(buff...); err != nil {
 			return nil, err
 		}
 
-		line := make(map[string]interface{}, len(cols))
+		line := make(map[string]any, len(cols))
 		for i, v := range cols {
 			if buff[i] == nil {
 				continue
@@ -63,7 +63,7 @@ func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) 
 		return nil, err
 	}
 
-	buf := make([]interface{}, len(cols))
+	buf := make([]any, len(cols))
 	for k := range buf {
 		var val string
 		buf[k] = &val
