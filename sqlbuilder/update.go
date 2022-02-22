@@ -21,7 +21,7 @@ type UpdateStmt struct {
 	occValue  any    // 乐观锁的当前值
 }
 
-type updateWhere = whereStmtOf[UpdateStmt]
+type updateWhere = WhereStmtOf[UpdateStmt]
 
 // 表示一条 SET 语句。比如 set key=val
 type updateSet struct {
@@ -37,7 +37,7 @@ func (sql *SQLBuilder) Update() *UpdateStmt { return Update(sql.engine) }
 func Update(e core.Engine) *UpdateStmt {
 	stmt := &UpdateStmt{values: []*updateSet{}}
 	stmt.execStmt = newExecStmt(e, stmt)
-	stmt.updateWhere = newWhereStmtOf(stmt)
+	stmt.updateWhere = NewWhereStmtOf(stmt)
 
 	return stmt
 }

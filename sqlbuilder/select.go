@@ -22,7 +22,7 @@ type SelectQuery struct {
 	stmt *core.Stmt
 }
 
-type selectWhere = whereStmtOf[SelectStmt]
+type selectWhere = WhereStmtOf[SelectStmt]
 
 // SelectStmt 查询语句
 type SelectStmt struct {
@@ -62,7 +62,7 @@ func (sql *SQLBuilder) Select() *SelectStmt { return Select(sql.engine) }
 func Select(e core.Engine) *SelectStmt {
 	stmt := &SelectStmt{columns: make([]string, 0, 10)}
 	stmt.queryStmt = newQueryStmt(e, stmt)
-	stmt.selectWhere = newWhereStmtOf(stmt)
+	stmt.selectWhere = NewWhereStmtOf(stmt)
 
 	return stmt
 }
