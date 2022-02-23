@@ -157,7 +157,7 @@ func(l *Last) Scan(v interface{}) error {
 }
 ```
 
-#### BeforeUpdater/BeforeInserter/AfterFetcher
+#### BeforeUpdater/BeforeCreater/AfterFetcher
 
 分别用于在更新和插入数据之前和从数据库获取数据之后被执行的方法。
 一般用于特定内容的生成，比如：
@@ -170,7 +170,7 @@ type User struct {
 }
 
 // 每次插入数据，都将 created 和 modified 设置为当前时间
-func(u *User) BeforeInsert() error {
+func(u *User) BeforeCreate() error {
     u.Created = time.Now()
     u.Modified = u.Created
     return nil

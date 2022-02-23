@@ -60,7 +60,7 @@ func (o *beforeObject2) BeforeUpdate() error {
 	return nil
 }
 
-func TestBeforeInsertUpdate(t *testing.T) {
+func TestBeforeCreateUpdate(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
@@ -90,7 +90,7 @@ func TestBeforeInsertUpdate(t *testing.T) {
 	})
 }
 
-func TestBeforeInsertUpdate_Mult(t *testing.T) {
+func TestBeforeCreateUpdate_Mult(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()

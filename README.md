@@ -142,7 +142,7 @@ refTable 如果需要表名前缀，需要添加 # 符号。
 - TableNamer 指定表名；
 - ApplyModeler 通过 ApplyModeler 接口可以指定一些表级别的属性值；
 - AfterFetcher 在拉到数据之后，对该对象执行的一些额外操作。如果需要根据字段做额外工作的，可以使用该接口；
-- BeforeInserter 在执行插入之前，需要执行的操作；
+- BeforeCreater 在执行插入之前，需要执行的操作；
 - BeforeUpdater 在执行更新之前，需要执行的操作；
 
 #### 约束名：
