@@ -35,9 +35,9 @@ type (
 		BeforeUpdate() error
 	}
 
-	// BeforeInserter 在插入之前调用的函数
-	BeforeInserter interface {
-		BeforeInsert() error
+	// BeforeCreater 在插入之前调用的函数
+	BeforeCreater interface {
+		BeforeCreate() error
 	}
 
 	// Engine 是 DB 与 Tx 的共有接口

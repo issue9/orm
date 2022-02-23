@@ -205,8 +205,8 @@ func lastInsertID(e Engine, v TableNamer) (int64, error) {
 		return 0, ErrNeedAutoIncrementColumn
 	}
 
-	if obj, ok := v.(BeforeInserter); ok {
-		if err = obj.BeforeInsert(); err != nil {
+	if obj, ok := v.(BeforeCreater); ok {
+		if err = obj.BeforeCreate(); err != nil {
 			return 0, err
 		}
 	}
@@ -239,8 +239,8 @@ func insert(e Engine, v TableNamer) (sql.Result, error) {
 		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	if obj, ok := v.(BeforeInserter); ok {
-		if err = obj.BeforeInsert(); err != nil {
+	if obj, ok := v.(BeforeCreater); ok {
+		if err = obj.BeforeCreate(); err != nil {
 			return nil, err
 		}
 	}
@@ -395,9 +395,8 @@ func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) 
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 
 	for i := 0; i < len(v); i++ {
-		// 判断 beforeInsert
-		if obj, ok := v[i].(BeforeInserter); ok {
-			if err := obj.BeforeInsert(); err != nil {
+		if obj, ok := v[i].(BeforeCreater); ok {
+			if err := obj.BeforeCreate(); err != nil {
 				return nil, err
 			}
 		}
