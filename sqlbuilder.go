@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/issue9/sliceutil"
+
 	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
@@ -350,7 +352,7 @@ func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols 
 
 		if m.OCC == col { // 乐观锁
 			occValue = field.Interface()
-		} else if inStrSlice(col.Name, cols) || !field.IsZero() {
+		} else if sliceutil.Index(cols, func(e string) bool { return e == col.Name }) > 0 || !field.IsZero() {
 			// 非零值或是明确指定需要更新的列，才会更新
 			stmt.Set(col.Name, field.Interface())
 		}
@@ -363,15 +365,6 @@ func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols 
 	stmt.Table(m.Name)
 
 	return m, rval, nil
-}
-
-func inStrSlice(key string, slice []string) bool {
-	for _, v := range slice {
-		if v == key {
-			return true
-		}
-	}
-	return false
 }
 
 // 将 v 生成 delete 的 sql 语句
