@@ -5,8 +5,7 @@ package types
 
 import "strings"
 
-const null = "NULL"
-
 func isNULL(v string) bool {
+	const null = "NULL"
 	return v == "" || strings.ToUpper(v) == null
 }
