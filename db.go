@@ -63,7 +63,6 @@ func (db *DB) TablePrefix() string { return db.Dialect().TablePrefix() }
 // 如果为 nil，则表示关闭调试。
 func (db *DB) Debug(l *log.Logger) { db.sqlLogger = l }
 
-// Dialect 返回对应的 Dialect 接口实例
 func (db *DB) Dialect() Dialect { return db.dialect }
 
 // Close 关闭连接
@@ -159,47 +158,25 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 	return core.NewStmt(s, orders), nil
 }
 
-// LastInsertID 插入数据并获取其自增的 ID
 func (db *DB) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(db, v) }
 
 // Insert 插入数据
 //
-// NOTE: 若需一次性插入多条数据，请使用 tx.Insert()。
+// NOTE: 若需一次性插入多条数据，请使用 tx.InsertMany()。
 func (db *DB) Insert(v TableNamer) (sql.Result, error) { return insert(db, v) }
 
-// Delete 删除符合条件的数据
-//
-// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
-// 若两者都不存在，则将返回 error
 func (db *DB) Delete(v TableNamer) (sql.Result, error) { return del(db, v) }
 
-// Update 更新数据
-//
-// 零值不会被提交，cols 指定的列，即使是零值也会被更新。
-//
-// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
-// 若两者都不存在，则将返回 error
 func (db *DB) Update(v TableNamer, cols ...string) (sql.Result, error) {
 	return update(db, v, cols...)
 }
 
-// Select 查询一个符合条件的数据
-//
-// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下 ) 来查找，
-// 若两者都不存在，则将返回 error
-// 若没有符合条件的数据，将不会对参数 v 做任何变动。
-//
-// 查找条件的查找顺序是为 自增 > 主键 > 唯一约束，
-// 如果同时存在多个唯一约束满足条件，则返回错误信息。
 func (db *DB) Select(v TableNamer) error { return find(db, v) }
 
-// Create 创建一张表或是视图
 func (db *DB) Create(v TableNamer) error { return create(db, v) }
 
-// Drop 删除一张表或视图
 func (db *DB) Drop(v TableNamer) error { return drop(db, v) }
 
-// Truncate 清空一张表
 func (db *DB) Truncate(v TableNamer) error {
 	if !db.Dialect().TransactionalDDL() {
 		return truncate(db, v)

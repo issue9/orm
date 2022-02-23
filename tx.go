@@ -105,15 +105,12 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 	return core.NewStmt(s, orders), nil
 }
 
-// Dialect 返回对应的 Dialect 实例
 func (tx *Tx) Dialect() Dialect { return tx.db.Dialect() }
 
-// LastInsertID 插入数据并获取其自增的 ID
 func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
 	return lastInsertID(tx, v)
 }
 
-// Insert 插入一个或多个数据
 func (tx *Tx) Insert(v TableNamer) (sql.Result, error) { return insert(tx, v) }
 
 func (tx *Tx) Select(v TableNamer) error { return find(tx, v) }
@@ -141,29 +138,21 @@ func (tx *Tx) InsertMany(max int, v ...TableNamer) error {
 	return nil
 }
 
-// Update 更新一条类型
 func (tx *Tx) Update(v TableNamer, cols ...string) (sql.Result, error) {
 	return update(tx, v, cols...)
 }
 
-// Delete 删除一条数据
 func (tx *Tx) Delete(v TableNamer) (sql.Result, error) { return del(tx, v) }
 
-// Create 创建数据表或是视图
 func (tx *Tx) Create(v TableNamer) error { return create(tx, v) }
 
-// Drop 删除表或视图
 func (tx *Tx) Drop(v TableNamer) error { return drop(tx, v) }
 
-// Truncate 清除表内容
-//
-// 会重置 ai，但保留表结构。
 func (tx *Tx) Truncate(v TableNamer) error { return truncate(tx, v) }
 
 // SQLBuilder 返回 SQL 实例
 func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder { return tx.sqlBuilder }
 
-// MultInsert 插入一个或多个数据
 func (tx *Tx) MultInsert(objs ...TableNamer) error {
 	for _, v := range objs {
 		if _, err := tx.Insert(v); err != nil {
@@ -173,12 +162,10 @@ func (tx *Tx) MultInsert(objs ...TableNamer) error {
 	return nil
 }
 
-// MultSelect 选择符合要求的一条或是多条记录
 func (tx *Tx) MultSelect(objs ...TableNamer) error {
 	return tx.multDo(tx.Select, objs...)
 }
 
-// MultUpdate 更新一条或多条类型
 func (tx *Tx) MultUpdate(objs ...TableNamer) error {
 	for _, v := range objs {
 		if _, err := tx.Update(v); err != nil {
@@ -188,7 +175,6 @@ func (tx *Tx) MultUpdate(objs ...TableNamer) error {
 	return nil
 }
 
-// MultDelete 删除一条或是多条数据
 func (tx *Tx) MultDelete(objs ...TableNamer) error {
 	for _, v := range objs {
 		if _, err := tx.Delete(v); err != nil {
@@ -198,10 +184,8 @@ func (tx *Tx) MultDelete(objs ...TableNamer) error {
 	return nil
 }
 
-// MultCreate 创建数据表
 func (tx *Tx) MultCreate(objs ...TableNamer) error { return tx.multDo(tx.Create, objs...) }
 
-// MultDrop 删除表结构及数据
 func (tx *Tx) MultDrop(objs ...TableNamer) error { return tx.multDo(tx.Drop, objs...) }
 
 func (tx *Tx) MultTruncate(objs ...TableNamer) error {

@@ -58,17 +58,35 @@ type (
 
 		Insert(v TableNamer) (sql.Result, error)
 
+		// Delete 删除符合条件的数据
+		//
+		// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
+		// 若两者都不存在，则将返回 error
 		Delete(v TableNamer) (sql.Result, error)
 
+		// Update 更新数据
+		//
+		// 零值不会被提交，cols 指定的列，即使是零值也会被更新。
+		//
+		// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
+		// 若两者都不存在，则将返回 error
 		Update(v TableNamer, cols ...string) (sql.Result, error)
 
+		// Select 查询一个符合条件的数据
+		//
+		// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下 ) 来查找，
+		// 若两者都不存在，则将返回 error
+		// 若没有符合条件的数据，将不会对参数 v 做任何变动。
+		//
+		// 查找条件的查找顺序是为 自增 > 主键 > 唯一约束，
+		// 如果同时存在多个唯一约束满足条件，则返回错误信息。
 		Select(v TableNamer) error
 
 		Create(v TableNamer) error
 
 		Drop(v TableNamer) error
 
-		// Truncate 重置 ai保留表结构
+		// Truncate 重置 ai 保留表结构
 		Truncate(v TableNamer) error
 
 		// InsertMany 插入多条相同的数据
