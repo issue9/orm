@@ -73,8 +73,14 @@ type (
 
 		Type    ModelType
 		Columns []*Column
-		OCC     *Column             // 乐观锁
-		Meta    map[string][]string // 表级别的数据，如存储引擎，表名和字符集等。
+		OCC     *Column // 乐观锁
+
+		// 表级别的数据
+		//
+		// 如存储引擎，表名和字符集等，在创建表时，会用到这此数据。
+		// 可以采用 dialect.DBName 限定数据库，比如 mysql_charset 限定为 mysql 下的 charset 属性。
+		// 具体可参考各个 dialect 实现的介绍。
+		Meta map[string][]string
 
 		// 索引内容
 		//

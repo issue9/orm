@@ -175,7 +175,7 @@ func truncate(e Engine, v TableNamer) error {
 	return stmt.Exec()
 }
 
-// 删除一张表或视图。
+// 删除表或视图
 func drop(e Engine, v TableNamer) error {
 	m, err := e.NewModel(v)
 	if err != nil {

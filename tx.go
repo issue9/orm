@@ -108,7 +108,7 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 // Dialect 返回对应的 Dialect 实例
 func (tx *Tx) Dialect() Dialect { return tx.db.Dialect() }
 
-// LastInsertID 插入数据，并获取其自增的 ID
+// LastInsertID 插入数据并获取其自增的 ID
 func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
 	return lastInsertID(tx, v)
 }
@@ -116,7 +116,6 @@ func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
 // Insert 插入一个或多个数据
 func (tx *Tx) Insert(v TableNamer) (sql.Result, error) { return insert(tx, v) }
 
-// Select 读数据
 func (tx *Tx) Select(v TableNamer) error { return find(tx, v) }
 
 // ForUpdate 读数据并锁定

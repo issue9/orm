@@ -70,7 +70,7 @@ func (stmt *UpdateStmt) Increase(col string, val any) *UpdateStmt {
 	return stmt
 }
 
-// Decrease 给钱减少值
+// Decrease 给列减少值
 func (stmt *UpdateStmt) Decrease(col string, val any) *UpdateStmt {
 	stmt.values = append(stmt.values, &updateSet{
 		column: col,
@@ -169,9 +169,7 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []any, error) {
 		occ.And(stmt.occColumn+"=?", stmt.occValue)
 	}
 
-	q, a, err := w.SQL()
-
-	return q, a, err
+	return w.SQL()
 }
 
 // 检测列名是否存在重复，先排序，再与后一元素比较。

@@ -14,6 +14,10 @@ type (
 	ForeignKey = core.ForeignKey
 
 	TableNamer = core.TableNamer
+
+	Table struct {
+		name string
+	}
 )
 
 // NewModel 从一个 obj 声明一个 Model 实例
