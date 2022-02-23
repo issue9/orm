@@ -114,7 +114,7 @@ const (
 //
 // cap 表示列的数量，如果指定了，可以提前分配内存。
 func NewModel(modelType ModelType, name string, cap int) *Model {
-	m := &Model{
+	return &Model{
 		Name:        name,
 		Type:        modelType,
 		Columns:     make([]*Column, 0, cap),
@@ -125,8 +125,6 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 		ForeignKeys: map[string]*ForeignKey{},
 		PrimaryKey:  []*Column{},
 	}
-
-	return m
 }
 
 // Reset 清空模型内容
@@ -223,7 +221,7 @@ func (m *Model) SetOCC(col *Column) error {
 //
 // 如果 name 不存在，则创建新的索引
 //
-// NOTE: 如果是唯一索引，则改为唯一约束
+// NOTE: 如果 typ == IndexUnique，则等同于调用 AddUnique。
 func (m *Model) AddIndex(typ Index, name string, col *Column) error {
 	if typ == IndexUnique { // 唯一索引直接转为唯一约束
 		return m.AddUnique(name, col)
@@ -276,7 +274,7 @@ func (m *Model) NewForeignKey(name string, fk *ForeignKey) error {
 
 // Sanitize 对整个对象做一次修正和检测，查看是否合法
 //
-// 必需在 Model 初始化完成之后调用。
+// NOTE: 必需在 Model 初始化完成之后调用。
 func (m *Model) Sanitize() error {
 	if m.Name == "" {
 		return errors.New("缺少模型名称")

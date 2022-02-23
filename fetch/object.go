@@ -150,8 +150,7 @@ func getName(field reflect.StructField) string {
 		}
 	}
 
-	// 未指定 struct tag，则尝试直接使用字段名。
-	if unicode.IsUpper(rune(field.Name[0])) {
+	if unicode.IsUpper(rune(field.Name[0])) { // 未指定 struct tag，则尝试直接使用字段名
 		return field.Name
 	}
 

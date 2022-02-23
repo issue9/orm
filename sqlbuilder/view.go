@@ -28,9 +28,7 @@ func CreateView(e core.Engine) *CreateViewStmt {
 
 // View 将当前查询语句转换为视图
 func (stmt *SelectStmt) View(name string) *CreateViewStmt {
-	return CreateView(stmt.Engine()).
-		From(stmt).
-		Name(name)
+	return CreateView(stmt.Engine()).From(stmt).Name(name)
 }
 
 // Reset 重置对象
