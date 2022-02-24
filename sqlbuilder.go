@@ -386,7 +386,7 @@ func del(e Engine, v TableNamer) (sql.Result, error) {
 	return stmt.Exec()
 }
 
-var errInsertHasDifferentType = errors.New("参数中包含了不同类型的元素")
+var errInsertManyHasDifferentType = errors.New("InsertMany 必须是相同的数据类型")
 
 // rval 为结构体指针组成的数据
 func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) {
@@ -426,7 +426,7 @@ func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) 
 			}
 		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
-				return nil, errInsertHasDifferentType
+				return nil, errInsertManyHasDifferentType
 			}
 
 			vals := make([]any, 0, len(keys))

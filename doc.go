@@ -104,6 +104,7 @@
 // ApplyModeler:
 //
 // 用于将一个对象转换成 Model 对象时执行的函数，给予用户修改 Model 的机会，
+// 在 ApplyModeler 中可以修改任意模型的内容，所以也可以由 ApplyModeler 代替 struct tag 的操作。
 //
 //
 //

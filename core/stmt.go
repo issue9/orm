@@ -5,7 +5,6 @@ package core
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"sort"
 )
@@ -88,11 +87,8 @@ func (stmt *Stmt) QueryRowContext(ctx context.Context, args ...any) *sql.Row {
 	if err != nil {
 		panic(err)
 	}
-
 	return stmt.Stmt.QueryRowContext(ctx, args...)
 }
-
-var errArgsNotMatch = errors.New("参数数量不匹配")
 
 func (stmt *Stmt) buildArgs(args []any) ([]any, error) {
 	if len(stmt.orders) == 0 {
@@ -100,7 +96,7 @@ func (stmt *Stmt) buildArgs(args []any) ([]any, error) {
 	}
 
 	if len(args) != len(stmt.orders) {
-		return nil, errArgsNotMatch
+		return nil, fmt.Errorf("给定的参数数量 %d 与预编译的参数数量 %d 不相等", len(args), len(stmt.orders))
 	}
 
 	ret := make([]any, len(args))

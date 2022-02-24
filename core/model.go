@@ -118,7 +118,7 @@ const (
 
 // NewModel 初始化 Model
 //
-// cap 表示列的数量，如果指定了，可以提前分配内存。
+// cap 表示列的数量，如果指定了，可以提前分配 Columns 字段的大小。
 func NewModel(modelType ModelType, name string, cap int) *Model {
 	return &Model{
 		Name:        name,
