@@ -44,14 +44,14 @@ func where(ws *sqlbuilder.WhereStmt, m *Model, rval reflect.Value) error {
 	var vals []any
 	var constraint string
 
-	if m.AutoIncrement != nil {
-		if keys, vals = getKV(rval, m.AutoIncrement); len(keys) > 0 {
+	if !m.AutoIncrement.IsEmpty() {
+		if keys, vals = getKV(rval, m.AutoIncrement.Columns[0]); len(keys) > 0 {
 			goto RET
 		}
 	}
 
-	if len(m.PrimaryKey) > 0 {
-		if keys, vals = getKV(rval, m.PrimaryKey...); len(keys) > 0 {
+	if !m.PrimaryKey.IsEmpty() {
+		if keys, vals = getKV(rval, m.PrimaryKey.Columns...); len(keys) > 0 {
 			goto RET
 		}
 	}
@@ -141,9 +141,9 @@ func create(e modelEngine, v TableNamer) error {
 		sb.ForeignKey(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 	}
 
-	if m.AutoIncrement == nil && len(m.PrimaryKey) > 0 {
-		cols := make([]string, 0, len(m.PrimaryKey))
-		for _, col := range m.PrimaryKey {
+	if m.AutoIncrement.IsEmpty() && !m.PrimaryKey.IsEmpty() {
+		cols := make([]string, 0, len(m.PrimaryKey.Columns))
+		for _, col := range m.PrimaryKey.Columns {
 			cols = append(cols, col.Name)
 		}
 		sb.PK(cols...)
@@ -173,7 +173,7 @@ func truncate(e modelEngine, v TableNamer) error {
 	}
 
 	stmt := e.SQLBuilder().TruncateTable()
-	if m.AutoIncrement != nil {
+	if !m.AutoIncrement.IsEmpty() {
 		stmt.Table(m.Name, m.AutoIncrement.Name)
 	} else {
 		stmt.Table(m.Name, "")
@@ -206,7 +206,7 @@ func lastInsertID(e modelEngine, v TableNamer) (int64, error) {
 		return 0, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	if m.AutoIncrement == nil {
+	if m.AutoIncrement.IsEmpty() {
 		return 0, ErrNeedAutoIncrementColumn
 	}
 
@@ -231,7 +231,7 @@ func lastInsertID(e modelEngine, v TableNamer) (int64, error) {
 		stmt.KeyValue(col.Name, field.Interface())
 	}
 
-	return stmt.LastInsertID(m.Name, m.AutoIncrement.Name)
+	return stmt.LastInsertID(m.Name, m.AutoIncrement.Columns[0].Name)
 }
 
 func insert(e modelEngine, v TableNamer) (sql.Result, error) {
@@ -429,7 +429,7 @@ func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) 
 				query.KeyValue(col.Name, field.Interface())
 				keys = append(keys, col.Name)
 			}
-		} else { // 之后的元素，只需要获取其对应的值就行
+		} else {                           // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
 				return nil, errInsertManyHasDifferentType
 			}

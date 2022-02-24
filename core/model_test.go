@@ -14,9 +14,6 @@ func TestNewModel(t *testing.T) {
 	m := NewModel(Table, "m1", 10)
 	a.NotNil(m)
 	a.Equal(m.Name, "m1")
-
-	a.Equal(m.AIName, "m1_ai")
-	a.Equal(m.PKName, "m1_pk")
 }
 
 func TestModel_SetAutoIncrement(t *testing.T) {
@@ -31,12 +28,12 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.NotError(m.AddColumns(ai))
 	a.NotError(m.SetAutoIncrement(ai))
 	a.True(ai.AI)
-	a.Equal(m.AutoIncrement, ai)
+	a.Equal(m.AutoIncrement.Columns[0], ai)
 
-	// 同类型可以多次添加
-	a.NotError(m.SetAutoIncrement(ai))
+	// 同类型也不可以多次添加
+	a.Error(m.SetAutoIncrement(ai))
 	a.True(ai.AI)
-	a.Equal(m.AutoIncrement, ai)
+	a.Equal(m.AutoIncrement.Columns[0], ai)
 
 	// 已有自增列
 	ai2, err := NewColumn(Int64)
@@ -97,7 +94,7 @@ func TestModel_AddPrimaryKey(t *testing.T) {
 	a.NotError(m.AddColumns(pk2))
 	a.NotError(m.AddPrimaryKey(pk2))
 
-	a.Equal(m.PrimaryKey, []*Column{pk, pk2})
+	a.Equal(m.PrimaryKey.Columns, []*Column{pk, pk2})
 }
 
 func TestModel_SetOCC(t *testing.T) {

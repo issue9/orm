@@ -122,12 +122,12 @@ func TestColumn_setDefault(t *testing.T) {
 		Equal(col.Default, 1)
 
 	// 可以是主键的一部分
-	m.PrimaryKey = []*core.Column{col.Column, col.Column}
+	m.PrimaryKey.Columns = []*core.Column{col.Column, col.Column}
 	a.NotError(col.setDefault([]string{"1"}))
 	a.True(col.HasDefault).
 		Equal(col.Default, 1)
 
-		// col == []byte
+	// col == []byte
 
 	col, err = newColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf([]byte{'1', '2'})})
 	a.NotError(err).NotNil(col).Equal(col.GoType, reflect.TypeOf([]byte{}))

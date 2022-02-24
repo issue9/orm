@@ -97,12 +97,12 @@ func (ms *Models) addModel(m *core.Model) (err error) {
 		w(name)
 	}
 
-	if m.AutoIncrement != nil {
-		w(m.AIName)
+	if !m.AutoIncrement.IsEmpty() {
+		w(m.AutoIncrement.Name)
 	}
 
-	if len(m.PrimaryKey) > 0 {
-		w(m.PKName)
+	if !m.PrimaryKey.IsEmpty() {
+		w(m.PrimaryKey.Name)
 	}
 
 	return

@@ -50,6 +50,11 @@ type (
 		UpdateRule, DeleteRule   string
 	}
 
+	Constraint struct {
+		Name    string
+		Columns []*Column
+	}
+
 	// ModelType 表示数据模型的类别
 	ModelType int8
 
@@ -84,12 +89,11 @@ type (
 		Indexes map[string][]*Column
 
 		// 约束
-		Uniques        map[string][]*Column
-		Checks         map[string]string
-		ForeignKeys    map[string]*ForeignKey
-		AutoIncrement  *Column
-		PrimaryKey     []*Column
-		AIName, PKName string // AI 和 pk 的约束名，部分数据库不支持这两个约束名。
+		Uniques       map[string][]*Column
+		Checks        map[string]string
+		ForeignKeys   map[string]*ForeignKey
+		AutoIncrement Constraint
+		PrimaryKey    Constraint
 	}
 )
 
@@ -118,14 +122,15 @@ const (
 // cap 表示列的数量，如果指定了，可以提前分配 Columns 字段的大小。
 func NewModel(modelType ModelType, name string, cap int) *Model {
 	m := &Model{
-		Type:        modelType,
-		Columns:     make([]*Column, 0, cap),
-		Meta:        map[string][]string{},
-		Indexes:     map[string][]*Column{},
-		Uniques:     map[string][]*Column{},
-		Checks:      map[string]string{},
-		ForeignKeys: map[string]*ForeignKey{},
-		PrimaryKey:  []*Column{},
+		Type:          modelType,
+		Columns:       make([]*Column, 0, cap),
+		Meta:          map[string][]string{},
+		Indexes:       map[string][]*Column{},
+		Uniques:       map[string][]*Column{},
+		Checks:        map[string]string{},
+		ForeignKeys:   map[string]*ForeignKey{},
+		AutoIncrement: Constraint{Columns: make([]*Column, 0, 1)},
+		PrimaryKey:    Constraint{Columns: make([]*Column, 0, 5)},
 	}
 	m.SetName(name)
 
@@ -134,8 +139,8 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 
 func (m *Model) SetName(name string) {
 	m.Name = name
-	m.AIName = aiName(name)
-	m.PKName = PKName(name)
+	m.PrimaryKey.Name = PKName(name)
+	m.AutoIncrement.Name = aiName(name)
 }
 
 // Reset 清空模型内容
@@ -151,10 +156,10 @@ func (m *Model) Reset() {
 	m.Uniques = map[string][]*Column{}
 	m.Checks = map[string]string{}
 	m.ForeignKeys = map[string]*ForeignKey{}
-	m.AutoIncrement = nil
-	m.PrimaryKey = m.PrimaryKey[:0]
-	m.PKName = ""
-	m.AIName = ""
+	m.AutoIncrement.Name = ""
+	m.AutoIncrement.Columns = m.AutoIncrement.Columns[:0]
+	m.PrimaryKey.Name = ""
+	m.PrimaryKey.Columns = m.PrimaryKey.Columns[:0]
 }
 
 // SetAutoIncrement 将 col 列设置为自增列
@@ -167,11 +172,11 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 		return errColMustNumber(col.Name)
 	}
 
-	if m.AutoIncrement != nil && m.AutoIncrement != col {
-		return ErrConstraintExists(m.AIName)
+	if !m.AutoIncrement.IsEmpty() {
+		return ErrConstraintExists(m.AutoIncrement.Name)
 	}
 
-	if len(m.PrimaryKey) > 0 {
+	if !m.PrimaryKey.IsEmpty() {
 		return ErrAutoIncrementPrimaryKeyConflict
 	}
 
@@ -180,7 +185,7 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 	}
 
 	col.AI = true
-	m.AutoIncrement = col
+	m.AutoIncrement.Columns = append(m.AutoIncrement.Columns, col)
 	return nil
 }
 
@@ -189,7 +194,7 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 // 自增会自动转换为主键。
 // 多次调用，则多列形成一个多列主键。
 func (m *Model) AddPrimaryKey(col *Column) error {
-	if m.AutoIncrement != nil {
+	if !m.AutoIncrement.IsEmpty() {
 		return ErrAutoIncrementPrimaryKeyConflict
 	}
 
@@ -197,7 +202,7 @@ func (m *Model) AddPrimaryKey(col *Column) error {
 		return errConstraintColumnNotExists("PrimaryKey", col.Name)
 	}
 
-	m.PrimaryKey = append(m.PrimaryKey, col)
+	m.PrimaryKey.Columns = append(m.PrimaryKey.Columns, col)
 	return nil
 }
 
@@ -291,8 +296,8 @@ func (m *Model) Sanitize() error {
 		return errors.New("无效的类型")
 	}
 
-	if len(m.PrimaryKey) == 1 {
-		pk := m.PrimaryKey[0]
+	if len(m.PrimaryKey.Columns) == 1 {
+		pk := m.PrimaryKey.Columns[0]
 		if pk.HasDefault || pk.Nullable {
 			return fmt.Errorf("单一主键约束的列 %s 不能为同时设置为默认值", pk.Name)
 		}
@@ -315,12 +320,12 @@ func (m *Model) checkNames() error {
 	l := 2 + len(m.Indexes) + len(m.Uniques) + len(m.ForeignKeys) + len(m.Checks)
 	names := make([]string, 0, l)
 
-	if m.AIName != "" {
-		names = append(names, m.AIName)
+	if m.AutoIncrement.Name != "" {
+		names = append(names, m.AutoIncrement.Name)
 	}
 
-	if m.PKName != "" {
-		names = append(names, m.PKName)
+	if m.PrimaryKey.Name != "" {
+		names = append(names, m.PrimaryKey.Name)
 	}
 
 	for name := range m.Indexes {
@@ -348,3 +353,5 @@ func (m *Model) checkNames() error {
 
 	return nil
 }
+
+func (c Constraint) IsEmpty() bool { return len(c.Columns) == 0 }

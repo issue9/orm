@@ -181,9 +181,9 @@ func (u *Upgrader) AddPK() *Upgrader {
 		return u
 	}
 
-	if u.model.PrimaryKey != nil {
-		cols := make([]string, 0, len(u.model.PrimaryKey))
-		for _, col := range u.model.PrimaryKey {
+	if !u.model.PrimaryKey.IsEmpty() {
+		cols := make([]string, 0, len(u.model.PrimaryKey.Columns))
+		for _, col := range u.model.PrimaryKey.Columns {
 			cols = append(cols, col.Name)
 		}
 

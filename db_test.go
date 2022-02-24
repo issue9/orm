@@ -30,12 +30,10 @@ func TestDB_LastInsertID(t *testing.T) {
 		}()
 
 		id, err := t.DB.LastInsertID(&User{Username: "1"})
-		t.NotError(err).
-			Equal(id, 1)
+		t.NotError(err).Equal(id, 1)
 
 		id, err = t.DB.LastInsertID(&User{Username: "2"})
-		t.NotError(err).
-			Equal(id, 2)
+		t.NotError(err).Equal(id, 2)
 	})
 }
 

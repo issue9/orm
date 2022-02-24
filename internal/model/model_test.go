@@ -140,8 +140,8 @@ func TestModels_New(t *testing.T) {
 	a.True(found).Equal(usernameCol, index[0])
 
 	// ai
-	a.Equal(m.AutoIncrement, idCol).
-		Empty(m.PrimaryKey) // 有自增，则主键为空
+	a.Equal(m.AutoIncrement.Columns[0], idCol).
+		True(m.PrimaryKey.IsEmpty()) // 有自增，则主键为空
 
 	// unique_name
 	unique, found := m.Uniques["unique_admin_username"]

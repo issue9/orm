@@ -248,8 +248,8 @@ func (stmt *CreateTableStmt) createConstraints(buf *core.Builder) error {
 	}
 
 	// primary key
-	if len(stmt.model.PrimaryKey) > 0 {
-		stmt.createPKSQL(buf, stmt.model.PKName, stmt.model.PrimaryKey...)
+	if !stmt.model.PrimaryKey.IsEmpty() {
+		stmt.createPKSQL(buf, stmt.model.PrimaryKey)
 		buf.WBytes(',')
 	}
 
@@ -284,12 +284,12 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 // create table 语句中 pk 约束的语句
 //
 // CONSTRAINT pk_name PRIMARY KEY (id,lastName)
-func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, name string, cols ...*core.Column) {
+func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, c core.Constraint) {
 	buf.WString(" CONSTRAINT ").
-		QuoteKey(name).
+		QuoteKey(c.Name).
 		WString(" PRIMARY KEY(")
 
-	for _, col := range cols {
+	for _, col := range c.Columns {
 		buf.QuoteKey(col.Name).WBytes(',')
 	}
 	buf.TruncateLast(1).WBytes(')')
