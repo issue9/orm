@@ -28,7 +28,6 @@ func CreateTable(e core.Engine) *CreateTableStmt {
 	return stmt
 }
 
-// Reset 重置内容
 func (stmt *CreateTableStmt) Reset() *CreateTableStmt {
 	stmt.baseStmt.Reset()
 	stmt.model.Reset()
@@ -38,7 +37,7 @@ func (stmt *CreateTableStmt) Reset() *CreateTableStmt {
 // Table 指定表名
 func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	stmt.model.Type = core.Table
-	stmt.model.Name = t
+	stmt.model.SetName(t)
 	return stmt
 }
 
@@ -116,7 +115,7 @@ func (stmt *CreateTableStmt) PK(col ...string) *CreateTableStmt {
 }
 
 // Index 添加索引
-func (stmt *CreateTableStmt) Index(typ core.Index, name string, col ...string) *CreateTableStmt {
+func (stmt *CreateTableStmt) Index(typ core.IndexType, name string, col ...string) *CreateTableStmt {
 	if stmt.err != nil {
 		return stmt
 	}
@@ -250,7 +249,7 @@ func (stmt *CreateTableStmt) createConstraints(buf *core.Builder) error {
 
 	// primary key
 	if len(stmt.model.PrimaryKey) > 0 {
-		stmt.createPKSQL(buf, stmt.model.PKName(), stmt.model.PrimaryKey...)
+		stmt.createPKSQL(buf, stmt.model.PKName, stmt.model.PrimaryKey...)
 		buf.WBytes(',')
 	}
 
@@ -335,8 +334,9 @@ func (stmt *CreateTableStmt) createFKSQL(buf *core.Builder, name string, fk *cor
 }
 
 // create table 语句中 check 约束部分的语句
+//
+// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 func (stmt *CreateTableStmt) createCheckSQL(buf *core.Builder, name, expr string) {
-	// CONSTRAINT chk_name CHECK (id>0 AND username='admin')
 	buf.WString(" CONSTRAINT ").
 		QuoteKey(name).
 		WString(" CHECK(").

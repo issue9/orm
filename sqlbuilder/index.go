@@ -10,7 +10,7 @@ type CreateIndexStmt struct {
 	table string
 	name  string   // 索引名称
 	cols  []string // 索引列
-	typ   core.Index
+	typ   core.IndexType
 }
 
 // CreateIndex 生成创建索引的语句
@@ -39,7 +39,7 @@ func (stmt *CreateIndexStmt) Name(index string) *CreateIndexStmt {
 }
 
 // Type 指定索引类型
-func (stmt *CreateIndexStmt) Type(t core.Index) *CreateIndexStmt {
+func (stmt *CreateIndexStmt) Type(t core.IndexType) *CreateIndexStmt {
 	stmt.typ = t
 	return stmt
 }

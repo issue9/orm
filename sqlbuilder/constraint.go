@@ -15,7 +15,7 @@ type AddConstraintStmt struct {
 
 	TableName string
 	Name      string
-	Type      core.Constraint
+	Type      core.ConstraintType
 
 	// 约束的值，根据 Type 的不同，略有不同：
 	// check 下表示的 check 表达式，仅有一个元素；

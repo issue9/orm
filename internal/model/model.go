@@ -98,11 +98,11 @@ func (ms *Models) addModel(m *core.Model) (err error) {
 	}
 
 	if m.AutoIncrement != nil {
-		w(m.AIName())
+		w(m.AIName)
 	}
 
 	if len(m.PrimaryKey) > 0 {
-		w(m.PKName())
+		w(m.PKName)
 	}
 
 	return

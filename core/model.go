@@ -10,17 +10,13 @@ import (
 )
 
 var (
-	// ErrColumnMustNumber 列的类型错误
-	//
-	// 部分列对其类型有要求，比如自增列和被定义为乐观锁的锁，
-	// 其类型必须为数值类型，否则将返回此错误。
-	ErrColumnMustNumber = errors.New("类型必须为数值")
-
 	// ErrAutoIncrementPrimaryKeyConflict 自增和主键不能同时存在
 	//
 	// 当添加自增时，会自动将其转换为主键，如果此时已经已经存在主键，则会报此错误。
 	ErrAutoIncrementPrimaryKeyConflict = errors.New("自增和主键不能同时存在")
 )
+
+func errColMustNumber(name string) error { return fmt.Errorf("列 %s 必须是数值类型", name) }
 
 type (
 	// Viewer 视图必须要实现的接口
@@ -88,11 +84,12 @@ type (
 		Indexes map[string][]*Column
 
 		// 约束
-		Uniques       map[string][]*Column
-		Checks        map[string]string
-		ForeignKeys   map[string]*ForeignKey
-		AutoIncrement *Column
-		PrimaryKey    []*Column
+		Uniques        map[string][]*Column
+		Checks         map[string]string
+		ForeignKeys    map[string]*ForeignKey
+		AutoIncrement  *Column
+		PrimaryKey     []*Column
+		AIName, PKName string // AI 和 pk 的约束名，部分数据库不支持这两个约束名。
 	}
 )
 
@@ -120,8 +117,7 @@ const (
 //
 // cap 表示列的数量，如果指定了，可以提前分配 Columns 字段的大小。
 func NewModel(modelType ModelType, name string, cap int) *Model {
-	return &Model{
-		Name:        name,
+	m := &Model{
 		Type:        modelType,
 		Columns:     make([]*Column, 0, cap),
 		Meta:        map[string][]string{},
@@ -131,6 +127,15 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 		ForeignKeys: map[string]*ForeignKey{},
 		PrimaryKey:  []*Column{},
 	}
+	m.SetName(name)
+
+	return m
+}
+
+func (m *Model) SetName(name string) {
+	m.Name = name
+	m.AIName = aiName(name)
+	m.PKName = PKName(name)
 }
 
 // Reset 清空模型内容
@@ -148,13 +153,9 @@ func (m *Model) Reset() {
 	m.ForeignKeys = map[string]*ForeignKey{}
 	m.AutoIncrement = nil
 	m.PrimaryKey = m.PrimaryKey[:0]
+	m.PKName = ""
+	m.AIName = ""
 }
-
-// AIName 当前模型中自增列的名称
-func (m *Model) AIName() string { return AIName(m.Name) }
-
-// PKName 当前模型中主键约束的名称
-func (m *Model) PKName() string { return PKName(m.Name) }
 
 // SetAutoIncrement 将 col 列设置为自增列
 //
@@ -163,11 +164,11 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 	switch col.PrimitiveType {
 	case Int, Int8, Int16, Int32, Int64, Uint, Uint8, Uint16, Uint32, Uint64:
 	default:
-		return ErrColumnMustNumber
+		return errColMustNumber(col.Name)
 	}
 
 	if m.AutoIncrement != nil && m.AutoIncrement != col {
-		return ErrConstraintExists(m.AIName())
+		return ErrConstraintExists(m.AIName)
 	}
 
 	if len(m.PrimaryKey) > 0 {
@@ -213,7 +214,7 @@ func (m *Model) SetOCC(col *Column) error {
 	switch col.PrimitiveType {
 	case Int, Int8, Int16, Int32, Int64, Uint, Uint8, Uint16, Uint32, Uint64:
 	default:
-		return ErrColumnMustNumber
+		return errColMustNumber(col.Name)
 	}
 
 	if !m.columnExists(col) {
@@ -228,7 +229,7 @@ func (m *Model) SetOCC(col *Column) error {
 // 如果 name 不存在，则创建新的索引
 //
 // NOTE: 如果 typ == IndexUnique，则等同于调用 AddUnique。
-func (m *Model) AddIndex(typ Index, name string, col *Column) error {
+func (m *Model) AddIndex(typ IndexType, name string, col *Column) error {
 	if typ == IndexUnique { // 唯一索引直接转为唯一约束
 		return m.AddUnique(name, col)
 	}
@@ -314,12 +315,12 @@ func (m *Model) checkNames() error {
 	l := 2 + len(m.Indexes) + len(m.Uniques) + len(m.ForeignKeys) + len(m.Checks)
 	names := make([]string, 0, l)
 
-	if m.AutoIncrement != nil {
-		names = append(names, m.AIName())
+	if m.AIName != "" {
+		names = append(names, m.AIName)
 	}
 
-	if m.PrimaryKey != nil {
-		names = append(names, m.PKName())
+	if m.PKName != "" {
+		names = append(names, m.PKName)
 	}
 
 	for name := range m.Indexes {

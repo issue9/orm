@@ -15,8 +15,8 @@ func TestNewModel(t *testing.T) {
 	a.NotNil(m)
 	a.Equal(m.Name, "m1")
 
-	a.Equal(m.AIName(), "m1_ai")
-	a.Equal(m.PKName(), "m1_pk")
+	a.Equal(m.AIName, "m1_ai")
+	a.Equal(m.PKName, "m1_pk")
 }
 
 func TestModel_SetAutoIncrement(t *testing.T) {
@@ -51,7 +51,7 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.NotError(err).NotNil(ai2)
 	ai2.Name = "ai2"
 	a.NotError(m.AddColumns(ai2))
-	a.ErrorIs(m.SetAutoIncrement(ai2), ErrColumnMustNumber)
+	a.ErrorString(m.SetAutoIncrement(ai2), "必须是数值类型")
 
 	// 存在主键
 	m.Reset()
@@ -128,7 +128,7 @@ func TestModel_SetOCC(t *testing.T) {
 	a.NotError(err).NotNil(ai)
 	ai.Name = "ai"
 	a.NotError(m.AddColumn(ai))
-	a.ErrorIs(m.SetOCC(ai), ErrColumnMustNumber)
+	a.ErrorString(m.SetOCC(ai), "必须是数值类型")
 
 	// 正常
 	ai, err = NewColumn(Int)

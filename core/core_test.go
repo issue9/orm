@@ -3,6 +3,7 @@
 package core
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/issue9/assert/v2"
@@ -16,10 +17,10 @@ func TestMain(m *testing.M) {
 
 func TestPKName(t *testing.T) {
 	a := assert.New(t, false)
-	a.Equal("xx_pk", PKName("xx"))
+	a.True(strings.HasSuffix(PKName("xx"), defaultPKNameSuffix))
 }
 
 func TestAIName(t *testing.T) {
 	a := assert.New(t, false)
-	a.Equal("xx_ai", AIName("xx"))
+	a.True(strings.HasSuffix(aiName("xx"), defaultAINameSuffix))
 }

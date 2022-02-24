@@ -6,6 +6,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 const (
@@ -13,21 +14,28 @@ const (
 	defaultPKNameSuffix = "_pk"
 )
 
-// PKName 生成主键约束的名称
-//
-// 各个数据库对主键约束的规定并不统一，mysql 会忽略约束名，
-// 为了统一，主键约束的名称统一由此函数生成，用户不能另外指定。
-//
-// 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
-func PKName(table string) string { return table + defaultPKNameSuffix }
+// 索引的类型
+const (
+	IndexDefault IndexType = iota // 普通的索引
+	IndexUnique                   // 唯一索引
+)
 
-// AIName 生成 AI 约束名称
+// 约束类型
 //
-// 自增约束的实现，各个数据库并不相同，诸如 mysql 直接加在列信息上，
-// 而 postgres 会创建 sequence，需要指定 sequence 名称。
-//
-// 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
-func AIName(table string) string { return table + defaultAINameSuffix }
+// 以下定义了一些常用的约束类型，但是并不是所有的数据都支持这些约束类型，
+// 比如 mysql<8.0.16 和 mariadb<10.2.1 不支持 check 约束。
+const (
+	ConstraintNone   ConstraintType = iota
+	ConstraintUnique                // 唯一约束
+	ConstraintFK                    // 外键约束
+	ConstraintCheck                 // Check 约束
+	ConstraintPK                    // 主键约束
+	ConstraintAI                    // 自增
+)
+
+type IndexType int8
+
+type ConstraintType int8
 
 // Engine 数据库执行的基本接口
 //
@@ -147,3 +155,22 @@ type Dialect interface {
 	// NOTE: query 中不能同时存在 ? 和命名参数。因为如果是命名参数，则 Exec 等的参数顺序可以是随意的。
 	Prepare(sql string) (query string, orders map[string]int, err error)
 }
+
+// PKName 生成主键约束的名称
+//
+// 各个数据库对主键约束的规定并不统一，mysql 会忽略约束名，
+// 为了统一，主键约束的名称统一由此函数生成，用户不能另外指定。
+//
+// 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
+func PKName(table string) string { return table + defaultPKNameSuffix }
+
+// 生成 AI 约束名称
+//
+// 自增约束的实现，各个数据库并不相同，诸如 mysql 直接加在列信息上，
+// 而 postgres 会创建 sequence，需要指定 sequence 名称。
+//
+// 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
+func aiName(table string) string { return table + defaultAINameSuffix }
+
+// ErrConstraintExists 返回约束名已经存在的错误
+func ErrConstraintExists(c string) error { return fmt.Errorf("约束 %s 已经存在", c) }

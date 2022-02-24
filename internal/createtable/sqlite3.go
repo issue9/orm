@@ -21,13 +21,13 @@ type Sqlite3Table struct {
 // 在 sqlite 中，索引是在创建表之后，另外提交的。
 // 在修改表结构时，需要保存索引，方便之后重建。
 type Sqlite3Index struct {
-	Type core.Index
+	Type core.IndexType
 	SQL  string // 创建索引的语句
 }
 
 // Sqlite3Constraint 从 create table 语句解析出来的约束信息
 type Sqlite3Constraint struct {
-	Type core.Constraint
+	Type core.ConstraintType
 	SQL  string // 在 Create Sqlite3Table 中的语句
 }
 

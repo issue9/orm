@@ -11,9 +11,9 @@ import (
 
 // MysqlTable 从 create table 中获取的表信息
 type MysqlTable struct {
-	Columns     map[string]string          // 列信息，名称 => 类型定义
-	Constraints map[string]core.Constraint // 约束信息，名称 => 约束类型
-	Indexes     map[string]core.Index      // 索引信息，名称 => 索引类型
+	Columns     map[string]string              // 列信息，名称 => 类型定义
+	Constraints map[string]core.ConstraintType // 约束信息，名称 => 约束类型
+	Indexes     map[string]core.IndexType      // 索引信息，名称 => 索引类型
 }
 
 // ParseMysqlCreateTable 分析 create table 的语法
@@ -36,8 +36,8 @@ func ParseMysqlCreateTable(table string, engine core.Engine) (*MysqlTable, error
 func parseMysqlCreateTable(tableName string, lines []string) (*MysqlTable, error) {
 	table := &MysqlTable{
 		Columns:     make(map[string]string, len(lines)),
-		Constraints: make(map[string]core.Constraint, len(lines)),
-		Indexes:     make(map[string]core.Index, len(lines)),
+		Constraints: make(map[string]core.ConstraintType, len(lines)),
+		Indexes:     make(map[string]core.IndexType, len(lines)),
 	}
 
 	for _, line := range lines {
