@@ -18,8 +18,13 @@ import (
 // 的方式插入一条没有 AI 列的对象时，会返回此错误。
 var ErrNeedAutoIncrementColumn = errors.New("必须存在自增列")
 
-func getModel(e Engine, v TableNamer) (*Model, reflect.Value, error) {
-	m, err := e.NewModel(v)
+type modelEngine interface {
+	Engine
+	newModel(v TableNamer) (*Model, error)
+}
+
+func getModel(e modelEngine, v TableNamer) (*Model, reflect.Value, error) {
+	m, err := e.newModel(v)
 	if err != nil {
 		return nil, reflect.Value{}, err
 	}
@@ -92,7 +97,7 @@ func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []any)
 }
 
 // 创建表或是视图。
-func create(e Engine, v TableNamer) error {
+func create(e modelEngine, v TableNamer) error {
 	m, _, err := getModel(e, v)
 	if err != nil {
 		return err
@@ -147,7 +152,7 @@ func create(e Engine, v TableNamer) error {
 	return sb.Exec()
 }
 
-func createView(e Engine, m *core.Model) error {
+func createView(e modelEngine, m *core.Model) error {
 	stmt := e.SQLBuilder().CreateView().Name(m.Name)
 
 	for _, col := range m.Columns {
@@ -157,8 +162,8 @@ func createView(e Engine, m *core.Model) error {
 	return stmt.Exec()
 }
 
-func truncate(e Engine, v TableNamer) error {
-	m, err := e.NewModel(v)
+func truncate(e modelEngine, v TableNamer) error {
+	m, err := e.newModel(v)
 	if err != nil {
 		return err
 	}
@@ -178,8 +183,8 @@ func truncate(e Engine, v TableNamer) error {
 }
 
 // 删除表或视图
-func drop(e Engine, v TableNamer) error {
-	m, err := e.NewModel(v)
+func drop(e modelEngine, v TableNamer) error {
+	m, err := e.newModel(v)
 	if err != nil {
 		return err
 	}
@@ -191,7 +196,7 @@ func drop(e Engine, v TableNamer) error {
 	return e.SQLBuilder().DropTable().Table(m.Name).Exec()
 }
 
-func lastInsertID(e Engine, v TableNamer) (int64, error) {
+func lastInsertID(e modelEngine, v TableNamer) (int64, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return 0, err
@@ -229,7 +234,7 @@ func lastInsertID(e Engine, v TableNamer) (int64, error) {
 	return stmt.LastInsertID(m.Name, m.AutoIncrement.Name)
 }
 
-func insert(e Engine, v TableNamer) (sql.Result, error) {
+func insert(e modelEngine, v TableNamer) (sql.Result, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
@@ -267,7 +272,7 @@ func insert(e Engine, v TableNamer) (sql.Result, error) {
 //
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
-func find(e Engine, v TableNamer) error {
+func find(e modelEngine, v TableNamer) error {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return err
@@ -313,7 +318,7 @@ func forUpdate(tx *Tx, v TableNamer) error {
 //
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func update(e Engine, v TableNamer, cols ...string) (sql.Result, error) {
+func update(e modelEngine, v TableNamer, cols ...string) (sql.Result, error) {
 	stmt := e.SQLBuilder().Update()
 
 	m, rval, err := getUpdateColumns(e, v, stmt, cols...)
@@ -328,7 +333,7 @@ func update(e Engine, v TableNamer, cols ...string) (sql.Result, error) {
 	return stmt.Exec()
 }
 
-func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols ...string) (*Model, reflect.Value, error) {
+func getUpdateColumns(e modelEngine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols ...string) (*Model, reflect.Value, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, reflect.Value{}, err
@@ -368,7 +373,7 @@ func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols 
 }
 
 // 将 v 生成 delete 的 sql 语句
-func del(e Engine, v TableNamer) (sql.Result, error) {
+func del(e modelEngine, v TableNamer) (sql.Result, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
@@ -454,3 +459,5 @@ func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) 
 
 	return query, nil
 }
+
+func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }

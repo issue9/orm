@@ -30,7 +30,7 @@ type Upgrader struct {
 // 删除操作需要保证已经存在于数据表；
 // 而添加操作需要保证已经存在于模型 v，又不存在于数据表。
 func (db *DB) Upgrade(v TableNamer) (*Upgrader, error) {
-	m, err := db.NewModel(v)
+	m, err := db.newModel(v)
 	if err != nil {
 		return nil, err
 	}

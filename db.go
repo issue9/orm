@@ -282,6 +282,3 @@ func (db *DB) MultTruncate(objs ...TableNamer) error {
 		return tx.MultTruncate(objs...)
 	})
 }
-
-// SQLBuilder 返回 SQL 实例
-func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }

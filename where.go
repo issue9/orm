@@ -15,7 +15,7 @@ type whereWhere = sqlbuilder.WhereStmtOf[WhereStmt]
 
 type WhereStmt struct {
 	*whereWhere
-	engine Engine
+	engine modelEngine
 }
 
 // Where 生成 WhereStmt 语句
@@ -34,7 +34,7 @@ func (tx *Tx) Where(cond string, args ...any) *WhereStmt {
 
 // Delete 从 v 表中删除符合条件的内容
 func (stmt *WhereStmt) Delete(v TableNamer) (sql.Result, error) {
-	m, err := stmt.engine.NewModel(v)
+	m, err := stmt.engine.newModel(v)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (stmt *WhereStmt) Select(strict bool, v any) (int, error) {
 	if !ok {
 		return 0, fmt.Errorf("v 不是 TableNamer 类型")
 	}
-	m, err := stmt.engine.NewModel(tn)
+	m, err := stmt.engine.newModel(tn)
 	if err != nil {
 		return 0, err
 	}

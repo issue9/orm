@@ -15,6 +15,9 @@ type (
 	// Model 表示一个数据库的表模型
 	Model = core.Model
 
+	// Column 列结构
+	Column = core.Column
+
 	TableNamer = core.TableNamer
 
 	// Table 表的基本字段
@@ -28,15 +31,9 @@ type (
 	}
 )
 
-// NewModel 从一个 obj 声明一个 Model 实例
-//
-// obj 可以是一个 struct 实例或是指针。
-func (db *DB) NewModel(obj TableNamer) (*Model, error) { return db.models.New(obj) }
+func (db *DB) newModel(obj TableNamer) (*Model, error) { return db.models.New(obj) }
 
-// NewModel 从一个 obj 声明一个 Model 实例
-//
-// obj 可以是一个 struct 实例或是指针。
-func (tx *Tx) NewModel(obj TableNamer) (*Model, error) { return tx.db.NewModel(obj) }
+func (tx *Tx) newModel(obj TableNamer) (*Model, error) { return tx.db.newModel(obj) }
 
 func (t *Table) BeforeUpdate() error {
 	t.Updated = time.Now()

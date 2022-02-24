@@ -150,7 +150,6 @@ func (tx *Tx) Drop(v TableNamer) error { return drop(tx, v) }
 
 func (tx *Tx) Truncate(v TableNamer) error { return truncate(tx, v) }
 
-// SQLBuilder 返回 SQL 实例
 func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder { return tx.sqlBuilder }
 
 func (tx *Tx) MultInsert(objs ...TableNamer) error {

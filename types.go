@@ -24,9 +24,6 @@ type (
 	// AfterFetcher 从数据库查询到数据之后需要执行的操作
 	AfterFetcher = fetch.AfterFetcher
 
-	// Column 列结构
-	Column = core.Column
-
 	// Dialect 数据库驱动特有的语言特性实现
 	Dialect = core.Dialect
 
@@ -124,8 +121,7 @@ type (
 		// MultTruncate 重置 ai保留表结构
 		MultTruncate(objs ...TableNamer) error
 
+		// SQLBuilder 返回 sqlbuilder.SQLBuilder 实例
 		SQLBuilder() *sqlbuilder.SQLBuilder
-
-		NewModel(v TableNamer) (*Model, error)
 	}
 )
