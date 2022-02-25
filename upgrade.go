@@ -117,31 +117,31 @@ func (u *Upgrader) AddConstraint(name ...string) *Upgrader {
 
 LOOP:
 	for _, c := range name {
-		for name, fk := range u.model.ForeignKeys {
-			if name != c {
+		for _, fk := range u.model.ForeignKeys {
+			if fk.Name != c {
 				continue
 			}
 
 			sql := sqlbuilder.AddConstraint(u.Engine())
 			sql.Table(u.model.Name)
-			sql.FK(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+			sql.FK(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 
 			u.ddl = append(u.ddl, sql)
 			continue LOOP
 		}
 
-		for name, unique := range u.model.Uniques {
-			if name != c {
+		for _, uu := range u.model.Uniques {
+			if uu.Name != c {
 				continue
 			}
 
 			sql := sqlbuilder.AddConstraint(u.Engine())
 			sql.Table(u.model.Name)
-			cols := make([]string, 0, len(unique))
-			for _, col := range unique {
+			cols := make([]string, 0, len(uu.Columns))
+			for _, col := range uu.Columns {
 				cols = append(cols, col.Name)
 			}
-			sql.Unique(name, cols...)
+			sql.Unique(uu.Name, cols...)
 
 			u.ddl = append(u.ddl, sql)
 			continue LOOP
@@ -181,7 +181,7 @@ func (u *Upgrader) AddPK() *Upgrader {
 		return u
 	}
 
-	if !u.model.PrimaryKey.IsEmpty() {
+	if u.model.PrimaryKey != nil {
 		cols := make([]string, 0, len(u.model.PrimaryKey.Columns))
 		for _, col := range u.model.PrimaryKey.Columns {
 			cols = append(cols, col.Name)
@@ -213,17 +213,17 @@ func (u *Upgrader) AddIndex(name ...string) *Upgrader {
 		sql := sqlbuilder.CreateIndex(u.Engine())
 		sql.Table(u.model.Name)
 
-		for name, cols := range u.model.Indexes {
-			if name != index {
+		for _, i := range u.model.Indexes {
+			if i.Name != index {
 				continue
 			}
 
-			cs := make([]string, 0, len(cols))
-			for _, c := range cols {
+			cs := make([]string, 0, len(i.Columns))
+			for _, c := range i.Columns {
 				cs = append(cs, c.Name)
 			}
 
-			sql.Name(name)
+			sql.Name(i.Name)
 			sql.Columns(cs...)
 		}
 
@@ -252,7 +252,9 @@ func (u *Upgrader) Do() error {
 
 	for _, ddl := range u.ddl {
 		if err := ddl.Exec(); err != nil {
-			u.rollback()
+			if err2 := u.rollback(); err2 != nil {
+				err = fmt.Errorf("%w,%s", err, err2)
+			}
 			return err
 		}
 	}

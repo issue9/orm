@@ -161,9 +161,11 @@ func TestModel_AddIndex(t *testing.T) {
 	a.NotError(m.AddIndex(IndexDefault, "index_0", col2))
 	a.NotError(m.AddIndex(IndexDefault, "index_1", col2))
 
-	a.Equal(2, len(m.Indexes)).
-		Equal(m.Indexes["index_0"], []*Column{col, col2}).
-		Equal(m.Indexes["index_1"], []*Column{col2})
+	a.Equal(2, len(m.Indexes))
+	i, found := m.Index("index_0")
+	a.True(found).Equal(i.Columns, []*Column{col, col2})
+	i, found = m.Index("index_1")
+	a.True(found).Equal(i.Columns, []*Column{col2})
 
 	// Unique
 	a.NotError(m.AddIndex(IndexUnique, "unique_0", col))
@@ -195,21 +197,21 @@ func TestModel_NewForeignKey(t *testing.T) {
 	a.NotNil(m)
 
 	// 空的 ForeignKey
-	a.Error(m.NewForeignKey("fk_0", &ForeignKey{}))
+	a.Error(m.NewForeignKey(&ForeignKey{}))
 
 	fkCol, err := NewColumn(Uint8)
 	a.NotError(err).NotNil(fkCol)
 	fkCol.Name = "fk_col"
 
 	// 列不存在于当前模型
-	a.Error(m.NewForeignKey("fk_0", &ForeignKey{Column: fkCol, RefTableName: "tbl", RefColName: "col"}))
+	a.Error(m.NewForeignKey(&ForeignKey{Name: "fk_0", Column: fkCol, RefTableName: "tbl", RefColName: "col"}))
 
 	// 正常
 	a.NotError(m.AddColumn(fkCol))
-	a.NotError(m.NewForeignKey("fk_0", &ForeignKey{Column: fkCol, RefTableName: "tbl", RefColName: "col"}))
+	a.NotError(m.NewForeignKey(&ForeignKey{Name: "fk_0", Column: fkCol, RefTableName: "tbl", RefColName: "col"}))
 
 	// 重复的约束名
-	a.Error(m.NewForeignKey("fk_0", &ForeignKey{Column: fkCol, RefTableName: "tbl", RefColName: "col"}))
+	a.Error(m.NewForeignKey(&ForeignKey{Name: "fk_0", Column: fkCol, RefTableName: "tbl", RefColName: "col"}))
 }
 
 func TestModel_Sanitize(t *testing.T) {
@@ -260,11 +262,40 @@ func TestModel_Sanitize(t *testing.T) {
 	a.NotError(m.AddColumn(ai))
 	a.NotError(m.AddColumns(nullable, def))
 	a.NotError(m.AddIndex(IndexDefault, "index_0", nullable))
-	a.NotError(m.NewForeignKey("fk_0", &ForeignKey{Column: def, RefTableName: "tbl", RefColName: "col"}))
+	a.NotError(m.NewForeignKey(&ForeignKey{Name: "fk_0", Column: def, RefTableName: "tbl", RefColName: "col"}))
 	a.NotError(m.NewCheck("id_great_0", "{id}>0"))
 	a.NotError(m.Sanitize())
 
 	// 约束重名
 	a.NotError(m.AddUnique("fk_0", nullable))
 	a.Error(m.Sanitize())
+}
+
+func TestConstraint_sanitize(t *testing.T) {
+	a := assert.New(t, false)
+
+	var c *Constraint
+	a.NotError(c.sanitize())
+
+	c = &Constraint{}
+	a.ErrorString(c.sanitize(), "未指定约束名")
+
+	c = &Constraint{Name: "abc"}
+	a.ErrorString(c.sanitize(), "并未指定列")
+}
+
+func TestForeignKey_sanitize(t *testing.T) {
+	a := assert.New(t, false)
+
+	var fk *ForeignKey
+	a.NotError(fk.sanitize())
+
+	fk = &ForeignKey{}
+	a.ErrorString(fk.sanitize(), "未指定外键的约束名")
+
+	fk = &ForeignKey{Name: "fk"}
+	a.ErrorString(fk.sanitize(), "并未指定列")
+
+	fk = &ForeignKey{Name: "fk", Column: &Column{}}
+	a.ErrorString(fk.sanitize(), "缺少必要的字段 ref")
 }

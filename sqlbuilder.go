@@ -44,30 +44,31 @@ func where(ws *sqlbuilder.WhereStmt, m *Model, rval reflect.Value) error {
 	var vals []any
 	var constraint string
 
-	if !m.AutoIncrement.IsEmpty() {
+	if m.AutoIncrement != nil && len(m.AutoIncrement.Columns) > 0 {
 		if keys, vals = getKV(rval, m.AutoIncrement.Columns[0]); len(keys) > 0 {
 			goto RET
 		}
 	}
 
-	if !m.PrimaryKey.IsEmpty() {
+	if m.PrimaryKey != nil && len(m.PrimaryKey.Columns) > 0 {
 		if keys, vals = getKV(rval, m.PrimaryKey.Columns...); len(keys) > 0 {
 			goto RET
 		}
 	}
 
-	for name, cols := range m.Uniques {
-		k, v := getKV(rval, cols...)
+	for _, u := range m.Uniques {
+		k, v := getKV(rval, u.Columns...)
 		if len(k) == 0 {
 			continue
 		}
 
 		if len(keys) > 0 {
-			return fmt.Errorf("多个唯一约束 %s、%s 满足查询条件", constraint, name)
+			// 可能每个唯一约束查询至的结果是不一样的
+			return fmt.Errorf("多个唯一约束 %s、%s 满足查询条件", constraint, u.Name)
 		}
 
 		keys, vals = k, v
-		constraint = name
+		constraint = u.Name
 	}
 
 RET:
@@ -117,31 +118,31 @@ func create(e modelEngine, v TableNamer) error {
 		}
 	}
 
-	for name, index := range m.Indexes {
-		cols := make([]string, 0, len(index))
-		for _, col := range index {
+	for _, index := range m.Indexes {
+		cols := make([]string, 0, len(index.Columns))
+		for _, col := range index.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.Index(core.IndexDefault, name, cols...)
+		sb.Index(core.IndexDefault, index.Name, cols...)
 	}
 
-	for name, unique := range m.Uniques {
-		cols := make([]string, 0, len(unique))
-		for _, col := range unique {
+	for _, unique := range m.Uniques {
+		cols := make([]string, 0, len(unique.Columns))
+		for _, col := range unique.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.Unique(name, cols...)
+		sb.Unique(unique.Name, cols...)
 	}
 
 	for name, expr := range m.Checks {
 		sb.Check(name, expr)
 	}
 
-	for name, fk := range m.ForeignKeys {
-		sb.ForeignKey(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+	for _, fk := range m.ForeignKeys {
+		sb.ForeignKey(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 	}
 
-	if m.AutoIncrement.IsEmpty() && !m.PrimaryKey.IsEmpty() {
+	if m.AutoIncrement == nil && m.PrimaryKey != nil {
 		cols := make([]string, 0, len(m.PrimaryKey.Columns))
 		for _, col := range m.PrimaryKey.Columns {
 			cols = append(cols, col.Name)
@@ -173,7 +174,7 @@ func truncate(e modelEngine, v TableNamer) error {
 	}
 
 	stmt := e.SQLBuilder().TruncateTable()
-	if !m.AutoIncrement.IsEmpty() {
+	if m.AutoIncrement != nil {
 		stmt.Table(m.Name, m.AutoIncrement.Name)
 	} else {
 		stmt.Table(m.Name, "")
@@ -206,7 +207,7 @@ func lastInsertID(e modelEngine, v TableNamer) (int64, error) {
 		return 0, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	if m.AutoIncrement.IsEmpty() {
+	if m.AutoIncrement == nil {
 		return 0, ErrNeedAutoIncrementColumn
 	}
 
@@ -429,7 +430,7 @@ func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) 
 				query.KeyValue(col.Name, field.Interface())
 				keys = append(keys, col.Name)
 			}
-		} else {                           // 之后的元素，只需要获取其对应的值就行
+		} else { // 之后的元素，只需要获取其对应的值就行
 			if firstType != irval.Type() { // 与第一个元素的类型不同。
 				return nil, errInsertManyHasDifferentType
 			}

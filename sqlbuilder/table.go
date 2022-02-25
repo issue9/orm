@@ -163,7 +163,8 @@ func (stmt *CreateTableStmt) ForeignKey(name, col, refTable, refCol, updateRule,
 		return stmt
 	}
 
-	stmt.err = stmt.model.NewForeignKey(name, &core.ForeignKey{
+	stmt.err = stmt.model.NewForeignKey(&core.ForeignKey{
+		Name:         name,
 		Column:       stmt.model.FindColumn(col),
 		RefTableName: refTable,
 		RefColName:   refCol,
@@ -236,19 +237,19 @@ func (stmt *CreateTableStmt) createConstraints(buf *core.Builder) error {
 		buf.WBytes(',')
 	}
 
-	for name, cols := range stmt.model.Uniques {
-		stmt.createUniqueSQL(buf, name, cols...)
+	for _, u := range stmt.model.Uniques {
+		stmt.createUniqueSQL(buf, u)
 		buf.WBytes(',')
 	}
 
 	// foreign  key
-	for name, fk := range stmt.model.ForeignKeys {
-		stmt.createFKSQL(buf, name, fk)
+	for _, fk := range stmt.model.ForeignKeys {
+		stmt.createFKSQL(buf, fk)
 		buf.WBytes(',')
 	}
 
 	// primary key
-	if !stmt.model.PrimaryKey.IsEmpty() {
+	if stmt.model.PrimaryKey != nil {
 		stmt.createPKSQL(buf, stmt.model.PrimaryKey)
 		buf.WBytes(',')
 	}
@@ -263,11 +264,11 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 
 	sqls := make([]string, 0, len(stmt.model.Indexes))
 	buf := CreateIndex(stmt.Engine())
-	for name, index := range stmt.model.Indexes {
+	for _, index := range stmt.model.Indexes {
 		buf.Reset()
 		buf.Table(stmt.model.Name).
-			Name(name)
-		for _, col := range index {
+			Name(index.Name)
+		for _, col := range index.Columns {
 			buf.Columns(col.Name)
 		}
 
@@ -284,7 +285,7 @@ func createIndexSQL(stmt *CreateTableStmt) ([]string, error) {
 // create table 语句中 pk 约束的语句
 //
 // CONSTRAINT pk_name PRIMARY KEY (id,lastName)
-func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, c core.Constraint) {
+func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, c *core.Constraint) {
 	buf.WString(" CONSTRAINT ").
 		QuoteKey(c.Name).
 		WString(" PRIMARY KEY(")
@@ -298,21 +299,21 @@ func (stmt *CreateTableStmt) createPKSQL(buf *core.Builder, c core.Constraint) {
 // create table 语句中的 unique 约束部分的语句。
 //
 // CONSTRAINT unique_name UNIQUE (id,lastName)
-func (stmt *CreateTableStmt) createUniqueSQL(buf *core.Builder, name string, cols ...*core.Column) {
+func (stmt *CreateTableStmt) createUniqueSQL(buf *core.Builder, c *core.Constraint) {
 	buf.WString(" CONSTRAINT ").
-		QuoteKey(name).
+		QuoteKey(c.Name).
 		WString(" UNIQUE(")
-	for _, col := range cols {
+	for _, col := range c.Columns {
 		buf.QuoteKey(col.Name).WBytes(',')
 	}
 	buf.TruncateLast(1).WBytes(')')
 }
 
 // create table 语句中 fk 的约束部分的语句
-func (stmt *CreateTableStmt) createFKSQL(buf *core.Builder, name string, fk *core.ForeignKey) {
+func (stmt *CreateTableStmt) createFKSQL(buf *core.Builder, fk *core.ForeignKey) {
 	// CONSTRAINT fk_name FOREIGN KEY (id) REFERENCES user(id)
 	buf.WString(" CONSTRAINT ").
-		QuoteKey(name)
+		QuoteKey(fk.Name)
 
 	buf.WString(" FOREIGN KEY (").
 		QuoteKey(fk.Column.Name)

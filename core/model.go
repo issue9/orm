@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+
+	"github.com/issue9/sliceutil"
 )
 
 var (
@@ -45,6 +47,7 @@ type (
 
 	// ForeignKey 外键
 	ForeignKey struct {
+		Name                     string // 约束名
 		Column                   *Column
 		RefTableName, RefColName string
 		UpdateRule, DeleteRule   string
@@ -83,17 +86,13 @@ type (
 		// 具体可参考各个 dialect 实现的介绍。
 		Meta map[string][]string
 
-		// 索引内容
-		//
-		// 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
-		Indexes map[string][]*Column
-
-		// 约束
-		Uniques       map[string][]*Column
+		// 约束与索引
 		Checks        map[string]string
-		ForeignKeys   map[string]*ForeignKey
-		AutoIncrement Constraint
-		PrimaryKey    Constraint
+		ForeignKeys   []*ForeignKey
+		Indexes       []*Constraint // 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
+		Uniques       []*Constraint
+		AutoIncrement *Constraint
+		PrimaryKey    *Constraint
 	}
 )
 
@@ -122,15 +121,10 @@ const (
 // cap 表示列的数量，如果指定了，可以提前分配 Columns 字段的大小。
 func NewModel(modelType ModelType, name string, cap int) *Model {
 	m := &Model{
-		Type:          modelType,
-		Columns:       make([]*Column, 0, cap),
-		Meta:          map[string][]string{},
-		Indexes:       map[string][]*Column{},
-		Uniques:       map[string][]*Column{},
-		Checks:        map[string]string{},
-		ForeignKeys:   map[string]*ForeignKey{},
-		AutoIncrement: Constraint{Columns: make([]*Column, 0, 1)},
-		PrimaryKey:    Constraint{Columns: make([]*Column, 0, 5)},
+		Type:    modelType,
+		Columns: make([]*Column, 0, cap),
+		Meta:    map[string][]string{},
+		Checks:  map[string]string{},
 	}
 	m.SetName(name)
 
@@ -139,8 +133,14 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 
 func (m *Model) SetName(name string) {
 	m.Name = name
-	m.PrimaryKey.Name = PKName(name)
-	m.AutoIncrement.Name = aiName(name)
+
+	if m.PrimaryKey != nil {
+		m.PrimaryKey.Name = PKName(name)
+	}
+
+	if m.AutoIncrement != nil {
+		m.AutoIncrement.Name = aiName(name)
+	}
 }
 
 // Reset 清空模型内容
@@ -152,14 +152,12 @@ func (m *Model) Reset() {
 	m.Columns = m.Columns[:0]
 	m.OCC = nil
 	m.Meta = map[string][]string{}
-	m.Indexes = map[string][]*Column{}
-	m.Uniques = map[string][]*Column{}
 	m.Checks = map[string]string{}
-	m.ForeignKeys = map[string]*ForeignKey{}
-	m.AutoIncrement.Name = ""
-	m.AutoIncrement.Columns = m.AutoIncrement.Columns[:0]
-	m.PrimaryKey.Name = ""
-	m.PrimaryKey.Columns = m.PrimaryKey.Columns[:0]
+	m.ForeignKeys = m.ForeignKeys[:0]
+	m.AutoIncrement = nil
+	m.PrimaryKey = nil
+	m.Indexes = m.Indexes[:0]
+	m.Uniques = m.Uniques[:0]
 }
 
 // SetAutoIncrement 将 col 列设置为自增列
@@ -172,11 +170,11 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 		return errColMustNumber(col.Name)
 	}
 
-	if !m.AutoIncrement.IsEmpty() {
+	if m.AutoIncrement != nil {
 		return ErrConstraintExists(m.AutoIncrement.Name)
 	}
 
-	if !m.PrimaryKey.IsEmpty() {
+	if m.PrimaryKey != nil {
 		return ErrAutoIncrementPrimaryKeyConflict
 	}
 
@@ -185,7 +183,7 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 	}
 
 	col.AI = true
-	m.AutoIncrement.Columns = append(m.AutoIncrement.Columns, col)
+	m.AutoIncrement = &Constraint{Name: aiName(m.Name), Columns: []*Column{col}}
 	return nil
 }
 
@@ -194,7 +192,7 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 // 自增会自动转换为主键。
 // 多次调用，则多列形成一个多列主键。
 func (m *Model) AddPrimaryKey(col *Column) error {
-	if !m.AutoIncrement.IsEmpty() {
+	if m.AutoIncrement != nil {
 		return ErrAutoIncrementPrimaryKeyConflict
 	}
 
@@ -202,7 +200,11 @@ func (m *Model) AddPrimaryKey(col *Column) error {
 		return errConstraintColumnNotExists("PrimaryKey", col.Name)
 	}
 
-	m.PrimaryKey.Columns = append(m.PrimaryKey.Columns, col)
+	if m.PrimaryKey == nil {
+		m.PrimaryKey = &Constraint{Name: PKName(m.Name), Columns: make([]*Column, 0, 5)}
+	}
+	m.PrimaryKey.append(col)
+
 	return nil
 }
 
@@ -242,7 +244,15 @@ func (m *Model) AddIndex(typ IndexType, name string, col *Column) error {
 	if !m.columnExists(col) {
 		return errConstraintColumnNotExists("Index", col.Name)
 	}
-	m.Indexes[name] = append(m.Indexes[name], col)
+
+	if m.Indexes == nil {
+		m.Indexes = make([]*Constraint, 0, 5)
+	}
+	if index, found := m.Index(name); found {
+		index.append(col)
+	} else {
+		m.Indexes = append(m.Indexes, &Constraint{Name: name, Columns: []*Column{col}})
+	}
 	return nil
 }
 
@@ -253,7 +263,16 @@ func (m *Model) AddUnique(name string, col *Column) error {
 	if !m.columnExists(col) {
 		return errConstraintColumnNotExists("Unique", col.Name)
 	}
-	m.Uniques[name] = append(m.Uniques[name], col)
+
+	if m.Uniques == nil {
+		m.Uniques = make([]*Constraint, 0, 5)
+	}
+	if unique, found := m.Unique(name); found {
+		unique.append(col)
+	} else {
+		m.Uniques = append(m.Uniques, &Constraint{Name: name, Columns: []*Column{col}})
+	}
+
 	return nil
 }
 
@@ -268,19 +287,19 @@ func (m *Model) NewCheck(name string, expr string) error {
 }
 
 // NewForeignKey 添加新的外键
-func (m *Model) NewForeignKey(name string, fk *ForeignKey) error {
+func (m *Model) NewForeignKey(fk *ForeignKey) error {
 	if fk.Column == nil || fk.RefColName == "" || fk.RefTableName == "" {
-		return fmt.Errorf("约束 %s 的 Column、RefColName 和 RefTableName 都不能为空", name)
+		return fmt.Errorf("约束 %s 的 Column、RefColName 和 RefTableName 都不能为空", fk.Name)
 	}
 
-	if _, found := m.ForeignKeys[name]; found {
-		return ErrConstraintExists(name)
+	if _, found := m.ForeignKey(fk.Name); found {
+		return ErrConstraintExists(fk.Name)
 	}
 
 	if !m.columnExists(fk.Column) {
 		return errConstraintColumnNotExists("ForeignKey", fk.Column.Name)
 	}
-	m.ForeignKeys[name] = fk
+	m.ForeignKeys = append(m.ForeignKeys, fk)
 	return nil
 }
 
@@ -296,7 +315,7 @@ func (m *Model) Sanitize() error {
 		return errors.New("无效的类型")
 	}
 
-	if len(m.PrimaryKey.Columns) == 1 {
+	if m.PrimaryKey != nil && len(m.PrimaryKey.Columns) == 1 {
 		pk := m.PrimaryKey.Columns[0]
 		if pk.HasDefault || pk.Nullable {
 			return fmt.Errorf("单一主键约束的列 %s 不能为同时设置为默认值", pk.Name)
@@ -305,6 +324,41 @@ func (m *Model) Sanitize() error {
 
 	for _, c := range m.Columns {
 		if err := c.Check(); err != nil {
+			return err
+		}
+	}
+
+	if err := m.AutoIncrement.sanitize(); err != nil {
+		return err
+	}
+
+	if err := m.PrimaryKey.sanitize(); err != nil {
+		return err
+	}
+
+	for _, i := range m.Indexes {
+		if i == nil {
+			return errors.New("存在空的索引")
+		}
+		if err := i.sanitize(); err != nil {
+			return err
+		}
+	}
+
+	for _, i := range m.Uniques {
+		if i == nil {
+			return errors.New("存在空的唯一约束")
+		}
+		if err := i.sanitize(); err != nil {
+			return err
+		}
+	}
+
+	for _, fk := range m.ForeignKeys {
+		if fk == nil {
+			return errors.New("存在空的外键约束")
+		}
+		if err := fk.sanitize(); err != nil {
 			return err
 		}
 	}
@@ -320,24 +374,24 @@ func (m *Model) checkNames() error {
 	l := 2 + len(m.Indexes) + len(m.Uniques) + len(m.ForeignKeys) + len(m.Checks)
 	names := make([]string, 0, l)
 
-	if m.AutoIncrement.Name != "" {
+	if m.AutoIncrement != nil { // 由 Constraint.sanitize 保证 name 不为空值
 		names = append(names, m.AutoIncrement.Name)
 	}
 
-	if m.PrimaryKey.Name != "" {
+	if m.PrimaryKey != nil {
 		names = append(names, m.PrimaryKey.Name)
 	}
 
-	for name := range m.Indexes {
-		names = append(names, name)
+	for _, c := range m.Indexes {
+		names = append(names, c.Name)
 	}
 
-	for name := range m.Uniques {
-		names = append(names, name)
+	for _, c := range m.Uniques {
+		names = append(names, c.Name)
 	}
 
-	for name := range m.ForeignKeys {
-		names = append(names, name)
+	for _, fk := range m.ForeignKeys {
+		names = append(names, fk.Name)
 	}
 
 	for name := range m.Checks {
@@ -354,4 +408,56 @@ func (m *Model) checkNames() error {
 	return nil
 }
 
-func (c Constraint) IsEmpty() bool { return len(c.Columns) == 0 }
+func (m *Model) Index(name string) (*Constraint, bool) {
+	return sliceutil.At(m.Indexes, func(e *Constraint) bool { return e.Name == name })
+}
+
+func (m *Model) Unique(name string) (*Constraint, bool) {
+	return sliceutil.At(m.Uniques, func(e *Constraint) bool { return e.Name == name })
+}
+
+func (m *Model) ForeignKey(name string) (*ForeignKey, bool) {
+	return sliceutil.At(m.ForeignKeys, func(e *ForeignKey) bool { return e.Name == name })
+}
+
+func (c *Constraint) append(col *Column) {
+	if c.Columns == nil {
+		c.Columns = make([]*Column, 0, 5)
+	}
+	c.Columns = append(c.Columns, col)
+}
+
+func (c *Constraint) sanitize() error {
+	if c == nil {
+		return nil
+	}
+
+	if c.Name == "" {
+		return errors.New("未指定约束名")
+	}
+
+	if len(c.Columns) == 0 {
+		return fmt.Errorf("约束 %s 并未指定列", c.Name)
+	}
+	return nil
+}
+
+func (f *ForeignKey) sanitize() error {
+	if f == nil {
+		return nil
+	}
+
+	if f.Name == "" {
+		return errors.New("未指定外键的约束名")
+	}
+
+	if f.Column == nil {
+		return fmt.Errorf("外键约束 %s 并未指定列", f.Name)
+	}
+
+	if f.RefTableName == "" || f.RefColName == "" {
+		return fmt.Errorf("外键约束 %s 缺少必要的字段 ref", f.Name)
+	}
+
+	return nil
+}

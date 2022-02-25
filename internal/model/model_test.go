@@ -136,19 +136,20 @@ func TestModels_New(t *testing.T) {
 	a.NotNil(groupCol)
 
 	// index
-	index, found := m.Indexes["index_admin_name"]
-	a.True(found).Equal(usernameCol, index[0])
+	index, found := m.Index("index_admin_name")
+	a.True(found).Equal(usernameCol, index.Columns[0])
 
 	// ai
 	a.Equal(m.AutoIncrement.Columns[0], idCol).
-		True(m.PrimaryKey.IsEmpty()) // 有自增，则主键为空
+		Nil(m.PrimaryKey) // 有自增，则主键为空
 
 	// unique_name
-	unique, found := m.Uniques["unique_admin_username"]
-	a.True(found).Equal(unique[0], usernameCol)
+	unique, found := m.Unique("unique_admin_username")
+	a.True(found).Equal(unique.Columns[0], usernameCol)
 
-	fk := m.ForeignKeys["fk_admin_name"]
+	fk, found := m.ForeignKey("fk_admin_name")
 	a.True(found).
+		Equal(fk.Name, "fk_admin_name").
 		Equal(fk.Column, groupCol).
 		Equal(fk.RefTableName, "#groups").
 		Equal(fk.RefColName, "id").

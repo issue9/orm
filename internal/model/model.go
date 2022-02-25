@@ -81,27 +81,27 @@ func (ms *Models) addModel(m *core.Model) (err error) {
 		}
 	}
 
-	for name := range m.Indexes {
-		w(name)
+	for _, c := range m.Indexes {
+		w(c.Name)
 	}
 
-	for name := range m.Uniques {
-		w(name)
+	for _, c := range m.Uniques {
+		w(c.Name)
 	}
 
 	for name := range m.Checks {
 		w(name)
 	}
 
-	for name := range m.ForeignKeys {
-		w(name)
+	for _, fk := range m.ForeignKeys {
+		w(fk.Name)
 	}
 
-	if !m.AutoIncrement.IsEmpty() {
+	if m.AutoIncrement != nil {
 		w(m.AutoIncrement.Name)
 	}
 
-	if !m.PrimaryKey.IsEmpty() {
+	if m.PrimaryKey != nil {
 		w(m.PrimaryKey.Name)
 	}
 
@@ -182,6 +182,7 @@ func setFK(m *core.Model, col *column, vals []string) error {
 	}
 
 	fk := &core.ForeignKey{
+		Name:         strings.ToLower(vals[0]),
 		Column:       col.Column,
 		RefTableName: vals[1],
 		RefColName:   vals[2],
@@ -194,5 +195,5 @@ func setFK(m *core.Model, col *column, vals []string) error {
 		fk.DeleteRule = vals[4]
 	}
 
-	return m.NewForeignKey(strings.ToLower(vals[0]), fk)
+	return m.NewForeignKey(fk)
 }
