@@ -12,9 +12,6 @@ import (
 type (
 	ApplyModeler = core.ApplyModeler
 
-	// Model 表示一个数据库的表模型
-	Model = core.Model
-
 	// Column 列结构
 	Column = core.Column
 
@@ -31,9 +28,9 @@ type (
 	}
 )
 
-func (db *DB) newModel(obj TableNamer) (*Model, error) { return db.models.New(obj) }
+func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New(obj) }
 
-func (tx *Tx) newModel(obj TableNamer) (*Model, error) { return tx.db.newModel(obj) }
+func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.newModel(obj) }
 
 func (t *Table) BeforeUpdate() error {
 	t.Updated = time.Now()

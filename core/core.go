@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	defaultAINameSuffix = "_ai"
-	defaultPKNameSuffix = "_pk"
+	AINameSuffix = "_ai"
+	PKNameSuffix = "_pk"
 )
 
 // 索引的类型
@@ -162,7 +162,7 @@ type Dialect interface {
 // 为了统一，主键约束的名称统一由此函数生成，用户不能另外指定。
 //
 // 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
-func PKName(table string) string { return table + defaultPKNameSuffix }
+func PKName(table string) string { return table + PKNameSuffix }
 
 // 生成 AI 约束名称
 //
@@ -170,7 +170,7 @@ func PKName(table string) string { return table + defaultPKNameSuffix }
 // 而 postgres 会创建 sequence，需要指定 sequence 名称。
 //
 // 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
-func aiName(table string) string { return table + defaultAINameSuffix }
+func aiName(table string) string { return table + AINameSuffix }
 
 // ErrConstraintExists 返回约束名已经存在的错误
 func ErrConstraintExists(c string) error { return fmt.Errorf("约束 %s 已经存在", c) }

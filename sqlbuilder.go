@@ -20,10 +20,10 @@ var ErrNeedAutoIncrementColumn = errors.New("必须存在自增列")
 
 type modelEngine interface {
 	Engine
-	newModel(v TableNamer) (*Model, error)
+	newModel(v TableNamer) (*core.Model, error)
 }
 
-func getModel(e modelEngine, v TableNamer) (*Model, reflect.Value, error) {
+func getModel(e modelEngine, v TableNamer) (*core.Model, reflect.Value, error) {
 	m, err := e.newModel(v)
 	if err != nil {
 		return nil, reflect.Value{}, err
@@ -39,7 +39,7 @@ func getModel(e modelEngine, v TableNamer) (*Model, reflect.Value, error) {
 
 // 根据 Model 中的主键或是唯一索引为 sql 产生 where 语句，
 // 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
-func where(ws *sqlbuilder.WhereStmt, m *Model, rval reflect.Value) error {
+func where(ws *sqlbuilder.WhereStmt, m *core.Model, rval reflect.Value) error {
 	var keys []string
 	var vals []any
 	var constraint string
@@ -68,7 +68,7 @@ func where(ws *sqlbuilder.WhereStmt, m *Model, rval reflect.Value) error {
 		}
 
 		keys, vals = k, v
-		constraint = u.Name
+		constraint = constraintName(m.Name, u.Name)
 	}
 
 RET:
@@ -123,7 +123,7 @@ func create(e modelEngine, v TableNamer) error {
 		for _, col := range index.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.Index(core.IndexDefault, index.Name, cols...)
+		sb.Index(core.IndexDefault, constraintName(m.Name, index.Name), cols...)
 	}
 
 	for _, unique := range m.Uniques {
@@ -131,15 +131,16 @@ func create(e modelEngine, v TableNamer) error {
 		for _, col := range unique.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.Unique(unique.Name, cols...)
+		sb.Unique(constraintName(m.Name, unique.Name), cols...)
 	}
 
 	for name, expr := range m.Checks {
-		sb.Check(name, expr)
+		sb.Check(constraintName(m.Name, name), expr)
 	}
 
 	for _, fk := range m.ForeignKeys {
-		sb.ForeignKey(fk.Name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
+		name := constraintName(m.Name, fk.Name)
+		sb.ForeignKey(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 	}
 
 	if m.AutoIncrement == nil && m.PrimaryKey != nil {
@@ -334,7 +335,7 @@ func update(e modelEngine, v TableNamer, cols ...string) (sql.Result, error) {
 	return stmt.Exec()
 }
 
-func getUpdateColumns(e modelEngine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols ...string) (*Model, reflect.Value, error) {
+func getUpdateColumns(e modelEngine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols ...string) (*core.Model, reflect.Value, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, reflect.Value{}, err
@@ -462,3 +463,5 @@ func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) 
 }
 
 func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }
+
+func constraintName(table, name string) string { return table + "_" + name }

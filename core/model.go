@@ -120,26 +120,12 @@ const (
 //
 // cap 表示列的数量，如果指定了，可以提前分配 Columns 字段的大小。
 func NewModel(modelType ModelType, name string, cap int) *Model {
-	m := &Model{
+	return &Model{
+		Name:    name,
 		Type:    modelType,
 		Columns: make([]*Column, 0, cap),
 		Meta:    map[string][]string{},
 		Checks:  map[string]string{},
-	}
-	m.SetName(name)
-
-	return m
-}
-
-func (m *Model) SetName(name string) {
-	m.Name = name
-
-	if m.PrimaryKey != nil {
-		m.PrimaryKey.Name = PKName(name)
-	}
-
-	if m.AutoIncrement != nil {
-		m.AutoIncrement.Name = aiName(name)
 	}
 }
 

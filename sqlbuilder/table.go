@@ -37,7 +37,7 @@ func (stmt *CreateTableStmt) Reset() *CreateTableStmt {
 // Table 指定表名
 func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	stmt.model.Type = core.Table
-	stmt.model.SetName(t)
+	stmt.model.Name = t
 	return stmt
 }
 
@@ -198,10 +198,7 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		w.QuoteKey(col.Name).
-			WBytes(' ').
-			WString(typ).
-			WBytes(',')
+		w.QuoteKey(col.Name).WBytes(' ').WString(typ).WBytes(',')
 	}
 
 	if err := stmt.createConstraints(w); err != nil {

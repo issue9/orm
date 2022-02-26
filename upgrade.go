@@ -5,6 +5,7 @@ package orm
 import (
 	"fmt"
 
+	"github.com/issue9/orm/v4/core"
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
@@ -15,7 +16,7 @@ import (
 // varchar(50) 和 text 在 sqlite3 是相同的，但是在其它数据库可能是稍微有差别的，
 // 所以 Upgrader 并不会自动对数据表进行更新，所有更新还是要手动调用相关的函数。
 type Upgrader struct {
-	model *Model
+	model *core.Model
 	err   error
 	ddl   []sqlbuilder.DDLStmt
 

@@ -55,8 +55,8 @@ func parseMysqlCreateTable(tableName string, lines []string) (*MysqlTable, error
 				return nil, fmt.Errorf("语法错误:%s", line)
 			}
 			table.Indexes[line[:index]] = core.IndexDefault
-		case "PRIMARY": // 主键约束，没有约束名
-			table.Constraints[core.PKName(tableName)] = core.ConstraintPK
+		case "PRIMARY": // 主键约束，没有约束名，可能与其它约束名称同名
+			table.Constraints[core.PKNameSuffix] = core.ConstraintPK
 		case "UNIQUE":
 			words := fields(line)
 			table.Constraints[words[1]] = core.ConstraintUnique
