@@ -54,8 +54,7 @@ func TestUpgrader(t *testing.T) {
 			DropIndex("i_name").
 			DropColumn("created").
 			AddColumn("modified").
-			AddPK().
-			AddConstraint("u_id", "chk_username").
+			AddConstraint("u_id", "chk_username", "u2_pk").
 			AddIndex("index_name").
 			AddColumn("created"). // 同名不同类型
 			Do()

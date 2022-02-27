@@ -9,8 +9,6 @@ import (
 	"fmt"
 )
 
-const PKNameSuffix = "_pk"
-
 // 索引的类型
 const (
 	IndexDefault IndexType = iota // 普通的索引
@@ -151,14 +149,6 @@ type Dialect interface {
 	// NOTE: query 中不能同时存在 ? 和命名参数。因为如果是命名参数，则 Exec 等的参数顺序可以是随意的。
 	Prepare(sql string) (query string, orders map[string]int, err error)
 }
-
-// PKName 生成主键约束的名称
-//
-// 各个数据库对主键约束的规定并不统一，mysql 会忽略约束名，
-// 为了统一，主键约束的名称统一由此函数生成，用户不能另外指定。
-//
-// 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
-func PKName(table string) string { return table + PKNameSuffix }
 
 // ErrConstraintExists 返回约束名已经存在的错误
 func ErrConstraintExists(c string) error { return fmt.Errorf("约束 %s 已经存在", c) }

@@ -160,6 +160,16 @@ LOOP:
 			u.ddl = append(u.ddl, sql)
 			continue LOOP
 		}
+
+		if u.model.PrimaryKey.Name == c {
+			cols := make([]string, 0, len(u.model.PrimaryKey.Columns))
+			for _, col := range u.model.PrimaryKey.Columns {
+				cols = append(cols, col.Name)
+			}
+
+			sql := sqlbuilder.AddConstraint(u.Engine()).Table(u.model.Name).PK(c, cols...)
+			u.ddl = append(u.ddl, sql)
+		}
 	}
 
 	return u
@@ -176,29 +186,10 @@ func (u *Upgrader) DropConstraint(conts ...string) *Upgrader {
 	return u
 }
 
-// AddPK 添加主键约束
-func (u *Upgrader) AddPK() *Upgrader {
-	if u.err != nil {
-		return u
-	}
-
-	if u.model.PrimaryKey != nil {
-		cols := make([]string, 0, len(u.model.PrimaryKey.Columns))
-		for _, col := range u.model.PrimaryKey.Columns {
-			cols = append(cols, col.Name)
-		}
-
-		sql := sqlbuilder.AddConstraint(u.Engine()).Table(u.model.Name).PK(cols...)
-		u.ddl = append(u.ddl, sql)
-	}
-
-	return u
-}
-
 // DropPK 删除主键约束
-func (u *Upgrader) DropPK() *Upgrader {
+func (u *Upgrader) DropPK(name string) *Upgrader {
 	if u.err == nil {
-		sql := sqlbuilder.DropConstraint(u.Engine()).Table(u.model.Name).PK()
+		sql := sqlbuilder.DropConstraint(u.Engine()).Table(u.model.Name).PK(name)
 		u.ddl = append(u.ddl, sql)
 	}
 	return u

@@ -45,7 +45,7 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 		// 已经存在主键，出错
 		addStmt := sqlbuilder.AddConstraint(t.DB)
 		err = addStmt.Table("#info").
-			PK("uid").
+			PK("#info_pk", "uid").
 			Exec()
 		t.Error(err)
 
@@ -58,13 +58,12 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 
 		err = sqlbuilder.DropConstraint(t.DB).
 			Table("#info").
-			Constraint("test_pk").
-			PK().
+			PK("test_pk").
 			Exec()
 		a.NotError(err)
 
 		err = addStmt.Reset().Table("#info").
-			PK("uid").
+			PK("#info_pk", "uid").
 			Exec()
 		t.NotError(err)
 	})

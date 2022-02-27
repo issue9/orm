@@ -122,7 +122,7 @@ func TestColumn_setDefault(t *testing.T) {
 		Equal(col.Default, 1)
 
 	// 可以是主键的一部分
-	m.PrimaryKey = &core.Constraint{Columns: []*core.Column{col.Column, col.Column}, Name: core.PKName(m.Name)}
+	m.PrimaryKey = &core.Constraint{Columns: []*core.Column{col.Column, col.Column}, Name: "pk"}
 	a.NotError(col.setDefault([]string{"1"}))
 	a.True(col.HasDefault).
 		Equal(col.Default, 1)

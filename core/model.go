@@ -11,6 +11,8 @@ import (
 	"github.com/issue9/sliceutil"
 )
 
+const pkName = "_pk"
+
 var (
 	// ErrAutoIncrementPrimaryKeyConflict 自增和主键不能同时存在
 	//
@@ -187,7 +189,7 @@ func (m *Model) AddPrimaryKey(col *Column) error {
 	}
 
 	if m.PrimaryKey == nil {
-		m.PrimaryKey = &Constraint{Name: PKName(m.Name), Columns: make([]*Column, 0, 5)}
+		m.PrimaryKey = &Constraint{Name: pkName, Columns: make([]*Column, 0, 5)}
 	}
 	m.PrimaryKey.append(col)
 

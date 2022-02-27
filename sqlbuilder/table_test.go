@@ -41,7 +41,7 @@ func TestCreateTableStmt(t *testing.T) {
 		err = stmt.Reset().
 			Table("users").
 			AutoIncrement("id", core.Int).
-			PK("id").
+			PK("users_pk", "id").
 			Err()
 		t.Error(err)
 

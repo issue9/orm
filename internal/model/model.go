@@ -26,7 +26,7 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 	ms.locker.Lock()
 	defer ms.locker.Unlock()
 
-	if m, found := ms.items[name]; found {
+	if m, found := ms.models[name]; found {
 		return m, nil
 	}
 
@@ -65,43 +65,13 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 		return nil, err
 	}
 
-	if err := ms.addModel(m); err != nil {
-		return nil, err
+	if _, found := ms.models[m.Name]; found {
+		return nil, fmt.Errorf("已经存在表模型 %s", m.Name)
 	}
+	ms.models[m.Name] = m
+	// NOTE: Model 的约束名会加上表名作为其前缀，只要在单个 Model 中能保证唯一，那么就可以保证全局唯一了。
 
 	return m, nil
-}
-
-func (ms *Models) addModel(m *core.Model) (err error) {
-	ms.items[m.Name] = m
-
-	w := func(name string) {
-		if err == nil {
-			err = ms.addNames(name)
-		}
-	}
-
-	for _, c := range m.Indexes {
-		w(c.Name)
-	}
-
-	for _, c := range m.Uniques {
-		w(c.Name)
-	}
-
-	for name := range m.Checks {
-		w(name)
-	}
-
-	for _, fk := range m.ForeignKeys {
-		w(fk.Name)
-	}
-
-	if m.PrimaryKey != nil {
-		w(m.PrimaryKey.Name)
-	}
-
-	return
 }
 
 // 将 rval 中的结构解析到 m 中，支持匿名字段。

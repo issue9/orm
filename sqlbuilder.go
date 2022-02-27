@@ -148,7 +148,7 @@ func create(e modelEngine, v TableNamer) error {
 		for _, col := range m.PrimaryKey.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.PK(cols...)
+		sb.PK(constraintName(m.Name, m.PrimaryKey.Name), cols...)
 	}
 
 	return sb.Exec()

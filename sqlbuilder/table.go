@@ -2,7 +2,11 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v4/core"
+import (
+	"fmt"
+
+	"github.com/issue9/orm/v4/core"
+)
 
 // CreateTableStmt 创建表的语句
 type CreateTableStmt struct {
@@ -98,18 +102,23 @@ func (stmt *CreateTableStmt) AutoIncrement(col string, p core.PrimitiveType) *Cr
 
 // PK 指定主键约束
 //
-// 自增会自动转换为主键
-func (stmt *CreateTableStmt) PK(col ...string) *CreateTableStmt {
+// name 为约束名，部分数据会忽略约束名，比如 mysql；
+func (stmt *CreateTableStmt) PK(name string, col ...string) *CreateTableStmt {
 	if stmt.err != nil {
 		return stmt
 	}
 
+	if stmt.model.PrimaryKey != nil && stmt.model.PrimaryKey.Name != name {
+		stmt.err = fmt.Errorf("已经存在名为 %s 的主键约束", stmt.model.PrimaryKey.Name)
+		return stmt
+	} else {
+		stmt.model.PrimaryKey = &core.Constraint{Name: name}
+	}
+
 	for _, c := range col {
-		if stmt.err != nil {
+		if stmt.err = stmt.model.AddPrimaryKey(stmt.model.FindColumn(c)); stmt.err != nil {
 			return stmt
 		}
-
-		stmt.err = stmt.model.AddPrimaryKey(stmt.model.FindColumn(c))
 	}
 	return stmt
 }

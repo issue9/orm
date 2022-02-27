@@ -48,44 +48,6 @@ func testDialectVersionSQL(t *test.Driver) {
 	t.NotEmpty(ver)
 }
 
-func testDialectDropConstraintStmtHook(t *test.Driver) {
-	db := t.DB
-
-	// 不存在的约束，出错
-	stmt := sqlbuilder.DropConstraint(db).
-		Table("fk_table").
-		Constraint("id_great_zero")
-
-	t.Error(stmt.Exec())
-
-	err := sqlbuilder.AddConstraint(db).
-		Table("fk_table").
-		Check("id_great_zero", "id>0").
-		Exec()
-	t.NotError(err)
-
-	// 约束已经添加，可以正常删除
-	// check
-	stmt.Reset()
-	err = stmt.Table("fk_table").Constraint("id_great_zero").Exec()
-	t.NotError(err)
-
-	// fk
-	stmt.Reset()
-	err = stmt.Table("usr").Constraint("xxx_fk").Exec()
-	t.NotError(err)
-
-	// unique
-	stmt.Reset()
-	err = stmt.Table("usr").Constraint("u_user_xx1").Exec()
-	t.NotError(err)
-
-	// pk
-	stmt.Reset()
-	err = stmt.Table("usr").Constraint(core.PKName("usr")).PK().Exec()
-	t.NotError(err)
-}
-
 func testTypes(t *test.Driver) {
 	tableName := "test_type_read_write"
 	now := time.Now()

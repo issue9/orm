@@ -46,7 +46,7 @@ func initDB(t *test.Driver) {
 		Column("nickname", core.String, false, false, false, nil, 20).
 		Column("address", core.String, false, false, false, nil, 1024).
 		Column("birthday", core.Time, false, false, true, time.Time{}).
-		PK("tel", "nickname").
+		PK("info_pk", "tel", "nickname").
 		ForeignKey("info_fk", "uid", "users", "id", "CASCADE", "CASCADE")
 	err = creator.Exec()
 	t.NotError(err)

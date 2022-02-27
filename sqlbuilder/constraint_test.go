@@ -93,19 +93,18 @@ func TestConstraint_PK(t *testing.T) {
 		// 已经存在主键，出错
 		addStmt := sqlbuilder.AddConstraint(t.DB)
 		err := addStmt.Table("info").
-			PK("tel").
+			PK("info_pk", "tel").
 			Exec()
 		t.Error(err)
 
 		err = sqlbuilder.DropConstraint(t.DB).
 			Table("info").
-			Constraint(core.PKName("info")).
-			PK().
+			PK("info_pk").
 			Exec()
 		a.NotError(err)
 
 		err = addStmt.Reset().Table("info").
-			PK("tel", "nickname").
+			PK("info_pk", "tel", "nickname").
 			Exec()
 		t.NotError(err)
 	})
@@ -116,7 +115,7 @@ func TestConstraint_PK(t *testing.T) {
 			Table("#info").
 			Column("uid", core.Int64, false, false, false, nil).
 			Column("tel", core.String, false, false, false, nil, 11).
-			PK("tel", "uid").
+			PK("#info_pk", "tel", "uid").
 			Exec()
 		t.NotError(err)
 
@@ -128,19 +127,18 @@ func TestConstraint_PK(t *testing.T) {
 		// 已经存在主键，出错
 		addStmt := sqlbuilder.AddConstraint(t.DB)
 		err = addStmt.Table("#info").
-			PK("tel").
+			PK("#info_pk", "tel").
 			Exec()
 		t.Error(err)
 
 		err = sqlbuilder.DropConstraint(t.DB).
 			Table("#info").
-			Constraint(core.PKName("#info")).
-			PK().
+			PK("#info_pk").
 			Exec()
 		a.NotError(err)
 
 		err = addStmt.Reset().Table("#info").
-			PK("tel", "uid").
+			PK("#info_pk", "tel", "uid").
 			Exec()
 		t.NotError(err)
 	})
@@ -159,19 +157,18 @@ func TestConstraint_PK(t *testing.T) {
 		// 已经存在主键，出错
 		addStmt := sqlbuilder.AddConstraint(t.DB)
 		err = addStmt.Table("#info").
-			PK("uid").
+			PK("#info_pk", "uid").
 			Exec()
 		t.Error(err)
 
 		err = sqlbuilder.DropConstraint(t.DB).
 			Table("#info").
-			Constraint("test_pk").
-			PK().
+			PK("test_pk").
 			Exec()
 		a.NotError(err)
 
 		err = addStmt.Reset().Table("#info").
-			PK("uid").
+			PK("#info_pk", "uid").
 			Exec()
 		t.NotError(err)
 	})
