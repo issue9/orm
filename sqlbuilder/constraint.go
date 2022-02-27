@@ -195,8 +195,8 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 	return []string{query}, nil
 }
 
-// DropConstraintStmtHooker DropConstraintStmt.DDLSQL 的钩子函数
 type DropConstraintStmtHooker interface {
+	// 如果返回空值，则继续之后的操作
 	DropConstraintStmtHook(*DropConstraintStmt) ([]string, error)
 }
 

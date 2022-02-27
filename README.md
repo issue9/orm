@@ -17,7 +17,7 @@ postgres  | postgres github.com/lib/pq              | [![Postgres](https://githu
 理论上 github.com/jackc/pgx/v4/stdlib 也是可用于 postgres，不过其驱动的注册名称为 pgx。
 
 其它数据库，用户可以通过实现 Dialect 接口，来实现相应的支持。
-如果用到了 check 约束，则需要 mysql > 8.0.16、mariadb > 10.2.1。
+如果用到了 check 约束，则需要 mysql > 8.0.19、mariadb > 10.2.1。
 
 #### 初始化
 

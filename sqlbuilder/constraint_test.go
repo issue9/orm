@@ -100,6 +100,7 @@ func TestConstraint_PK(t *testing.T) {
 		err = sqlbuilder.DropConstraint(t.DB).
 			Table("info").
 			Constraint(core.PKName("info")).
+			PK().
 			Exec()
 		a.NotError(err)
 
@@ -134,6 +135,7 @@ func TestConstraint_PK(t *testing.T) {
 		err = sqlbuilder.DropConstraint(t.DB).
 			Table("#info").
 			Constraint(core.PKName("#info")).
+			PK().
 			Exec()
 		a.NotError(err)
 

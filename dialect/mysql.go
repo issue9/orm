@@ -8,11 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/issue9/orm/v4/core"
-	"github.com/issue9/orm/v4/internal/createtable"
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
@@ -101,48 +99,14 @@ func (m *mysql) LimitSQL(limit any, offset ...any) (string, []any) {
 }
 
 func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]string, error) {
-	info, err := createtable.ParseMysqlCreateTable(stmt.TableName, stmt.Engine())
-	if err != nil {
-		return nil, err
-	}
-
-	builder := core.NewBuilder("ALTER TABLE ").
-		WString(stmt.TableName).
-		WString(" DROP ")
+	b := core.NewBuilder("ALTER TABLE ").WString(stmt.TableName).WString(" DROP ")
 	if stmt.IsPK {
-		query, err := builder.WString(" PRIMARY KEY").String()
-		if err != nil {
-			return nil, err
-		}
-		return []string{query}, nil
+		b.WString(" PRIMARY KEY ")
+	} else {
+		b.WString(" CONSTRAINT ").QuoteKey(stmt.Name)
 	}
 
-	name := strings.Replace(stmt.Name, "#", stmt.Engine().TablePrefix(), 1)
-	constraintType, found := info.Constraints[name]
-	if !found { // 不存在，也返回错误，统一与其它数据的行为
-		return nil, fmt.Errorf("不存在的约束:%s", name)
-	}
-
-	switch constraintType {
-	case core.ConstraintFK:
-		builder.WString(" FOREIGN KEY ").WString(stmt.Name)
-	case core.ConstraintPK:
-		builder.WString(" PRIMARY KEY")
-	case core.ConstraintUnique:
-		builder.WString(" INDEX ").WString(stmt.Name)
-	default:
-		if constraintType == core.ConstraintCheck {
-			if m.isMariadb {
-				builder.WString(" CONSTRAINT ").WString(stmt.Name)
-			} else {
-				builder.WString(" CHECK ").WString(stmt.Name)
-			}
-		} else {
-			panic(fmt.Sprintf("不存在的约束类型:%d", constraintType))
-		}
-	}
-
-	query, err := builder.String()
+	query, err := b.String()
 	if err != nil {
 		return nil, err
 	}

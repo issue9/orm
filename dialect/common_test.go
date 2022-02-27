@@ -82,7 +82,7 @@ func testDialectDropConstraintStmtHook(t *test.Driver) {
 
 	// pk
 	stmt.Reset()
-	err = stmt.Table("usr").Constraint(core.PKName("usr")).Exec()
+	err = stmt.Table("usr").Constraint(core.PKName("usr")).PK().Exec()
 	t.NotError(err)
 }
 

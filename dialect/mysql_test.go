@@ -14,34 +14,6 @@ import (
 	"github.com/issue9/orm/v4/sqlbuilder"
 )
 
-// 创建测试数据表的脚本
-var mysqlCreateTable = []string{`CREATE TABLE fk_table(
-	id bigint NOT NULL,
-	name varchar(20) not null,
-	address varchar(200) not null,
-	CONSTRAINT fk_table_pk PRIMARY KEY(id)
-	)`,
-
-	`CREATE TABLE usr (
-	id bigint NOT NULL,
-	created bigint NOT NULL,
-	nickname varchar(20) NOT NULL,
-	state bigint NOT NULL,
-	username varchar(20) NOT NULL,
-	mobile varchar(18) NOT NULL,
-	email varchar(200) NOT NULL,
-	pwd varchar(36) NOT NULL,
-	CONSTRAINT usr_pk PRIMARY KEY (id),
-	CONSTRAINT u_user_xx1 UNIQUE (mobile,username),
-	CONSTRAINT u_user_email1 UNIQUE (email,username),
-	CONSTRAINT unique_id UNIQUE (id),
-	CONSTRAINT xxx_fk FOREIGN KEY (id) REFERENCES fk_table (id),
-	CONSTRAINT xxx CHECK (created > 0)
-	)`,
-	`create index index_user_mobile on usr(mobile)`,
-	`create unique index index_user_unique_email_id on usr(email,id)`,
-}
-
 func TestMysql_VersionSQL(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
@@ -56,25 +28,6 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
-
-	suite.ForEach(func(t *test.Driver) {
-		db := t.DB
-
-		for _, query := range mysqlCreateTable {
-			_, err := db.Exec(query)
-			t.NotError(err)
-		}
-
-		defer func() {
-			_, err := db.Exec("DROP TABLE `usr`")
-			t.NotError(err)
-
-			_, err = db.Exec("DROP TABLE `fk_table`")
-			t.NotError(err)
-		}()
-
-		testDialectDropConstraintStmtHook(t)
-	})
 
 	// 约束名不是根据 core.PKName() 生成的
 	suite.ForEach(func(t *test.Driver) {

@@ -9,10 +9,7 @@ import (
 	"fmt"
 )
 
-const (
-	AINameSuffix = "_ai"
-	PKNameSuffix = "_pk"
-)
+const PKNameSuffix = "_pk"
 
 // 索引的类型
 const (
