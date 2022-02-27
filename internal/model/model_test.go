@@ -140,7 +140,7 @@ func TestModels_New(t *testing.T) {
 	a.True(found).Equal(usernameCol, index.Columns[0])
 
 	// ai
-	a.Equal(m.AutoIncrement.Columns[0], idCol).
+	a.Equal(m.AutoIncrement, idCol).
 		Nil(m.PrimaryKey) // 有自增，则主键为空
 
 	// unique_name

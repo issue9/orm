@@ -97,10 +97,6 @@ func (ms *Models) addModel(m *core.Model) (err error) {
 		w(fk.Name)
 	}
 
-	if m.AutoIncrement != nil {
-		w(m.AutoIncrement.Name)
-	}
-
 	if m.PrimaryKey != nil {
 		w(m.PrimaryKey.Name)
 	}

@@ -44,8 +44,8 @@ func where(ws *sqlbuilder.WhereStmt, m *core.Model, rval reflect.Value) error {
 	var vals []any
 	var constraint string
 
-	if m.AutoIncrement != nil && len(m.AutoIncrement.Columns) > 0 {
-		if keys, vals = getKV(rval, m.AutoIncrement.Columns[0]); len(keys) > 0 {
+	if m.AutoIncrement != nil {
+		if keys, vals = getKV(rval, m.AutoIncrement); len(keys) > 0 {
 			goto RET
 		}
 	}
@@ -68,7 +68,7 @@ func where(ws *sqlbuilder.WhereStmt, m *core.Model, rval reflect.Value) error {
 		}
 
 		keys, vals = k, v
-		constraint = constraintName(m.Name, u.Name)
+		constraint = u.Name
 	}
 
 RET:
@@ -176,7 +176,7 @@ func truncate(e modelEngine, v TableNamer) error {
 
 	stmt := e.SQLBuilder().TruncateTable()
 	if m.AutoIncrement != nil {
-		stmt.Table(m.Name, m.AutoIncrement.Name)
+		stmt.Table(m.Name, constraintName(m.Name, m.AutoIncrement.Name))
 	} else {
 		stmt.Table(m.Name, "")
 	}
@@ -233,7 +233,7 @@ func lastInsertID(e modelEngine, v TableNamer) (int64, error) {
 		stmt.KeyValue(col.Name, field.Interface())
 	}
 
-	return stmt.LastInsertID(m.Name, m.AutoIncrement.Columns[0].Name)
+	return stmt.LastInsertID(m.Name, m.AutoIncrement.Name)
 }
 
 func insert(e modelEngine, v TableNamer) (sql.Result, error) {

@@ -28,12 +28,12 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	a.NotError(m.AddColumns(ai))
 	a.NotError(m.SetAutoIncrement(ai))
 	a.True(ai.AI)
-	a.Equal(m.AutoIncrement.Columns[0], ai)
+	a.Equal(m.AutoIncrement, ai)
 
 	// 同类型也不可以多次添加
 	a.Error(m.SetAutoIncrement(ai))
 	a.True(ai.AI)
-	a.Equal(m.AutoIncrement.Columns[0], ai)
+	a.Equal(m.AutoIncrement, ai)
 
 	// 已有自增列
 	ai2, err := NewColumn(Int64)

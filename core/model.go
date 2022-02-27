@@ -91,7 +91,7 @@ type (
 		ForeignKeys   []*ForeignKey
 		Indexes       []*Constraint // 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
 		Uniques       []*Constraint
-		AutoIncrement *Constraint
+		AutoIncrement *Column
 		PrimaryKey    *Constraint
 	}
 )
@@ -169,7 +169,7 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 	}
 
 	col.AI = true
-	m.AutoIncrement = &Constraint{Name: aiName(m.Name), Columns: []*Column{col}}
+	m.AutoIncrement = col
 	return nil
 }
 
@@ -314,10 +314,6 @@ func (m *Model) Sanitize() error {
 		}
 	}
 
-	if err := m.AutoIncrement.sanitize(); err != nil {
-		return err
-	}
-
 	if err := m.PrimaryKey.sanitize(); err != nil {
 		return err
 	}
@@ -360,11 +356,7 @@ func (m *Model) checkNames() error {
 	l := 2 + len(m.Indexes) + len(m.Uniques) + len(m.ForeignKeys) + len(m.Checks)
 	names := make([]string, 0, l)
 
-	if m.AutoIncrement != nil { // 由 Constraint.sanitize 保证 name 不为空值
-		names = append(names, m.AutoIncrement.Name)
-	}
-
-	if m.PrimaryKey != nil {
+	if m.PrimaryKey != nil { // 由 Constraint.sanitize 保证 name 不为空值
 		names = append(names, m.PrimaryKey.Name)
 	}
 

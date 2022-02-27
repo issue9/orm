@@ -182,7 +182,7 @@ func TestDB_Update_error(t *testing.T) {
 			Email: "email1",
 		}
 		rslt, err := t.DB.Update(admin)
-		t.ErrorString(err, "unique_admin_username").Nil(rslt)
+		t.ErrorString(err, "多个唯一约束 unique_admin_username").Nil(rslt)
 	})
 }
 

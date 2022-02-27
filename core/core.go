@@ -30,7 +30,6 @@ const (
 	ConstraintFK                    // 外键约束
 	ConstraintCheck                 // Check 约束
 	ConstraintPK                    // 主键约束
-	ConstraintAI                    // 自增
 )
 
 type IndexType int8
@@ -163,14 +162,6 @@ type Dialect interface {
 //
 // 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
 func PKName(table string) string { return table + PKNameSuffix }
-
-// 生成 AI 约束名称
-//
-// 自增约束的实现，各个数据库并不相同，诸如 mysql 直接加在列信息上，
-// 而 postgres 会创建 sequence，需要指定 sequence 名称。
-//
-// 参数 table 必须是完整的表名，如果有表名前缀，也需要带上。
-func aiName(table string) string { return table + AINameSuffix }
 
 // ErrConstraintExists 返回约束名已经存在的错误
 func ErrConstraintExists(c string) error { return fmt.Errorf("约束 %s 已经存在", c) }

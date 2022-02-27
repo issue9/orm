@@ -19,8 +19,3 @@ func TestPKName(t *testing.T) {
 	a := assert.New(t, false)
 	a.True(strings.HasSuffix(PKName("xx"), PKNameSuffix))
 }
-
-func TestAIName(t *testing.T) {
-	a := assert.New(t, false)
-	a.True(strings.HasSuffix(aiName("xx"), AINameSuffix))
-}
