@@ -17,7 +17,6 @@ type Unix struct {
 	IsNull bool
 }
 
-// Scan implements the Scanner.Scan
 func (n *Unix) Scan(src any) (err error) {
 	// The src value will be of one of the following types:
 	//
@@ -65,23 +64,6 @@ func (n Unix) Value() (driver.Value, error) {
 func (n *Unix) FromTime(t time.Time) {
 	n.IsNull = false
 	n.Time = t
-}
-
-// ParseDefault 实现 DefaultParser 接口
-func (n *Unix) ParseDefault(v string) error {
-	n.IsNull = isNULL(v)
-	if n.IsNull {
-		return nil
-	}
-
-	t, err := time.Parse(core.TimeFormatLayout, v)
-	if err != nil {
-		n.IsNull = false
-		return err
-	}
-
-	n.FromTime(t)
-	return nil
 }
 
 func (n Unix) PrimitiveType() core.PrimitiveType { return core.Int64 }

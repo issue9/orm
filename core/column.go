@@ -13,19 +13,6 @@ import (
 // 像 reflect.Func 和 reflect.Chan 等都将返回该错误。
 var ErrInvalidColumnType = errors.New("无效的列类型")
 
-// DefaultParser 提供了 ParseDefault 函数
-//
-// 在 struct tag 中可以通过 default 指定默认值，
-// 该值的表示可能与数据库中的表示不尽相同，
-// 所以自定义的数据类型，需要实现该接口，以便能正确转换成该类型的值。
-//
-// 如果用户不提供该接口实现，那么默认情况下，
-// 系统会采用 github.com/issue9/conv.Value() 函数作默认转换。
-type DefaultParser interface {
-	// ParseDefault 将默认值从字符串解析成 t 类型的值
-	ParseDefault(v string) error
-}
-
 // Column 列结构
 type Column struct {
 	Name       string // 数据库的字段名

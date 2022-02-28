@@ -77,7 +77,7 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 内置类型的格式，Bool 为 true 和 false，time 为 time.RFC3339
 
-自定义类型，用户可以自已实现 DefaultParser 作为解析方式。
+自定义类型会尝试采用 sql.Scanner 作为解析方式。
 
 #### fk(fk_name,refTable,refColName,updateRule,deleteRule)
 
@@ -104,60 +104,7 @@ Viewer 接口返回一条 `SELECT` 语句，用于指定创建视图时的 `SELE
 在视图模式下，部分功能会不可用，比如 check 约束、索引等。
 但是 AI、PK 和唯一索引，仍然在查询时，被用来当作唯一查询条件。
 
-#### DefaultParser
-
-DefaultParser 用于自定义类型的数据作为列时，如果需要指定默认值，
-可以实现该接口。
-
-在解析默认值时，如果不存在 `DefaultParser` 接口，也会尝试采用 `sql.Scanner` 接口，
-如果两者都不存在，则会采用 github.com/issue9/conv.Value 进行强转换。
-
-比如以下代码就可以实现将一个对象以 JSON 字符串的形式保存在数据库中，
-而默认值的设置，可以是 `ip,time` 的形式，以逗号作简单分隔。
-
-```go
-// Last 用户最后一次访问信息
-type Last struct {
-    IP      string    `orm:"name(ip);len(50)"`
-    Created time.Time `orm:"name(creator)"`
-}
-
-func(l *Last) ParseDefault(v string) (err error) {
-    fields := strings.Split(v, ",")
-    if len(fields) != 2 {
-        return errors.New("格式不正确")
-    }
-
-    l.Created, err = time.Parse(time.RFC3339, fields[1])
-    if err != nil {
-        return err
-    }
-
-    l.IP = fields[0]
-
-    return nil
-}
-
-func(l *Last) Value() (driver.Value, error) {
-    data, err := json.Marshal(l)
-    if err != nil {
-        return nil, err
-    }
-
-    return string(data), nil
-}
-
-func(l *Last) Scan(v interface{}) error {
-    str, ok := v.(string)
-    if !ok {
-        return errors.New("无效的类型")
-    }
-
-    return json.Unmarshal([]byte(str), l)
-}
-```
-
-#### BeforeUpdater/BeforeCreater/AfterFetcher
+#### BeforeUpdater/BeforeInserter/AfterFetcher
 
 分别用于在更新和插入数据之前和从数据库获取数据之后被执行的方法。
 一般用于特定内容的生成，比如：

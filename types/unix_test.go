@@ -18,7 +18,6 @@ import (
 var (
 	_ sql.Scanner         = &Unix{}
 	_ driver.Valuer       = Unix{}
-	_ core.DefaultParser  = &Unix{}
 	_ core.PrimitiveTyper = &Unix{}
 
 	_ encoding.BinaryMarshaler   = Unix{}
@@ -28,17 +27,6 @@ var (
 	_ encoding.TextUnmarshaler   = &Unix{}
 	_ json.Unmarshaler           = &Unix{}
 )
-
-func TestUnix_ParseDefault(t *testing.T) {
-	a := assert.New(t, false)
-
-	u := &Unix{}
-	a.Error(u.ParseDefault("2020"))
-
-	now := time.Now()
-	a.NotError(u.ParseDefault(now.Format(core.TimeFormatLayout))).
-		Equal(now.Unix(), u.Time.Unix())
-}
 
 func TestUnix_Scan(t *testing.T) {
 	a := assert.New(t, false)

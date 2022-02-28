@@ -67,15 +67,6 @@ func (n Decimal) Value() (driver.Value, error) {
 	return n.Decimal.StringFixed(n.Precision), nil
 }
 
-// ParseDefault 实现 DefaultParser 接口
-func (n *Decimal) ParseDefault(v string) error {
-	if isNULL(v) {
-		n.IsNull = true
-		return nil
-	}
-	return n.UnmarshalText([]byte(v))
-}
-
 func (n Decimal) PrimitiveType() core.PrimitiveType { return core.Decimal }
 
 func (n Decimal) MarshalText() ([]byte, error) {

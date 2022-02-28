@@ -4,6 +4,7 @@ package model
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -177,7 +178,8 @@ func TestColumn_setDefault(t *testing.T) {
 	a.Error(col.setDefault([]string{"xyz"}))
 
 	// 格式正确，但类型被转换成 *core.Unix，而不初始的 core.Unix
-	a.NotError(col.setDefault([]string{f}))
+	nf := strconv.FormatInt(now.Unix(), 10)
+	a.NotError(col.setDefault([]string{nf}))
 	a.Equal(col.Default.(*types.Unix).Time.Unix(), now.Unix())
 
 	// col == &core.Unix
@@ -189,7 +191,7 @@ func TestColumn_setDefault(t *testing.T) {
 	a.Error(col.setDefault([]string{"xyz"}))
 
 	// 格式正确
-	a.NotError(col.setDefault([]string{f}))
+	a.NotError(col.setDefault([]string{nf}))
 	a.Equal(col.Default.(*types.Unix).Time.Unix(), now.Unix())
 
 	// col == &&core.Unix
@@ -202,6 +204,6 @@ func TestColumn_setDefault(t *testing.T) {
 	a.Error(col.setDefault([]string{"xyz"}))
 
 	// 格式正确
-	a.NotError(col.setDefault([]string{f}))
+	a.NotError(col.setDefault([]string{nf}))
 	a.Equal(col.Default.(*types.Unix).Time.Unix(), now.Unix())
 }

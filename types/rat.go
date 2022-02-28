@@ -56,15 +56,6 @@ func (n Rat) Value() (driver.Value, error) {
 // Rat 返回标准库中 math/big.Rat 的实例
 func (n Rat) Rat() *big.Rat { return n.rat }
 
-// ParseDefault 实现 DefaultParser 接口
-func (n *Rat) ParseDefault(v string) error {
-	if isNULL(v) {
-		n.rat = nil
-		return nil
-	}
-	return n.UnmarshalText([]byte(v))
-}
-
 func (n Rat) PrimitiveType() core.PrimitiveType { return core.String }
 
 func (n Rat) MarshalText() ([]byte, error) {

@@ -20,37 +20,12 @@ type (
 var (
 	_ sql.Scanner         = &ints{}
 	_ driver.Valuer       = ints{}
-	_ core.DefaultParser  = &ints{}
 	_ core.PrimitiveTyper = &ints{}
 
 	_ sql.Scanner         = &strs{}
 	_ driver.Valuer       = strs{}
-	_ core.DefaultParser  = &strs{}
 	_ core.PrimitiveTyper = &strs{}
 )
-
-func TestSlices_ParseDefault(t *testing.T) {
-	a := assert.New(t, false)
-
-	// ints
-
-	u := &ints{}
-	a.Error(u.ParseDefault("2020"))
-
-	u = &ints{}
-	a.NotError(u.ParseDefault(`[1,2]`)).
-		Equal(u, &ints{1, 2})
-
-	// strs
-
-	s := &strs{}
-	a.NotError(s.ParseDefault(`["1,2","3"]`)).
-		Equal(s, &strs{"1,2", "3"})
-
-	s = &strs{}
-	a.NotError(s.ParseDefault(`["1,2\"","3"]`)).
-		Equal(s, &strs{`1,2"`, "3"})
-}
 
 func TestSlices_Scan(t *testing.T) {
 	a := assert.New(t, false)

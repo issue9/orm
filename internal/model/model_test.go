@@ -3,6 +3,7 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 	"strings"
 	"testing"
@@ -16,8 +17,8 @@ import (
 )
 
 var (
-	_ core.DefaultParser  = &last{}
 	_ core.PrimitiveTyper = &last{}
+	_ sql.Scanner         = &last{}
 )
 
 func TestMain(m *testing.M) {
@@ -29,8 +30,13 @@ type last struct {
 	Created int64
 }
 
-func (l *last) ParseDefault(v string) error {
-	vals := strings.Split(v, ",")
+func (l *last) Scan(v any) error {
+	vv, ok := v.(string)
+	if !ok {
+		return errors.New("无效的类型")
+	}
+
+	vals := strings.Split(vv, ",")
 	if len(vals) != 2 {
 		return errors.New("无效的值格式")
 	}

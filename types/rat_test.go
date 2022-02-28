@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding"
-	"math/big"
 	"testing"
 
 	"github.com/issue9/assert/v2"
@@ -15,11 +14,9 @@ import (
 )
 
 var (
-	_ core.DefaultParser  = &Rat{}
 	_ core.PrimitiveTyper = &Rat{}
-
-	_ driver.Valuer = &Rat{}
-	_ sql.Scanner   = &Rat{}
+	_ driver.Valuer       = &Rat{}
+	_ sql.Scanner         = &Rat{}
 
 	_ encoding.TextMarshaler   = &Rat{}
 	_ encoding.TextUnmarshaler = &Rat{}
@@ -62,24 +59,4 @@ func TestRat_SQL(t *testing.T) {
 	a.Equal(r2.Rat().String(), "1/3")
 	val, err = r2.Value()
 	a.Equal(val, "1/3").NotError(err)
-}
-
-func TestRat_ParseDefault(t *testing.T) {
-	a := assert.New(t, false)
-
-	r := &Rat{}
-	a.True(r.IsNull())
-	a.NotError(r.ParseDefault("1/3"))
-	a.False(r.IsNull())
-	val, err := r.MarshalText()
-	a.NotError(err).Equal(string(val), "1/3")
-
-	r = &Rat{
-		rat: big.NewRat(1, 2),
-	}
-	a.False(r.IsNull())
-	a.NotError(r.ParseDefault(""))
-	a.True(r.IsNull())
-	val, err = r.MarshalText()
-	a.NotError(err).Equal(string(val), "")
 }

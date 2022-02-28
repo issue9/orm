@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/issue9/assert/v2"
-	"github.com/shopspring/decimal"
 
 	"github.com/issue9/orm/v5/core"
 )
@@ -18,7 +17,6 @@ import (
 var (
 	_ sql.Scanner         = &Decimal{}
 	_ driver.Valuer       = Decimal{}
-	_ core.DefaultParser  = &Decimal{}
 	_ core.PrimitiveTyper = &Decimal{}
 
 	_ encoding.TextMarshaler   = Decimal{}
@@ -58,18 +56,4 @@ func TestSQL(t *testing.T) {
 
 	d = FloatDecimal(2.22, 3)
 	a.Error(d.Scan(""))
-}
-
-func TestParseDefault(t *testing.T) {
-	a := assert.New(t, false)
-
-	d := Decimal{Decimal: decimal.New(1, 2), Precision: 1}
-	a.NotError(d.ParseDefault("3.333"))
-	val, err := d.MarshalText()
-	a.NotError(err).Equal(string(val), "3.3")
-
-	dd := &Decimal{Decimal: decimal.New(1, 2), Precision: 1}
-	a.NotError(dd.ParseDefault("3.333"))
-	val, err = dd.MarshalText()
-	a.NotError(err).Equal(string(val), "3.3")
 }

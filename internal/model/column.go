@@ -128,24 +128,8 @@ func (col *column) setDefault(vals []string) error {
 	col.HasDefault = true
 
 	rval := reflect.New(col.GoType)
-	v := rval.Interface()
-	if p, ok := v.(core.DefaultParser); ok {
-		if err := p.ParseDefault(vals[0]); err != nil {
-			return err
-		}
-		col.Default = v
-		return nil
-	}
-	v = rval.Elem().Interface()
-	if p, ok := v.(core.DefaultParser); ok {
-		if err := p.ParseDefault(vals[0]); err != nil {
-			return err
-		}
-		col.Default = v
-		return nil
-	}
 
-	v = rval.Interface()
+	v := rval.Interface()
 	if p, ok := v.(sql.Scanner); ok {
 		if err := p.Scan(vals[0]); err != nil {
 			return err
