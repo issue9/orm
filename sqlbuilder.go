@@ -160,8 +160,7 @@ func createView(e modelEngine, m *core.Model) error {
 	for _, col := range m.Columns {
 		stmt.Column(col.Name)
 	}
-	stmt.SelectQuery = m.ViewAs
-	return stmt.Exec()
+	return stmt.FromQuery(m.ViewAs).Exec()
 }
 
 func truncate(e modelEngine, v TableNamer) error {
@@ -205,7 +204,7 @@ func lastInsertID(e modelEngine, v TableNamer) (int64, error) {
 	}
 
 	if m.Type == core.View {
-		return 0, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+		return 0, fmt.Errorf("模型 %s 的类型是视图，无法添中数据", m.Name)
 	}
 
 	if m.AutoIncrement == nil {
@@ -243,7 +242,7 @@ func insert(e modelEngine, v TableNamer) (sql.Result, error) {
 	}
 
 	if m.Type == core.View {
-		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+		return nil, fmt.Errorf("模型 %s 的类型是视图，无法添中数据", m.Name)
 	}
 
 	if obj, ok := v.(BeforeInserter); ok {
@@ -297,7 +296,7 @@ func forUpdate(tx *Tx, v TableNamer) error {
 	}
 
 	if m.Type == core.View {
-		return fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+		return fmt.Errorf("模型 %s 的类型是视图，无法更新其数据", m.Name)
 	}
 
 	if obj, ok := v.(BeforeUpdater); ok {
@@ -341,7 +340,7 @@ func getUpdateColumns(e modelEngine, v TableNamer, stmt *sqlbuilder.UpdateStmt, 
 		return nil, reflect.Value{}, err
 	}
 	if m.Type == core.View {
-		return nil, reflect.Value{}, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
+		return nil, reflect.Value{}, fmt.Errorf("模型 %s 的类型是视图，无法更新其数据", m.Name)
 	}
 
 	if obj, ok := v.(BeforeUpdater); ok {

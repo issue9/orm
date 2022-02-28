@@ -8,7 +8,7 @@ import "github.com/issue9/orm/v5/core"
 type CreateViewStmt struct {
 	*ddlStmt
 
-	SelectQuery string
+	selectQuery string
 	name        string
 	columns     []string
 	temporary   bool
@@ -35,7 +35,7 @@ func (stmt *SelectStmt) View(name string) *CreateViewStmt {
 func (stmt *CreateViewStmt) Reset() *CreateViewStmt {
 	stmt.baseStmt.Reset()
 	stmt.name = ""
-	stmt.SelectQuery = ""
+	stmt.selectQuery = ""
 	stmt.columns = stmt.columns[:0]
 	stmt.temporary = false
 	stmt.replace = false
@@ -84,13 +84,21 @@ func (stmt *CreateViewStmt) From(sel *SelectStmt) *CreateViewStmt {
 		return stmt
 	}
 
-	stmt.SelectQuery = query
+	stmt.selectQuery = query
+	return stmt
+}
+
+// FromQuery 指定查询语句
+//
+// FromQuery 和 From 会相互覆盖。
+func (stmt *CreateViewStmt) FromQuery(query string) *CreateViewStmt {
+	stmt.selectQuery = query
 	return stmt
 }
 
 // DDLSQL 返回创建视图的 SQL 语句
 func (stmt *CreateViewStmt) DDLSQL() ([]string, error) {
-	return stmt.Dialect().CreateViewSQL(stmt.replace, stmt.temporary, stmt.name, stmt.SelectQuery, stmt.columns)
+	return stmt.Dialect().CreateViewSQL(stmt.replace, stmt.temporary, stmt.name, stmt.selectQuery, stmt.columns)
 }
 
 // DropViewStmt 删除视图

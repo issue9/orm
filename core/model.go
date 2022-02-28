@@ -69,8 +69,7 @@ type (
 
 		// 模型的名称
 		//
-		// 可以以 # 符号开头，表示该表名带有一个表名前缀，
-		// 在生成 SQL 语句时，该符号会被转换成 Engine.TablePrefix() 返回的值。
+		// 可以以 # 符号开头，表示该表名带有一个表名前缀。
 		Name string
 
 		// 如果当前模型是视图，那么此值表示的是视图的 select 语句，
@@ -79,7 +78,19 @@ type (
 
 		Type    ModelType
 		Columns []*Column
-		OCC     *Column // 乐观锁
+
+		// 约束与索引
+		//
+		// NOTE: 如果是视图模式，理论上是不存在约束信息的，
+		// 但是依然可以指定约束，这些信息主要是给 ORM 查看，以便构建搜索语句。
+		Checks        map[string]string
+		ForeignKeys   []*ForeignKey
+		Indexes       []*Constraint // 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
+		Uniques       []*Constraint
+		AutoIncrement *Column
+		PrimaryKey    *Constraint
+
+		OCC *Column // 乐观锁
 
 		// 表级别的数据
 		//
@@ -87,14 +98,6 @@ type (
 		// 可以采用 dialect.DBName 限定数据库，比如 mysql_charset 限定为 mysql 下的 charset 属性。
 		// 具体可参考各个 dialect 实现的介绍。
 		Options map[string][]string
-
-		// 约束与索引
-		Checks        map[string]string
-		ForeignKeys   []*ForeignKey
-		Indexes       []*Constraint // 目前不支持唯一索引，如果需要唯一索引，可以设置成唯一约束。
-		Uniques       []*Constraint
-		AutoIncrement *Column
-		PrimaryKey    *Constraint
 	}
 )
 

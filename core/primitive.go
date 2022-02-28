@@ -82,31 +82,24 @@ var (
 	primitiveTyperType = reflect.TypeOf((*PrimitiveTyper)(nil)).Elem()
 )
 
-// PrimitiveTyper 提供了 PrimitiveType 方法
-//
-// 如果用户需要将自定义类型写入数据，需要提供该类型所表示的 PrimitiveType 值，
-// 最终会以该类型的值写入数据库。
-//
-// NOTE: 最简单的方法是复用 driver.Valuer 接口，从其返回值中获取类型信息，
-// 但是该接口有可能返回 nil 值，无法确定类型。
 type PrimitiveTyper interface {
+	// NOTE: 最简单的方法是复用 driver.Valuer 接口，从其返回值中获取类型信息，
+	// 但是该接口有可能返回 nil 值，无法确定类型。
+
 	// PrimitiveType 返回当前对象所表示的 PrimitiveType 值
 	//
 	// NOTE: 每个对象在任何时间返回的值应该都是固定的。
 	PrimitiveType() PrimitiveType
 }
 
-// PrimitiveType 表示 Dialect 支持的数据类型
+// PrimitiveType 表示 Go 对象在数据库中实际的存储方式
 //
-// 所有 Go 对象需要指定一种类型作为其在数据库中的存储方式，
-// 内置的 Go 类型除去 complex 之外将作为相应在的定义，可通过 GetPrimitiveType 获取。
-//
-// Dialect 的实现者也需要在 SQLType 中实现对所有 PrimitiveType 在数据库中的真实类型。
+// PrimitiveType 由 Dialect.SQLType 转换成相应数据的实际类型。
 type PrimitiveType int
 
 // GetPrimitiveType 获取 t 所关联的 PrimitiveType 值
 //
-// 如果 t.Kind == Ptr，则需要用户自行处理获取其对象的类型，否则返回 Auto。
+// t.Kind 不能为 reflect.Ptr 否则将返回 Auto。
 func GetPrimitiveType(t reflect.Type) PrimitiveType {
 	primitiveType, found := types[t]
 	if !found {
