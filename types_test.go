@@ -27,13 +27,13 @@ type beforeObject2 struct {
 }
 
 var (
-	_ orm.BeforeCreater = &beforeObject1{}
-	_ orm.BeforeUpdater = &beforeObject1{}
+	_ orm.BeforeInserter = &beforeObject1{}
+	_ orm.BeforeUpdater  = &beforeObject1{}
 )
 
 func (o *beforeObject1) TableName() string { return "#objects1" }
 
-func (o *beforeObject1) BeforeCreate() error {
+func (o *beforeObject1) BeforeInsert() error {
 	o.Name = "insert-" + o.Name
 	return nil
 }
@@ -44,13 +44,13 @@ func (o *beforeObject1) BeforeUpdate() error {
 }
 
 var (
-	_ orm.BeforeCreater = &beforeObject1{}
-	_ orm.BeforeUpdater = &beforeObject1{}
+	_ orm.BeforeInserter = &beforeObject1{}
+	_ orm.BeforeUpdater  = &beforeObject1{}
 )
 
 func (o *beforeObject2) TableName() string { return "#objects2" }
 
-func (o *beforeObject2) BeforeCreate() error {
+func (o *beforeObject2) BeforeInsert() error {
 	o.Name = "insert-" + o.Name
 	return nil
 }

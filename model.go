@@ -37,7 +37,7 @@ func (t *Table) BeforeUpdate() error {
 	return nil
 }
 
-func (t *Table) BeforeCreate() error {
+func (t *Table) BeforeInsert() error {
 	t.Created = time.Now()
 	t.Updated = t.Created
 	return nil

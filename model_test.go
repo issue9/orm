@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	_ orm.BeforeCreater = &orm.Table{}
-	_ orm.BeforeUpdater = &orm.Table{}
+	_ orm.BeforeInserter = &orm.Table{}
+	_ orm.BeforeUpdater  = &orm.Table{}
 )
 
 // Group 带有自增 ID 的普通表结构
