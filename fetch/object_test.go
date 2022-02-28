@@ -9,9 +9,9 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v4/fetch"
-	"github.com/issue9/orm/v4/internal/test"
-	"github.com/issue9/orm/v4/types"
+	"github.com/issue9/orm/v5/fetch"
+	"github.com/issue9/orm/v5/internal/test"
+	"github.com/issue9/orm/v5/types"
 )
 
 type FetchEmail struct {

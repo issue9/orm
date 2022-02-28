@@ -7,7 +7,7 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v4/internal/flagtest"
+	"github.com/issue9/orm/v5/internal/flagtest"
 )
 
 func TestMain(m *testing.M) {

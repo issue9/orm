@@ -7,8 +7,8 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v4/fetch"
-	"github.com/issue9/orm/v4/internal/test"
+	"github.com/issue9/orm/v5/fetch"
+	"github.com/issue9/orm/v5/internal/test"
 )
 
 // 测试性能的数据库驱动名称

@@ -7,9 +7,9 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/issue9/orm/v4/core"
-	"github.com/issue9/orm/v4/internal/model"
-	"github.com/issue9/orm/v4/sqlbuilder"
+	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v5/internal/model"
+	"github.com/issue9/orm/v5/sqlbuilder"
 )
 
 // DB 数据库操作实例

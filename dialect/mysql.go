@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/issue9/orm/v4/core"
-	"github.com/issue9/orm/v4/sqlbuilder"
+	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v5/sqlbuilder"
 )
 
 const (

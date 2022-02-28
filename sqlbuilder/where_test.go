@@ -7,7 +7,7 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v4/internal/sqltest"
+	"github.com/issue9/orm/v5/internal/sqltest"
 )
 
 var _ SQLer = &WhereStmt{}

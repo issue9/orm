@@ -5,7 +5,7 @@ package model
 import (
 	"sync"
 
-	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v5/core"
 )
 
 // Models 数据模型管理

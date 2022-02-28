@@ -11,8 +11,8 @@ import (
 
 	"github.com/issue9/conv"
 
-	"github.com/issue9/orm/v4/core"
-	t "github.com/issue9/orm/v4/internal/tags"
+	"github.com/issue9/orm/v5/core"
+	t "github.com/issue9/orm/v5/internal/tags"
 )
 
 // AfterFetcher 在数据从数据库拉取之后执行的操作

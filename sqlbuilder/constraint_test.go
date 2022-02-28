@@ -7,9 +7,9 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v4/core"
-	"github.com/issue9/orm/v4/internal/test"
-	"github.com/issue9/orm/v4/sqlbuilder"
+	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v5/internal/test"
+	"github.com/issue9/orm/v5/sqlbuilder"
 )
 
 var (

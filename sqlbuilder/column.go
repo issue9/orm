@@ -2,7 +2,7 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v4/core"
+import "github.com/issue9/orm/v5/core"
 
 // AddColumnStmt 添加列
 type AddColumnStmt struct {

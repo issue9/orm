@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/orm/v4/core"
-	"github.com/issue9/orm/v4/internal/flagtest"
-	"github.com/issue9/orm/v4/internal/test"
-	"github.com/issue9/orm/v4/sqlbuilder"
+	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v5/internal/flagtest"
+	"github.com/issue9/orm/v5/internal/test"
+	"github.com/issue9/orm/v5/sqlbuilder"
 )
 
 func TestMain(m *testing.M) {

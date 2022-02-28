@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v5/core"
 )
 
 // Unix 以 unix 时间戳保存的 time.Time 数据格式

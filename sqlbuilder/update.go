@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"sort"
 
-	"github.com/issue9/orm/v4/core"
+	"github.com/issue9/orm/v5/core"
 )
 
 // UpdateStmt 更新语句
