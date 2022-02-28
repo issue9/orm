@@ -66,10 +66,9 @@ type Admin1 struct {
 
 func (u *User) TableName() string { return "#users" }
 
-// Meta 指定表属性
 func (u *User) ApplyModel(m *core.Model) error {
-	m.Meta["mysql_engine"] = []string{"innodb"}
-	m.Meta["mysql_charset"] = []string{"utf8"}
+	m.Options["mysql_engine"] = []string{"innodb"}
+	m.Options["mysql_charset"] = []string{"utf8"}
 	return nil
 }
 
@@ -82,10 +81,9 @@ type Admin struct {
 
 func (a *Admin) TableName() string { return "#administrators" }
 
-// Meta 指定表属性
 func (a *Admin) ApplyModel(m *core.Model) error {
-	m.Meta["mysql_engine"] = []string{"innodb"}
-	m.Meta["mysql_charset"] = []string{"utf8"}
+	m.Options["mysql_engine"] = []string{"innodb"}
+	m.Options["mysql_charset"] = []string{"utf8"}
 	return m.NewCheck("admin_chk_name", "{group}>0")
 }
 
@@ -93,7 +91,6 @@ type obj struct {
 	ID int `orm:"name(id);ai"`
 }
 
-// Meta 指定表属性
 func (o obj) TableName() string { return "#objs" }
 
 type viewObject struct {
@@ -160,13 +157,12 @@ func TestModels_New(t *testing.T) {
 	chk, found := m.Checks["admin_chk_name"]
 	a.True(found).Equal(chk, "{group}>0")
 
-	// meta
-	a.Equal(m.Meta, map[string][]string{
+	// options
+	a.Equal(m.Options, map[string][]string{
 		"mysql_engine":  {"innodb"},
 		"mysql_charset": {"utf8"},
 	})
 
-	// Meta返回的 name 属性
 	a.Equal(m.Name, "#administrators")
 
 	// 多层指针下的 Receive

@@ -18,7 +18,7 @@ func (u *User) TableName() string { return "#users" }
 
 // 指定了表名，以及其它一些表属性
 func (u *User) ApplyModel(m*core.Model) error {
-    m.Meta["mysql_charset"] = []string{"utf8"}
+    m.Options["mysql_charset"] = []string{"utf8"}
     return nil
 }
 

@@ -57,8 +57,8 @@
 //  // 表名 user 会被自动加上表名前缀。
 //  func(u *User) ApplyModel(m *core.Model) error {
 //      m.Name = "#user"
-//      m.Meta["engine"] = "innodb"
-//      m.Meta["charset"] = "utf8"
+//      m.Options["engine"] = "innodb"
+//      m.Options["charset"] = "utf8"
 //      return nil
 //  }
 //

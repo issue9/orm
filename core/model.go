@@ -83,10 +83,10 @@ type (
 
 		// 表级别的数据
 		//
-		// 如存储引擎，表名和字符集等，在创建表时，会用到这此数据。
+		// 如存储引擎，表名和字符集等，在创建表时，可能会用到这此数据。
 		// 可以采用 dialect.DBName 限定数据库，比如 mysql_charset 限定为 mysql 下的 charset 属性。
 		// 具体可参考各个 dialect 实现的介绍。
-		Meta map[string][]string
+		Options map[string][]string
 
 		// 约束与索引
 		Checks        map[string]string
@@ -126,7 +126,7 @@ func NewModel(modelType ModelType, name string, cap int) *Model {
 		Name:    name,
 		Type:    modelType,
 		Columns: make([]*Column, 0, cap),
-		Meta:    map[string][]string{},
+		Options: map[string][]string{},
 		Checks:  map[string]string{},
 	}
 }
@@ -139,7 +139,7 @@ func (m *Model) Reset() {
 	m.Type = none
 	m.Columns = m.Columns[:0]
 	m.OCC = nil
-	m.Meta = map[string][]string{}
+	m.Options = map[string][]string{}
 	m.Checks = map[string]string{}
 	m.ForeignKeys = m.ForeignKeys[:0]
 	m.AutoIncrement = nil

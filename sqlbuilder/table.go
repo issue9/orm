@@ -184,6 +184,15 @@ func (stmt *CreateTableStmt) ForeignKey(name, col, refTable, refCol, updateRule,
 	return stmt
 }
 
+// Options 指定创建表的额外选项
+//
+// k 为选项的名称，如果特定于数据库，需要加上数据库名作为前缀，比如 mysql_charset；
+// v 为选项值；
+func (stmt *CreateTableStmt) Options(k string, v ...string) *CreateTableStmt {
+	stmt.model.Options[k] = v
+	return stmt
+}
+
 // DDLSQL 获取 SQL 的语句及参数部分
 func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	if stmt.err != nil {
@@ -215,7 +224,7 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	}
 	w.TruncateLast(1).WBytes(')')
 
-	if err := stmt.Dialect().CreateTableOptionsSQL(w, stmt.model.Meta); err != nil {
+	if err := stmt.Dialect().CreateTableOptionsSQL(w, stmt.model.Options); err != nil {
 		return nil, err
 	}
 

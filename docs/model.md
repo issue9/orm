@@ -13,7 +13,7 @@ type User struct {
 func(u *User) TableName() string { return "#users" }
 
 func(u *User) ApplyModel(m*core.Model) error {
-    m.Meta["mysql_charset"] = []string{"utf8"}
+    m.Options["mysql_charset"] = []string{"utf8"}
     return m.NewCheck("id_great_zero", "id>0")
 }
 ```

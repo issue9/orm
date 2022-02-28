@@ -74,8 +74,8 @@ func(u *User) TableName() string { return "#user" }
 
 // 通过 orm.ApplyModeler 接口，指定表的额外数据。若不需要，可不用实现该接口
 func(u *User) ApplyModel(m *core.Model) error {
-    m.Meta["mysql_engine"] = []string{"innodb"}
-    m.Meta["mysql_charset"] = []string{"utf8"}
+    m.Options["mysql_engine"] = []string{"innodb"}
+    m.Options["mysql_charset"] = []string{"utf8"}
     return nil
 }
 ```

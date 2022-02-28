@@ -99,7 +99,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 	a.NotNil(builder)
 	var m = dialect.Mysql("mysql_driver_name", "")
 
-	// 空的 meta
+	// 空的 options
 	a.NotError(m.CreateTableOptionsSQL(builder, nil))
 	a.Equal(builder.Len(), 0)
 

@@ -112,7 +112,7 @@ type Dialect interface {
 	LastInsertIDSQL(table, col string) (sql string, append bool)
 
 	// CreateTableOptionsSQL 创建表时根据附加信息返回的部分 SQL 语句
-	CreateTableOptionsSQL(sql *Builder, meta map[string][]string) error
+	CreateTableOptionsSQL(sql *Builder, options map[string][]string) error
 
 	// TruncateTableSQL 生成清空数据表并重置自增列的语句
 	//

@@ -24,7 +24,6 @@ type Group struct {
 	Created int64  `orm:"name(created)"`
 }
 
-// Meta 指定表属性
 func (g *Group) TableName() string { return "#groups" }
 
 type User struct {
@@ -42,15 +41,13 @@ type UserInfo struct {
 	Sex       string `orm:"name(sex);default(male);len(6)"`
 }
 
-// Meta 指定表属性
 func (u *User) TableName() string { return "#users" }
 
 func (u *UserInfo) TableName() string { return "#user_info" }
 
-// Meta 指定表属性
 func (u *UserInfo) ApplyModel(m *core.Model) error {
-	m.Meta["mysql_engine"] = []string{"innodb"}
-	m.Meta["mysql_charset"] = []string{"utf8"}
+	m.Options["mysql_engine"] = []string{"innodb"}
+	m.Options["mysql_charset"] = []string{"utf8"}
 	return m.NewCheck("user_info_chk_name", "uid>0")
 }
 
@@ -63,10 +60,9 @@ type Admin struct {
 
 func (a *Admin) TableName() string { return "#administrators" }
 
-// Meta 指定表属性
 func (a *Admin) ApplyModel(m *core.Model) error {
-	m.Meta["mysql_engine"] = []string{"innodb"}
-	m.Meta["mysql_charset"] = []string{"utf8"}
+	m.Options["mysql_engine"] = []string{"innodb"}
+	m.Options["mysql_charset"] = []string{"utf8"}
 	return m.NewCheck("admin_chk_name", "{group}>0")
 }
 
@@ -77,7 +73,6 @@ type Account struct {
 	Version int64 `orm:"name(version);occ;default(0)"`
 }
 
-// Meta 指定表属性
 func (a *Account) TableName() string { return "#account" }
 
 // table 表中是否存在 size 条记录，若不是，则触发 error

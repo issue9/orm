@@ -175,7 +175,7 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 	a.NotNil(builder)
 	var s = dialect.Sqlite3("sqlite3_driver", "")
 
-	// 空的 meta
+	// 空的 options
 	a.NotError(s.CreateTableOptionsSQL(builder, nil))
 	a.Equal(builder.Len(), 0)
 

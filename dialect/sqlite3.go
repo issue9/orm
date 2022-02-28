@@ -30,7 +30,7 @@ var (
 
 // Sqlite3 返回一个适配 sqlite3 的 Dialect 接口
 //
-// Meta 可以接受以下参数：
+// Options 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
 func Sqlite3(driverName, tablePrefix string) core.Dialect {
 	return &sqlite3{

@@ -46,8 +46,8 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 		return nil, err
 	}
 
-	if meta, ok := obj.(core.ApplyModeler); ok {
-		if err := meta.ApplyModel(m); err != nil {
+	if am, ok := obj.(core.ApplyModeler); ok {
+		if err := am.ApplyModel(m); err != nil {
 			return nil, err
 		}
 	}
