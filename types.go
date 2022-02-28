@@ -83,7 +83,7 @@ type (
 
 		Drop(v TableNamer) error
 
-		// Truncate 重置 ai 保留表结构
+		// Truncate 清空表并重置 ai 但保留表结构
 		Truncate(v TableNamer) error
 
 		// InsertMany 插入多条相同的数据
@@ -92,34 +92,7 @@ type (
 		//
 		// max 表示一次最多插入的数量，如果超过此值，会分批执行，
 		// 但是依然在一个事务中完成。
-		//
-		// 与 MultInsert() 方法最大的不同在于:
-		//  // MultInsert() 可以每个参数的类型都不一样：
-		//  vs := []interface{}{&user{...}, &userInfo{...}}
-		//  db.Insert(vs...)
-		//  // db.InsertMany(500, vs) // 这里将出错，数组的元素的类型必须相同。
-		//  us := []*users{&user{}, &user{}}
-		//  db.InsertMany(500, us)
-		//  db.Insert(us...) // 这样也行，但是性能会差好多
 		InsertMany(max int, v ...TableNamer) error
-
-		// MultInsert 一次性插入多条不同的数据
-		//
-		// 本质上是对 Insert 的多次调用，合并在一个事务中完成。
-		MultInsert(objs ...TableNamer) error
-
-		MultSelect(objs ...TableNamer) error
-
-		MultUpdate(objs ...TableNamer) error
-
-		MultDelete(objs ...TableNamer) error
-
-		MultCreate(objs ...TableNamer) error
-
-		MultDrop(objs ...TableNamer) error
-
-		// MultTruncate 重置 ai保留表结构
-		MultTruncate(objs ...TableNamer) error
 
 		// SQLBuilder 返回 sqlbuilder.SQLBuilder 实例
 		SQLBuilder() *sqlbuilder.SQLBuilder

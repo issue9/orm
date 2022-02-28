@@ -1,7 +1,7 @@
 orm
 [![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/orm)
 [![codecov](https://codecov.io/gh/issue9/orm/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/orm)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/orm/v4)](https://pkg.go.dev/github.com/issue9/orm/v4)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/orm/v5)](https://pkg.go.dev/github.com/issue9/orm/v5)
 ![Go version](https://img.shields.io/github/go-mod/go-version/issue9/orm)
 ======
 
@@ -25,7 +25,7 @@ postgres  | postgres github.com/lib/pq              | [![Postgres](https://githu
 
 ```go
 import (
-    github.com/issue9/orm/v4/dialect  // sqlite3 的 dialect 声明在此处
+    github.com/issue9/orm/v5/dialect  // sqlite3 的 dialect 声明在此处
     _ github.com/mattn/go-sqlite3     // 加载数据库驱动
 )
 
@@ -160,8 +160,6 @@ index、unique、check 和 fk 都是可以指定约束名的，在当前数据�
 ```go
 // 创建表
 db.Create(&User{})
-// 创建多个表，同时创建多张表，主使用 Tx.Create
-tx.MultCreate(&User{},&Email{})
 ```
 
 ##### Update:

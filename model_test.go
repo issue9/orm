@@ -103,7 +103,11 @@ func initData(t *test.Driver) {
 	err := db.Create(&Group{})
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
-	err = db.MultCreate(&Admin{}, &UserInfo{}, &Account{})
+	err = db.Create(&Admin{})
+	t.NotError(err, "%s@%s", err, t.DriverName)
+	err = db.Create(&UserInfo{})
+	t.NotError(err, "%s@%s", err, t.DriverName)
+	err = db.Create(&Account{})
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	insert := func(obj core.TableNamer) {
@@ -153,7 +157,8 @@ func initData(t *test.Driver) {
 }
 
 func clearData(t *test.Driver) {
-	t.NotError(t.DB.MultDrop(&Admin{}, &Account{}))
+	t.NotError(t.DB.Drop(&Admin{}))
+	t.NotError(t.DB.Drop(&Account{}))
 	t.NotError(t.DB.Drop(&Group{})) // admin 外键依赖 group
 	t.NotError(t.DB.Drop(&UserInfo{}))
 }

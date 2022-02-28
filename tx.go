@@ -152,54 +152,6 @@ func (tx *Tx) Truncate(v TableNamer) error { return truncate(tx, v) }
 
 func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder { return tx.sqlBuilder }
 
-func (tx *Tx) MultInsert(objs ...TableNamer) error {
-	for _, v := range objs {
-		if _, err := tx.Insert(v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (tx *Tx) MultSelect(objs ...TableNamer) error {
-	return tx.multDo(tx.Select, objs...)
-}
-
-func (tx *Tx) MultUpdate(objs ...TableNamer) error {
-	for _, v := range objs {
-		if _, err := tx.Update(v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (tx *Tx) MultDelete(objs ...TableNamer) error {
-	for _, v := range objs {
-		if _, err := tx.Delete(v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (tx *Tx) MultCreate(objs ...TableNamer) error { return tx.multDo(tx.Create, objs...) }
-
-func (tx *Tx) MultDrop(objs ...TableNamer) error { return tx.multDo(tx.Drop, objs...) }
-
-func (tx *Tx) MultTruncate(objs ...TableNamer) error {
-	return tx.multDo(tx.Truncate, objs...)
-}
-
-func (tx *Tx) multDo(f func(TableNamer) error, objs ...TableNamer) error {
-	for _, v := range objs {
-		if err := f(v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // DoTransaction 将 f 中的内容以事务的方式执行
 func (db *DB) DoTransaction(f func(tx *Tx) error) error {
 	return db.DoTransactionTx(context.Background(), nil, f)

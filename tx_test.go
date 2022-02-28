@@ -179,17 +179,20 @@ func TestTx_Update(t *testing.T) {
 		t.NotError(err).NotNil(tx)
 
 		// update
-		t.NotError(tx.MultUpdate(&UserInfo{
+		_, err = tx.Update(&UserInfo{
 			UID:       1,
 			FirstName: "firstName1",
 			LastName:  "lastName1",
 			Sex:       "sex1",
-		}, &UserInfo{
+		})
+		t.NotError(err)
+		_, err = tx.Update(&UserInfo{
 			UID:       2,
 			FirstName: "firstName2",
 			LastName:  "lastName2",
 			Sex:       "sex2",
-		}))
+		})
+		t.NotError(err)
 		t.NotError(tx.Commit())
 
 		u1 := &UserInfo{UID: 1}
@@ -199,76 +202,6 @@ func TestTx_Update(t *testing.T) {
 		u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
 		t.NotError(t.DB.Select(u2))
 		t.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
-	})
-}
-
-func TestTx_MultDelete(t *testing.T) {
-	a := assert.New(t, false)
-	suite := test.NewSuite(a)
-	defer suite.Close()
-
-	suite.ForEach(func(t *test.Driver) {
-		initData(t)
-		defer clearData(t)
-
-		tx, err := t.DB.Begin()
-		t.NotError(err)
-
-		// delete
-		t.NotError(tx.MultDelete(
-			&UserInfo{
-				UID: 1,
-			},
-			&UserInfo{
-				LastName:  "l2",
-				FirstName: "f2",
-			},
-			&Admin{Email: "email1"},
-		))
-
-		hasCount(tx, t.Assertion, "user_info", 0)
-		hasCount(tx, t.Assertion, "administrators", 0)
-
-		// delete 并不会重置 ai 计数
-		_, err = tx.Insert(&Admin{Group: 1, Email: "email1"})
-		t.NotError(err)
-
-		t.NotError(tx.Commit())
-
-		a1 := &Admin{Email: "email1"}
-		t.NotError(t.DB.Select(a1))
-		t.Equal(a1.ID, 2) // a1.ID 为一个自增列,不会在 delete 中被重置
-	})
-}
-
-func TestTx_Truncate(t *testing.T) {
-	a := assert.New(t, false)
-	suite := test.NewSuite(a)
-	defer suite.Close()
-
-	suite.ForEach(func(t *test.Driver) {
-		initData(t)
-		defer clearData(t)
-
-		hasCount(t.DB, a, "administrators", 1)
-		hasCount(t.DB, a, "user_info", 2)
-
-		// truncate 之后，会重置 AI
-		tx, err := t.DB.Begin()
-		t.NotError(err)
-		t.NotError(tx.MultTruncate(&Admin{}, &UserInfo{}))
-		t.NotError(tx.Commit())
-		hasCount(t.DB, a, "administrators", 0)
-		hasCount(t.DB, a, "user_info", 0)
-
-		tx, err = t.DB.Begin()
-		t.NotError(err)
-		_, err = tx.Insert(&Admin{Group: 1, Email: "email1"})
-		t.NotError(err)
-		t.NotError(tx.Commit())
-		a1 := &Admin{Email: "email1"}
-		t.NotError(t.DB.Select(a1))
-		t.Equal(1, a1.ID)
 	})
 }
 

@@ -46,7 +46,8 @@ func (u *FetchEmail) AfterFetch() error {
 
 // 初始化一个 sql.DB，方便后面的测试用例使用。
 func initDB(t *test.Driver) {
-	t.NotError(t.DB.MultCreate(&FetchUser{}, &Log{}))
+	t.Assertion.NotError(t.DB.Create(&FetchUser{}))
+	t.Assertion.NotError(t.DB.Create(&Log{}))
 
 	/* 插入数据 */
 	tx, err := t.DB.Begin()
@@ -71,7 +72,8 @@ func initDB(t *test.Driver) {
 }
 
 func clearDB(t *test.Driver) {
-	t.NotError(t.DB.MultDrop(&FetchUser{}, &Log{}))
+	t.NotError(t.DB.Drop(&FetchUser{}))
+	t.NotError(t.DB.Drop(&Log{}))
 }
 
 func TestObject_strict(t *testing.T) {

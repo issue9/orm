@@ -124,8 +124,6 @@
 // 可以通过 DB.Create() 或是 Tx.Create() 创建一张表。
 //  // 创建表
 //  db.Create(&User{})
-//  // 创建多个表，同时创建多张表，主使用 Tx.Create
-//  tx.MultCreate(&User{},&Email{})
 //
 // Update:
 //  // 将 id 为 1 的记录的 FirstName 更改为 abc；对象中的零值不会被提交。

@@ -50,7 +50,7 @@ func where(ws *sqlbuilder.WhereStmt, m *core.Model, rval reflect.Value) error {
 		}
 	}
 
-	if m.PrimaryKey != nil && len(m.PrimaryKey.Columns) > 0 {
+	if m.PrimaryKey != nil {
 		if keys, vals = getKV(rval, m.PrimaryKey.Columns...); len(keys) > 0 {
 			goto RET
 		}
