@@ -168,7 +168,7 @@ func (db *DB) DoTransactionTx(ctx context.Context, opt *sql.TxOptions, f func(tx
 
 	if err := f(tx); err != nil {
 		if err1 := tx.Rollback(); err1 != nil {
-			return fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
+			return fmt.Errorf("在抛出错误 %w 时再次发生错误 %s", err, err1.Error())
 		}
 		return err
 	}
