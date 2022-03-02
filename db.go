@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"strings"
 
 	"github.com/issue9/orm/v5/core"
 	"github.com/issue9/orm/v5/internal/model"
@@ -15,10 +16,12 @@ import (
 // DB 数据库操作实例
 type DB struct {
 	*sql.DB
-	dialect    Dialect
-	sqlBuilder *sqlbuilder.SQLBuilder
-	models     *model.Models
-	version    string
+	dialect     Dialect
+	sqlBuilder  *sqlbuilder.SQLBuilder
+	models      *model.Models
+	version     string
+	tablePrefix string
+	replacer    *strings.Replacer
 
 	sqlLogger *log.Logger
 }
@@ -29,23 +32,30 @@ type DB struct {
 // 那么建议将保存时的时区都统一设置为 UTC：
 // postgres 已经固定为 UTC，sqlite3 可以在 dsn 中通过 _loc=UTC 指定，
 // mysql 默认是 UTC，也可以在 DSN 中通过 loc=UTC 指定。
-func NewDB(dsn string, dialect Dialect) (*DB, error) {
+func NewDB(dsn, tablePrefix string, dialect Dialect) (*DB, error) {
 	db, err := sql.Open(dialect.DriverName(), dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewDBWithStdDB(db, dialect)
+	return NewDBWithStdDB(db, tablePrefix, dialect)
 }
 
 // NewDBWithStdDB 从 sql.DB 构建 DB 实例
 //
 // NOTE: 请确保用于打开 db 的 driverName 参数与 dialect.DriverName() 是相同的，
 // 否则后续操作的结果是未知的。
-func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
+func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error) {
+	l, r := dialect.Quotes()
 	inst := &DB{
-		DB:      db,
-		dialect: dialect,
+		DB:          db,
+		dialect:     dialect,
+		tablePrefix: tablePrefix,
+		replacer: strings.NewReplacer(
+			string(core.TablePrefix), tablePrefix,
+			string(core.QuoteLeft), l,
+			string(core.QuoteRight), r,
+		),
 	}
 
 	inst.models = model.NewModels(inst)
@@ -53,6 +63,8 @@ func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
 
 	return inst, nil
 }
+
+func (db *DB) TablePrefix() string { return db.tablePrefix }
 
 // Debug 指定调输出调试内容通道
 //
@@ -107,6 +119,7 @@ func (db *DB) QueryRowContext(ctx context.Context, query string, args ...any) *s
 		panic(err)
 	}
 
+	query = db.replacer.Replace(query)
 	return db.DB.QueryRowContext(ctx, query, args...)
 }
 
@@ -121,6 +134,7 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql
 		return nil, err
 	}
 
+	query = db.replacer.Replace(query)
 	return db.DB.QueryContext(ctx, query, args...)
 }
 
@@ -135,6 +149,7 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.R
 		return nil, err
 	}
 
+	query = db.replacer.Replace(query)
 	return db.DB.ExecContext(ctx, query, args...)
 }
 
@@ -149,6 +164,7 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 		return nil, err
 	}
 
+	query = db.replacer.Replace(query)
 	s, err := db.DB.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, err

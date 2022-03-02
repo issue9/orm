@@ -32,14 +32,14 @@ var (
 //
 // Options 可以接受以下参数：
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
-func Sqlite3(driverName, tablePrefix string) core.Dialect {
+func Sqlite3(driverName string) core.Dialect {
 	return &sqlite3{
-		base: newBase("sqlite3", driverName, tablePrefix, "`", "`"),
+		base: newBase("sqlite3", driverName, "`", "`"),
 	}
 }
 
 func (s *sqlite3) Fix(query string, args []any) (string, []any, error) {
-	return s.replacer.Replace(query), args, nil
+	return query, args, nil
 }
 
 func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {
@@ -49,11 +49,7 @@ func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {
 func (s *sqlite3) VersionSQL() string { return `select sqlite_version();` }
 
 func (s *sqlite3) Prepare(query string) (string, map[string]int, error) {
-	query, orders, err := PrepareNamedArgs(query)
-	if err != nil {
-		return "", nil, err
-	}
-	return s.replacer.Replace(query), orders, nil
+	return PrepareNamedArgs(query)
 }
 
 func (s *sqlite3) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
@@ -148,7 +144,7 @@ func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([
 		return nil, err
 	}
 
-	name := strings.Replace(stmt.Name, "#", s.TablePrefix(), 1)
+	name := strings.Replace(stmt.Name, "#", stmt.Engine().TablePrefix(), 1)
 	if _, found := info.Constraints[name]; !found {
 		return nil, fmt.Errorf("不存在的约束:%s", name)
 	}

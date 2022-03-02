@@ -37,6 +37,8 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	return inst, nil
 }
 
+func (tx *Tx) TablePrefix() string { return tx.db.tablePrefix }
+
 func (tx *Tx) Query(query string, args ...any) (*sql.Rows, error) {
 	return tx.QueryContext(context.Background(), query, args...)
 }
@@ -48,6 +50,7 @@ func (tx *Tx) QueryContext(ctx context.Context, query string, args ...any) (*sql
 		return nil, err
 	}
 
+	query = tx.db.replacer.Replace(query)
 	return tx.Tx.QueryContext(ctx, query, args...)
 }
 
@@ -68,6 +71,7 @@ func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...any) *s
 		panic(err)
 	}
 
+	query = tx.db.replacer.Replace(query)
 	return tx.Tx.QueryRowContext(ctx, query, args...)
 }
 
@@ -82,6 +86,7 @@ func (tx *Tx) ExecContext(ctx context.Context, query string, args ...any) (sql.R
 		return nil, err
 	}
 
+	query = tx.db.replacer.Replace(query)
 	return tx.Tx.ExecContext(ctx, query, args...)
 }
 
@@ -96,6 +101,7 @@ func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, err
 		return nil, err
 	}
 
+	query = tx.db.replacer.Replace(query)
 	s, err := tx.Tx.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, err

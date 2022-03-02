@@ -2,27 +2,18 @@
 
 package dialect
 
-import (
-	"strings"
-
-	"github.com/issue9/orm/v5/core"
-)
-
 type base struct {
-	driverName  string
-	dbName      string
-	tablePrefix string
-	replacer    *strings.Replacer
+	driverName     string
+	dbName         string
+	quoteL, quoteR string
 }
 
-func newBase(dbName, driverName, tablePrefix, quoteLeft, quoteRight string) base {
+func newBase(dbName, driverName, quoteLeft, quoteRight string) base {
 	return base{
-		dbName:      dbName,
-		driverName:  driverName,
-		tablePrefix: tablePrefix,
-		replacer: strings.NewReplacer(string(core.TablePrefix), tablePrefix,
-			string(core.QuoteLeft), quoteLeft,
-			string(core.QuoteRight), quoteRight),
+		dbName:     dbName,
+		driverName: driverName,
+		quoteL:     quoteLeft,
+		quoteR:     quoteRight,
 	}
 }
 
@@ -30,4 +21,4 @@ func (b *base) DBName() string { return b.dbName }
 
 func (b *base) DriverName() string { return b.driverName }
 
-func (b *base) TablePrefix() string { return b.tablePrefix }
+func (b *base) Quotes() (string, string) { return b.quoteL, b.quoteR }

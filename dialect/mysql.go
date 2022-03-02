@@ -34,30 +34,26 @@ var (
 // 支持以下 options 属性
 //  mysql_charset 字符集，语法为： charset(utf-8)
 //  mysql_engine 使用的引擎，语法为： engine(innodb)
-func Mysql(driverName, tablePrefix string) core.Dialect {
-	return newMysql(false, "mysql", driverName, tablePrefix)
+func Mysql(driverName string) core.Dialect {
+	return newMysql(false, "mysql", driverName)
 }
 
 // Mariadb 返回一个适配 mariadb 的 Dialect 接口
 //
 // options 属性可参考 mysql，大部分内容与 Mysql 相同。
-func Mariadb(driverName, tablePrefix string) core.Dialect {
-	return newMysql(true, "mariadb", driverName, tablePrefix)
+func Mariadb(driverName string) core.Dialect {
+	return newMysql(true, "mariadb", driverName)
 }
 
-func newMysql(isMariadb bool, dbName, driverName, tablePrefix string) core.Dialect {
+func newMysql(isMariadb bool, dbName, driverName string) core.Dialect {
 	return &mysql{
-		base:      newBase(dbName, driverName, tablePrefix, "`", "`"),
+		base:      newBase(dbName, driverName, "`", "`"),
 		isMariadb: isMariadb,
 	}
 }
 
 func (m *mysql) Fix(query string, args []any) (string, []any, error) {
-	query, args, err := fixQueryAndArgs(query, args)
-	if err != nil {
-		return "", nil, err
-	}
-	return m.replacer.Replace(query), args, nil
+	return fixQueryAndArgs(query, args)
 }
 
 func (m *mysql) LastInsertIDSQL(table, col string) (sql string, append bool) {
@@ -67,11 +63,7 @@ func (m *mysql) LastInsertIDSQL(table, col string) (sql string, append bool) {
 func (m *mysql) VersionSQL() string { return `select version();` }
 
 func (m *mysql) Prepare(query string) (string, map[string]int, error) {
-	query, orders, err := PrepareNamedArgs(query)
-	if err != nil {
-		return "", nil, err
-	}
-	return m.replacer.Replace(query), orders, nil
+	return PrepareNamedArgs(query)
 }
 
 func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {

@@ -97,7 +97,7 @@ func TestMysql_CreateTableOptions(t *testing.T) {
 	a := assert.New(t, false)
 	builder := core.NewBuilder("")
 	a.NotNil(builder)
-	var m = dialect.Mysql("mysql_driver_name", "")
+	var m = dialect.Mysql("mysql_driver_name")
 
 	// 空的 options
 	a.NotError(m.CreateTableOptionsSQL(builder, nil))
@@ -267,7 +267,7 @@ func TestMysql_SQLType(t *testing.T) {
 		},
 	}
 
-	testSQLType(a, dialect.Mysql("mysql_driver_name", ""), data)
+	testSQLType(a, dialect.Mysql("mysql_driver_name"), data)
 }
 
 func TestMysql_Types(t *testing.T) {

@@ -22,18 +22,20 @@ import (
 
 const sqlite3DBFile = "orm_test.db"
 
+const Prefix = "prefix_"
+
 var (
 	// Sqlite3 Dialect 实例
-	Sqlite3 = dialect.Sqlite3("sqlite3", "prefix_")
+	Sqlite3 = dialect.Sqlite3("sqlite3")
 
 	// Mysql Dialect 实例
-	Mysql = dialect.Mysql("mysql", "prefix_")
+	Mysql = dialect.Mysql("mysql")
 
 	// Mariadb Dialect 实例
-	Mariadb = dialect.Mariadb("mysql", "prefix_")
+	Mariadb = dialect.Mariadb("mysql")
 
 	// Postgres Dialect 实例
-	Postgres = dialect.Postgres("postgres", "prefix_")
+	Postgres = dialect.Postgres("postgres")
 )
 
 // 以驱动为单的测试用例
@@ -96,7 +98,7 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 			continue
 		}
 
-		db, err := orm.NewDB(c.dsn, c.dialect)
+		db, err := orm.NewDB(c.dsn, Prefix, c.dialect)
 		a.NotError(err).NotNil(db)
 
 		s.drivers = append(s.drivers, &Driver{

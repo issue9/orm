@@ -52,6 +52,8 @@ type Engine interface {
 	Prepare(query string) (*Stmt, error)
 
 	PrepareContext(ctx context.Context, query string) (*Stmt, error)
+
+	TablePrefix() string
 }
 
 // Dialect 用于描述与数据库和驱动相关的一些特性
@@ -71,10 +73,7 @@ type Dialect interface {
 	// 仅注册的名称的不同。
 	DriverName() string
 
-	// TablePrefix 表名前缀
-	//
-	// 表名前缀由构建 Dialect 时传递给对象，可以由此方法返回。
-	TablePrefix() string
+	Quotes() (left, right string)
 
 	// SQLType 将列转换成数据支持的类型表达式
 	//

@@ -19,9 +19,9 @@ type postgres struct {
 }
 
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
-func Postgres(driverName, tablePrefix string) core.Dialect {
+func Postgres(driverName string) core.Dialect {
 	return &postgres{
-		base: newBase("postgres", driverName, tablePrefix, `"`, `"`),
+		base: newBase("postgres", driverName, `"`, `"`),
 	}
 }
 
@@ -79,8 +79,6 @@ func (p *postgres) Fix(query string, args []any) (string, []any, error) {
 var errInvalidDollar = errors.New("语句中包含非法的字符串:$")
 
 func (p *postgres) replace(query string) (string, error) {
-	query = p.replacer.Replace(query)
-
 	if strings.IndexByte(query, '?') < 0 {
 		return query, nil
 	}
