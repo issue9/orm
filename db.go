@@ -54,8 +54,6 @@ func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
 	return inst, nil
 }
 
-func (db *DB) TablePrefix() string { return db.Dialect().TablePrefix() }
-
 // Debug 指定调输出调试内容通道
 //
 // 如果 l 不为 nil，则每次 SQL 调用都会输出 SQL 语句，

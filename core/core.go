@@ -35,8 +35,6 @@ type ConstraintType int8
 //
 // orm.DB 和 orm.Tx 应该实现此接口。
 type Engine interface {
-	TablePrefix() string
-
 	Dialect() Dialect
 
 	Query(query string, args ...any) (*sql.Rows, error)

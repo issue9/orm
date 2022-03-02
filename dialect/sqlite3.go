@@ -148,7 +148,7 @@ func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([
 		return nil, err
 	}
 
-	name := strings.Replace(stmt.Name, "#", stmt.Engine().TablePrefix(), 1)
+	name := strings.Replace(stmt.Name, "#", s.TablePrefix(), 1)
 	if _, found := info.Constraints[name]; !found {
 		return nil, fmt.Errorf("不存在的约束:%s", name)
 	}
