@@ -375,13 +375,13 @@ func TestObjectNest(t *testing.T) {
 		}
 		cnt, err := fetch.Object(true, rows, &objs)
 		t.NotError(err).Equal(cnt, len(objs))
-		yestday := time.Now().Add(-24 * time.Hour)
+		yesterday := time.Now().Add(-24 * time.Hour)
 		o0 := objs[0]
 		o1 := objs[1]
 		t.Equal(o0.User.ID, o0.UID).
-			False(o0.Created.IsNull).True(o0.Created.After(yestday)) // Created 肯定是一个晚于 24 小时之前值
+			False(o0.Created.IsNull).True(o0.Created.After(yesterday)) // Created 肯定是一个晚于 24 小时之前值
 		t.Equal(o1.User.ID, o1.UID).
-			False(o1.Created.IsNull).True(o1.Created.After(yestday))
+			False(o1.Created.IsNull).True(o1.Created.After(yesterday))
 	})
 }
 

@@ -81,8 +81,8 @@ func Object(strict bool, rows *sql.Rows, obj any) (int, error) {
 }
 
 // 将 v 转换成 map[string]reflect.Value 形式，其中键名为对象的字段名，
-// 键值为字段的值。支持匿名字段，不会转换不可导出(小写字母开头)的
-// 字段，也不会转换 struct tag 以-开头的字段。
+// 键值为字段的值。支持匿名字段，不会转换不可导出(非大写字母开头)的
+// 字段，也不会转换 struct tag 以 - 开头的字段。
 func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 	v = getRealValue(v)
 	if v.Kind() != reflect.Struct {
@@ -107,10 +107,10 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 			continue
 		}
 
-		vf = getRealValue(vf)
-		if vf.Kind() == reflect.Struct && core.GetPrimitiveType(vf.Type()) == core.Auto {
-			items := make(map[string]reflect.Value, vf.NumField())
-			if err := parseObject(vf, &items); err != nil {
+		vf2 := getRealValue(vf)
+		if _, impl := vf.Interface().(core.PrimitiveTyper); !impl && vf2.Kind() == reflect.Struct {
+			items := make(map[string]reflect.Value, vf2.NumField())
+			if err := parseObject(vf2, &items); err != nil {
 				return err
 			}
 
@@ -120,7 +120,7 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 		} else if _, found := (*ret)[name]; found {
 			return fmt.Errorf("已存在相同名字的字段 %s", name)
 		} else {
-			(*ret)[name] = vf
+			(*ret)[name] = vf2
 		}
 	} // end for
 
