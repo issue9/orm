@@ -3,6 +3,7 @@
 package types
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"strconv"
@@ -37,10 +38,18 @@ func (n *Unix) Scan(src any) (err error) {
 	case int64:
 		unix = v
 	case []byte:
+		if bytes.Equal(v, nullBytes) {
+			n.IsNull = true
+			return nil
+		}
 		if unix, err = strconv.ParseInt(string(v), 10, 64); err != nil {
 			return err
 		}
 	case string:
+		if v == null {
+			n.IsNull = true
+			return nil
+		}
 		if unix, err = strconv.ParseInt(v, 10, 64); err != nil {
 			return err
 		}

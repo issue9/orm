@@ -2,3 +2,7 @@
 
 // Package types 提供部分存取数据库的类型
 package types
+
+const null = "NULL"
+
+var nullBytes = []byte(null)
