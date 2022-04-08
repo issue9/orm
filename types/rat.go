@@ -3,6 +3,7 @@
 package types
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"math/big"
 
@@ -38,8 +39,16 @@ func (n *Rat) Scan(src any) (err error) {
 
 	switch v := src.(type) {
 	case []byte:
+		if bytes.Equal(v, nullBytes) {
+			n.rat = nil
+			return nil
+		}
 		return n.UnmarshalText(v)
 	case string:
+		if v == null {
+			n.rat = nil
+			return nil
+		}
 		return n.UnmarshalText([]byte(v))
 	default:
 		return core.ErrInvalidColumnType

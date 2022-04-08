@@ -3,6 +3,7 @@
 package types
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"strings"
@@ -51,13 +52,24 @@ func StringDecimalWithPrecision(s string) (Decimal, error) {
 
 // Scan implements the Scanner.Scan
 func (n *Decimal) Scan(src any) (err error) {
-	if n.IsNull = src == nil; !n.IsNull {
-		if err = n.Decimal.Scan(src); err != nil {
-			n.IsNull = false
-			return err
+	if src == nil {
+		n.IsNull = true
+		return nil
+	}
+
+	switch v := src.(type) {
+	case []byte:
+		if bytes.Equal(v, nullBytes) {
+			n.IsNull = true
+			return nil
+		}
+	case string:
+		if v == null {
+			n.IsNull = true
+			return nil
 		}
 	}
-	return nil
+	return n.Decimal.Scan(src)
 }
 
 func (n Decimal) Value() (driver.Value, error) {
