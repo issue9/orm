@@ -73,7 +73,7 @@ type Dialect interface {
 	// 仅注册的名称的不同。
 	DriverName() string
 
-	Quotes() (left, right string)
+	Quotes() (left, right byte)
 
 	// SQLType 将列转换成数据支持的类型表达式
 	//

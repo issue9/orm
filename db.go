@@ -55,8 +55,8 @@ func NewDBWithStdDB(db *sql.DB, tablePrefix string, dialect Dialect) (*DB, error
 		tablePrefix: tablePrefix,
 		replacer: strings.NewReplacer(
 			string(core.TablePrefix), tablePrefix,
-			string(core.QuoteLeft), l,
-			string(core.QuoteRight), r,
+			string(core.QuoteLeft), string(l),
+			string(core.QuoteRight), string(r),
 		),
 	}
 

@@ -21,7 +21,7 @@ type postgres struct {
 // Postgres 返回一个适配 postgresql 的 Dialect 接口
 func Postgres(driverName string) core.Dialect {
 	return &postgres{
-		base: newBase("postgres", driverName, `"`, `"`),
+		base: newBase("postgres", driverName, '"', '"'),
 	}
 }
 

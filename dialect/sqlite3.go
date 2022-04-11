@@ -34,7 +34,7 @@ var (
 //  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
 func Sqlite3(driverName string) core.Dialect {
 	return &sqlite3{
-		base: newBase("sqlite3", driverName, "`", "`"),
+		base: newBase("sqlite3", driverName, '`', '`'),
 	}
 }
 
