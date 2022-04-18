@@ -19,7 +19,8 @@ import (
 var ErrNeedAutoIncrementColumn = errors.New("必须存在自增列")
 
 type modelEngine interface {
-	Engine
+	core.Engine
+	SQLBuilder() *sqlbuilder.SQLBuilder
 	newModel(v TableNamer) (*core.Model, error)
 }
 
