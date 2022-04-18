@@ -107,6 +107,8 @@ type DropViewStmt struct {
 	name string
 }
 
+func (sql *SQLBuilder) DropView() *DropViewStmt { return DropView(sql.engine) }
+
 // DropView 创建视图
 func DropView(e core.Engine) *DropViewStmt {
 	stmt := &DropViewStmt{}

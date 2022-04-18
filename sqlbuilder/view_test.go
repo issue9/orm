@@ -26,10 +26,11 @@ func TestCreateView(t *testing.T) {
 func testCreateView(d *test.Driver) {
 	initDB(d)
 	defer clearDB(d)
+	sb := d.DB.SQLBuilder()
 
 	viewName := "user_view"
 
-	sel := sqlbuilder.Select(d.DB).
+	sel := sb.Select().
 		Column("u.id as uid").
 		Column("u.name").
 		Column("i.address").
@@ -49,6 +50,6 @@ func testCreateView(d *test.Driver) {
 	d.NotError(view.Exec())
 
 	// 删除
-	dropView := sqlbuilder.DropView(d.DB).Name(viewName)
+	dropView := sb.DropView().Name(viewName)
 	d.NotError(dropView.Exec())
 }

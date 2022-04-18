@@ -191,7 +191,7 @@ func drop(e modelEngine, v TableNamer) error {
 	}
 
 	if m.Type == core.View {
-		return sqlbuilder.DropView(e).Name(m.Name).Exec()
+		return e.SQLBuilder().DropView().Name(m.Name).Exec()
 	}
 
 	return e.SQLBuilder().DropTable().Table(m.Name).Exec()
