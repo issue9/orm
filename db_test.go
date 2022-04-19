@@ -10,12 +10,11 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v5/internal/flagtest"
 	"github.com/issue9/orm/v5/internal/test"
 )
 
 func TestMain(m *testing.M) {
-	flagtest.Main(m)
+	test.Main(m)
 }
 
 func TestDB_LastInsertID(t *testing.T) {

@@ -12,7 +12,6 @@ import (
 	"github.com/issue9/orm/v5"
 	"github.com/issue9/orm/v5/core"
 	"github.com/issue9/orm/v5/dialect"
-	"github.com/issue9/orm/v5/internal/flagtest"
 
 	// 测试入口，数据库也在此初始化
 	_ "github.com/go-sql-driver/mysql"
@@ -78,8 +77,7 @@ type Suite struct {
 
 // NewSuite 初始化测试内容
 //
-// dialect 指定了当前需要测试的驱动，如果未指定表示需要测全部，否则只测试指定内容。
-// 同时 dialect 还受到 flagsets.Flags 变量的影响，如果未在其中指定的，也不会执行测试。
+// dialect 指定了当前需要测试的驱动，若未指定表示测试 flags 中的所有内容。
 func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 	s := &Suite{a: a}
 	a.TB().Cleanup(func() {
@@ -94,8 +92,8 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 			continue
 		}
 
-		fs := flagtest.Flags
-		if len(fs) > 0 && sliceutil.Count(fs, func(i *flagtest.Flag) bool { return i.DBName == name && i.DriverName == driver }) <= 0 {
+		fs := flags
+		if len(fs) > 0 && sliceutil.Count(fs, func(i *flagVar) bool { return i.DBName == name && i.DriverName == driver }) <= 0 {
 			continue
 		}
 
@@ -114,9 +112,6 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 	return s
 }
 
-// Close 销毁测试用例并关闭数据库
-//
-// 如果是 sqlite3，还会删除数据库文件。
 func (s Suite) close() {
 	for _, t := range s.drivers {
 		t.NotError(t.DB.Close())
@@ -125,6 +120,7 @@ func (s Suite) close() {
 			return
 		}
 
+		// sqlite3 删除数据库文件
 		if _, err := os.Stat(sqlite3DBFile); err == nil || os.IsExist(err) {
 			t.NotError(os.Remove(sqlite3DBFile))
 		}

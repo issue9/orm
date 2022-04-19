@@ -5,6 +5,7 @@ package dialect_test
 import (
 	"database/sql"
 	"math"
+	"testing"
 	"time"
 
 	"github.com/issue9/assert/v2"
@@ -15,6 +16,10 @@ import (
 	"github.com/issue9/orm/v5/sqlbuilder"
 	"github.com/issue9/orm/v5/types"
 )
+
+func TestMain(m *testing.M) {
+	test.Main(m)
+}
 
 type sqlTypeTester struct {
 	col     *core.Column

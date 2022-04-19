@@ -7,13 +7,12 @@ import (
 	"time"
 
 	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/internal/flagtest"
 	"github.com/issue9/orm/v5/internal/test"
 	"github.com/issue9/orm/v5/sqlbuilder"
 )
 
 func TestMain(m *testing.M) {
-	flagtest.Main(m)
+	test.Main(m)
 }
 
 // user 需要与 initDB 中的 users 表中的字段相同

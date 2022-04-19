@@ -13,6 +13,10 @@ import (
 	"github.com/issue9/orm/v5/internal/test"
 )
 
+func TestMain(m *testing.M) {
+	test.Main(m)
+}
+
 var sqlite3CreateTable = []string{`CREATE TABLE fk_table(
 	id integer NOT NULL,
 	PRIMARY KEY(id)

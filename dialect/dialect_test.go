@@ -8,13 +8,8 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v5/internal/flagtest"
 	"github.com/issue9/orm/v5/internal/sqltest"
 )
-
-func TestMain(m *testing.M) {
-	flagtest.Main(m)
-}
 
 func TestMysqlLimitSQL(t *testing.T) {
 	a := assert.New(t, false)

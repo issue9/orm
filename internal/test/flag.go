@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Package flagtest 用于生成测试用的命令行参数
-package flagtest
+package test
 
 import (
 	"flag"
@@ -11,11 +10,9 @@ import (
 	"testing"
 )
 
-// Flags 解析后的参数值
-var Flags []*Flag
+var flags []*flagVar
 
-// Flag 参数对象
-type Flag struct {
+type flagVar struct {
 	DBName, DriverName string
 }
 
@@ -25,11 +22,11 @@ func Main(m *testing.M) {
 
 	flag.Parse()
 
-	if *dbString == "" || Flags != nil {
+	if *dbString == "" || flags != nil {
 		return
 	}
 
-	Flags = make([]*Flag, 0, 10)
+	flags = make([]*flagVar, 0, 10)
 
 	items := strings.Split(*dbString, ":")
 	for _, item := range items {
@@ -37,7 +34,7 @@ func Main(m *testing.M) {
 		if len(i) != 2 {
 			panic(fmt.Sprintf("格式错误：%v", *dbString))
 		}
-		Flags = append(Flags, &Flag{DBName: i[0], DriverName: i[1]})
+		flags = append(flags, &flagVar{DBName: i[0], DriverName: i[1]})
 	}
 
 	os.Exit(m.Run())

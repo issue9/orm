@@ -12,7 +12,6 @@ import (
 	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/internal/flagtest"
 	"github.com/issue9/orm/v5/sqlbuilder"
 )
 
@@ -20,10 +19,6 @@ var (
 	_ core.PrimitiveTyper = &last{}
 	_ sql.Scanner         = &last{}
 )
-
-func TestMain(m *testing.M) {
-	flagtest.Main(m)
-}
 
 type last struct {
 	IP      string

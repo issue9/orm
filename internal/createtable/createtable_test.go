@@ -6,13 +6,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert/v2"
-
-	"github.com/issue9/orm/v5/internal/flagtest"
 )
-
-func TestMain(m *testing.M) {
-	flagtest.Main(m)
-}
 
 func TestLines(t *testing.T) {
 	a := assert.New(t, false)

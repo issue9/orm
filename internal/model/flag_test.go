@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-package core_test
+package model_test
 
 import (
 	"testing"

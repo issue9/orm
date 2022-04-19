@@ -7,13 +7,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert/v2"
-
-	"github.com/issue9/orm/v5/internal/flagtest"
 )
-
-func TestMain(m *testing.M) {
-	flagtest.Main(m)
-}
 
 type FetchEmail struct {
 	Email string `orm:"unique(unique_index);nullable;pk;len(100)"`

@@ -14,6 +14,10 @@ import (
 	"github.com/issue9/orm/v5/types"
 )
 
+func TestMain(m *testing.M) {
+	test.Main(m)
+}
+
 type FetchEmail struct {
 	Email string `orm:"name(email);unique(unique_index);nullable;len(100)"`
 
