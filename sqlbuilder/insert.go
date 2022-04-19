@@ -113,7 +113,7 @@ func (stmt *InsertStmt) SQL() (string, []any, error) {
 		return "", nil, ErrTableIsEmpty
 	}
 
-	builder := core.NewBuilder("INSERT INTO ").WString(stmt.table)
+	builder := core.NewBuilder("INSERT INTO ").QuoteKey(stmt.table)
 
 	if stmt.selectStmt != nil {
 		return stmt.fromSelect(builder)

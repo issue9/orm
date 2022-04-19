@@ -7,7 +7,6 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v5/core"
 	"github.com/issue9/orm/v5/internal/test"
 	"github.com/issue9/orm/v5/sqlbuilder"
 )
@@ -66,14 +65,15 @@ func TestConstraint_Check(t *testing.T) {
 	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
+		sb := t.DB.SQLBuilder()
 
-		err := sqlbuilder.AddConstraint(t.DB).
+		err := sb.AddConstraint().
 			Table("info").
 			Check("nick_not_null", "nickname IS NOT NULL").
 			Exec()
 		t.NotError(err)
 
-		err = sqlbuilder.DropConstraint(t.DB).
+		err = sb.DropConstraint().
 			Table("info").
 			Constraint("nick_not_null").
 			Exec()
@@ -89,15 +89,16 @@ func TestConstraint_PK(t *testing.T) {
 	suite.ForEach(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
+		sb := t.DB.SQLBuilder()
 
 		// 已经存在主键，出错
-		addStmt := sqlbuilder.AddConstraint(t.DB)
+		addStmt := sb.AddConstraint()
 		err := addStmt.Table("info").
 			PK("info_pk", "tel").
 			Exec()
 		t.Error(err)
 
-		err = sqlbuilder.DropConstraint(t.DB).
+		err = sb.DropConstraint().
 			Table("info").
 			PK("info_pk").
 			Exec()
@@ -109,66 +110,32 @@ func TestConstraint_PK(t *testing.T) {
 		t.NotError(err)
 	})
 
-	// 表名带 #
+	// 约束名不是根据 core.pkName 生成的
 	suite.ForEach(func(t *test.Driver) {
-		err := sqlbuilder.CreateTable(t.DB).
-			Table("#info").
-			Column("uid", core.Int64, false, false, false, nil).
-			Column("tel", core.String, false, false, false, nil, 11).
-			PK("#info_pk", "tel", "uid").
-			Exec()
-		t.NotError(err)
-
-		defer func() {
-			err := sqlbuilder.DropTable(t.DB).Table("#info").Exec()
-			t.NotError(err)
-		}()
-
-		// 已经存在主键，出错
-		addStmt := sqlbuilder.AddConstraint(t.DB)
-		err = addStmt.Table("#info").
-			PK("#info_pk", "tel").
-			Exec()
-		t.Error(err)
-
-		err = sqlbuilder.DropConstraint(t.DB).
-			Table("#info").
-			PK("#info_pk").
-			Exec()
-		a.NotError(err)
-
-		err = addStmt.Reset().Table("#info").
-			PK("#info_pk", "tel", "uid").
-			Exec()
-		t.NotError(err)
-	})
-
-	// 约束名不是根据 core.PKName() 生成的
-	suite.ForEach(func(t *test.Driver) {
-		query := "CREATE TABLE #info (uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
+		query := "CREATE TABLE info (uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
 		_, err := t.DB.Exec(query)
 		t.NotError(err)
 
 		defer func() {
-			err := sqlbuilder.DropTable(t.DB).Table("#info").Exec()
+			err := sqlbuilder.DropTable(t.DB).Table("info").Exec()
 			t.NotError(err)
 		}()
 
 		// 已经存在主键，出错
 		addStmt := sqlbuilder.AddConstraint(t.DB)
-		err = addStmt.Table("#info").
-			PK("#info_pk", "uid").
+		err = addStmt.Table("info").
+			PK("info_pk", "uid").
 			Exec()
 		t.Error(err)
 
 		err = sqlbuilder.DropConstraint(t.DB).
-			Table("#info").
+			Table("info").
 			PK("test_pk").
 			Exec()
 		a.NotError(err)
 
-		err = addStmt.Reset().Table("#info").
-			PK("#info_pk", "uid").
+		err = addStmt.Reset().Table("info").
+			PK("info_pk", "uid").
 			Exec()
 		t.NotError(err)
 	})

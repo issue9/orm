@@ -18,22 +18,21 @@
 //      _ github.com/issue9/orm/v4/dialect  // sqlite3 的 dialect 声明在此处
 //  )
 //
-//  // 初始化一个 DB，表前缀为 prefix_
-//  db1 := orm.NewDB("./db1", dialect.Sqlite3("sqlite3", "prefix_"))
+//  // 初始化一个 DB
+//  db1 := orm.NewDB("./db1", dialect.Sqlite3("sqlite3"))
 //
 //  // 另一个 DB 实例
-//  db2 := orm.NewDB("./db2", dialect.Sqlite3("sqlite3", "db2_"))
+//  db2 := orm.NewDB("./db2", dialect.Sqlite3("sqlite3"))
 //
 //
 //
 // 占位符
 //
 //
-// SQL 语句可以使用 # 字符在语句中暂替真实的表名前缀，也可以使用 {}
-// 包含一个关键字，使其它成为普通列名，如：
-//  select * from #user where {group}=1
-// 在实际执行时，相关的占位符就会被替换成与当前环境想容的实例，如在表名前缀为 p_，
-// 数据库为 mysql 时，会被替换成以下语句，然后再执行：
+// SQL 语句可以使用 {} 包含一个关键字，使其它成为普通列名，如：
+//  select * from user where {group}=1
+// 在实际执行时，相关的占位符就会被替换成与当前环境想容的实例，
+// 如在数据库为 mysql 时，会被替换成以下语句，然后再执行：
 //  select * from p_user where `group`=1
 // DB.Query(),DB.Exec(),DB.Prepare().DB.Where() 及 Tx 与之对应的函数都可以使用占位符。
 //
@@ -54,9 +53,8 @@
 //  }
 //
 //  // 通过 orm.ApplyModeler 接口，指定表的额外数据。若不需要，可不用实现该接口
-//  // 表名 user 会被自动加上表名前缀。
 //  func(u *User) ApplyModel(m *core.Model) error {
-//      m.Name = "#user"
+//      m.Name = "user"
 //      m.Options["engine"] = "innodb"
 //      m.Options["charset"] = "utf8"
 //      return nil
@@ -98,7 +96,6 @@
 //  定义物理外键，最少需要指定 fk_name,refTable,refColName 三个值。
 //  分别对应约束名，引用的表和引用的字段，updateRule,deleteRule，
 //  在不指定的情况下，使用数据库的默认值。
-//  refTable 如果需要表名前缀，需要添加 # 符号。
 //
 //
 // ApplyModeler:
@@ -128,12 +125,12 @@
 // Update:
 //  // 将 id 为 1 的记录的 FirstName 更改为 abc；对象中的零值不会被提交。
 //  db.Update(&User{Id:1,FirstName:"abc"})
-//  sqlbuilder.Update(db).Table("#table").Where("id=?",1).Set("FirstName", "abc").Exec()
+//  sqlbuilder.Update(db).Table("table").Where("id=?",1).Set("FirstName", "abc").Exec()
 //
 // Delete:
 //  // 删除 id 为 1 的记录
 //  e.Delete(&User{Id:1})
-//  sqlbuilder.Delete(e).Table("#table").Where("id=?",1).Exec()
+//  sqlbuilder.Delete(e).Table("table").Where("id=?",1).Exec()
 //
 // Insert:
 //  // 插入一条数据
@@ -150,10 +147,10 @@
 //
 // Query/Exec:
 //  // Query 返回参数与 sql.Query 是相同的
-//  sql := "select * from #tbl_name where id=?"
+//  sql := "select * from tbl_name where id=?"
 //  rows, err := e.Query(sql, []interface{}{5})
 //  // Exec 返回参数与 sql.Exec 是相同的
-//  sql = "update #tbl_name set name=? where id=?"
+//  sql = "update tbl_name set name=? where id=?"
 //  r, err := e.Exec(sql, []interface{}{"name1", 5})
 //
 // 事务：

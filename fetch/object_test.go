@@ -27,7 +27,7 @@ type FetchUser struct {
 	Group    int    `orm:"name(group)"`
 }
 
-func (u *FetchUser) TableName() string { return "#user" }
+func (u *FetchUser) TableName() string { return "fetch_users" }
 
 type Log struct {
 	ID      int        `orm:"name(id);ai"`
@@ -36,7 +36,7 @@ type Log struct {
 	UID     int        `orm:"name(uid)"`
 }
 
-func (l *Log) TableName() string { return "#logs" }
+func (l *Log) TableName() string { return "logs" }
 
 // AfterFetcher 接口
 func (u *FetchEmail) AfterFetch() error {
@@ -53,7 +53,7 @@ func initDB(t *test.Driver) {
 	tx, err := t.DB.Begin()
 	t.NotError(err).NotNil(tx)
 
-	stmt, err := tx.Prepare("INSERT INTO #user(id,email,username,{group}) values(?, ?, ?, ?)")
+	stmt, err := tx.Prepare("INSERT INTO fetch_users(id,email,username,{group}) values(?, ?, ?, ?)")
 	t.NotError(err).NotNil(stmt)
 	for i := 1; i < 100; i++ { // 自增 ID 部分数据库不能为 0
 		_, err = stmt.Exec(i, fmt.Sprintf("email-%d", i), fmt.Sprintf("username-%d", i), 1)
@@ -61,7 +61,7 @@ func initDB(t *test.Driver) {
 	}
 	t.NotError(stmt.Close())
 
-	stmt, err = tx.Prepare("INSERT INTO #logs(id, created,content,uid) values(?, ?, ?, ?)")
+	stmt, err = tx.Prepare("INSERT INTO logs(id, created,content,uid) values(?, ?, ?, ?)")
 	t.NotError(err).NotNil(stmt)
 	for i := 1; i < 100; i++ {
 		_, err = stmt.Exec(i, types.Unix{Time: time.Now()}, fmt.Sprintf("content-%d", i), i)
@@ -87,7 +87,7 @@ func TestObject_strict(t *testing.T) {
 
 		db := t.DB
 
-		sql := `SELECT id,email FROM #user WHERE id<3 ORDER BY id`
+		sql := `SELECT id,email FROM fetch_users WHERE id<3 ORDER BY id`
 		now := time.Now().Unix()
 
 		// test1:objs 的长度与导出的数据长度相等
@@ -190,7 +190,7 @@ func TestObject_strict(t *testing.T) {
 		t.Error(err).Empty(cnt)
 		t.NotError(rows.Close())
 
-		sql = `SELECT * FROM #user WHERE id<3 ORDER BY id`
+		sql = `SELECT * FROM fetch_users WHERE id<3 ORDER BY id`
 
 		// test8: objs 的长度与导出的数据长度相等
 		rows, err = db.Query(sql)
@@ -221,7 +221,7 @@ func TestObject_no_strict(t *testing.T) {
 		db := t.DB
 
 		// 导出一条数据有对应的 logs，一条没有对应的 logs
-		sql := `SELECT u.id,u.email,l.id as lid FROM #user AS u LEFT JOIN #logs AS l ON l.uid=u.id WHERE u.id<3 ORDER BY u.id`
+		sql := `SELECT u.id,u.email,l.id as lid FROM fetch_users AS u LEFT JOIN logs AS l ON l.uid=u.id WHERE u.id<3 ORDER BY u.id`
 		now := time.Now().Unix()
 
 		type userlog struct {
@@ -333,7 +333,7 @@ func TestObject_no_strict(t *testing.T) {
 		t.Error(err).Empty(cnt)
 		t.NotError(rows.Close())
 
-		sql = `SELECT u.*,l.id AS lid FROM #user AS u LEFT JOIN #logs AS l on l.uid=u.id WHERE u.id<3 ORDER BY u.id`
+		sql = `SELECT u.*,l.id AS lid FROM fetch_users AS u LEFT JOIN logs AS l on l.uid=u.id WHERE u.id<3 ORDER BY u.id`
 
 		// test8: objs 的长度与导出的数据长度相等
 		rows, err = db.Query(sql)
@@ -367,7 +367,7 @@ func TestObjectNest(t *testing.T) {
 			User *FetchUser `orm:"name(user)"`
 		}
 
-		sql := `SELECT l.*,u.id as {user.id},u.username as {user.username}  FROM #logs AS l LEFT JOIN #user as u ON u.id=l.uid WHERE l.id<3 ORDER BY l.id`
+		sql := `SELECT l.*,u.id as {user.id},u.username as {user.username}  FROM logs AS l LEFT JOIN fetch_users as u ON u.id=l.uid WHERE l.id<3 ORDER BY l.id`
 		rows, err := t.DB.Query(sql)
 		t.NotError(err).NotNil(rows)
 		objs := []*log{
@@ -394,7 +394,7 @@ func TestObjectNotFound(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		sql := `SELECT id,email FROM #user WHERE id>100 ORDER BY id`
+		sql := `SELECT id,email FROM fetch_users WHERE id>100 ORDER BY id`
 
 		// test1: 查询条件不满足，返回空数据
 		rows, err := t.DB.Query(sql)

@@ -34,8 +34,6 @@ type (
 	// TableNamer 表或是视图必须实现的接口
 	TableNamer interface {
 		// TableName 返回表或是视图的名称
-		//
-		// 如果需要带表名前缀，请以 # 开头返回。
 		TableName() string
 	}
 
@@ -68,8 +66,6 @@ type (
 		GoType reflect.Type
 
 		// 模型的名称
-		//
-		// 可以以 # 符号开头，表示该表名带有一个表名前缀。
 		Name string
 
 		// 如果当前模型是视图，那么此值表示的是视图的 select 语句，

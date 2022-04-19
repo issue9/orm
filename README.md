@@ -29,24 +29,23 @@ import (
     _ github.com/mattn/go-sqlite3     // 加载数据库驱动
 )
 
-// 初始化一个 DB，表前缀为 prefix_
-db1 := orm.NewDB("./db1", dialect.Sqlite3("sqlite3", "prefix_"))
+// 初始化一个 DB
+db1 := orm.NewDB("./db1", dialect.Sqlite3("sqlite3"))
 
 // 另一个 DB 实例
-db2 := orm.NewDB("./db2", dialect.Sqlite3("sqlite3", "db2_"))
+db2 := orm.NewDB("./db2", dialect.Sqlite3("sqlite3"))
 ```
 
 #### 占位符
 
-SQL 语句可以使用 # 字符在语句中暂替真实的表名前缀，也可以使用 {}
-包含一个关键字，使其它成为普通列名，如：
+SQL 语句可以使用 {} 包含一个关键字，使其它成为普通列名，如：
 
 ```sql
-SELECT * FROM #user WHERE {group}=1
+SELECT * FROM user WHERE {group}=1
 ```
 
-在实际执行时，相关的占位符就会被替换成与当前环境想容的实例，如在表名前缀为 p_，
-数据库为 mysql 时，会被替换成以下语句，然后再执行：
+在实际执行时，相关的占位符就会被替换成与当前环境想容的实例，
+如在数据库为 mysql 时，会被替换成以下语句，然后再执行：
 
 ```sql
  SELECT * FROM p_user WHERE `group`=1
@@ -70,7 +69,7 @@ type User struct {
     Group       string     `orm:"name(group)"`
 }
 
-func(u *User) TableName() string { return "#user" }
+func(u *User) TableName() string { return "user" }
 
 // 通过 orm.ApplyModeler 接口，指定表的额外数据。若不需要，可不用实现该接口
 func(u *User) ApplyModel(m *core.Model) error {
@@ -135,7 +134,6 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 定义物理外键，最少需要指定 fk_name、refTable 和 refColName 三个值。分别对应约束名，
 引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
-refTable 如果需要表名前缀，需要添加 # 符号。
 
 #### 接口:
 
@@ -167,7 +165,7 @@ db.Create(&User{})
 ```go
 // 将 id 为 1 的记录的 FirstName 更改为 abc；对象中的零值不会被提交。
 db.Update(&User{Id:1,FirstName:"abc"})
-sqlbuilder.Update(db).Table("#table").Where("id=?",1).Set("FirstName", "abc").Exec()
+sqlbuilder.Update(db).Table("table").Where("id=?",1).Set("FirstName", "abc").Exec()
 ```
 
 ##### Delete:
@@ -175,7 +173,7 @@ sqlbuilder.Update(db).Table("#table").Where("id=?",1).Set("FirstName", "abc").Ex
 ```go
 // 删除 id 为 1 的记录
 e.Delete(&User{Id:1})
-sqlbuilder.Delete(e).Table("#table").Where("id=?",1).Exec()
+sqlbuilder.Delete(e).Table("table").Where("id=?",1).Exec()
 ```
 
 ##### Insert:
@@ -201,10 +199,10 @@ err := e.Select(u)
 
 ```go
 // Query 返回参数与 sql.Query 是相同的
-sql := "select * from #tbl_name where id=?"
+sql := "select * from tbl_name where id=?"
 rows, err := e.Query(sql, []interface{}{5})
 // Exec 返回参数与 sql.Exec 是相同的
-sql = "update #tbl_name set name=? where id=?"
+sql = "update tbl_name set name=? where id=?"
 r, err := e.Exec(sql, []interface{}{"name1", 5})
 ```
 

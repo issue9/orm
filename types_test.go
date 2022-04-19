@@ -31,7 +31,7 @@ var (
 	_ orm.BeforeUpdater  = &beforeObject1{}
 )
 
-func (o *beforeObject1) TableName() string { return "#objects1" }
+func (o *beforeObject1) TableName() string { return "objects1" }
 
 func (o *beforeObject1) BeforeInsert() error {
 	o.Name = "insert-" + o.Name
@@ -48,7 +48,7 @@ var (
 	_ orm.BeforeUpdater  = &beforeObject1{}
 )
 
-func (o *beforeObject2) TableName() string { return "#objects2" }
+func (o *beforeObject2) TableName() string { return "objects2" }
 
 func (o *beforeObject2) BeforeInsert() error {
 	o.Name = "insert-" + o.Name

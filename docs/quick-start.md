@@ -14,7 +14,7 @@ type User struct {
     Age  int    `orm:"name(age)" json:"age"`
 }
 
-func (u *User) TableName() string { return "#users" }
+func (u *User) TableName() string { return "users" }
 
 // 指定了表名，以及其它一些表属性
 func (u *User) ApplyModel(m*core.Model) error {
@@ -98,11 +98,11 @@ import (
 
 ```go
 // 初始化 sqlite3 的实例
-sqlite, err := orm.NewDB("./orm.db", "table_prefix_", dialect.Sqlite3())
+sqlite, err := orm.NewDB("./orm.db", dialect.Sqlite3())
 
 // 初始化 mysql 的实例
 db, err := sql.Open("mysql", "root@/orm")
-my, err := orm.NewDBWithStdDB(db, "table_prefix_", dialect.Mysql())
+my, err := orm.NewDBWithStdDB(db, dialect.Mysql())
 ```
 
 后续代码中可以同时使用 my 和 sqlite 两个实例操纵不同的数据库数据。
@@ -116,7 +116,7 @@ my, err := orm.NewDBWithStdDB(db, "table_prefix_", dialect.Mysql())
 ```go
 l := log.New(os.Stdout, "[SQL]", 0)
 db.Debug(l)
-db.Query("select * from #users") // 输出到日志
+db.Query("select * from users") // 输出到日志
 db.Debug(nil)
-db.Query("select * from #groups") // 不会输出到日志
+db.Query("select * from groups") // 不会输出到日志
 ```

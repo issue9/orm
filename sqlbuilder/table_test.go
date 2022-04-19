@@ -37,6 +37,13 @@ func TestCreateTableStmt(t *testing.T) {
 		err := stmt.Exec()
 		a.NotError(err)
 
+		defer func() {
+			err = sqlbuilder.DropTable(t.DB).
+				Table(table).
+				Exec()
+			a.NotError(err)
+		}()
+
 		// AI 和 PK 同时指定为 ID
 		err = stmt.Reset().
 			Table("users").
@@ -77,11 +84,6 @@ func TestCreateTableStmt(t *testing.T) {
 			From(table).
 			QueryInt("cnt")
 		a.NotError(err).Equal(cnt, 3)
-
-		err = sqlbuilder.DropTable(t.DB).
-			Table(table).
-			Exec()
-		a.NotError(err)
 	})
 }
 

@@ -70,7 +70,7 @@ type Admin1 struct {
 	Regdate  int    `orm:"-"`
 }
 
-func (u *User) TableName() string { return "#users" }
+func (u *User) TableName() string { return "users" }
 
 func (u *User) ApplyModel(m *core.Model) error {
 	m.Options["mysql_engine"] = []string{"innodb"}
@@ -82,10 +82,10 @@ func (u *User) ApplyModel(m *core.Model) error {
 type Admin struct {
 	Admin1
 	Email string `orm:"name(email);len(20);unique(unique_admin_email)"`
-	Group int64  `orm:"name(group);fk(fk_admin_name,#groups,id,NO ACTION)"`
+	Group int64  `orm:"name(group);fk(fk_admin_name,groups,id,NO ACTION)"`
 }
 
-func (a *Admin) TableName() string { return "#administrators" }
+func (a *Admin) TableName() string { return "administrators" }
 
 func (a *Admin) ApplyModel(m *core.Model) error {
 	m.Options["mysql_engine"] = []string{"innodb"}
@@ -97,14 +97,14 @@ type obj struct {
 	ID int `orm:"name(id);ai"`
 }
 
-func (o obj) TableName() string { return "#objs" }
+func (o obj) TableName() string { return "objs" }
 
 type viewObject struct {
 	ID       int    `orm:"name(id);ai"`
 	Username string `orm:"name(username)"`
 }
 
-func (v *viewObject) TableName() string { return "#view_objects" }
+func (v *viewObject) TableName() string { return "view_objects" }
 
 func (v *viewObject) ViewAs(e core.Engine) (string, error) {
 	return sqlbuilder.Select(e).
@@ -154,7 +154,7 @@ func TestModels_New(t *testing.T) {
 	a.True(found).
 		Equal(fk.Name, "fk_admin_name").
 		Equal(fk.Column, groupCol).
-		Equal(fk.RefTableName, "#groups").
+		Equal(fk.RefTableName, "groups").
 		Equal(fk.RefColName, "id").
 		Equal(fk.UpdateRule, "NO ACTION").
 		Equal(fk.DeleteRule, "")
@@ -169,16 +169,16 @@ func TestModels_New(t *testing.T) {
 		"mysql_charset": {"utf8"},
 	})
 
-	a.Equal(m.Name, "#administrators")
+	a.Equal(m.Name, "administrators")
 
 	// 多层指针下的 Receive
 	o := obj{}
 	m, err = ms.New(o)
 	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "#objs")
+	a.Equal(m.Name, "objs")
 	m, err = ms.New(&o)
 	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "#objs")
+	a.Equal(m.Name, "objs")
 
 	// view
 	m, err = ms.New(&viewObject{})

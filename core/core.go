@@ -52,8 +52,6 @@ type Engine interface {
 	Prepare(query string) (*Stmt, error)
 
 	PrepareContext(ctx context.Context, query string) (*Stmt, error)
-
-	TablePrefix() string
 }
 
 // Dialect 用于描述与数据库和驱动相关的一些特性

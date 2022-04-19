@@ -41,6 +41,12 @@ func testCreateView(d *test.Driver) {
 		Column("name", "address")
 	d.NotError(view.Exec())
 
+	// 删除
+	defer func() {
+		dropView := sb.DropView().Name(viewName)
+		d.NotError(dropView.Exec())
+	}()
+
 	// 创建同名视图
 	view.Reset().Name(viewName).From(sel)
 	d.Error(view.Exec(), "not err @%s", d.DriverName)
@@ -48,8 +54,4 @@ func testCreateView(d *test.Driver) {
 	// 以 replace 的方式创建
 	view.Reset().Name(viewName).From(sel).Replace()
 	d.NotError(view.Exec())
-
-	// 删除
-	dropView := sb.DropView().Name(viewName)
-	d.NotError(dropView.Exec())
 }

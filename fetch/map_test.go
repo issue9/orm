@@ -23,7 +23,7 @@ func TestMap(t *testing.T) {
 		db := t.DB
 
 		// 正常匹配数据，读取多行
-		sql := `SELECT id,email FROM #user WHERE id<3 ORDER BY id`
+		sql := `SELECT id,email FROM fetch_users WHERE id<3 ORDER BY id`
 		rows, err := db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
@@ -58,7 +58,7 @@ func TestMap(t *testing.T) {
 		t.NotError(rows.Close())
 
 		// 没有匹配的数据，读取多行
-		sql = `SELECT id,email FROM #user WHERE id<0 ORDER BY id`
+		sql = `SELECT id,email FROM fetch_users WHERE id<0 ORDER BY id`
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
@@ -92,7 +92,7 @@ func TestMapString(t *testing.T) {
 		db := t.DB
 
 		// 正常数据匹配，读取多行
-		sql := `SELECT id,email FROM #user WHERE id<3 ORDER BY id`
+		sql := `SELECT id,email FROM fetch_users WHERE id<3 ORDER BY id`
 		rows, err := db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
@@ -118,7 +118,7 @@ func TestMapString(t *testing.T) {
 		t.NotError(rows.Close())
 
 		// 没有数据匹配，读取多行
-		sql = `SELECT id,email FROM #user WHERE id<0 ORDER BY id`
+		sql = `SELECT id,email FROM fetch_users WHERE id<0 ORDER BY id`
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 

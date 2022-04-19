@@ -21,6 +21,11 @@ func TestTx_InsertMany(t *testing.T) {
 		a.NotError(err)
 		a.NotError(tx.Create(&UserInfo{}))
 
+		defer func() {
+			t.TB().Helper()
+			t.NotError(t.DB.Drop(&UserInfo{}))
+		}()
+
 		a.NotError(tx.InsertMany(10, &UserInfo{
 			UID:       1,
 			FirstName: "f1",
@@ -93,8 +98,6 @@ func TestTx_InsertMany(t *testing.T) {
 		u7 := &UserInfo{UID: 7}
 		t.NotError(t.DB.Select(u7))
 		t.Equal(u7, &UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
-
-		t.NotError(t.DB.Drop(&UserInfo{}))
 	})
 }
 

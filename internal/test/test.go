@@ -22,8 +22,6 @@ import (
 
 const sqlite3DBFile = "orm_test.db"
 
-const Prefix = "prefix_"
-
 var (
 	// Sqlite3 Dialect 实例
 	Sqlite3 = dialect.Sqlite3("sqlite3")
@@ -98,7 +96,7 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 			continue
 		}
 
-		db, err := orm.NewDB(c.dsn, Prefix, c.dialect)
+		db, err := orm.NewDB(c.dsn, c.dialect)
 		a.NotError(err).NotNil(db)
 
 		s.drivers = append(s.drivers, &Driver{

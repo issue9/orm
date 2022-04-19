@@ -10,7 +10,7 @@ type User struct {
     Last     *Last          `orm:"name(last);len(-1);default(192.168.1.1,2019-07-29T17:11:01)"`
 }
 
-func(u *User) TableName() string { return "#users" }
+func(u *User) TableName() string { return "users" }
 
 func(u *User) ApplyModel(m*core.Model) error {
     m.Options["mysql_charset"] = []string{"utf8"}
@@ -49,7 +49,6 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 主键，支持联合主键，给多个字段加上 pk 的 struct tag 即可。
 
 主键约束不能自定义约束名。
-如果在某些地方需要用到约束名，可以调用 core.PKName() 生成约束名。
 
 #### ai
 
@@ -83,7 +82,6 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 定义物理外键，最少需要指定 fk_name、refTable 和 refColName 三个值。分别对应约束名，
 引用的表和引用的字段，updateRule,deleteRule，在不指定的情况下，使用数据库的默认值。
-refTable 如果需要表名前缀，需要添加 # 符号。
 
 ### 接口
 

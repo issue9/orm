@@ -42,7 +42,7 @@ type defvalues struct {
 	Age  int    `orm:"name(age);default(-1)"`
 }
 
-func (v *defvalues) TableName() string { return "#defvalues" }
+func (v *defvalues) TableName() string { return "defvalues" }
 
 func TestDB_InsertDefaultValues(t *testing.T) {
 	a := assert.New(t, false)
@@ -164,11 +164,6 @@ func TestDB_Update_error(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
 	defer suite.Close()
-
-	suite.ForEach(func(t *test.Driver) {
-		initData(t)
-		defer clearData(t)
-	})
 
 	// 多个唯一约束符合查询条件
 	suite.ForEach(func(t *test.Driver) {

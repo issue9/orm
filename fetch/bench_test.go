@@ -23,7 +23,7 @@ func BenchmarkObject(b *testing.B) {
 		initDB(t)
 		defer clearDB(t)
 
-		sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+		sql := `SELECT id,Email FROM fetch_users WHERE id<2 ORDER BY id`
 		objs := []*FetchUser{
 			{},
 			{},
@@ -50,7 +50,7 @@ func BenchmarkMap(b *testing.B) {
 		defer clearDB(t)
 
 		// 正常匹配数据，读取多行
-		sql := `SELECT id,Email FROM user WHERE id<2 ORDER BY id`
+		sql := `SELECT id,Email FROM fetch_users WHERE id<2 ORDER BY id`
 
 		for i := 0; i < b.N; i++ {
 			rows, err := t.DB.Query(sql)

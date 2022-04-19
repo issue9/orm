@@ -7,14 +7,14 @@
 *.test
 *.prof
 
-# vim
-*.swp
-
 # 测试文件
 orm_test.db
+coverage.txt
 
 # mac os x
 .DS_Store
 
+# ide
 .idea
 .vscode
+*.swp

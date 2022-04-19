@@ -19,7 +19,7 @@ type u2 struct {
 	Created  string `orm:"name(created);nullable"`
 }
 
-func (u *u2) TableName() string { return "#upgrades" }
+func (u *u2) TableName() string { return "upgrades" }
 
 func (u *u2) ApplyModel(m *core.Model) error {
 	return m.NewCheck("chk_username", "{username} IS NOT NULL")

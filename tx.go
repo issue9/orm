@@ -37,8 +37,6 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	return inst, nil
 }
 
-func (tx *Tx) TablePrefix() string { return tx.db.tablePrefix }
-
 func (tx *Tx) Query(query string, args ...any) (*sql.Rows, error) {
 	return tx.QueryContext(context.Background(), query, args...)
 }

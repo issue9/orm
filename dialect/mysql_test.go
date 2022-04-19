@@ -29,41 +29,41 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
 	defer suite.Close()
 
-	// 约束名不是根据 core.PKName() 生成的
+	// 约束名不是根据 core.pkName 生成的
 	suite.ForEach(func(t *test.Driver) {
 		db := t.DB
 
-		query := "CREATE TABLE #info(uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
+		query := "CREATE TABLE info(uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
 		_, err := db.Exec(query)
 		t.NotError(err)
 
 		defer func() {
-			_, err = db.Exec("DROP TABLE #info")
+			_, err = db.Exec("DROP TABLE info")
 			t.NotError(err)
 		}()
 
 		// 已经存在主键，出错
 		addStmt := sqlbuilder.AddConstraint(t.DB)
-		err = addStmt.Table("#info").
-			PK("#info_pk", "uid").
+		err = addStmt.Table("info").
+			PK("info_pk", "uid").
 			Exec()
 		t.Error(err)
 
 		// 未指定 PK 属性，无法找到相同的约束名。
 		err = sqlbuilder.DropConstraint(t.DB).
-			Table("#info").
+			Table("info").
 			Constraint("test_pk").
 			Exec()
 		a.Error(err)
 
 		err = sqlbuilder.DropConstraint(t.DB).
-			Table("#info").
+			Table("info").
 			PK("test_pk").
 			Exec()
 		a.NotError(err)
 
-		err = addStmt.Reset().Table("#info").
-			PK("#info_pk", "uid").
+		err = addStmt.Reset().Table("info").
+			PK("info_pk", "uid").
 			Exec()
 		t.NotError(err)
 	})

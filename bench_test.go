@@ -28,7 +28,9 @@ func BenchmarkDB_Insert(b *testing.B) {
 
 	suite.ForEach(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
-		defer t.NotError(t.DB.Drop(&Group{}))
+		defer func() {
+			t.NotError(t.DB.Drop(&Group{}))
+		}()
 
 		for i := 0; i < b.N; i++ {
 			_, err := t.DB.Insert(m)
@@ -50,7 +52,9 @@ func BenchmarkDB_Update(b *testing.B) {
 
 	suite.ForEach(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
-		defer t.NotError(t.DB.Drop(&Group{}))
+		defer func() {
+			t.NotError(t.DB.Drop(&Group{}))
+		}()
 
 		// 构造数据
 		for i := 0; i < 10000; i++ {
@@ -79,7 +83,9 @@ func BenchmarkDB_Select(b *testing.B) {
 
 	suite.ForEach(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
-		defer t.NotError(t.DB.Drop(&Group{}))
+		defer func() {
+			t.NotError(t.DB.Drop(&Group{}))
+		}()
 
 		_, err := t.DB.Insert(m)
 		t.NotError(err)
@@ -104,7 +110,9 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 
 	suite.ForEach(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
-		defer t.NotError(t.DB.Drop(&Group{}))
+		defer func() {
+			t.NotError(t.DB.Drop(&Group{}))
+		}()
 
 		// 构造数据
 		for i := 0; i < 10000; i++ {

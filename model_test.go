@@ -24,7 +24,7 @@ type Group struct {
 	Created int64  `orm:"name(created)"`
 }
 
-func (g *Group) TableName() string { return "#groups" }
+func (g *Group) TableName() string { return "groups" }
 
 type User struct {
 	ID       int    `orm:"name(id);ai;"`
@@ -41,9 +41,9 @@ type UserInfo struct {
 	Sex       string `orm:"name(sex);default(male);len(6)"`
 }
 
-func (u *User) TableName() string { return "#users" }
+func (u *User) TableName() string { return "users" }
 
-func (u *UserInfo) TableName() string { return "#user_info" }
+func (u *UserInfo) TableName() string { return "user_info" }
 
 func (u *UserInfo) ApplyModel(m *core.Model) error {
 	m.Options["mysql_engine"] = []string{"innodb"}
@@ -55,10 +55,10 @@ func (u *UserInfo) ApplyModel(m *core.Model) error {
 type Admin struct {
 	User
 	Email string `orm:"name(email);len(20);unique(unique_email)"`
-	Group int64  `orm:"name(group);fk(fk_name,#groups,id,NO ACTION)"`
+	Group int64  `orm:"name(group);fk(fk_name,groups,id,NO ACTION)"`
 }
 
-func (a *Admin) TableName() string { return "#administrators" }
+func (a *Admin) TableName() string { return "administrators" }
 
 func (a *Admin) ApplyModel(m *core.Model) error {
 	m.Options["mysql_engine"] = []string{"innodb"}
@@ -73,11 +73,11 @@ type Account struct {
 	Version int64 `orm:"name(version);occ;default(0)"`
 }
 
-func (a *Account) TableName() string { return "#account" }
+func (a *Account) TableName() string { return "account" }
 
 // table 表中是否存在 size 条记录，若不是，则触发 error
 func hasCount(e core.Engine, a *assert.Assertion, table string, size int) {
-	rows, err := e.Query("SELECT COUNT(*) as cnt FROM #" + table)
+	rows, err := e.Query("SELECT COUNT(*) as cnt FROM " + table)
 	a.NotError(err).
 		NotNil(rows)
 	defer func() {
@@ -106,6 +106,8 @@ func initData(t *test.Driver) {
 	t.NotError(err, "%s@%s", err, t.DriverName)
 
 	insert := func(obj core.TableNamer) {
+		t.TB().Helper()
+
 		r, err := db.Insert(obj)
 		t.NotError(err, "%s@%s", err, t.DriverName)
 		cnt, err := r.RowsAffected()

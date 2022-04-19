@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/issue9/orm/v5/core"
@@ -144,12 +143,11 @@ func (s *sqlite3) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([
 		return nil, err
 	}
 
-	name := strings.Replace(stmt.Name, "#", stmt.Engine().TablePrefix(), 1)
-	if _, found := info.Constraints[name]; !found {
-		return nil, fmt.Errorf("不存在的约束:%s", name)
+	if _, found := info.Constraints[stmt.Name]; !found {
+		return nil, fmt.Errorf("不存在的约束:%s", stmt.Name)
 	}
 
-	delete(info.Constraints, name)
+	delete(info.Constraints, stmt.Name)
 
 	return s.buildSQLS(stmt.Engine(), info, stmt.TableName)
 }

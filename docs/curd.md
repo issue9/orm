@@ -47,8 +47,7 @@ CREATE INDEX i_user_index ON users (name);
 err := db.Create(&User{})
 ```
 
-会创建一张 User 表，表名由 User.TableName() 方法指定，
-当然如果你在初始化 DB 时，指定了表名前缀，这里也会加上。
+会创建一张 User 表，表名由 User.TableName() 方法指定。
 
 创建表属于 DDL，如果数据不支持事务中执行 DDL，那么即使在事务中，
 创建表也依然是逐条提交的。

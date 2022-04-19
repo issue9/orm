@@ -25,11 +25,13 @@ type user struct {
 }
 
 func (u *user) ApplyModel(m *core.Model) error {
-	m.Name = "#users"
+	m.Name = "users"
 	return nil
 }
 
 func initDB(t *test.Driver) {
+	t.Assertion.TB().Helper()
+
 	creator := sqlbuilder.CreateTable(t.DB).
 		Table("users").
 		AutoIncrement("id", core.Int64).
