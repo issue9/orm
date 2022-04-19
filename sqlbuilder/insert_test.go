@@ -18,10 +18,9 @@ var _ sqlbuilder.SQLer = &sqlbuilder.InsertStmt{}
 func TestInsert(t *testing.T) {
 	a := assert.New(t, false)
 	s := test.NewSuite(a)
-	defer s.Close()
 	tableName := "users"
 
-	s.ForEach(func(t *test.Driver) {
+	s.Run(func(t *test.Driver) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
 			AutoIncrement("id", core.Int64).
@@ -66,10 +65,9 @@ func TestInsert(t *testing.T) {
 func TestInsert_NamedArgs(t *testing.T) {
 	a := assert.New(t, false)
 	s := test.NewSuite(a)
-	defer s.Close()
 	tableName := "users"
 
-	s.ForEach(func(t *test.Driver) {
+	s.Run(func(t *test.Driver) {
 		err := sqlbuilder.CreateTable(t.DB).
 			Table(tableName).
 			AutoIncrement("id", core.Int64).

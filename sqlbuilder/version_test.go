@@ -13,11 +13,9 @@ import (
 
 func TestVersion(t *testing.T) {
 	a := assert.New(t, false)
-
 	s := test.NewSuite(a)
-	defer s.Close()
 
-	s.ForEach(func(t *test.Driver) {
+	s.Run(func(t *test.Driver) {
 		ver, err := sqlbuilder.Version(t.DB)
 		t.NotError(err).
 			NotEmpty(ver)

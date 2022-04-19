@@ -20,9 +20,8 @@ var (
 func TestColumn(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		db := t.DB
 
 		err := sqlbuilder.CreateTable(db).
@@ -58,7 +57,7 @@ func TestColumn(t *testing.T) {
 	})
 
 	// 添加主键
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		db := t.DB
 
 		err := sqlbuilder.CreateTable(db).

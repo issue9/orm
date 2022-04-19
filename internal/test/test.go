@@ -82,6 +82,9 @@ type Suite struct {
 // 同时 dialect 还受到 flagsets.Flags 变量的影响，如果未在其中指定的，也不会执行测试。
 func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 	s := &Suite{a: a}
+	a.TB().Cleanup(func() {
+		s.close()
+	})
 
 	for _, c := range cases {
 		name := c.dialect.DBName()
@@ -114,7 +117,7 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 // Close 销毁测试用例并关闭数据库
 //
 // 如果是 sqlite3，还会删除数据库文件。
-func (s Suite) Close() {
+func (s Suite) close() {
 	for _, t := range s.drivers {
 		t.NotError(t.DB.Close())
 
@@ -128,10 +131,8 @@ func (s Suite) Close() {
 	}
 }
 
-// ForEach 为每个数据库测试用例调用 f 进行测试
-//
-// dialects 为需要测试的驱动，如果为空表示测试全部
-func (s Suite) ForEach(f func(*Driver)) {
+// Run 为每个数据库测试用例调用 f 进行测试
+func (s Suite) Run(f func(*Driver)) {
 	for _, test := range s.drivers {
 		f(test)
 	}

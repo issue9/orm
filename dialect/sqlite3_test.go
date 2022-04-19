@@ -52,9 +52,8 @@ func clearSqlite3CreateTable(t *test.Driver, db core.Engine) {
 func TestSqlite3_VersionSQL(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		testDialectVersionSQL(t)
 	})
 }
@@ -62,9 +61,8 @@ func TestSqlite3_VersionSQL(t *testing.T) {
 func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
@@ -88,9 +86,8 @@ func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Sqlite3)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
@@ -145,9 +142,8 @@ func testMysqlDropConstraintStmtHook(t *test.Driver) {
 func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		db := t.DB
 
 		for _, query := range sqlite3CreateTable {
@@ -199,9 +195,8 @@ func TestSqlite3_TruncateTableSQL(t *testing.T) {
 	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Sqlite3)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		qs, err := t.DB.Dialect().TruncateTableSQL("tbl", "")
 		a.NotError(err).Equal(1, len(qs))
 		sqltest.Equal(a, qs[0], "DELETE FROM {tbl}")
@@ -317,9 +312,8 @@ func TestSqlite3_SQLType(t *testing.T) {
 func TestSqlite3_Types(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		testTypes(t)
 	})
 }
@@ -327,9 +321,8 @@ func TestSqlite3_Types(t *testing.T) {
 func TestSqlite3_TypesDefault(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Sqlite3)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		testTypesDefault(t)
 	})
 }

@@ -18,9 +18,8 @@ var _ sqlbuilder.SQLer = &sqlbuilder.SelectStmt{}
 func TestSelect(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -68,9 +67,8 @@ func TestSelect(t *testing.T) {
 func TestSelectWithNamedParam(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -119,9 +117,8 @@ func TestSelectWithNamedParam(t *testing.T) {
 func TestSelectQuery(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -147,9 +144,8 @@ func TestSelectQuery(t *testing.T) {
 func TestSelectStmt_Join(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -183,9 +179,8 @@ func TestSelectStmt_Join(t *testing.T) {
 func TestSelectStmt_Group(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -209,9 +204,8 @@ func TestSelectStmt_Group(t *testing.T) {
 func TestSelectStmt_Union(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -253,9 +247,8 @@ func TestSelectStmt_Union(t *testing.T) {
 func TestSelectStmt_UnionAll(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 

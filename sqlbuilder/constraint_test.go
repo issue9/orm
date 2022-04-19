@@ -20,9 +20,8 @@ func TestConstraint(t *testing.T) {
 	a := assert.New(t, false)
 
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -60,9 +59,8 @@ func TestConstraint(t *testing.T) {
 func TestConstraint_Check(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 		sb := t.DB.SQLBuilder()
@@ -84,9 +82,8 @@ func TestConstraint_Check(t *testing.T) {
 func TestConstraint_PK(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 		sb := t.DB.SQLBuilder()
@@ -111,7 +108,7 @@ func TestConstraint_PK(t *testing.T) {
 	})
 
 	// 约束名不是根据 core.pkName 生成的
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		query := "CREATE TABLE info (uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
 		_, err := t.DB.Exec(query)
 		t.NotError(err)
@@ -144,9 +141,8 @@ func TestConstraint_PK(t *testing.T) {
 func TestConstraint_FK(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 

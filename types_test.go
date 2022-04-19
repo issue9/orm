@@ -63,9 +63,8 @@ func (o *beforeObject2) BeforeUpdate() error {
 func TestBeforeCreateUpdate(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		// create
 		t.NotError(t.DB.Create(&beforeObject1{}))
 		defer func() {

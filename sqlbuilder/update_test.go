@@ -16,9 +16,8 @@ var _ sqlbuilder.ExecStmt = &sqlbuilder.UpdateStmt{}
 func TestUpdate_columnsHasDup(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		u := sqlbuilder.Update(t.DB).
 			Table("users").
 			Set("c1", "v1").
@@ -31,9 +30,8 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -61,9 +59,8 @@ func TestUpdate(t *testing.T) {
 func TestUpdateStmt_Increase(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -111,9 +108,8 @@ func TestUpdateStmt_Increase(t *testing.T) {
 func TestUpdateStmt_OCC(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 

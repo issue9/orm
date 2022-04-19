@@ -20,10 +20,9 @@ func TestSuite_ForEach(t *testing.T) {
 	a := assert.New(t, false)
 
 	s := NewSuite(a)
-	defer s.Close()
 
 	var size int
-	s.ForEach(func(t *Driver) {
+	s.Run(func(t *Driver) {
 		a.NotNil(t).
 			NotNil(t.DB).
 			NotNil(t.DB.Dialect()).
@@ -49,10 +48,9 @@ func TestSuite_ForEach_withDialect(t *testing.T) {
 
 	dialects := []core.Dialect{Mysql, Sqlite3}
 	s := NewSuite(a, dialects...)
-	defer s.Close()
 
 	size := 0
-	s.ForEach(func(t *Driver) {
+	s.Run(func(t *Driver) {
 		a.NotNil(t).
 			NotNil(t.DB).
 			NotNil(t.DB.Dialect()).

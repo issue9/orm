@@ -24,9 +24,8 @@ func BenchmarkDB_Insert(b *testing.B) {
 	}
 
 	suite := test.NewSuite(a, benchDBDriverName)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
 		defer func() {
 			t.NotError(t.DB.Drop(&Group{}))
@@ -48,9 +47,8 @@ func BenchmarkDB_Update(b *testing.B) {
 	}
 
 	suite := test.NewSuite(a, benchDBDriverName)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
 		defer func() {
 			t.NotError(t.DB.Drop(&Group{}))
@@ -79,9 +77,8 @@ func BenchmarkDB_Select(b *testing.B) {
 	}
 
 	suite := test.NewSuite(a, benchDBDriverName)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
 		defer func() {
 			t.NotError(t.DB.Drop(&Group{}))
@@ -106,9 +103,8 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 	}
 
 	suite := test.NewSuite(a, benchDBDriverName)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
 		defer func() {
 			t.NotError(t.DB.Drop(&Group{}))

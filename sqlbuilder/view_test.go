@@ -16,9 +16,8 @@ var _ sqlbuilder.DDLStmt = &sqlbuilder.CreateTableStmt{}
 func TestCreateView(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		testCreateView(t)
 	})
 }

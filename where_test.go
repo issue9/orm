@@ -13,9 +13,8 @@ import (
 func TestWhereStmt_Delete(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -46,9 +45,8 @@ func TestWhereStmt_Delete(t *testing.T) {
 func TestWhereStmt_Update(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -83,9 +81,8 @@ func TestWhereStmt_Update(t *testing.T) {
 func TestWhereStmt_Select(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -121,9 +118,8 @@ func TestWhereStmt_Select(t *testing.T) {
 func TestWhereStmt_Count(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 

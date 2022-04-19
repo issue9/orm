@@ -14,9 +14,8 @@ import (
 func TestTx_InsertMany(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		tx, err := t.DB.Begin()
 		a.NotError(err)
 		a.NotError(tx.Create(&UserInfo{}))
@@ -104,9 +103,8 @@ func TestTx_InsertMany(t *testing.T) {
 func TestTx_LastInsertID(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		a.NotError(t.DB.Create(&User{}))
 		defer func() {
 			a.NotError(t.DB.Drop(&User{}))
@@ -128,9 +126,8 @@ func TestTx_LastInsertID(t *testing.T) {
 func TestTx_Insert(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&User{}))
 		defer func() {
 			t.NotError(t.DB.Drop(&User{}))
@@ -172,9 +169,8 @@ func TestTx_Insert(t *testing.T) {
 func TestTx_Update(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -211,9 +207,8 @@ func TestTx_Update(t *testing.T) {
 func TestTX(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&User{}))
 		t.NotError(t.DB.Create(&UserInfo{}))
 		defer func() {

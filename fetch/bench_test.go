@@ -17,9 +17,8 @@ var benchDBDriverName = test.Mysql
 func BenchmarkObject(b *testing.B) {
 	a := assert.New(b, false)
 	suite := test.NewSuite(a, benchDBDriverName)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
@@ -43,9 +42,8 @@ func BenchmarkObject(b *testing.B) {
 func BenchmarkMap(b *testing.B) {
 	a := assert.New(b, false)
 	suite := test.NewSuite(a, benchDBDriverName)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 

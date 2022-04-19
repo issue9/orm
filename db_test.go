@@ -21,9 +21,8 @@ func TestMain(m *testing.M) {
 func TestDB_LastInsertID(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&User{}))
 		defer func() {
 			t.NotError(t.DB.Drop(&User{}))
@@ -47,9 +46,8 @@ func (v *defvalues) TableName() string { return "defvalues" }
 func TestDB_InsertDefaultValues(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(d *test.Driver) {
+	suite.Run(func(d *test.Driver) {
 		d.NotError(d.DB.Create(&defvalues{}))
 		defer func() {
 			d.NotError(d.DB.Drop(&defvalues{}))
@@ -68,9 +66,8 @@ func TestDB_InsertDefaultValues(t *testing.T) {
 func TestDB_Update(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -110,9 +107,8 @@ func TestDB_Update(t *testing.T) {
 func TestDB_Update_occ(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -163,10 +159,9 @@ func TestDB_Update_occ(t *testing.T) {
 func TestDB_Update_error(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
 	// 多个唯一约束符合查询条件
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -184,9 +179,8 @@ func TestDB_Update_error(t *testing.T) {
 func TestDB_Delete(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -228,9 +222,8 @@ func TestDB_Delete(t *testing.T) {
 func TestDB_Truncate(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -258,9 +251,8 @@ func TestDB_Truncate(t *testing.T) {
 func TestDB_Drop(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		initData(t)
 		defer clearData(t)
 
@@ -274,9 +266,8 @@ func TestDB_Drop(t *testing.T) {
 func TestDB_Version(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		v, err := t.DB.Version()
 		t.NotError(err).
 			NotEmpty(v)
@@ -286,9 +277,8 @@ func TestDB_Version(t *testing.T) {
 func TestDB_Debug(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		buf := new(bytes.Buffer)
 		l := log.New(buf, "[SQL]", 0)
 

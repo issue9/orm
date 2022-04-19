@@ -17,9 +17,8 @@ import (
 func TestMysql_VersionSQL(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		testDialectVersionSQL(t)
 	})
 }
@@ -27,10 +26,9 @@ func TestMysql_VersionSQL(t *testing.T) {
 func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
-	defer suite.Close()
 
 	// 约束名不是根据 core.pkName 生成的
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		db := t.DB
 
 		query := "CREATE TABLE info(uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
@@ -73,9 +71,8 @@ func TestMysql_DropIndexSQL(t *testing.T) {
 	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		qs, err := t.DB.Dialect().DropIndexSQL("tbl", "index_name")
 		a.NotError(err).Equal(qs, "ALTER TABLE {tbl} DROP INDEX {index_name}")
 	})
@@ -85,9 +82,8 @@ func TestMysql_TruncateTableSQL(t *testing.T) {
 	a := assert.New(t, false)
 
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		qs, err := t.DB.Dialect().TruncateTableSQL("tbl", "")
 		a.NotError(err).Equal(qs, []string{"TRUNCATE TABLE {tbl}"})
 	})
@@ -273,9 +269,8 @@ func TestMysql_SQLType(t *testing.T) {
 func TestMysql_Types(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		testTypes(t)
 	})
 }
@@ -283,9 +278,8 @@ func TestMysql_Types(t *testing.T) {
 func TestMysql_TypesDefault(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		testTypesDefault(t)
 	})
 }

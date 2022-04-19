@@ -28,9 +28,8 @@ func (u *u2) ApplyModel(m *core.Model) error {
 func TestUpgrader(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
-	defer suite.Close()
 
-	suite.ForEach(func(t *test.Driver) {
+	suite.Run(func(t *test.Driver) {
 		sql := t.DB.SQLBuilder().CreateTable().
 			Column("id", core.Int64, false, false, false, nil).
 			Column("name", core.String, false, false, false, nil, 50).
