@@ -405,13 +405,15 @@ func (stmt *WhereStmtOf[T]) OrNotIn(col string, v ...any) *T {
 }
 
 // AndGroup 开始一个子条件语句
-func (stmt *WhereStmtOf[T]) AndGroup(f func(*WhereStmt)) *WhereStmt {
-	return stmt.w.AndGroup(f)
+func (stmt *WhereStmtOf[T]) AndGroup(f func(*WhereStmt)) *T {
+	stmt.w.AndGroup(f)
+	return stmt.t
 }
 
 // OrGroup 开始一个子条件语句
-func (stmt *WhereStmtOf[T]) OrGroup(f func(*WhereStmt)) *WhereStmt {
-	return stmt.w.OrGroup(f)
+func (stmt *WhereStmtOf[T]) OrGroup(f func(*WhereStmt)) *T {
+	stmt.w.OrGroup(f)
+	return stmt.t
 }
 
 func (stmt *WhereStmtOf[T]) WhereStmt() *WhereStmt { return stmt.w }
