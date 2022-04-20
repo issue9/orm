@@ -35,5 +35,7 @@ func Equal(a *assert.Assertion, s1, s2 string) {
 	s1 = spaceReplaceRegexp.ReplaceAllString(s1, " ")
 	s2 = spaceReplaceRegexp.ReplaceAllString(s2, " ")
 
+	a.TB().Helper()
+
 	a.Equal(s1, s2)
 }

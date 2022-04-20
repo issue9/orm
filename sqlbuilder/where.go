@@ -6,7 +6,6 @@ import "github.com/issue9/orm/v5/core"
 
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {
-	parent    *WhereStmt
 	andGroups []*WhereStmt
 	orGroups  []*WhereStmt
 
@@ -33,7 +32,6 @@ func Where() *WhereStmt {
 
 // Reset 重置内容
 func (stmt *WhereStmt) Reset() {
-	stmt.parent = nil
 	stmt.andGroups = stmt.andGroups[:0]
 	stmt.orGroups = stmt.orGroups[:0]
 
@@ -260,24 +258,22 @@ func (stmt *WhereStmt) in(and, not bool, col string, v ...any) *WhereStmt {
 }
 
 // AndGroup 开始一个子条件语句
-func (stmt *WhereStmt) AndGroup() *WhereStmt {
+func (stmt *WhereStmt) AndGroup(f func(*WhereStmt)) *WhereStmt {
 	w := Where()
+	f(w)
 	stmt.appendGroup(true, w)
-
-	return w
+	return stmt
 }
 
 // OrGroup 开始一个子条件语句
-func (stmt *WhereStmt) OrGroup() *WhereStmt {
+func (stmt *WhereStmt) OrGroup(f func(*WhereStmt)) *WhereStmt {
 	w := Where()
+	f(w)
 	stmt.appendGroup(false, w)
-
-	return w
+	return stmt
 }
 
 func (stmt *WhereStmt) appendGroup(and bool, w *WhereStmt) {
-	w.parent = stmt
-
 	if and {
 		if stmt.andGroups == nil {
 			stmt.andGroups = []*WhereStmt{w}
@@ -291,15 +287,6 @@ func (stmt *WhereStmt) appendGroup(and bool, w *WhereStmt) {
 			stmt.orGroups = append(stmt.orGroups, w)
 		}
 	}
-}
-
-// EndGroup 结束当前组的条件输出，返回上一层。如果没有上一层，则 panic
-func (stmt *WhereStmt) EndGroup() (parent *WhereStmt) {
-	if stmt.parent == nil {
-		panic("没有更高层的查询条件了")
-	}
-
-	return stmt.parent
 }
 
 func NewWhereStmtOf[T any](t *T) *WhereStmtOf[T] {
@@ -418,9 +405,13 @@ func (stmt *WhereStmtOf[T]) OrNotIn(col string, v ...any) *T {
 }
 
 // AndGroup 开始一个子条件语句
-func (stmt *WhereStmtOf[T]) AndGroup() *WhereStmt { return stmt.w.AndGroup() }
+func (stmt *WhereStmtOf[T]) AndGroup(f func(*WhereStmt)) *WhereStmt {
+	return stmt.w.AndGroup(f)
+}
 
 // OrGroup 开始一个子条件语句
-func (stmt *WhereStmtOf[T]) OrGroup() *WhereStmt { return stmt.w.OrGroup() }
+func (stmt *WhereStmtOf[T]) OrGroup(f func(*WhereStmt)) *WhereStmt {
+	return stmt.w.OrGroup(f)
+}
 
 func (stmt *WhereStmtOf[T]) WhereStmt() *WhereStmt { return stmt.w }

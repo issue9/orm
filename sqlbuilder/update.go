@@ -162,11 +162,14 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []any, error) {
 	w := Where()
 	w.appendGroup(true, stmt.WhereStmt())
 
-	occ := w.AndGroup()
 	if named, ok := stmt.occValue.(sql.NamedArg); ok && named.Name != "" {
-		occ.And(stmt.occColumn+"=@"+named.Name, stmt.occValue)
+		w.AndGroup(func(occ *WhereStmt) {
+			occ.And(stmt.occColumn+"=@"+named.Name, stmt.occValue)
+		})
 	} else {
-		occ.And(stmt.occColumn+"=?", stmt.occValue)
+		w.AndGroup(func(occ *WhereStmt) {
+			occ.And(stmt.occColumn+"=?", stmt.occValue)
+		})
 	}
 
 	return w.SQL()

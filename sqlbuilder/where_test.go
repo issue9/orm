@@ -168,11 +168,15 @@ func TestWhere_Group(t *testing.T) {
 	a := assert.New(t, false)
 	w := Where()
 
-	w.AndGroup().And("id=?", 4)
-	w.AndGroup().And("id=?", 2).
-		OrGroup().And("id=?", 3).
-		EndGroup().
-		And("id=?", 6)
+	w.AndGroup(func(ws *WhereStmt) {
+		ws.And("id=?", 4)
+	})
+
+	w.AndGroup(func(ws *WhereStmt) {
+		ws.And("id=?", 2).OrGroup(func(ws *WhereStmt) {
+			ws.And("id=?", 3)
+		}).And("id=?", 6)
+	})
 
 	w.And("id=?", 1).And("id=?", 5)
 
@@ -188,8 +192,4 @@ func TestWhere_Group(t *testing.T) {
 	a.NotError(err)
 	a.Equal(args, []any{1})
 	sqltest.Equal(a, query, "id=?")
-
-	a.Panic(func() {
-		w.EndGroup()
-	})
 }
