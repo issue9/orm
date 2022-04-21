@@ -18,16 +18,26 @@ type WhereStmt struct {
 	engine modelEngine
 }
 
-// Where 生成 WhereStmt 语句
 func (db *DB) Where(cond string, args ...any) *WhereStmt {
 	w := &WhereStmt{engine: db}
 	w.whereWhere = sqlbuilder.NewWhereStmtOf(w)
 	return w.Where(cond, args...)
 }
 
-// Where 生成 WhereStmt 语句
 func (tx *Tx) Where(cond string, args ...any) *WhereStmt {
 	w := &WhereStmt{engine: tx}
+	w.whereWhere = sqlbuilder.NewWhereStmtOf(w)
+	return w.Where(cond, args...)
+}
+
+func (p *dbPrefix) Where(cond string, args ...any) *WhereStmt {
+	w := &WhereStmt{engine: p}
+	w.whereWhere = sqlbuilder.NewWhereStmtOf(w)
+	return w.Where(cond, args...)
+}
+
+func (p *txPrefix) Where(cond string, args ...any) *WhereStmt {
+	w := &WhereStmt{engine: p}
 	w.whereWhere = sqlbuilder.NewWhereStmtOf(w)
 	return w.Where(cond, args...)
 }

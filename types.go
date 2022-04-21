@@ -91,6 +91,9 @@ type (
 		// max 表示一次最多插入的数量，如果超过此值，会分批执行，
 		// 但是依然在一个事务中完成。
 		InsertMany(max int, v ...TableNamer) error
+
+		// Where 生成 WhereStmt 语句
+		Where(cond string, args ...any) *WhereStmt
 	}
 
 	Engine interface {
