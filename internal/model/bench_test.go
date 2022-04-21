@@ -14,7 +14,7 @@ func BenchmarkNewModelNoCached(b *testing.B) {
 	a.NotNil(ms)
 
 	for i := 0; i < b.N; i++ {
-		m, err := ms.New(&User{})
+		m, err := ms.New("", &User{})
 		a.NotError(err).NotNil(m)
 		ms.Clear()
 	}
@@ -26,7 +26,7 @@ func BenchmarkNewModelCached(b *testing.B) {
 	a.NotNil(ms)
 
 	for i := 0; i < b.N; i++ {
-		m, err := ms.New(&User{})
+		m, err := ms.New("", &User{})
 		a.NotError(err).NotNil(m)
 	}
 }

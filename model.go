@@ -28,7 +28,7 @@ type (
 	}
 )
 
-func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New(obj) }
+func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New("", obj) }
 
 func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.newModel(obj) }
 

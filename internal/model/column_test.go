@@ -95,7 +95,7 @@ func TestColumn_setNullable(t *testing.T) {
 	a.NotNil(ms)
 
 	// 将 AI 设置为 nullable
-	m, err := ms.New(&User{})
+	m, err := ms.New("", &User{})
 	a.NotError(err).NotNil(m)
 	col.AI = true
 	a.Error(col.setNullable([]string{"true"}))
