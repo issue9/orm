@@ -7,12 +7,9 @@ import (
 
 	"github.com/issue9/assert/v2"
 
-	"github.com/issue9/orm/v5"
 	"github.com/issue9/orm/v5/core"
 	"github.com/issue9/orm/v5/internal/test"
 )
-
-var _ orm.ModelEngine = &orm.Prefix{}
 
 func TestPrefix_InsertMany(t *testing.T) {
 	a := assert.New(t, false)

@@ -28,13 +28,17 @@ func (db *DB) getEngine() core.Engine { return db }
 
 func (tx *Tx) getEngine() core.Engine { return tx }
 
-func (p *Prefix) getEngine() core.Engine { return p.e }
+func (p *dbPrefix) getEngine() core.Engine { return p.db }
+
+func (p *txPrefix) getEngine() core.Engine { return p.tx }
 
 func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New("", obj) }
 
 func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.newModel(obj) }
 
-func (p *Prefix) newModel(obj TableNamer) (*core.Model, error) { return p.ms.New(p.p, obj) }
+func (p *dbPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.db.models.New(p.p, obj) }
+
+func (p *txPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.tx.db.models.New(p.p, obj) }
 
 func getModel(e modelEngine, v TableNamer) (*core.Model, reflect.Value, error) {
 	m, err := e.newModel(v)
