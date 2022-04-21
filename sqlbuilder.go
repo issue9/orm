@@ -19,10 +19,22 @@ import (
 var ErrNeedAutoIncrementColumn = errors.New("必须存在自增列")
 
 type modelEngine interface {
-	core.Engine
 	SQLBuilder() *sqlbuilder.SQLBuilder
 	newModel(v TableNamer) (*core.Model, error)
+	getEngine() core.Engine
 }
+
+func (db *DB) getEngine() core.Engine { return db }
+
+func (tx *Tx) getEngine() core.Engine { return tx }
+
+func (p *Prefix) getEngine() core.Engine { return p.e }
+
+func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New("", obj) }
+
+func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.newModel(obj) }
+
+func (p *Prefix) newModel(obj TableNamer) (*core.Model, error) { return p.ms.New(p.p, obj) }
 
 func getModel(e modelEngine, v TableNamer) (*core.Model, reflect.Value, error) {
 	m, err := e.newModel(v)
@@ -396,7 +408,7 @@ func del(e modelEngine, v TableNamer) (sql.Result, error) {
 var errInsertManyHasDifferentType = errors.New("InsertMany 必须是相同的数据类型")
 
 // rval 为结构体指针组成的数据
-func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) {
+func buildInsertManySQL(e modelEngine, v ...TableNamer) (*sqlbuilder.InsertStmt, error) {
 	query := e.SQLBuilder().Insert()
 	var keys []string          // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
@@ -461,7 +473,5 @@ func buildInsertManySQL(e *Tx, v ...TableNamer) (*sqlbuilder.InsertStmt, error) 
 
 	return query, nil
 }
-
-func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }
 
 func constraintName(table, name string) string { return table + "_" + name }

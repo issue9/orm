@@ -43,7 +43,7 @@ func (stmt *WhereStmt) Delete(v TableNamer) (sql.Result, error) {
 		return nil, fmt.Errorf("模型 %s 的类型是视图，无法从其中删除数据", m.Name)
 	}
 
-	return stmt.WhereStmt().Delete(stmt.engine).Table(m.Name).Exec()
+	return stmt.WhereStmt().Delete(stmt.engine.getEngine()).Table(m.Name).Exec()
 }
 
 // Update 将 v 中内容更新到符合条件的行中
@@ -51,7 +51,7 @@ func (stmt *WhereStmt) Delete(v TableNamer) (sql.Result, error) {
 // 不会更新零值，除非通过 cols 指定了该列。
 // 表名来自 v，列名为 v 的所有列或是 cols 指定的列。
 func (stmt *WhereStmt) Update(v TableNamer, cols ...string) (sql.Result, error) {
-	upd := stmt.WhereStmt().Update(stmt.engine)
+	upd := stmt.WhereStmt().Update(stmt.engine.getEngine())
 
 	if _, _, err := getUpdateColumns(stmt.engine, v, upd, cols...); err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (stmt *WhereStmt) Select(strict bool, v any) (int, error) {
 		return 0, err
 	}
 
-	return stmt.WhereStmt().Select(stmt.engine).
+	return stmt.WhereStmt().Select(stmt.engine.getEngine()).
 		Column("*").
 		From(m.Name).
 		QueryObject(strict, v)
@@ -94,7 +94,7 @@ func (stmt *WhereStmt) Count(v TableNamer) (int64, error) {
 		return 0, err
 	}
 
-	return stmt.WhereStmt().Select(stmt.engine).
+	return stmt.WhereStmt().Select(stmt.engine.getEngine()).
 		Count("count(*) as cnt").
 		From(m.Name).
 		QueryInt("cnt")

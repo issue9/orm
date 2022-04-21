@@ -203,3 +203,5 @@ func (db *DB) InsertMany(max int, v ...TableNamer) error {
 		return tx.InsertMany(max, v...)
 	})
 }
+
+func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }

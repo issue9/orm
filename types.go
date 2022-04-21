@@ -37,10 +37,8 @@ type (
 		BeforeInsert() error
 	}
 
-	// Engine 是 DB 与 Tx 的共有接口
-	Engine interface {
-		core.Engine
-
+	// ModelEngine 针对操作 TableNamer 接口数据的接口
+	ModelEngine interface {
 		// LastInsertID 插入一条数据并返回其自增 ID
 		//
 		// 理论上功能等同于以下两步操作：
@@ -93,6 +91,11 @@ type (
 		// max 表示一次最多插入的数量，如果超过此值，会分批执行，
 		// 但是依然在一个事务中完成。
 		InsertMany(max int, v ...TableNamer) error
+	}
+
+	Engine interface {
+		core.Engine
+		ModelEngine
 
 		// SQLBuilder 返回 sqlbuilder.SQLBuilder 实例
 		SQLBuilder() *sqlbuilder.SQLBuilder
