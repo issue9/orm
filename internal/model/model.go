@@ -20,8 +20,8 @@ func propertyError(field, name, message string) error {
 // New 从一个 obj 声明一个 Model 实例
 //
 // obj 可以是一个 struct 实例或是指针。
-func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
-	name := obj.TableName()
+func (ms *Models) New(p string, obj core.TableNamer) (*core.Model, error) {
+	name := p + obj.TableName()
 
 	ms.locker.Lock()
 	defer ms.locker.Unlock()

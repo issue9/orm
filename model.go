@@ -28,10 +28,6 @@ type (
 	}
 )
 
-func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New(obj) }
-
-func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.newModel(obj) }
-
 func (t *Table) BeforeUpdate() error {
 	t.Updated = time.Now()
 	return nil
