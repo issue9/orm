@@ -18,6 +18,15 @@ type txPrefix struct {
 	tx *Tx
 }
 
+// Prefix 表名前缀
+//
+// 经由 Prefix 返回的 ModelEngine 对象会对所有的表名加上 Prefix 作为前缀。
+type Prefix string
+
+func (p Prefix) DB(db *DB) ModelEngine { return db.Prefix(string(p)) }
+
+func (p Prefix) Tx(tx *Tx) ModelEngine { return tx.Prefix(string(p)) }
+
 // Prefix 为所有操作的表名加上统一的前缀
 //
 // 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 DB 或 Tx。
