@@ -34,4 +34,4 @@ func (n *SliceOf[T]) Scan(value any) (err error) {
 
 func (n SliceOf[T]) Value() (driver.Value, error) { return json.Marshal(n) }
 
-func (n SliceOf[T]) PrimitiveType() core.PrimitiveType { return core.Bytes }
+func (n SliceOf[T]) PrimitiveType() core.PrimitiveType { return core.String }
