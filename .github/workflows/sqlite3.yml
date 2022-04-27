@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest] # action 不支持非 linux 下的容器, windows-latest, macOS-latest
-        go: ['1.18.0-beta2']
+        go: ['1.18.x']
 
 
     steps:
