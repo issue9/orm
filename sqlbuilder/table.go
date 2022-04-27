@@ -396,7 +396,6 @@ func (stmt *TruncateTableStmt) Table(t, aiColumn string) *TruncateTableStmt {
 	return stmt
 }
 
-// DDLSQL 获取 SQL 的语句及参数部分
 func (stmt *TruncateTableStmt) DDLSQL() ([]string, error) {
 	if stmt.err != nil {
 		return nil, stmt.Err()
@@ -421,7 +420,7 @@ func DropTable(e core.Engine) *DropTableStmt {
 	return stmt
 }
 
-// Table 指定表名。
+// Table 指定表名
 //
 // 多次指定，则会删除多个表
 func (stmt *DropTableStmt) Table(table ...string) *DropTableStmt {
@@ -434,7 +433,6 @@ func (stmt *DropTableStmt) Table(table ...string) *DropTableStmt {
 	return stmt
 }
 
-// DDLSQL 获取 SQL 语句以及对应的参数
 func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 	if stmt.err != nil {
 		return nil, stmt.Err()
@@ -459,7 +457,6 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 	return qs, nil
 }
 
-// Reset 重置
 func (stmt *DropTableStmt) Reset() *DropTableStmt {
 	stmt.tables = stmt.tables[:0]
 	return stmt

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"time"
 	"unicode"
 
 	"github.com/issue9/conv"
@@ -108,6 +109,14 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 		}
 
 		vf2 := getRealValue(vf)
+
+		// time 即是 reflect.Struct 类型，又未实现 core.PrimitiveTyper 接口，
+		// 但是 rows.Scan 已经对该值作为特殊处理。
+		if vf.Type() == timeType {
+			(*ret)[name] = vf2
+			continue
+		}
+
 		if _, impl := vf.Interface().(core.PrimitiveTyper); !impl && vf2.Kind() == reflect.Struct {
 			items := make(map[string]reflect.Value, vf2.NumField())
 			if err := parseObject(vf2, &items); err != nil {
@@ -126,6 +135,8 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 
 	return nil
 }
+
+var timeType = reflect.TypeOf(time.Time{})
 
 func getRealValue(v reflect.Value) reflect.Value {
 	for v.Kind() == reflect.Ptr {
@@ -360,6 +371,7 @@ func fetchObjToSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, error
 		if err != nil {
 			return 0, err
 		}
+
 		if err := rows.Scan(buff...); err != nil {
 			return 0, err
 		}

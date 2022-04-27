@@ -48,7 +48,7 @@ SELECT * FROM user WHERE {group}=1
 如在数据库为 mysql 时，会被替换成以下语句，然后再执行：
 
 ```sql
- SELECT * FROM p_user WHERE `group`=1
+ SELECT * FROM user WHERE `group`=1
 ```
 
 DB.Query(),DB.Exec(),DB.Prepare().DB.Where() 及 Tx 与之对应的函数都可以使用占位符。

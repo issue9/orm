@@ -286,7 +286,7 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 	case core.Bytes:
 		return s.buildType("BLOB", col)
 	case core.Time:
-		return s.buildType("TIMESTAMP", col)
+		return s.buildType("DATETIME", col)
 	}
 
 	return "", errUncovert(col)

@@ -302,7 +302,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 
 		{
 			col:     &core.Column{PrimitiveType: core.Time},
-			SQLType: "TIMESTAMP NOT NULL",
+			SQLType: "DATETIME NOT NULL",
 		},
 	}
 

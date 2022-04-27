@@ -60,14 +60,14 @@ func main() {
 
 ### 安装
 
-在项目的 go.mod 中引用项目即可，当前版本为 v4：
+在项目的 go.mod 中引用项目即可，当前版本为 v5：
 
 ```go.mod
 require (
-    github.com/issue9/orm/v4 v4.x.x
+    github.com/issue9/orm/v5 v5.x.x
 )
 
-go 1.13
+go 1.18
 ```
 
 ### 数据库

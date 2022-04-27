@@ -3,6 +3,8 @@
 package orm_test
 
 import (
+	"time"
+
 	"github.com/issue9/assert/v2"
 	"github.com/issue9/conv"
 
@@ -19,12 +21,17 @@ var (
 
 // Group 带有自增 ID 的普通表结构
 type Group struct {
-	ID      int64  `orm:"name(id);ai;unique(unique_groups_id)"`
-	Name    string `orm:"name(name);len(500)"`
-	Created int64  `orm:"name(created)"`
+	ID      int64     `orm:"name(id);ai;unique(unique_groups_id)"`
+	Name    string    `orm:"name(name);len(500)"`
+	Created time.Time `orm:"name(created)"`
 }
 
 func (g *Group) TableName() string { return "groups" }
+
+func (g *Group) BeforeInsert() error {
+	g.Created = time.Now()
+	return nil
+}
 
 type User struct {
 	ID       int    `orm:"name(id);ai;"`
@@ -139,9 +146,13 @@ func initData(t *test.Driver) {
 	})
 
 	// select
+	g1 := &Group{ID: 1}
 	u1 := &UserInfo{UID: 1}
 	u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
 	a1 := &Admin{Email: "email1"}
+
+	t.NotError(db.Select(g1)).
+		True(g1.Created.After(time.Now().Add(-24*time.Hour)), "g1.Created 应该有大于昨天的时间，页实际值为 %s", g1.Created)
 
 	t.NotError(db.Select(u1))
 	t.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "female"})
