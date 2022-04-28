@@ -375,7 +375,7 @@ func getUpdateColumns(e modelEngine, v TableNamer, stmt *sqlbuilder.UpdateStmt, 
 
 		if m.OCC == col { // 乐观锁
 			occValue = field.Interface()
-		} else if sliceutil.Index(cols, func(e string) bool { return e == col.Name }) > 0 || !field.IsZero() {
+		} else if sliceutil.Exists(cols, func(e string) bool { return e == col.Name }) || !field.IsZero() {
 			// 非零值或是明确指定需要更新的列，才会更新
 			stmt.Set(col.Name, field.Interface())
 		}

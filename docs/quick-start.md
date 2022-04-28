@@ -75,6 +75,7 @@ go 1.18
 目前支持以下数据库以及对应的驱动:
 
  1. sqlite3:  github.com/mattn/go-sqlite3
+ 1. sqlite:   modernc.org/sqlite 纯 go 写的驱动
  1. mysql:    github.com/go-sql-driver/mysql
  1. mariadb:  github.com/go-sql-driver/mysql
  1. postgres: github.com/lib/pq
