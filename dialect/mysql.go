@@ -56,7 +56,7 @@ func (m *mysql) Fix(query string, args []any) (string, []any, error) {
 	return fixQueryAndArgs(query, args)
 }
 
-func (m *mysql) LastInsertIDSQL(table, col string) (sql string, append bool) {
+func (m *mysql) LastInsertIDSQL(_, _ string) (sql string, append bool) {
 	return "", false
 }
 
@@ -120,7 +120,7 @@ func (m *mysql) DropIndexSQL(table, index string) (string, error) {
 		String()
 }
 
-func (m *mysql) TruncateTableSQL(table, ai string) ([]string, error) {
+func (m *mysql) TruncateTableSQL(table, _ string) ([]string, error) {
 	builder := core.NewBuilder("TRUNCATE TABLE ").QuoteKey(table)
 
 	query, err := builder.String()

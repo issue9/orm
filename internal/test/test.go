@@ -17,6 +17,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 const sqlite3DBFile = "orm_test.db"
@@ -24,6 +25,9 @@ const sqlite3DBFile = "orm_test.db"
 var (
 	// Sqlite3 Dialect 实例
 	Sqlite3 = dialect.Sqlite3("sqlite3")
+
+	// Sqlite Dialect 实例
+	Sqlite = dialect.Sqlite3("sqlite")
 
 	// Mysql Dialect 实例
 	Mysql = dialect.Mysql("mysql")
@@ -45,6 +49,10 @@ var cases = []struct {
 	{
 		dsn:     "./" + sqlite3DBFile + "?_fk=true&_loc=UTC",
 		dialect: Sqlite3,
+	},
+	{
+		dsn:     "./" + sqlite3DBFile + "?_fk=true&_loc=UTC",
+		dialect: Sqlite,
 	},
 	{
 		dsn:     "user=postgres password=postgres dbname=orm_test sslmode=disable",

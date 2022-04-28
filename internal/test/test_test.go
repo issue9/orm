@@ -39,6 +39,7 @@ func TestSuite_Run_withDialect(t *testing.T) {
 	flags = []*flagVar{
 		{DBName: "mysql", DriverName: "mysql"},
 		{DBName: "sqlite3", DriverName: "sqlite3"},
+		{DBName: "sqlite3", DriverName: "sqlite"},
 		{DBName: "mariadb", DriverName: "mariadb"},
 		{DBName: "postgres", DriverName: "postgres"},
 	}
