@@ -55,8 +55,10 @@ var (
 		reflect.TypeOf(time.Time{}):    Time,
 
 		reflect.TypeOf(sql.NullString{}):  String,
+		reflect.TypeOf(sql.NullByte{}):    Bytes,
 		reflect.TypeOf(sql.NullInt64{}):   Int64,
 		reflect.TypeOf(sql.NullInt32{}):   Int32,
+		reflect.TypeOf(sql.NullInt16{}):   Int16,
 		reflect.TypeOf(sql.NullBool{}):    Bool,
 		reflect.TypeOf(sql.NullFloat64{}): Float64,
 		reflect.TypeOf(sql.NullTime{}):    Time,

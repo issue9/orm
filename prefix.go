@@ -27,6 +27,8 @@ func (p Prefix) DB(db *DB) ModelEngine { return db.Prefix(string(p)) }
 
 func (p Prefix) Tx(tx *Tx) ModelEngine { return tx.Prefix(string(p)) }
 
+func (p Prefix) TableName(v TableNamer) string { return string(p) + v.TableName() }
+
 // Prefix 为所有操作的表名加上统一的前缀
 //
 // 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 DB 或 Tx。
