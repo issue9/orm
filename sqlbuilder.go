@@ -290,19 +290,22 @@ func insert(e modelEngine, v TableNamer) (sql.Result, error) {
 //
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
-func find(e modelEngine, v TableNamer) error {
+func find(e modelEngine, v TableNamer) (bool, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	stmt := e.SQLBuilder().Select().Column("*").From(m.Name)
 	if err = where(stmt.WhereStmt(), m, rval); err != nil {
-		return err
+		return false, err
 	}
 
-	_, err = stmt.QueryObject(true, v)
-	return err
+	size, err := stmt.QueryObject(true, v)
+	if err != nil {
+		return false, err
+	}
+	return size > 0, nil
 }
 
 // for update 只能作用于事务

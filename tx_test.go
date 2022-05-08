@@ -71,31 +71,38 @@ func TestTx_InsertMany(t *testing.T) {
 		t.NotError(tx.Commit())
 
 		u1 := &UserInfo{UID: 1}
-		t.NotError(t.DB.Select(u1))
+		found, err := t.DB.Select(u1)
+		t.NotError(err).True(found)
 		t.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "male"})
 
 		u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
-		t.NotError(t.DB.Select(u2))
+		found, err = t.DB.Select(u2)
+		t.NotError(err).True(found)
 		t.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
 
 		u3 := &UserInfo{UID: 3}
-		t.NotError(t.DB.Select(u3))
+		found, err = t.DB.Select(u3)
+		t.NotError(err).True(found)
 		t.Equal(u3, &UserInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
 
 		u4 := &UserInfo{UID: 4}
-		t.NotError(t.DB.Select(u4))
+		found, err = t.DB.Select(u4)
+		t.NotError(err).True(found)
 		t.Equal(u4, &UserInfo{UID: 4, FirstName: "f4", LastName: "l4", Sex: "male"})
 
 		u5 := &UserInfo{UID: 5}
-		t.NotError(t.DB.Select(u5))
+		found, err = t.DB.Select(u5)
+		t.NotError(err).True(found)
 		t.Equal(u5, &UserInfo{UID: 5, FirstName: "f5", LastName: "l5", Sex: "male"})
 
 		u6 := &UserInfo{UID: 6}
-		t.NotError(t.DB.Select(u6))
+		found, err = t.DB.Select(u6)
+		t.NotError(err).True(found)
 		t.Equal(u6, &UserInfo{UID: 6, FirstName: "f6", LastName: "l6", Sex: "male"})
 
 		u7 := &UserInfo{UID: 7}
-		t.NotError(t.DB.Select(u7))
+		found, err = t.DB.Select(u7)
+		t.NotError(err).True(found)
 		t.Equal(u7, &UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
 	})
 }
@@ -157,11 +164,13 @@ func TestTx_Insert(t *testing.T) {
 		t.NotError(tx.Commit())
 
 		u1 := &User{ID: 1}
-		t.NotError(t.DB.Select(u1))
+		found, err := t.DB.Select(u1)
+		t.NotError(err).True(found)
 		t.Equal(u1, &User{ID: 1, Username: "u1"})
 
 		u3 := &User{ID: 3}
-		t.NotError(t.DB.Select(u3))
+		found, err = t.DB.Select(u3)
+		t.NotError(err).True(found)
 		t.Equal(u3, &User{ID: 3, Username: "u3"})
 	})
 }
@@ -195,11 +204,13 @@ func TestTx_Update(t *testing.T) {
 		t.NotError(tx.Commit())
 
 		u1 := &UserInfo{UID: 1}
-		t.NotError(t.DB.Select(u1))
+		found, err := t.DB.Select(u1)
+		t.NotError(err).True(found)
 		t.Equal(u1, &UserInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "sex1"})
 
 		u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
-		t.NotError(t.DB.Select(u2))
+		found, err = t.DB.Select(u2)
+		t.NotError(err).True(found)
 		t.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
 	})
 }

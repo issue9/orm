@@ -115,7 +115,7 @@ func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
 
 func (tx *Tx) Insert(v TableNamer) (sql.Result, error) { return insert(tx, v) }
 
-func (tx *Tx) Select(v TableNamer) error { return find(tx, v) }
+func (tx *Tx) Select(v TableNamer) (bool, error) { return find(tx, v) }
 
 // ForUpdate 读数据并锁定
 func (tx *Tx) ForUpdate(v TableNamer) error { return forUpdate(tx, v) }

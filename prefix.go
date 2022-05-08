@@ -62,7 +62,7 @@ func (p *dbPrefix) Update(v TableNamer, cols ...string) (sql.Result, error) {
 	return update(p, v, cols...)
 }
 
-func (p *dbPrefix) Select(v TableNamer) error { return find(p, v) }
+func (p *dbPrefix) Select(v TableNamer) (bool, error) { return find(p, v) }
 
 func (p *dbPrefix) Create(v TableNamer) error { return create(p, v) }
 
@@ -91,7 +91,7 @@ func (p *txPrefix) Update(v TableNamer, cols ...string) (sql.Result, error) {
 	return update(p, v, cols...)
 }
 
-func (p *txPrefix) Select(v TableNamer) error { return find(p, v) }
+func (p *txPrefix) Select(v TableNamer) (bool, error) { return find(p, v) }
 
 func (p *txPrefix) Create(v TableNamer) error { return create(p, v) }
 

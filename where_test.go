@@ -69,11 +69,13 @@ func TestWhereStmt_Update(t *testing.T) {
 			Equal(cnt, 1)
 
 		u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
-		t.NotError(t.DB.Select(u2))
+		found, err := t.DB.Select(u2)
+		t.NotError(err).True(found)
 		t.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
 
 		admin := &Admin{Email: "email1111"}
-		t.NotError(t.DB.Select(admin))
+		found, err = t.DB.Select(admin)
+		t.NotError(err).True(found)
 		t.Equal(admin, &Admin{User: User{ID: 1, Username: "username1", Password: "password1"}, Email: "email1111", Group: 1})
 	})
 }

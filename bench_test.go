@@ -89,7 +89,8 @@ func BenchmarkDB_Select(b *testing.B) {
 
 		m.ID = 1
 		for i := 0; i < b.N; i++ {
-			t.NotError(t.DB.Select(m))
+			found, err := t.DB.Select(m)
+			t.NotError(err).True(found)
 		}
 	})
 }

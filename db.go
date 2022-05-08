@@ -179,7 +179,7 @@ func (db *DB) Update(v TableNamer, cols ...string) (sql.Result, error) {
 	return update(db, v, cols...)
 }
 
-func (db *DB) Select(v TableNamer) error { return find(db, v) }
+func (db *DB) Select(v TableNamer) (bool, error) { return find(db, v) }
 
 func (db *DB) Create(v TableNamer) error { return create(db, v) }
 

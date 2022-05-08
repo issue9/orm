@@ -74,8 +74,8 @@ type (
 		// 若没有符合条件的数据，将不会对参数 v 做任何变动。
 		//
 		// 查找条件的查找顺序是为 自增 > 主键 > 唯一约束，
-		// 如果同时存在多个唯一约束满足条件，则返回错误信息。
-		Select(v TableNamer) error
+		// 如果同时存在多个唯一约束满足条件(可能每个唯一约束查询至的结果是不一样的)，则返回错误信息。
+		Select(v TableNamer) (found bool, err error)
 
 		Create(v TableNamer) error
 

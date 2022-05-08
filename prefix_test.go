@@ -77,31 +77,38 @@ func TestPrefix_InsertMany(t *testing.T) {
 		p = t.DB.Prefix("p1_")
 
 		u1 := &UserInfo{UID: 1}
-		t.NotError(p.Select(u1))
+		found, err := p.Select(u1)
+		t.NotError(err).True(found)
 		t.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "male"})
 
 		u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
-		t.NotError(p.Select(u2))
+		found, err = p.Select(u2)
+		t.NotError(err).True(found)
 		t.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
 
 		u3 := &UserInfo{UID: 3}
-		t.NotError(p.Select(u3))
+		found, err = p.Select(u3)
+		t.NotError(err).True(found)
 		t.Equal(u3, &UserInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
 
 		u4 := &UserInfo{UID: 4}
-		t.NotError(p.Select(u4))
+		found, err = p.Select(u4)
+		t.NotError(err).True(found)
 		t.Equal(u4, &UserInfo{UID: 4, FirstName: "f4", LastName: "l4", Sex: "male"})
 
 		// 不带前经的 DB，找不到数据。
 		u5 := &UserInfo{UID: 5}
-		t.Error(t.DB.Select(u5))
+		found, err = t.DB.Select(u5)
+		t.Error(err).False(found)
 
 		u6 := &UserInfo{UID: 6}
-		t.NotError(p.Select(u6))
+		found, err = p.Select(u6)
+		t.NotError(err).True(found)
 		t.Equal(u6, &UserInfo{UID: 6, FirstName: "f6", LastName: "l6", Sex: "male"})
 
 		u7 := &UserInfo{UID: 7}
-		t.NotError(p.Select(u7))
+		found, err = p.Select(u7)
+		t.NotError(err).True(found)
 		t.Equal(u7, &UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
 	})
 }

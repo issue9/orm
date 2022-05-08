@@ -76,7 +76,8 @@ func TestBeforeCreateUpdate(t *testing.T) {
 		_, err := t.DB.Insert(o)
 		t.NotError(err)
 		o = &beforeObject1{ID: 1}
-		t.NotError(t.DB.Select(o))
+		found, err := t.DB.Select(o)
+		t.NotError(err).True(found)
 		t.Equal(o.Name, "insert-name1")
 
 		// update
@@ -84,7 +85,8 @@ func TestBeforeCreateUpdate(t *testing.T) {
 		_, err = t.DB.Update(o)
 		t.NotError(err)
 		o = &beforeObject1{ID: 1}
-		t.NotError(t.DB.Select(o))
+		found, err = t.DB.Select(o)
+		t.NotError(err).True(found)
 		t.Equal(o.Name, "update-name11")
 	})
 }

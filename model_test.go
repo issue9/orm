@@ -151,17 +151,21 @@ func initData(t *test.Driver) {
 	u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
 	a1 := &Admin{Email: "email1"}
 
-	t.NotError(db.Select(g1)).
+	found, err := t.DB.Select(g1)
+	t.NotError(err).True(found).
 		True(g1.Created.After(time.Now().Add(-24*time.Hour)), "g1.Created 应该有大于昨天的时间，页实际值为 %s", g1.Created)
 
-	t.NotError(db.Select(u1))
-	t.Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "female"})
+	found, err = t.DB.Select(u1)
+	t.NotError(err).True(found).
+		Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "female"})
 
-	t.NotError(db.Select(u2))
-	t.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
+	found, err = t.DB.Select(u2)
+	t.NotError(err).True(found).
+		Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
 
-	t.NotError(db.Select(a1))
-	t.Equal(a1.Username, "username1")
+	found, err = t.DB.Select(a1)
+	t.NotError(err).True(found).
+		Equal(a1.Username, "username1")
 }
 
 func clearData(t *test.Driver) {

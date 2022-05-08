@@ -94,11 +94,13 @@ func TestDB_Update(t *testing.T) {
 			Equal(1, cnt)
 
 		u1 := &UserInfo{UID: 1}
-		t.NotError(t.DB.Select(u1))
+		found, err := t.DB.Select(u1)
+		t.NotError(err).True(found)
 		t.Equal(u1, &UserInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "sex1"})
 
 		u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
-		t.NotError(t.DB.Select(u2))
+		found, err = t.DB.Select(u2)
+		t.NotError(err).True(found)
 		t.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
 	})
 }
@@ -147,7 +149,8 @@ func TestDB_Update_occ(t *testing.T) {
 
 		obj := &Account{UID: 1}
 		obj.Account = 100
-		t.NotError(t.DB.Select(obj))
+		found, err := t.DB.Select(obj)
+		t.NotError(err).True(found)
 		r, err = t.DB.Update(obj)
 		t.NotError(err).NotNil(r)
 		cnt, err = r.RowsAffected()
@@ -213,7 +216,8 @@ func TestDB_Delete(t *testing.T) {
 		_, err = t.DB.Insert(&Admin{Group: 1, Email: "email1"})
 		t.NotError(err)
 		a1 := &Admin{Email: "email1"}
-		t.NotError(t.DB.Select(a1))
+		found, err := t.DB.Select(a1)
+		t.NotError(err).True(found)
 		t.Equal(a1.ID, 2) // a1.ID 为一个自增列,不会在 delete 中被重置
 	})
 }
@@ -238,11 +242,13 @@ func TestDB_Truncate(t *testing.T) {
 		t.NotError(err)
 
 		a1 := &Admin{Email: "email1"}
-		t.NotError(t.DB.Select(a1))
+		found, err := t.DB.Select(a1)
+		t.NotError(err).True(found)
 		t.Equal(1, a1.ID)
 
 		a2 := &Admin{Email: "email2"}
-		t.NotError(t.DB.Select(a2))
+		found, err = t.DB.Select(a2)
+		t.NotError(err).True(found)
 		t.Equal(2, a2.ID)
 	})
 }
