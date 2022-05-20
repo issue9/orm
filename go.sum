@@ -7,8 +7,8 @@ github.com/google/go-cmp v0.5.3/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/issue9/assert/v2 v2.0.0/go.mod h1:rKr1eVGzXUhAo2af1thiKAhIA8uiSK9Wyn7mcZ4BzAg=
-github.com/issue9/assert/v2 v2.3.0 h1:vx/x3qehCQI17SLITDS+S/AOs9oLt0Ez3cFur4CLeLc=
-github.com/issue9/assert/v2 v2.3.0/go.mod h1:rKr1eVGzXUhAo2af1thiKAhIA8uiSK9Wyn7mcZ4BzAg=
+github.com/issue9/assert/v2 v2.3.2 h1:J8TxGeak/CvrMchXHjs9CFChsZvpX0hGE/HTnwT6L+8=
+github.com/issue9/assert/v2 v2.3.2/go.mod h1:rKr1eVGzXUhAo2af1thiKAhIA8uiSK9Wyn7mcZ4BzAg=
 github.com/issue9/conv v1.2.2 h1:DlvooVwcCgHxGxgVNSt4LFGxIVzWbMV8E2dmQlrGHNA=
 github.com/issue9/conv v1.2.2/go.mod h1:uDqE/xgXbZ5UjC2J5+HLIoguE0qOKGzv7EzLzkvoRPE=
 github.com/issue9/errwrap v0.2.1 h1:hrzBGbOCRs8acitpWSg54xNl2oaLGA/WZEf71bKaiEU=

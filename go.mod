@@ -2,7 +2,7 @@ module github.com/issue9/orm/v5
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/issue9/assert/v2 v2.3.0
+	github.com/issue9/assert/v2 v2.3.2
 	github.com/issue9/conv v1.2.2
 	github.com/issue9/errwrap v0.2.1
 	github.com/issue9/sliceutil v0.10.1
