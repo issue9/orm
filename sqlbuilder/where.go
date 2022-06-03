@@ -112,7 +112,7 @@ func (stmt *WhereStmt) where(and bool, cond string, args ...any) *WhereStmt {
 	return stmt
 }
 
-// And 添加一条 and 语句
+// And 添加一条 AND 语句
 func (stmt *WhereStmt) And(cond string, args ...any) *WhereStmt {
 	return stmt.where(true, cond, args...)
 }
@@ -289,6 +289,27 @@ func (stmt *WhereStmt) appendGroup(and bool, w *WhereStmt) {
 	}
 }
 
+// Cond 在 expr 为真时才执行 f 中的内容
+//
+// expr 为条件表达式，此为 true 时，才会执行 f 函数；
+// f 的原型为 `func(stmt *WhereStmt)` 其中的参数 stmt 即为当前对象的实例；
+//
+//  sql := Where()
+//  sql.Cond(uid > 0, func(sql *WhereStmt) {
+//      sql.And("uid>?", uid)
+//  });
+// 相当于：
+//  sql := Where()
+//  if uid > 0 {
+//      sql.And("uid>?", uid)
+//  }
+func (stmt *WhereStmt) Cond(expr bool, f func(stmt *WhereStmt)) *WhereStmt {
+	if expr {
+		f(stmt)
+	}
+	return stmt
+}
+
 func NewWhereStmtOf[T any](t *T) *WhereStmtOf[T] {
 	return &WhereStmtOf[T]{w: Where(), t: t}
 }
@@ -413,6 +434,12 @@ func (stmt *WhereStmtOf[T]) AndGroup(f func(*WhereStmt)) *T {
 // OrGroup 开始一个子条件语句
 func (stmt *WhereStmtOf[T]) OrGroup(f func(*WhereStmt)) *T {
 	stmt.w.OrGroup(f)
+	return stmt.t
+}
+
+// Cond 在 expr 为真时才执行 f 中的内容
+func (stmt *WhereStmtOf[T]) Cond(expr bool, f func(stmt *WhereStmt)) *T {
+	stmt.w.Cond(expr, f)
 	return stmt.t
 }
 

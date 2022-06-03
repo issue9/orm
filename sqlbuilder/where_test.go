@@ -164,7 +164,7 @@ func TestWhereStmt_In(t *testing.T) {
 	sqltest.Equal(a, query, "{col1} not in(?,?,?) and {col2} not in(?,?,?)")
 }
 
-func TestWhere_Group(t *testing.T) {
+func TestWhereStmt_Group(t *testing.T) {
 	a := assert.New(t, false)
 	w := Where()
 
@@ -184,6 +184,38 @@ func TestWhere_Group(t *testing.T) {
 	a.NotError(err)
 	a.Equal(args, []any{1, 5, 4, 2, 6, 3})
 	sqltest.Equal(a, query, "id=? AND id=? and(id=?) AND (id=? and id=? OR(id=?))")
+
+	// Reset
+	w.Reset()
+	w.And("id=?", 1)
+	query, args, err = w.SQL()
+	a.NotError(err)
+	a.Equal(args, []any{1})
+	sqltest.Equal(a, query, "id=?")
+}
+
+func TestWhereStmt_Cond(t *testing.T) {
+	a := assert.New(t, false)
+	w := Where()
+
+	w.Cond(true, func(ww *WhereStmt) {
+		ww.AndGroup(func(ws *WhereStmt) {
+			ws.And("id=?", 4)
+		})
+	}).AndGroup(func(ws *WhereStmt) {
+		ws.And("id=?", 2).OrGroup(func(ws *WhereStmt) {
+			ws.And("id=?", 3)
+		}).And("id=?", 6)
+	})
+
+	w.Cond(false, func(stmt *WhereStmt) {
+		stmt.And("id=?", 1)
+	}).And("id=?", 5)
+
+	query, args, err := w.SQL()
+	a.NotError(err)
+	a.Equal(args, []any{5, 4, 2, 6, 3})
+	sqltest.Equal(a, query, "id=? and(id=?) AND (id=? and id=? OR(id=?))")
 
 	// Reset
 	w.Reset()
