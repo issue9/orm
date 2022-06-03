@@ -6,10 +6,10 @@ require (
 	github.com/issue9/conv v1.2.2
 	github.com/issue9/errwrap v0.2.1
 	github.com/issue9/sliceutil v0.10.1
-	github.com/lib/pq v1.10.4
-	github.com/mattn/go-sqlite3 v1.14.12
-	github.com/shopspring/decimal v1.2.0
-	modernc.org/sqlite v1.17.0
+	github.com/lib/pq v1.10.6
+	github.com/mattn/go-sqlite3 v1.14.13
+	github.com/shopspring/decimal v1.3.1
+	modernc.org/sqlite v1.17.3
 )
 
 require (
@@ -22,11 +22,11 @@ require (
 	golang.org/x/tools v0.0.0-20201124115921-2c860bdd6e78 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
-	modernc.org/cc/v3 v3.35.26 // indirect
-	modernc.org/ccgo/v3 v3.16.2 // indirect
-	modernc.org/libc v1.15.0 // indirect
+	modernc.org/cc/v3 v3.36.0 // indirect
+	modernc.org/ccgo/v3 v3.16.6 // indirect
+	modernc.org/libc v1.16.7 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
-	modernc.org/memory v1.0.7 // indirect
+	modernc.org/memory v1.1.1 // indirect
 	modernc.org/opt v0.1.1 // indirect
 	modernc.org/strutil v1.1.1 // indirect
 	modernc.org/token v1.0.0 // indirect

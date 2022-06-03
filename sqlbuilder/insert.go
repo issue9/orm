@@ -211,13 +211,13 @@ func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
 // LastInsertIDContext 执行 SQL 语句
 //
 // 并根据表名和自增列 ID 返回当前行的自增 ID 值。
-func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col string) (id int64, err error) {
+func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, _, col string) (id int64, err error) {
 	if len(stmt.args) > 1 {
 		// mysql 没有好的方法可以处理多行插入数据时，返回最大的 ID 值。
 		return 0, errors.New("多行插入语句，无法获取 LastInsertIDContext")
 	}
 
-	q, append := stmt.Dialect().LastInsertIDSQL(stmt.table, col)
+	q, apd := stmt.Dialect().LastInsertIDSQL(stmt.table, col)
 	if q == "" {
 		rslt, err := stmt.ExecContext(ctx)
 		if err != nil {
@@ -228,7 +228,7 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 	}
 
 	var args []any
-	if !append {
+	if !apd {
 		_, err := stmt.ExecContext(ctx)
 		if err != nil {
 			return 0, err
@@ -238,7 +238,7 @@ func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, table, col stri
 		return id, err
 	}
 
-	// 当 append 为 true 时，将 q 添加到 query 之后，合并为一条语句
+	// 当 apd 为 true 时，将 q 添加到 query 之后，合并为一条语句
 	query, as, err := stmt.SQL()
 	if err != nil {
 		return 0, err
