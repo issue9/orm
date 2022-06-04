@@ -2,12 +2,7 @@
 
 package orm
 
-import (
-	"database/sql"
-	"time"
-
-	"github.com/issue9/orm/v5/core"
-)
+import "github.com/issue9/orm/v5/core"
 
 type (
 	ApplyModeler = core.ApplyModeler
@@ -16,25 +11,4 @@ type (
 	Column = core.Column
 
 	TableNamer = core.TableNamer
-
-	// Table 表的基本字段
-	//
-	// 可嵌入到其它表中。
-	Table struct {
-		ID      int64        `orm:"name(id);ai"`
-		Created time.Time    `orm:"name(created)"`
-		Updated time.Time    `orm:"name(updated)"`
-		Deleted sql.NullTime `orm:"name(deleted);nullable"`
-	}
 )
-
-func (t *Table) BeforeUpdate() error {
-	t.Updated = time.Now()
-	return nil
-}
-
-func (t *Table) BeforeInsert() error {
-	t.Created = time.Now()
-	t.Updated = t.Created
-	return nil
-}

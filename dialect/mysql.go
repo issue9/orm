@@ -162,6 +162,14 @@ func (m *mysql) InsertDefaultValueHook(table string) (string, []any, error) {
 
 func (m *mysql) TransactionalDDL() bool { return false }
 
+func (m *mysql) ExistsSQL(name string, view bool) (string, []any) {
+	t := "BASE TABLE"
+	if view {
+		t = "VIEW"
+	}
+	return "SELECT TABLE_NAME as name FROM information_schema.tables WHERE TABLE_TYPE=? AND TABLE_NAME=?", []any{t, name}
+}
+
 func (m *mysql) SQLType(col *core.Column) (string, error) {
 	if col == nil {
 		return "", errColIsNil

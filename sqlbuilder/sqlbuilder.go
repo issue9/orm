@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	// ErrTableIsEmpty 未指定表名，任何 SQL 语句中，
-	// 若未指定表名时，会返回此错误
+	// ErrTableIsEmpty 未指定表名
+	//
+	// 任何 SQL 语句中，若未指定表名或是视图名，会返回此错误。
 	ErrTableIsEmpty = errors.New("表名为空")
 
 	// ErrValueIsEmpty 在 Update 和 Insert 语句中，

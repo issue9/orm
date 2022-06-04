@@ -36,6 +36,11 @@ func TestCreateTableStmt(t *testing.T) {
 		err := stmt.Exec()
 		a.NotError(err)
 
+		exists, err := sqlbuilder.TableExists(t.DB).Table(table).Exists()
+		a.NotError(err).True(exists)
+		exists, err = sqlbuilder.TableExists(t.DB).Table("not-exists").Exists()
+		a.NotError(err).False(exists)
+
 		defer func() {
 			err = sqlbuilder.DropTable(t.DB).
 				Table(table).

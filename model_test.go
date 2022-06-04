@@ -8,15 +8,9 @@ import (
 	"github.com/issue9/assert/v2"
 	"github.com/issue9/conv"
 
-	"github.com/issue9/orm/v5"
 	"github.com/issue9/orm/v5/core"
 	"github.com/issue9/orm/v5/fetch"
 	"github.com/issue9/orm/v5/internal/test"
-)
-
-var (
-	_ orm.BeforeInserter = &orm.Table{}
-	_ orm.BeforeUpdater  = &orm.Table{}
 )
 
 // Group 带有自增 ID 的普通表结构

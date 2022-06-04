@@ -40,6 +40,11 @@ func testCreateView(d *test.Driver) {
 		Column("name", "address")
 	d.NotError(view.Exec())
 
+	exists, err := sqlbuilder.ViewExists(d.DB).View(viewName).Exists()
+	d.NotError(err).True(exists)
+	exists, err = sqlbuilder.TableExists(d.DB).Table("not-exists").Exists()
+	d.NotError(err).False(exists)
+
 	// 删除
 	defer func() {
 		dropView := sb.DropView().Name(viewName)

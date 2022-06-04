@@ -3,6 +3,7 @@
 package sqlbuilder
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/issue9/orm/v5/core"
@@ -460,4 +461,55 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 func (stmt *DropTableStmt) Reset() *DropTableStmt {
 	stmt.tables = stmt.tables[:0]
 	return stmt
+}
+
+type TableExistsStmt struct {
+	*queryStmt
+	name string
+}
+
+func TableExists(e core.Engine) *TableExistsStmt {
+	stmt := &TableExistsStmt{}
+	stmt.queryStmt = newQueryStmt(e, stmt)
+	return stmt
+}
+
+func (sql *SQLBuilder) TableExists() *TableExistsStmt {
+	return TableExists(sql.engine)
+}
+
+func (stmt *TableExistsStmt) Table(table string) *TableExistsStmt {
+	stmt.name = table
+	return stmt
+}
+
+func (stmt *TableExistsStmt) Reset() *TableExistsStmt {
+	stmt.name = ""
+	return stmt
+}
+
+func (stmt *TableExistsStmt) SQL() (string, []any, error) {
+	if stmt.name == "" {
+		return "", nil, ErrTableIsEmpty
+	}
+
+	sql, args := stmt.Dialect().ExistsSQL(stmt.name, false)
+	return sql, args, nil
+}
+
+func (stmt *TableExistsStmt) Exists() (bool, error) {
+	rows, err := stmt.Query()
+	if err != nil {
+		return false, err
+	}
+
+	name, err := queryString(rows, "name")
+	switch {
+	case errors.Is(err, ErrNoData):
+		return false, nil
+	case err != nil:
+		return false, err
+	default:
+		return name == stmt.name, nil
+	}
 }

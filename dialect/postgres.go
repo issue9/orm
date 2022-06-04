@@ -143,8 +143,16 @@ func (p *postgres) CreateViewSQL(replace, temporary bool, name, selectQuery stri
 
 func (p *postgres) TransactionalDDL() bool { return true }
 
-func (p *postgres) DropIndexSQL(table, index string) (string, error) {
+func (p *postgres) DropIndexSQL(_, index string) (string, error) {
 	return stdDropIndex(index)
+}
+
+func (p *postgres) ExistsSQL(name string, view bool) (string, []any) {
+	t := "BASE TABLE"
+	if view {
+		t = "VIEW"
+	}
+	return "SELECT table_name as name FROM information_schema.tables WHERE table_type=? AND table_name=?", []any{t, name}
 }
 
 func (p *postgres) SQLType(col *core.Column) (string, error) {

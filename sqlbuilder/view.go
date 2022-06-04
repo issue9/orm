@@ -2,7 +2,11 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v5/core"
+import (
+	"errors"
+
+	"github.com/issue9/orm/v5/core"
+)
 
 // CreateViewStmt 创建视图的语句
 type CreateViewStmt struct {
@@ -145,4 +149,55 @@ func (stmt *DropViewStmt) Reset() *DropViewStmt {
 	stmt.name = ""
 
 	return stmt
+}
+
+type ViewExistsStmt struct {
+	*queryStmt
+	name string
+}
+
+func ViewExists(e core.Engine) *ViewExistsStmt {
+	stmt := &ViewExistsStmt{}
+	stmt.queryStmt = newQueryStmt(e, stmt)
+	return stmt
+}
+
+func (sql *SQLBuilder) ViewExists() *ViewExistsStmt {
+	return ViewExists(sql.engine)
+}
+
+func (stmt *ViewExistsStmt) View(table string) *ViewExistsStmt {
+	stmt.name = table
+	return stmt
+}
+
+func (stmt *ViewExistsStmt) Reset() *ViewExistsStmt {
+	stmt.name = ""
+	return stmt
+}
+
+func (stmt *ViewExistsStmt) SQL() (string, []any, error) {
+	if stmt.name == "" {
+		return "", nil, ErrTableIsEmpty
+	}
+
+	sql, args := stmt.Dialect().ExistsSQL(stmt.name, true)
+	return sql, args, nil
+}
+
+func (stmt *ViewExistsStmt) Exists() (bool, error) {
+	rows, err := stmt.Query()
+	if err != nil {
+		return false, err
+	}
+
+	name, err := queryString(rows, "name")
+	switch {
+	case errors.Is(err, ErrNoData):
+		return false, nil
+	case err != nil:
+		return false, err
+	default:
+		return name == stmt.name, nil
+	}
 }

@@ -89,6 +89,11 @@ type Dialect interface {
 	// VersionSQL 查询服务器版本号的 SQL 语句
 	VersionSQL() string
 
+	// ExistsSQL 查询数据库中是否存在指定名称的表或是视图 SQL 语句
+	//
+	// 返回的 SQL语句中，其执行结果如果存在，则应该返回 name 字段表示表名，否则返回空。
+	ExistsSQL(name string, view bool) (string, []any)
+
 	// LimitSQL 生成 `LIMIT N OFFSET M` 或是相同的语意的语句片段
 	//
 	// offset 值为一个可选参数，若不指定，则表示 `LIMIT N` 语句。
