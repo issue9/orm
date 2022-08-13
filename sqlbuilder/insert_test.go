@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/issue9/assert/v2"
+	"github.com/issue9/assert/v3"
 
 	"github.com/issue9/orm/v5/core"
 	"github.com/issue9/orm/v5/internal/test"

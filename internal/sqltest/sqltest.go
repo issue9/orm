@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/issue9/assert/v2"
+	"github.com/issue9/assert/v3"
 )
 
 var replacer = strings.NewReplacer(

@@ -3,9 +3,10 @@
 package fetch_test
 
 import (
+	"reflect"
 	"testing"
 
-	"github.com/issue9/assert/v2"
+	"github.com/issue9/assert/v3"
 
 	"github.com/issue9/orm/v5/fetch"
 	"github.com/issue9/orm/v5/internal/test"
@@ -14,6 +15,26 @@ import (
 func TestMap(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
+
+	eq := func(m1, m2 []map[string]any) bool {
+		if len(m1) != len(m2) {
+			return false
+		}
+
+		for i, s1 := range m1 {
+			s2 := m2[i]
+			if len(s2) != len(s1) {
+				return false
+			}
+
+			for k, v := range s1 {
+				if !reflect.DeepEqual(s2[k], v) {
+					return false
+				}
+			}
+		}
+		return true
+	}
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -29,11 +50,11 @@ func TestMap(t *testing.T) {
 		mapped, err := fetch.Map(false, rows)
 		t.NotError(err).NotNil(mapped)
 
-		ok := assert.IsEqual([]map[string]any{
-			{"id": 1, "email": "email-1"},
-			{"id": 2, "email": "email-2"},
+		ok := eq([]map[string]any{
+			{"id": int64(1), "email": "email-1"},
+			{"id": int64(2), "email": "email-2"},
 		}, mapped) ||
-			assert.IsEqual([]map[string]any{
+			eq([]map[string]any{
 				{"id": []byte{'1'}, "email": []byte("email-1")},
 				{"id": []byte{'2'}, "email": []byte("email-2")},
 			}, mapped)
@@ -47,10 +68,10 @@ func TestMap(t *testing.T) {
 		mapped, err = fetch.Map(true, rows)
 		t.NotError(err).NotNil(mapped)
 
-		ok = assert.IsEqual([]map[string]any{
-			{"id": 1, "email": "email-1"},
+		ok = eq([]map[string]any{
+			{"id": int64(1), "email": "email-1"},
 		}, mapped) ||
-			assert.IsEqual([]map[string]any{
+			eq([]map[string]any{
 				{"id": []byte{'1'}, "email": []byte("email-1")},
 			}, mapped)
 		t.True(ok)

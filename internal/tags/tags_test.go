@@ -5,7 +5,7 @@ package tags
 import (
 	"testing"
 
-	"github.com/issue9/assert/v2"
+	"github.com/issue9/assert/v3"
 )
 
 type testData struct { // 测试数据结构

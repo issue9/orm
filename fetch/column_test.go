@@ -3,9 +3,10 @@
 package fetch_test
 
 import (
+	"reflect"
 	"testing"
 
-	"github.com/issue9/assert/v2"
+	"github.com/issue9/assert/v3"
 
 	"github.com/issue9/orm/v5/fetch"
 	"github.com/issue9/orm/v5/internal/test"
@@ -14,6 +15,18 @@ import (
 func TestColumn(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a)
+
+	eq := func(s1, s2 []any) bool {
+		if len(s1) != len(s2) {
+			return false
+		}
+		for i, v := range s1 {
+			if !reflect.DeepEqual(v, s2[i]) {
+				return false
+			}
+		}
+		return true
+	}
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -29,9 +42,8 @@ func TestColumn(t *testing.T) {
 		t.NotError(err).NotNil(cols)
 
 		// mysql 返回的是 []byte 类型
-		ok := assert.IsEqual([]any{1, 2}, cols) ||
-			assert.IsEqual([]any{[]byte{'1'}, []byte{'2'}}, cols)
-		t.True(ok)
+		ok := eq([]any{int64(1), int64(2)}, cols) || eq([]any{[]byte{'1'}, []byte{'2'}}, cols)
+		t.True(ok, cols)
 		t.NotError(rows.Close())
 
 		// 正常数据匹配，读取一行
@@ -41,8 +53,7 @@ func TestColumn(t *testing.T) {
 		cols, err = fetch.Column(true, "id", rows)
 		t.NotError(err).NotNil(cols)
 
-		ok = assert.IsEqual([]any{1}, cols) ||
-			assert.IsEqual([]any{[]byte{'1'}}, cols)
+		ok = eq([]any{int64(1)}, cols) || eq([]any{[]byte{'1'}}, cols)
 		t.True(ok)
 		t.NotError(rows.Close())
 
