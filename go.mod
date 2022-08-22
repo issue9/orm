@@ -2,12 +2,12 @@ module github.com/issue9/orm/v5
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/issue9/assert/v3 v3.0.0
+	github.com/issue9/assert/v3 v3.0.1
 	github.com/issue9/conv v1.3.1
 	github.com/issue9/errwrap v0.3.1
 	github.com/issue9/sliceutil v0.11.0
 	github.com/lib/pq v1.10.6
-	github.com/mattn/go-sqlite3 v1.14.14
+	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/shopspring/decimal v1.3.1
 	modernc.org/sqlite v1.18.1
 )
