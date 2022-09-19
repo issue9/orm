@@ -9,6 +9,16 @@ import (
 	"github.com/issue9/assert/v3"
 )
 
+func TestPrimitiveType(t *testing.T) {
+	a := assert.New(t, false)
+
+	// 保证 PrimitiveType.String() 拥有所有的值。
+	for i := Auto; i < maxPrimitiveType; i++ {
+		a.NotEmpty(i.String())
+	}
+	a.Length(typeStrings, int(maxPrimitiveType))
+}
+
 func TestGetPrimitiveType(t *testing.T) {
 	a := assert.New(t, false)
 
