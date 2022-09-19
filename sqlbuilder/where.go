@@ -102,9 +102,17 @@ func (stmt *WhereStmt) writeAnd(and bool) {
 }
 
 // and 表示当前的语句是 and 还是 or；
-// cond 表示条件语句部分，比如 "id=?"
+// cond 表示条件语句部分，比如 "id=?"，可以为空；
 // args 则表示 cond 中表示的值，可以是直接的值或是 sql.NamedArg
 func (stmt *WhereStmt) where(and bool, cond string, args ...any) *WhereStmt {
+	if cond == "" {
+		if len(args) > 0 {
+			panic(ErrArgsNotMatch)
+		}
+
+		return stmt
+	}
+
 	stmt.writeAnd(and)
 	stmt.builder.WString(cond)
 	stmt.args = append(stmt.args, args...)
@@ -294,15 +302,17 @@ func (stmt *WhereStmt) appendGroup(and bool, w *WhereStmt) {
 // expr 为条件表达式，此为 true 时，才会执行 f 函数；
 // f 的原型为 `func(stmt *WhereStmt)` 其中的参数 stmt 即为当前对象的实例；
 //
-//  sql := Where()
-//  sql.Cond(uid > 0, func(sql *WhereStmt) {
-//      sql.And("uid>?", uid)
-//  });
+//	sql := Where()
+//	sql.Cond(uid > 0, func(sql *WhereStmt) {
+//	    sql.And("uid>?", uid)
+//	});
+//
 // 相当于：
-//  sql := Where()
-//  if uid > 0 {
-//      sql.And("uid>?", uid)
-//  }
+//
+//	sql := Where()
+//	if uid > 0 {
+//	    sql.And("uid>?", uid)
+//	}
 func (stmt *WhereStmt) Cond(expr bool, f func(stmt *WhereStmt)) *WhereStmt {
 	if expr {
 		f(stmt)

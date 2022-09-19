@@ -42,6 +42,22 @@ func TestWhere(t *testing.T) {
 	w.And("id=?", 5, 7)
 	sql, args, err = w.SQL()
 	a.Equal(err, ErrArgsNotMatch).Nil(args).Empty(sql)
+
+	// cond==""
+
+	w.Reset()
+	a.Equal(0, w.builder.Len())
+	a.Equal(0, len(w.args))
+
+	w.And("")
+	sql, args, err = w.SQL()
+	a.NotError(err).Empty(args)
+	sqltest.Equal(a, sql, "")
+
+	w.Reset()
+	a.PanicType(func() {
+		w.And("", 3)
+	}, ErrArgsNotMatch)
 }
 
 func TestWhereStmt_IsNull(t *testing.T) {
