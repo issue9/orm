@@ -101,8 +101,9 @@ func parseColumns(m *core.Model, rtype reflect.Type) error {
 			return err
 		}
 
+		// 这属于代码级别的错误，直接 panic 了。
 		if err := col.parseTags(m, tag); err != nil {
-			return err
+			panic(err)
 		}
 	}
 

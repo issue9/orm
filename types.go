@@ -4,6 +4,7 @@ package orm
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/issue9/orm/v5/core"
 	"github.com/issue9/orm/v5/fetch"
@@ -100,7 +101,15 @@ type (
 		core.Engine
 		ModelEngine
 
-		// SQLBuilder 返回 sqlbuilder.SQLBuilder 实例
+		// SQLBuilder 返回 [sqlbuilder.SQLBuilder] 实例
 		SQLBuilder() *sqlbuilder.SQLBuilder
 	}
 )
+
+// NowUnix 返回当前时间
+func NowUnix() Unix { return Unix{Time: time.Now()} }
+
+// NowNullTime 返回当前时间
+func NowNullTime() sql.NullTime {
+	return sql.NullTime{Time: time.Now(), Valid: true}
+}

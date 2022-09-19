@@ -4,6 +4,7 @@ package orm_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/issue9/assert/v3"
 
@@ -89,4 +90,17 @@ func TestBeforeCreateUpdate(t *testing.T) {
 		t.NotError(err).True(found)
 		t.Equal(o.Name, "update-name11")
 	})
+}
+
+func TestNow(t *testing.T) {
+	a := assert.New(t, false)
+	now := time.Now()
+
+	n1 := orm.NowUnix()
+	a.True(n1.Time.After(now)).
+		False(n1.IsNull)
+
+	n2 := orm.NowNullTime()
+	a.True(n2.Time.After(now)).
+		True(n2.Valid)
 }
