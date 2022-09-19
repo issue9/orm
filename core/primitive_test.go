@@ -15,6 +15,7 @@ func TestGetPrimitiveType(t *testing.T) {
 	a.Equal(GetPrimitiveType(reflect.TypeOf(1)), Int)
 	a.Equal(GetPrimitiveType(reflect.TypeOf([]byte{1, 2})), Bytes)
 	a.Equal(GetPrimitiveType(reflect.TypeOf("string")), String)
+	a.Equal(GetPrimitiveType(reflect.TypeOf(any(5))), Int)
 
 	// 指针的 PrimitiveType
 	x := 5
@@ -26,4 +27,11 @@ func TestGetPrimitiveType(t *testing.T) {
 
 	type obj struct{}
 	a.Equal(GetPrimitiveType(reflect.TypeOf(obj{})), Auto)
+
+	type obj2 struct {
+		Any any
+	}
+	o2 := obj2{}
+	field, _ := reflect.ValueOf(o2).Type().FieldByName("Any")
+	a.Equal(GetPrimitiveType(field.Type), String)
 }

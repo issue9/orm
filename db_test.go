@@ -96,7 +96,15 @@ func TestDB_Update(t *testing.T) {
 		u1 := &UserInfo{UID: 1}
 		found, err := t.DB.Select(u1)
 		t.NotError(err).True(found)
-		t.Equal(u1, &UserInfo{UID: 1, FirstName: "firstName1", LastName: "lastName1", Sex: "sex1"})
+		t.Equal(1, u1.UID).
+			Equal("firstName1", u1.FirstName).
+			Equal("lastName1", u1.LastName).
+			Equal("sex1", u1.Sex)
+		if t.DriverName == "mysql" {
+			t.Equal(u1.Any, []byte("55"))
+		} else {
+			t.Equal(u1.Any, "55")
+		}
 
 		u2 := &UserInfo{LastName: "lastName2", FirstName: "firstName2"}
 		found, err = t.DB.Select(u2)

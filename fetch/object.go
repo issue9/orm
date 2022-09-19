@@ -50,11 +50,12 @@ func convertError(field, message string) error {
 //
 // struct 可以在 struct tag 中用 name 指定字段名称，
 // 或是以减号(-)开头表示忽略该字段的导出：
-//  type user struct {
-//      ID    int `orm:"name(id)"`  // 对应 rows 中的 id 字段，而不是 ID。
-//      age   int `orm:"name(Age)"` // 小写不会被导出。
-//      Count int `orm:"-"`         // 不会匹配与该字段对应的列。
-//  }
+//
+//	type user struct {
+//	    ID    int `orm:"name(id)"`  // 对应 rows 中的 id 字段，而不是 ID。
+//	    age   int `orm:"name(Age)"` // 小写不会被导出。
+//	    Count int `orm:"-"`         // 不会匹配与该字段对应的列。
+//	}
 //
 // 第一个参数用于表示有多少数据被正确导入到 obj 中
 func Object(strict bool, rows *sql.Rows, obj any) (int, error) {

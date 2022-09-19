@@ -11,7 +11,6 @@ import (
 // TimeFormatLayout 时间如果需要转换成字符串采用此格式
 const TimeFormatLayout = time.RFC3339
 
-// 所有的 PrimitiveType
 const (
 	Auto PrimitiveType = iota
 	Bool
@@ -27,7 +26,7 @@ const (
 	Uint64
 	Float32
 	Float64
-	String
+	String // any 也被保存成此类型，但是在读取时，各个数据库略有不同，比如 mysql 返回 []byte，而其它数据一般返回 string。
 	Bytes
 	Time
 	Decimal
@@ -35,6 +34,27 @@ const (
 )
 
 var (
+	typeStrings = map[PrimitiveType]string{
+		Auto:    "auto",
+		Bool:    "bool",
+		Int:     "int",
+		Int8:    "int8",
+		Int16:   "int16",
+		Int32:   "int32",
+		Int64:   "int64",
+		Uint:    "uint",
+		Uint8:   "uint8",
+		Uint16:  "uint16",
+		Uint32:  "uint32",
+		Uint64:  "uint64",
+		Float32: "float32",
+		Float64: "float64",
+		String:  "string",
+		Bytes:   "bytes",
+		Time:    "time",
+		Decimal: "decimal",
+	}
+
 	types = map[reflect.Type]PrimitiveType{
 		reflect.TypeOf(true):           Bool,
 		reflect.TypeOf(int(1)):         Int,
@@ -65,20 +85,21 @@ var (
 	}
 
 	kinds = map[reflect.Kind]PrimitiveType{
-		reflect.Bool:    Bool,
-		reflect.Int:     Int,
-		reflect.Int8:    Int8,
-		reflect.Int16:   Int16,
-		reflect.Int32:   Int32,
-		reflect.Int64:   Int64,
-		reflect.Uint:    Uint,
-		reflect.Uint8:   Uint8,
-		reflect.Uint16:  Uint16,
-		reflect.Uint32:  Uint32,
-		reflect.Uint64:  Uint64,
-		reflect.Float32: Float32,
-		reflect.Float64: Float64,
-		reflect.String:  String,
+		reflect.Bool:      Bool,
+		reflect.Int:       Int,
+		reflect.Int8:      Int8,
+		reflect.Int16:     Int16,
+		reflect.Int32:     Int32,
+		reflect.Int64:     Int64,
+		reflect.Uint:      Uint,
+		reflect.Uint8:     Uint8,
+		reflect.Uint16:    Uint16,
+		reflect.Uint32:    Uint32,
+		reflect.Uint64:    Uint64,
+		reflect.Float32:   Float32,
+		reflect.Float64:   Float64,
+		reflect.String:    String,
+		reflect.Interface: String,
 	}
 
 	primitiveTyperType = reflect.TypeOf((*PrimitiveTyper)(nil)).Elem()
@@ -103,7 +124,12 @@ type PrimitiveType int
 //
 // t.Kind 不能为 reflect.Ptr 否则将返回 Auto。
 func GetPrimitiveType(t reflect.Type) PrimitiveType {
-	primitiveType, found := types[t]
+	primitiveType, found := kinds[t.Kind()]
+	if found {
+		return primitiveType
+	}
+
+	primitiveType, found = types[t]
 	if !found {
 		v := reflect.New(t).Elem()
 		if t.Implements(primitiveTyperType) {
@@ -113,9 +139,7 @@ func GetPrimitiveType(t reflect.Type) PrimitiveType {
 		}
 	}
 
-	if primitiveType == Auto {
-		primitiveType = kinds[t.Kind()]
-	}
-
 	return primitiveType
 }
+
+func (t PrimitiveType) String() string { return typeStrings[t] }

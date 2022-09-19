@@ -41,9 +41,11 @@ func TestColumn(t *testing.T) {
 		cols, err := fetch.Column(false, "id", rows)
 		t.NotError(err).NotNil(cols)
 
-		// mysql 返回的是 []byte 类型
-		ok := eq([]any{int64(1), int64(2)}, cols) || eq([]any{[]byte{'1'}, []byte{'2'}}, cols)
-		t.True(ok, cols)
+		if t.DriverName == "mysql" { // mysql 返回的是 []byte 类型
+			eq(cols, []any{[]byte{'1'}, []byte{'2'}})
+		} else {
+			eq(cols, []any{int64(1), int64(2)})
+		}
 		t.NotError(rows.Close())
 
 		// 正常数据匹配，读取一行
@@ -53,8 +55,11 @@ func TestColumn(t *testing.T) {
 		cols, err = fetch.Column(true, "id", rows)
 		t.NotError(err).NotNil(cols)
 
-		ok = eq([]any{int64(1)}, cols) || eq([]any{[]byte{'1'}}, cols)
-		t.True(ok)
+		if t.DriverName == "mysql" { // mysql 返回的是 []byte 类型
+			eq([]any{[]byte{'1'}}, cols)
+		} else {
+			eq([]any{int64(1)}, cols)
+		}
 		t.NotError(rows.Close())
 
 		// 没有数据匹配，读取多行

@@ -18,6 +18,7 @@ type Group struct {
 	ID      int64     `orm:"name(id);ai;unique(unique_groups_id)"`
 	Name    string    `orm:"name(name);len(500)"`
 	Created time.Time `orm:"name(created)"`
+	Any     any       `orm:"name(any)"` // any
 }
 
 func (g *Group) TableName() string { return "groups" }
@@ -40,6 +41,7 @@ type UserInfo struct {
 	FirstName string `orm:"name(first_name);unique(unique_name);len(20)"`
 	LastName  string `orm:"name(last_name);unique(unique_name);len(20)"`
 	Sex       string `orm:"name(sex);default(male);len(6)"`
+	Any       any    `orm:"name(any);nullable"`
 }
 
 func (u *User) TableName() string { return "users" }
@@ -119,6 +121,7 @@ func initData(t *test.Driver) {
 	insert(&Group{
 		Name: "group1",
 		ID:   1,
+		Any:  "attr",
 	})
 
 	insert(&Admin{
@@ -132,8 +135,9 @@ func initData(t *test.Driver) {
 		FirstName: "f1",
 		LastName:  "l1",
 		Sex:       "female",
+		Any:       55,
 	})
-	insert(&UserInfo{ // sex 使用默认值
+	insert(&UserInfo{ // sex 使用默认值，any 采用 nullable
 		UID:       2,
 		FirstName: "f2",
 		LastName:  "l2",
@@ -147,15 +151,25 @@ func initData(t *test.Driver) {
 
 	found, err := t.DB.Select(g1)
 	t.NotError(err).True(found).
-		True(g1.Created.After(time.Now().Add(-24*time.Hour)), "g1.Created 应该有大于昨天的时间，页实际值为 %s", g1.Created)
+		True(g1.Created.After(time.Now().Add(-24*time.Hour)), "g1.Created 应该有大于昨天的时间，页实际值为 %s", g1.Created).
+		Equal(g1.Name, "group1").
+		Equal(g1.Any, "attr")
 
 	found, err = t.DB.Select(u1)
 	t.NotError(err).True(found).
-		Equal(u1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "female"})
+		Equal(1, u1.UID).
+		Equal("f1", u1.FirstName).
+		Equal("l1", u1.LastName).
+		Equal("female", u1.Sex)
+	if t.DriverName == "mysql" {
+		t.Equal(u1.Any, []byte("55"))
+	} else {
+		t.Equal(u1.Any, "55")
+	}
 
 	found, err = t.DB.Select(u2)
 	t.NotError(err).True(found).
-		Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
+		Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male", Any: nil})
 
 	found, err = t.DB.Select(a1)
 	t.NotError(err).True(found).
