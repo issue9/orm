@@ -3,6 +3,7 @@
 package orm_test
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -60,7 +61,7 @@ func BenchmarkDB_Update(b *testing.B) {
 			t.NotError(err)
 		}
 
-		m.ID = 1 // 自增，从 1 开始
+		m.ID = sql.NullInt64{Int64: 1, Valid: true} // 自增，从 1 开始
 		for i := 0; i < b.N; i++ {
 			_, err := t.DB.Update(m)
 			t.NotError(err)
@@ -87,7 +88,7 @@ func BenchmarkDB_Select(b *testing.B) {
 		_, err := t.DB.Insert(m)
 		t.NotError(err)
 
-		m.ID = 1
+		m.ID = sql.NullInt64{Int64: 1, Valid: true}
 		for i := 0; i < b.N; i++ {
 			found, err := t.DB.Select(m)
 			t.NotError(err).True(found)

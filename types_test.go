@@ -98,7 +98,7 @@ func TestNow(t *testing.T) {
 
 	n1 := orm.NowUnix()
 	a.True(n1.Time.After(now)).
-		False(n1.IsNull)
+		False(n1.Valid)
 
 	n2 := orm.NowNullTime()
 	a.True(n2.Time.After(now)).

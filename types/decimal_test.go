@@ -29,16 +29,16 @@ func TestStringDecimalWithPrecision(t *testing.T) {
 	a := assert.New(t, false)
 
 	d, err := StringDecimalWithPrecision("3.222")
-	a.NotError(err).Equal(d.Precision, 3).False(d.IsNull)
+	a.NotError(err).Equal(d.Precision, 3).True(d.Valid)
 
 	d, err = StringDecimalWithPrecision(".222")
-	a.NotError(err).Equal(d.Precision, 3).False(d.IsNull)
+	a.NotError(err).Equal(d.Precision, 3).True(d.Valid)
 
 	d, err = StringDecimalWithPrecision("222")
-	a.NotError(err).Equal(d.Precision, 0).False(d.IsNull)
+	a.NotError(err).Equal(d.Precision, 0).True(d.Valid)
 
 	d, err = StringDecimalWithPrecision("")
-	a.Error(err).False(d.IsNull)
+	a.Error(err).False(d.Valid)
 }
 
 func TestSQL(t *testing.T) {

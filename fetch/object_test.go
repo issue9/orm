@@ -68,7 +68,7 @@ func initDB(t *test.Driver) {
 	stmt, err = tx.Prepare("INSERT INTO logs(id, created,content,uid) values(?, ?, ?, ?)")
 	t.NotError(err).NotNil(stmt)
 	for i := 1; i < 100; i++ {
-		_, err = stmt.Exec(i, types.Unix{Time: time.Now()}, fmt.Sprintf("content-%d", i), i)
+		_, err = stmt.Exec(i, types.Unix{Time: time.Now(), Valid: true}, fmt.Sprintf("content-%d", i), i)
 		t.NotError(err)
 	}
 	t.NotError(stmt.Close())
@@ -380,9 +380,9 @@ func TestObjectNest(t *testing.T) {
 		o0 := objs[0]
 		o1 := objs[1]
 		t.Equal(o0.User.ID, o0.UID).
-			False(o0.Created.IsNull).True(o0.Created.After(yesterday)) // Created 肯定是一个晚于 24 小时之前值
+			True(o0.Created.Valid).True(o0.Created.After(yesterday)) // Created 肯定是一个晚于 24 小时之前值
 		t.Equal(o1.User.ID, o1.UID).
-			False(o1.Created.IsNull).True(o1.Created.After(yesterday))
+			True(o1.Created.Valid).True(o1.Created.After(yesterday))
 	})
 }
 

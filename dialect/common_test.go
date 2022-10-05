@@ -132,7 +132,7 @@ func testTypes(t *test.Driver) {
 		sql.RawBytes("rawBytes"),
 		now,
 		now,
-		types.Unix{Time: now},
+		types.Unix{Time: now, Valid: true},
 	}
 
 	r, err := sqlbuilder.Insert(t.DB).
@@ -240,7 +240,7 @@ func testTypesDefault(t *test.Driver) {
 		Column("raw_bytes", core.Bytes, false, true, false, []byte("rawBytes")). // 默认值无效
 		Column("time", core.Time, false, false, true, now).
 		Column("time_with_len", core.Time, false, false, true, now, 5).
-		Column("unix", core.Int64, false, false, true, types.Unix{Time: now}).
+		Column("unix", core.Int64, false, false, true, types.Unix{Time: now, Valid: true}).
 		Table(tableName)
 	t.NotError(creator.Exec())
 	defer func() {
@@ -338,6 +338,6 @@ func testTypesDefault(t *test.Driver) {
 		Nil(RawBytes, []byte("rawBytes")).
 		Equal(Time.Unix(), now.Unix()).
 		Equal(TimeWithLen.Unix(), now.Unix()).
-		Equal(Unix.Time.Unix(), now.Unix())
+		Equal(Unix.Time.Unix(), now.Unix()).True(Unix.Valid)
 	//fmt.Printf("\n%s,%v,%v", t.DriverName, Time, now)
 }

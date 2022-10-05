@@ -41,11 +41,12 @@ func TestUnix_Scan(t *testing.T) {
 
 	u = &Unix{}
 	a.NotError(u.Scan([]byte("123"))).
-		Equal(123, u.Time.Unix())
+		Equal(123, u.Time.Unix()).
+		True(u.Valid)
 
 	u = &Unix{}
 	a.NotError(u.Scan(nil)).
-		True(u.IsNull)
+		False(u.Valid)
 
 	// 无法解析的值
 	u = &Unix{}

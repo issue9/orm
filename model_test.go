@@ -3,6 +3,7 @@
 package orm_test
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/issue9/assert/v3"
@@ -15,10 +16,10 @@ import (
 
 // Group 带有自增 ID 的普通表结构
 type Group struct {
-	ID      int64     `orm:"name(id);ai;unique(unique_groups_id)"`
-	Name    string    `orm:"name(name);len(500)"`
-	Created time.Time `orm:"name(created)"`
-	Any     any       `orm:"name(any)"` // any
+	ID      sql.NullInt64 `orm:"name(id);ai;unique(unique_groups_id)"`
+	Name    string        `orm:"name(name);len(500)"`
+	Created time.Time     `orm:"name(created)"`
+	Any     any           `orm:"name(any)"` // any
 }
 
 func (g *Group) TableName() string { return "groups" }
@@ -120,7 +121,7 @@ func initData(t *test.Driver) {
 
 	insert(&Group{
 		Name: "group1",
-		ID:   1,
+		ID:   sql.NullInt64{Int64: 1, Valid: true},
 		Any:  "attr",
 	})
 
@@ -144,7 +145,7 @@ func initData(t *test.Driver) {
 	})
 
 	// select
-	g1 := &Group{ID: 1}
+	g1 := &Group{ID: sql.NullInt64{Int64: 1, Valid: true}}
 	u1 := &UserInfo{UID: 1}
 	u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
 	a1 := &Admin{Email: "email1"}
