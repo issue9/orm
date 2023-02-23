@@ -3,7 +3,7 @@ module github.com/issue9/orm/v5
 require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/issue9/assert/v3 v3.0.4
-	github.com/issue9/conv v1.3.3
+	github.com/issue9/conv v1.3.4
 	github.com/issue9/errwrap v0.3.1
 	github.com/issue9/sliceutil v0.12.0
 	github.com/lib/pq v1.10.7
@@ -18,7 +18,6 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	golang.org/x/exp v0.0.0-20221217163422-3c43f8badb15 // indirect
 	golang.org/x/mod v0.6.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/tools v0.2.0 // indirect
