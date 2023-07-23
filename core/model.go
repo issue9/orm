@@ -388,15 +388,15 @@ func (m *Model) checkNames() error {
 }
 
 func (m *Model) Index(name string) (*Constraint, bool) {
-	return sliceutil.At(m.Indexes, func(e *Constraint) bool { return e.Name == name })
+	return sliceutil.At(m.Indexes, func(e *Constraint, _ int) bool { return e.Name == name })
 }
 
 func (m *Model) Unique(name string) (*Constraint, bool) {
-	return sliceutil.At(m.Uniques, func(e *Constraint) bool { return e.Name == name })
+	return sliceutil.At(m.Uniques, func(e *Constraint, _ int) bool { return e.Name == name })
 }
 
 func (m *Model) ForeignKey(name string) (*ForeignKey, bool) {
-	return sliceutil.At(m.ForeignKeys, func(e *ForeignKey) bool { return e.Name == name })
+	return sliceutil.At(m.ForeignKeys, func(e *ForeignKey, _ int) bool { return e.Name == name })
 }
 
 func (c *Constraint) append(col *Column) {
