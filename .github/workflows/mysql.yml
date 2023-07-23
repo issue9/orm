@@ -32,9 +32,8 @@ jobs:
         mysql -u root -proot -h 127.0.0.1 -e 'CREATE DATABASE IF NOT EXISTS orm_test;'
 
     - name: 安装 Go ${{ matrix.go }}
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
-        stable: '!contains(${{ matrix.go }}, "beta") && !contains(${{ matrix.go }}, "rc")'
         go-version: ${{ matrix.go }}
       id: go
 

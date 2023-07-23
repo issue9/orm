@@ -33,9 +33,8 @@ jobs:
         PGPASSWORD=postgres psql -U postgres -h 127.0.0.1 -c 'CREATE DATABASE orm_test;'
 
     - name: 安装 Go ${{ matrix.go }}
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
-        stable: '!contains(${{ matrix.go }}, "beta") && !contains(${{ matrix.go }}, "rc")'
         go-version: ${{ matrix.go }}
       id: go
 
