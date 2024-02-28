@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest] # action 不支持非 linux 下的容器, windows-latest, macOS-latest
-        go: ['1.18.x', '1.22.x']
+        go: ['1.21.x', '1.22.x']
 
     services:
       postgres:
@@ -43,11 +43,11 @@ jobs:
 
     - name: Vet
       run: go vet -v ./...
-        
+
     - name: Test
       run: go test -p=1 ./... -test.coverprofile=coverage.txt -covermode=atomic -dbs=postgres,postgres
-      
-    - name: Upload coverage to Codecov  
+
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
         token: ${{secrets.CODECOV_TOKEN}}
