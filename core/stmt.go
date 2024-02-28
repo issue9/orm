@@ -8,7 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"sort"
+	"slices"
 )
 
 // Stmt 实现自定义的 Stmt 实例
@@ -29,7 +29,7 @@ func NewStmt(stmt *sql.Stmt, orders map[string]int) *Stmt {
 		for _, v := range orders {
 			vals = append(vals, v)
 		}
-		sort.Ints(vals)
+		slices.Sort(vals)
 
 		for k, v := range vals {
 			if k != v {

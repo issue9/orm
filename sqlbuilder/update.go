@@ -6,7 +6,8 @@ package sqlbuilder
 
 import (
 	"database/sql"
-	"sort"
+
+	"github.com/issue9/sliceutil"
 
 	"github.com/issue9/orm/v5/core"
 )
@@ -187,30 +188,12 @@ func (stmt *UpdateStmt) checkErrors() error {
 		return ErrValueIsEmpty
 	}
 
-	if stmt.columnsHasDup() {
+	// 检测列名是否存在重复，先排序，再与后一元素比较。
+	if len(sliceutil.Dup(stmt.values, func(i, j *updateSet) bool { return i.column == j.column })) > 0 {
 		return ErrDupColumn
 	}
 
 	return nil
-}
-
-// 检测列名是否存在重复，先排序，再与后一元素比较。
-func (stmt *UpdateStmt) columnsHasDup() bool {
-	sort.SliceStable(stmt.values, func(i, j int) bool {
-		return stmt.values[i].column < stmt.values[j].column
-	})
-
-	for index, col := range stmt.values {
-		if index+1 >= len(stmt.values) {
-			return false
-		}
-
-		if col.column == stmt.values[index+1].column {
-			return true
-		}
-	}
-
-	return false
 }
 
 // Update 更新指定条件内容

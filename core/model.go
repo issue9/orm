@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 
 	"github.com/issue9/sliceutil"
 )
@@ -379,7 +379,7 @@ func (m *Model) checkNames() error {
 		names = append(names, name)
 	}
 
-	sort.Strings(names)
+	slices.Sort(names)
 	for i := 1; i < len(names); i++ {
 		if names[i] == names[i-1] {
 			return ErrConstraintExists(names[i])
