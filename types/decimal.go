@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 package types
@@ -79,7 +81,7 @@ func (n Decimal) Value() (driver.Value, error) {
 	return n.Decimal.StringFixed(n.Precision), nil
 }
 
-func (n Decimal) PrimitiveType() core.PrimitiveType { return core.Decimal }
+func (n Decimal) PrimitiveType() core.PrimitiveType { return core.String }
 
 func (n Decimal) MarshalText() ([]byte, error) {
 	if !n.Valid {

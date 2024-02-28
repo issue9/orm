@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 // Package fetch 包提供了将 sql.Rows 导出为几种常用数据格式的方法

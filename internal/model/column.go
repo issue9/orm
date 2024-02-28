@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 package model
@@ -82,7 +84,8 @@ func (col *column) parseTags(m *core.Model, tag string) (err error) {
 }
 
 // 从参数中获取 Column 的 len1 和 len2 变量
-//  len(len1,len2)
+//
+//	len(len1,len2)
 func (col *column) setLen(vals []string) (err error) {
 	l := len(vals)
 	switch l {

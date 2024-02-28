@@ -1,26 +1,30 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 // Package tags 包实现对特定格式的 struct tag 字符串的分析
 //
 // 1. 以分号分隔的字符串，每个子串又以逗号分隔，
 // 第一个字符串为键名，之后的字符串组成的数组为键值。如：
-//  "id,1;unique;fun,add,1,2;"
-//  // 以下将会被解析成：
-//  [
-//       "id"    :["1"],
-//       "unique":nil,
-//       "fun"   :["add","1","2"]
-//  ]
+//
+//	"id,1;unique;fun,add,1,2;"
+//	// 以下将会被解析成：
+//	[
+//	     "id"    :["1"],
+//	     "unique":nil,
+//	     "fun"   :["add","1","2"]
+//	]
 //
 // 2.以分号分隔的字符串，每个子串括号前的字符串为健名，
 // 括号中的字符串以逗号分隔组成数组为键值。如：
-//  "id(1);unique;fun(add,1,2)"
-//  // 以下将会被解析成：
-//  [
-//       "id"    :["1"],
-//       "unique":nil,
-//       "fun"   :["add","1","2"]
-//  ]
+//
+//	"id(1);unique;fun(add,1,2)"
+//	// 以下将会被解析成：
+//	[
+//	     "id"    :["1"],
+//	     "unique":nil,
+//	     "fun"   :["add","1","2"]
+//	]
 package tags
 
 import "strings"

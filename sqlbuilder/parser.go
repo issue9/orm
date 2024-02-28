@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 package sqlbuilder
@@ -70,13 +72,13 @@ func fillArgs(query string, args []any) (string, error) {
 // 从表达式中获取列的名称
 //
 // 如果不存在别名，则取其列名或是整个表达式作为别名。
-//  *  => *
-//  table.*  => *
-//  table.col  => {col}
-//  table.col as col  => {col}
-//  sum(table.count) as cnt  ==> {cnt}
-//  func1(func2(table.col1),table.col2) as fn1  ==> {fn1}
-//  count({table.*})  => {count(table.*)}
+//   - => *
+//     table.*  => *
+//     table.col  => {col}
+//     table.col as col  => {col}
+//     sum(table.count) as cnt  ==> {cnt}
+//     func1(func2(table.col1),table.col2) as fn1  ==> {fn1}
+//     count({table.*})  => {count(table.*)}
 func getColumnName(expr string) string {
 	if expr == "*" {
 		return expr

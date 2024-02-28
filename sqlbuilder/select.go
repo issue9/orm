@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 package sqlbuilder
@@ -232,11 +234,12 @@ func (stmt *SelectStmt) buildColumns(builder *core.Builder) {
 // 一次只能指定一列，当未指定任何列时，默认会采用 *。
 //
 // col 表示列名，可以是以下形式：
-//  *
-//  col
-//  table.col
-//  table.*
-//  sum({table}.{col}) as col1
+//
+//	*
+//	col
+//	table.col
+//	table.*
+//	sum({table}.{col}) as col1
 //
 // 如果列名是关键字，可以使用 {} 包含。
 func (stmt *SelectStmt) Column(col string) *SelectStmt {
@@ -317,8 +320,10 @@ func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 // Desc 倒序查询
 //
 // col 为分组的列名，格式可以是单纯的列名，或是带表名的列：
-//  col
-//  table.col
+//
+//	col
+//	table.col
+//
 // table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Desc(col ...string) *SelectStmt {
 	return stmt.orderBy(false, col...)
@@ -327,8 +332,10 @@ func (stmt *SelectStmt) Desc(col ...string) *SelectStmt {
 // Asc 正序查询
 //
 // col 为分组的列名，格式可以是单纯的列名，或是带表名的列：
-//  col
-//  table.col
+//
+//	col
+//	table.col
+//
 // table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Asc(col ...string) *SelectStmt {
 	return stmt.orderBy(true, col...)
@@ -368,8 +375,10 @@ func (stmt *SelectStmt) ForUpdate() *SelectStmt {
 // Group 添加 GROUP BY 语句
 //
 // col 为分组的列名，格式可以单纯的列名，或是带表名的列：
-//  col
-//  table.col
+//
+//	col
+//	table.col
+//
 // table 和 col 都可以是关键字，系统会自动处理。
 func (stmt *SelectStmt) Group(col string) *SelectStmt {
 	if stmt.err != nil {

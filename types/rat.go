@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 package types
@@ -21,7 +23,7 @@ type Rat struct {
 
 func Rational(a, b int64) Rat { return Rat{rat: big.NewRat(a, b)} }
 
-// Scan implements the Scanner.Scan
+// Scan implements the sql.Scanner
 func (n *Rat) Scan(src any) (err error) {
 	// The src value will be of one of the following types:
 	//

@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 package dialect
@@ -30,7 +32,7 @@ var (
 // Sqlite3 返回一个适配 sqlite3 的 Dialect 接口
 //
 // Options 可以接受以下参数：
-//  rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
+//   - rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid
 func Sqlite3(driverName string) core.Dialect {
 	return &sqlite3{
 		base: newBase("sqlite3", driverName, '`', '`'),

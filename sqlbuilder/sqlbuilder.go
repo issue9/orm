@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 // Package sqlbuilder 提供一套通过字符串拼接来构成 SQL 语句的工具

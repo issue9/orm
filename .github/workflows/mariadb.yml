@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest] # action 不支持非 linux 下的容器, windows-latest, macOS-latest
-        go: ['1.18.x', '1.20.x']
+        go: ['1.18.x', '1.22.x']
 
     services:
       mariadb:
@@ -38,7 +38,7 @@ jobs:
       id: go
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Vet
       run: go vet -v ./...

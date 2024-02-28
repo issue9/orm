@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 package fetch_test
@@ -6,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/issue9/assert/v3"
+	"github.com/issue9/assert/v4"
 
 	"github.com/issue9/orm/v5/fetch"
 	"github.com/issue9/orm/v5/internal/test"

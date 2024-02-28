@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 package dialect
@@ -32,8 +34,9 @@ var (
 // Mysql 返回一个适配 mysql 的 Dialect 接口
 //
 // 支持以下 options 属性
-//  mysql_charset 字符集，语法为： charset(utf-8)
-//  mysql_engine 使用的引擎，语法为： engine(innodb)
+//
+//	mysql_charset 字符集，语法为： charset(utf-8)
+//	mysql_engine 使用的引擎，语法为： engine(innodb)
 func Mysql(driverName string) core.Dialect {
 	return newMysql(false, "mysql", driverName)
 }

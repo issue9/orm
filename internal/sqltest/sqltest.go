@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2014-2024 caixw
+//
 // SPDX-License-Identifier: MIT
 
 // Package sqltest 提供对 SQL 内容测试的工具
@@ -7,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/issue9/assert/v3"
+	"github.com/issue9/assert/v4"
 )
 
 var replacer = strings.NewReplacer(
