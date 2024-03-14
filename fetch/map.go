@@ -16,10 +16,10 @@ import (
 // NOTE:
 // 每个数据库对数据的处理方式是不一样的，比如如下语句
 //
-//	SELECT COUNT(*) as cnt FROM tbl1
+//	SELECT x FROM tbl1
 //
-// 使用 Map() 导出到 []map[string]any 中时，
-// 在 mysql 中，cnt 有可能被处理成一个 []byte (打印输出时，像一个数组，容易造成困惑)，
+// 使用 [Map] 导出到 []map[string]any 中时，
+// 在 mysql 中，x 如果是字符串，有可能被处理成一个 []byte (打印输出时，像一个数组，容易造成困惑)，
 // 而在 sqlite3 就有可能是个 int。
 func Map(once bool, rows *sql.Rows) ([]map[string]any, error) {
 	cols, err := rows.Columns()
@@ -60,7 +60,7 @@ func Map(once bool, rows *sql.Rows) ([]map[string]any, error) {
 
 // MapString 将 rows 中的数据导出到一个 map[string]string 中
 //
-// 功能上与 Map() 上一样，但 map 的键值固定为 string。
+// 功能上与 [Map] 上一样，但 map 的键值固定为 string。
 func MapString(once bool, rows *sql.Rows) (data []map[string]string, err error) {
 	cols, err := rows.Columns()
 	if err != nil {

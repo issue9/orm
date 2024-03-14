@@ -57,10 +57,10 @@ func TestMap(t *testing.T) {
 			{"id": int64(2), "email": "email-2"},
 		}, mapped) ||
 			eq([]map[string]any{
-				{"id": []byte{'1'}, "email": []byte("email-1")},
-				{"id": []byte{'2'}, "email": []byte("email-2")},
+				{"id": int64(1), "email": []byte("email-1")},
+				{"id": int64(2), "email": []byte("email-2")},
 			}, mapped)
-		t.True(ok)
+		t.True(ok, "%+v")
 		t.NotError(rows.Close())
 
 		// 正常匹配数据，读取一行
@@ -74,7 +74,7 @@ func TestMap(t *testing.T) {
 			{"id": int64(1), "email": "email-1"},
 		}, mapped) ||
 			eq([]map[string]any{
-				{"id": []byte{'1'}, "email": []byte("email-1")},
+				{"id": int64(1), "email": []byte("email-1")},
 			}, mapped)
 		t.True(ok)
 		t.NotError(rows.Close())

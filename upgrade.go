@@ -16,7 +16,7 @@ import (
 // 主要针对线上数据与本地模型不相同时，可执行的一些操作。
 // 并没有准确的方法判断线上字段与本地定义的是否相同，比如：
 // varchar(50) 和 text 在 sqlite3 是相同的，但是在其它数据库可能是稍微有差别的，
-// 所以 Upgrader 并不会主动对数据表进行更新，所有更新还是要手动调用相关的函数。
+// 所以 [Upgrader] 并不会主动对数据表进行更新，所有更新还是要手动调用相关的函数。
 type Upgrader struct {
 	model *core.Model
 	err   error
