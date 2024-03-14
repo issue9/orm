@@ -33,7 +33,7 @@ jobs:
         PGPASSWORD=postgres psql -U postgres -h 127.0.0.1 -c 'CREATE DATABASE orm_test;'
 
     - name: 安装 Go ${{ matrix.go }}
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go }}
       id: go
@@ -48,7 +48,7 @@ jobs:
       run: go test -p=1 ./... -test.coverprofile=coverage.txt -covermode=atomic -dbs=postgres,postgres
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{secrets.CODECOV_TOKEN}}
         file: ./coverage.txt

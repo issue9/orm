@@ -22,7 +22,7 @@ type txPrefix struct {
 
 // Prefix 表名前缀
 //
-// 经由 Prefix 返回的 ModelEngine 对象会对所有的表名加上 Prefix 作为前缀。
+// 经由 Prefix 返回的 [ModelEngine] 对象会对所有的表名加上 Prefix 作为前缀。
 type Prefix string
 
 func (p Prefix) DB(db *DB) ModelEngine { return db.Prefix(string(p)) }
@@ -84,7 +84,7 @@ func (p *txPrefix) LastInsertID(v TableNamer) (int64, error) { return lastInsert
 
 // Insert 插入数据
 //
-// NOTE: 若需一次性插入多条数据，请使用 tx.InsertMany()。
+// NOTE: 若需一次性插入多条数据，请使用 InsertMany。
 func (p *txPrefix) Insert(v TableNamer) (sql.Result, error) { return insert(p, v) }
 
 func (p *txPrefix) Delete(v TableNamer) (sql.Result, error) { return del(p, v) }

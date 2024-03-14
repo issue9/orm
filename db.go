@@ -7,7 +7,6 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"log"
 	"strings"
 
 	"github.com/issue9/orm/v5/core"
@@ -24,15 +23,18 @@ type DB struct {
 	version    string
 	replacer   *strings.Replacer
 
-	sqlLogger *log.Logger
+	sqlLogger func(string)
 }
 
-// NewDB 声明一个新的 DB 实例
+func defaultSQLLogger(string) {}
+
+// NewDB 声明一个新的 [DB] 实例
 //
 // NOTE: 不同驱动对时间的处理不尽相同，如果有在不同数据库之间移植的需求，
 // 那么建议将保存时的时区都统一设置为 UTC：
-// postgres 已经固定为 UTC，sqlite3 可以在 dsn 中通过 _loc=UTC 指定，
-// mysql 默认是 UTC，也可以在 DSN 中通过 loc=UTC 指定。
+//   - postgres 已经固定为 UTC；
+//   - sqlite3 可以在 dsn 中通过 _loc=UTC 指定；
+//   - mysql 默认是 UTC，也可以在 DSN 中通过 loc=UTC 指定；
 func NewDB(dsn string, dialect Dialect) (*DB, error) {
 	db, err := sql.Open(dialect.DriverName(), dsn)
 	if err != nil {
@@ -41,7 +43,7 @@ func NewDB(dsn string, dialect Dialect) (*DB, error) {
 	return NewDBWithStdDB(db, dialect)
 }
 
-// NewDBWithStdDB 从 sql.DB 构建 DB 实例
+// NewDBWithStdDB 从 [sql.DB] 构建 [DB] 实例
 //
 // NOTE: 请确保用于打开 db 的 driverName 参数与 dialect.DriverName() 是相同的，
 // 否则后续操作的结果是未知的。
@@ -54,6 +56,8 @@ func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
 			string(core.QuoteLeft), string(l),
 			string(core.QuoteRight), string(r),
 		),
+
+		sqlLogger: defaultSQLLogger,
 	}
 
 	inst.models = model.NewModels(inst)
@@ -67,7 +71,12 @@ func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
 // 如果 l 不为 nil，则每次 SQL 调用都会输出 SQL 语句，
 // 预编译的语句，仅在预编译时输出；
 // 如果为 nil，则表示关闭调试。
-func (db *DB) Debug(l *log.Logger) { db.sqlLogger = l }
+func (db *DB) Debug(l func(string)) {
+	if l == nil {
+		l = defaultSQLLogger
+	}
+	db.sqlLogger = l
+}
 
 func (db *DB) Dialect() Dialect { return db.dialect }
 
@@ -99,17 +108,11 @@ func (db *DB) QueryRow(query string, args ...any) *sql.Row {
 	return db.QueryRowContext(context.Background(), query, args...)
 }
 
-func (db *DB) printDebug(query string) {
-	if db.sqlLogger != nil {
-		db.sqlLogger.Println(query)
-	}
-}
-
 // QueryRowContext 执行一条查询语句
 //
 // 如果生成语句出错，则会 panic
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
-	db.printDebug(query)
+	db.sqlLogger(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		panic(err)
@@ -124,7 +127,7 @@ func (db *DB) Query(query string, args ...any) (*sql.Rows, error) {
 }
 
 func (db *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
-	db.printDebug(query)
+	db.sqlLogger(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		return nil, err
@@ -139,7 +142,7 @@ func (db *DB) Exec(query string, args ...any) (sql.Result, error) {
 }
 
 func (db *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	db.printDebug(query)
+	db.sqlLogger(query)
 	query, args, err := db.dialect.Fix(query, args)
 	if err != nil {
 		return nil, err
@@ -154,7 +157,7 @@ func (db *DB) Prepare(query string) (*core.Stmt, error) {
 }
 
 func (db *DB) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
-	db.printDebug(query)
+	db.sqlLogger(query)
 	query, orders, err := db.Dialect().Prepare(query)
 	if err != nil {
 		return nil, err

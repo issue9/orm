@@ -15,8 +15,8 @@ const (
 
 // Builder 用于构建 SQL 语句
 //
-// 出错时，错误信息会缓存，并在 String 和 Bytes 时返回，
-// 或是通过 Err() 查看是否存在错误。
+// 出错时，错误信息会缓存，并在 [Builder.String] 或 [Builder.Bytes] 时返回，
+// 或是通过 [Builder.Err] 查看是否存在错误。
 type Builder struct {
 	buffer errwrap.Buffer
 }

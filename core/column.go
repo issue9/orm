@@ -12,7 +12,7 @@ import (
 // ErrInvalidColumnType 无效的列类型
 //
 // 作为列类型，该数据类型必须是可序列化的。
-// 像 reflect.Func 和 reflect.Chan 等都将返回该错误。
+// 像 [reflect.Func]、[reflect.Chan] 等类型的数据都将返回该错误。
 var ErrInvalidColumnType = errors.New("无效的列类型")
 
 // Column 列结构
@@ -28,7 +28,7 @@ type Column struct {
 	GoName        string // Go 中的字段名
 }
 
-// NewColumn 从 Go 类型中生成 Column
+// NewColumn 从 Go 类型中生成 [Column]
 func NewColumn(p PrimitiveType) (*Column, error) {
 	if p <= Auto || p >= maxPrimitiveType {
 		return nil, ErrInvalidColumnType
@@ -43,11 +43,10 @@ func NewColumn(p PrimitiveType) (*Column, error) {
 func (c *Column) Clone() *Column {
 	cc := &Column{}
 	*cc = *c
-
 	return cc
 }
 
-// Check 检测 Column 内容是否合法
+// Check 检测 [Column] 内容是否合法
 func (c *Column) Check() error {
 	if c.AI && c.HasDefault {
 		return fmt.Errorf("AutoIncrement 列 %s 不能同时包含默认值", c.Name)

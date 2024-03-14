@@ -297,7 +297,7 @@ func TestDB_Debug(t *testing.T) {
 		buf := new(bytes.Buffer)
 		l := log.New(buf, "[SQL]", 0)
 
-		t.DB.Debug(l)
+		t.DB.Debug(func(v string) { l.Print(v) })
 		_, err := t.DB.Query("select 1+1")
 		t.NotError(err)
 		t.DB.Debug(nil)

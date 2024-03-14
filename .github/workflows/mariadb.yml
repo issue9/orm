@@ -32,7 +32,7 @@ jobs:
         mysql -u root -proot -h 127.0.0.1 -e 'CREATE DATABASE IF NOT EXISTS orm_test;'
 
     - name: 安装 Go ${{ matrix.go }}
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go }}
       id: go
@@ -47,7 +47,7 @@ jobs:
       run: go test -p=1 ./... -test.coverprofile=coverage.txt -covermode=atomic -dbs=mariadb,mysql
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{secrets.CODECOV_TOKEN}}
         file: ./coverage.txt

@@ -44,7 +44,7 @@ func (tx *Tx) Query(query string, args ...any) (*sql.Rows, error) {
 }
 
 func (tx *Tx) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
-	tx.db.printDebug(query)
+	tx.db.sqlLogger(query)
 	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (tx *Tx) QueryRow(query string, args ...any) *sql.Row {
 //
 // 如果生成语句出错，则会 panic
 func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
-	tx.db.printDebug(query)
+	tx.db.sqlLogger(query)
 	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {
 		panic(err)
@@ -80,7 +80,7 @@ func (tx *Tx) Exec(query string, args ...any) (sql.Result, error) {
 }
 
 func (tx *Tx) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	tx.db.printDebug(query)
+	tx.db.sqlLogger(query)
 	query, args, err := tx.Dialect().Fix(query, args)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (tx *Tx) Prepare(query string) (*core.Stmt, error) {
 }
 
 func (tx *Tx) PrepareContext(ctx context.Context, query string) (*core.Stmt, error) {
-	tx.db.printDebug(query)
+	tx.db.sqlLogger(query)
 	query, orders, err := tx.Dialect().Prepare(query)
 	if err != nil {
 		return nil, err
