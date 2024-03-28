@@ -55,7 +55,7 @@ func (b *Builder) Quote(str string, l, r byte) *Builder {
 	return b.WBytes(l).WString(str).WBytes(r)
 }
 
-// QuoteKey 给 str 左右添加 QuoteLeft 和 QuoteRight 两个字符
+// QuoteKey 给 str 左右添加 [QuoteLeft] 和 [QuoteRight] 两个字符
 func (b *Builder) QuoteKey(str string) *Builder {
 	return b.Quote(str, QuoteLeft, QuoteRight)
 }
@@ -94,7 +94,7 @@ func (b *Builder) Bytes() ([]byte, error) {
 // Len 获取长度
 func (b *Builder) Len() int { return b.buffer.Len() }
 
-// Append 追加加一个 Builder 的内容
+// Append 追加加一个 [Builder] 的内容
 func (b *Builder) Append(v *Builder) *Builder {
 	if b.Err() != nil {
 		return b

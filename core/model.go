@@ -41,8 +41,8 @@ type (
 
 	// ApplyModeler 加载数据模型
 	//
-	// 当一个对象实现此接口时，那么在将对象转换成 Model 类型时，
-	// 会调用 ApplyModel 方法，给予用户修改 Model 的机会。
+	// 当一个对象实现此接口时，那么在将对象转换成 [Model] 类型时，
+	// 会调用 ApplyModel 方法，给予用户修改 [Model] 的机会。
 	ApplyModeler interface {
 		ApplyModel(*Model) error
 	}
@@ -101,14 +101,14 @@ type (
 
 // 目前支持的数据模型类别
 //
-// Table 表示为一张普通的数据表，默认的模型即为 Table；
-// 如果实现了 Viewer 接口，则该模型改变视图类型，即 View。
+// Table 表示为一张普通的数据表，默认的模型即为 [Table]；
+// 如果实现了 [Viewer] 接口，则该模型改变视图类型，即 [View]。
 //
 // 两者的创建方式稍微有点不同：
 // Table 类型创建时，会采用列、约束和索引等信息创建表；
 // 而 View 创建时，只使用了 Viewer 接口返回的 Select
 // 语句作为内容生成语句，像约束等信息，仅作为查询时的依据，
-// 当然 select 语句中的列需要和 Columns 中的列要相对应，
+// 当然 select 语句中的列需要和 [Columns] 中的列要相对应，
 // 否则可能出错。
 //
 // 在视图类型中，唯一约束、主键约束、自增约束依然是可以定义的，
@@ -119,9 +119,9 @@ const (
 	View
 )
 
-// NewModel 初始化 Model
+// NewModel 初始化 [Model]
 //
-// cap 表示列的数量，如果指定了，可以提前分配 Columns 字段的大小。
+// cap 表示列的数量，如果指定了，可以提前分配 [Model.Columns] 字段的大小。
 func NewModel(modelType ModelType, name string, cap int) *Model {
 	return &Model{
 		Name:    name,

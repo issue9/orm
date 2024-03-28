@@ -13,7 +13,7 @@ import (
 
 // Stmt 实现自定义的 Stmt 实例
 //
-// 功能与 sql.Stmt 完全相同，但是实现了对 sql.NamedArgs 的支持。
+// 功能与 sql.Stmt 完全相同，但是实现了对 [sql.NamedArgs] 的支持。
 type Stmt struct {
 	*sql.Stmt
 	orders map[string]int
@@ -21,8 +21,8 @@ type Stmt struct {
 
 // NewStmt 声明 Stmt 实例
 //
-// 如果 orders 为空，则 Stmt 的表现和 sql.Stmt 是完全相同的，
-// 如果不为空，则可以处理 sql.NamedArg 类型的参数。
+// 如果 orders 为空，则 Stmt 的表现和 [sql.Stmt] 是完全相同的，
+// 如果不为空，则可以处理 [sql.NamedArg] 类型的参数。
 func NewStmt(stmt *sql.Stmt, orders map[string]int) *Stmt {
 	if len(orders) > 0 {
 		vals := make([]int, 0, len(orders))

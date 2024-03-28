@@ -31,7 +31,7 @@ var (
 	_ sqlbuilder.InsertDefaultValueHooker = &mysql{}
 )
 
-// Mysql 返回一个适配 mysql 的 Dialect 接口
+// Mysql 返回一个适配 mysql 的 [core.Dialect] 接口
 //
 // 支持以下 options 属性
 //

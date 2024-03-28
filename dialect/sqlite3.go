@@ -29,7 +29,7 @@ var (
 	_ sqlbuilder.AddConstraintStmtHooker  = &sqlite3{}
 )
 
-// Sqlite3 返回一个适配 sqlite3 的 Dialect 接口
+// Sqlite3 返回一个适配 sqlite3 的 [core.Dialect] 接口
 //
 // Options 可以接受以下参数：
 //   - rowid 可以是 rowid(false);rowid(true),rowid，其中只有 rowid(false) 等同于 without rowid

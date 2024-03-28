@@ -13,9 +13,9 @@ import (
 // TimeFormatLayout 时间如果需要转换成字符串采用此格式
 const TimeFormatLayout = time.RFC3339
 
-// 当前支持的 PrimitiveType 值
+// 当前支持的 [PrimitiveType] 值
 //
-// 其中的 String 被设计成可以保存部分类型为 reflect.Interface 的数据结构，
+// 其中的 [String] 被设计成可以保存部分类型为 [reflect.Interface] 的数据结构，
 // 但是一个有限的集合，比如将一个 any 字段赋予 slice 类型的数，在保存时可会不被支持。
 // 且在读取时，各个数据库略有不同，比如 mysql 返回 []byte，而其它数据一般返回 string。
 const (
@@ -124,12 +124,12 @@ type PrimitiveTyper interface {
 
 // PrimitiveType 表示 Go 对象在数据库中实际的存储方式
 //
-// PrimitiveType 由 Dialect.SQLType 转换成相应数据的实际类型。
+// PrimitiveType 由 [Dialect.SQLType] 转换成相应数据的实际类型。
 type PrimitiveType int
 
 // GetPrimitiveType 获取 t 所关联的 PrimitiveType 值
 //
-// t.Kind 不能为 reflect.Ptr 否则将返回 Auto。
+// t.Kind 不能为 [reflect.Ptr] 否则将返回 [Auto]。
 func GetPrimitiveType(t reflect.Type) PrimitiveType {
 	primitiveType, found := kinds[t.Kind()]
 	if found {

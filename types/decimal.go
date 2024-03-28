@@ -21,14 +21,14 @@ type Decimal struct {
 	Valid     bool
 }
 
-// FloatDecimal 从浮点数还原 Decimal 对象
+// FloatDecimal 从浮点数还原 [Decimal] 对象
 //
 // precision 表示输出的精度。
 func FloatDecimal(f float64, precision int32) Decimal {
 	return Decimal{Decimal: decimal.NewFromFloat(f), Precision: precision, Valid: true}
 }
 
-// StringDecimal 从字符串还原 Decimal 对象
+// StringDecimal 从字符串还原 [Decimal] 对象
 //
 // precision 表示输出的精度。
 func StringDecimal(s string, precision int32) (Decimal, error) {
@@ -39,7 +39,7 @@ func StringDecimal(s string, precision int32) (Decimal, error) {
 	return Decimal{Decimal: d, Precision: precision, Valid: true}, nil
 }
 
-// StringDecimalWithPrecision 从字符串还原 Decimal 对象
+// StringDecimalWithPrecision 从字符串还原 [Decimal] 对象
 //
 // 输出精度从 s 获取，如果 s 不包含小数位，则小数长度为 0
 func StringDecimalWithPrecision(s string) (Decimal, error) {

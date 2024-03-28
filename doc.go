@@ -5,11 +5,11 @@
 // Package orm 一个简单小巧的 orm 实现方案
 //
 // 目前内置了对以下数据库的支持：
-//  1. sqlite3:  github.com/mattn/go-sqlite3
-//  2. mysql:    github.com/go-sql-driver/mysql
-//  3. postgres: github.com/lib/pq
+//   - sqlite3:  github.com/mattn/go-sqlite3
+//   - mysql:    github.com/go-sql-driver/mysql
+//   - postgres: github.com/lib/pq
 //
-// 其它数据库，用户可以通过实现 Dialect 接口，来实现相应的支持。
+// 其它数据库，用户可以通过实现 [Dialect] 接口，来实现相应的支持。
 //
 // 初始化：
 //
@@ -54,7 +54,7 @@
 //	    Group       string	   `orm:"name(group)"`
 //	}
 //
-//	// 通过 orm.ApplyModeler 接口，指定表的额外数据。若不需要，可不用实现该接口
+//	// 通过 [ApplyModeler] 接口，指定表的额外数据。若不需要，可不用实现该接口
 //	func(u *User) ApplyModel(m *core.Model) error {
 //	    m.Name = "user"
 //	    m.Options["engine"] = "innodb"
@@ -102,7 +102,7 @@
 // ApplyModeler:
 //
 // 用于将一个对象转换成 Model 对象时执行的函数，给予用户修改 Model 的机会，
-// 在 ApplyModeler 中可以修改任意模型的内容，所以也可以由 ApplyModeler 代替 struct tag 的操作。
+// 在 [ApplyModeler] 中可以修改任意模型的内容，所以也可以由 ApplyModeler 代替 struct tag 的操作。
 //
 // 约束名：
 //
@@ -158,7 +158,7 @@
 //
 // 事务：
 //
-// 默认的 DB 是不支持事务的，若需要事务支持，则需要调用 DB.Begin()
-// 返回事务对象 Tx，当然并不是所有的数据库都支持事务操作的。
-// Tx 拥有一组与 DB 相同的接口。
+// 默认的 [DB] 是不支持事务的，若需要事务支持，则需要调用 [DB.Begin]
+// 返回事务对象 [Tx]，当然并不是所有的数据库都支持事务操作的。
+// [Tx] 拥有一组与 [DB] 相同的接口。
 package orm

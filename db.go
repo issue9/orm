@@ -175,7 +175,7 @@ func (db *DB) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(db
 
 // Insert 插入数据
 //
-// NOTE: 若需一次性插入多条数据，请使用 tx.InsertMany()。
+// NOTE: 若需一次性插入多条数据，请使用 [Tx.InsertMany]。
 func (db *DB) Insert(v TableNamer) (sql.Result, error) { return insert(db, v) }
 
 func (db *DB) Delete(v TableNamer) (sql.Result, error) { return del(db, v) }

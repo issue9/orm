@@ -17,7 +17,7 @@ import (
 type (
 	// Unix 表示 Unix 时间戳的数据样式
 	//
-	// 表现为 time.Time，但是保存数据库时，以 unix 时间戳的形式保存。
+	// 表现为 [time.Time]，但是保存数据库时，以 unix 时间戳的形式保存。
 	Unix = types.Unix
 
 	Rat = types.Rat
@@ -40,7 +40,7 @@ type (
 		BeforeInsert() error
 	}
 
-	// ModelEngine 针对操作 TableNamer 接口数据的接口
+	// ModelEngine 针对操作 [TableNamer] 的操作接口
 	ModelEngine interface {
 		// LastInsertID 插入一条数据并返回其自增 ID
 		//
@@ -112,6 +112,4 @@ type (
 func NowUnix() Unix { return Unix{Time: time.Now()} }
 
 // NowNullTime 返回当前时间
-func NowNullTime() sql.NullTime {
-	return sql.NullTime{Time: time.Now(), Valid: true}
-}
+func NowNullTime() sql.NullTime { return sql.NullTime{Time: time.Now(), Valid: true} }

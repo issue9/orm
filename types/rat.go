@@ -14,7 +14,7 @@ import (
 
 // Rat 有理数
 //
-// 这是对 math/big.Rat 的扩展，提供了 orm 需要的接口支持。
+// 这是对 [big.Rat] 的扩展，提供了 orm 需要的接口支持。
 //
 // 在数据库中以分数的形式保存至字符串类型的列，所以需要指定长度。
 type Rat struct {
@@ -64,7 +64,7 @@ func (n Rat) Value() (driver.Value, error) {
 	return n.Rat().String(), nil
 }
 
-// Rat 返回标准库中 math/big.Rat 的实例
+// Rat 返回标准库中 [big.Rat] 的实例
 func (n Rat) Rat() *big.Rat { return n.rat }
 
 func (n Rat) PrimitiveType() core.PrimitiveType { return core.String }
