@@ -37,16 +37,12 @@ var (
 //
 //	mysql_charset 字符集，语法为： charset(utf-8)
 //	mysql_engine 使用的引擎，语法为： engine(innodb)
-func Mysql(driverName string) core.Dialect {
-	return newMysql(false, "mysql", driverName)
-}
+func Mysql(driverName string) core.Dialect { return newMysql(false, "mysql", driverName) }
 
-// Mariadb 返回一个适配 mariadb 的 Dialect 接口
+// Mariadb 返回一个适配 mariadb 的 [core.Dialect] 接口
 //
-// options 属性可参考 mysql，大部分内容与 Mysql 相同。
-func Mariadb(driverName string) core.Dialect {
-	return newMysql(true, "mariadb", driverName)
-}
+// options 属性可参考 [Mysql]，大部分内容是相同的。
+func Mariadb(driverName string) core.Dialect { return newMysql(true, "mariadb", driverName) }
 
 func newMysql(isMariadb bool, name, driverName string) core.Dialect {
 	return &mysql{

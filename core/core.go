@@ -132,7 +132,7 @@ type Dialect interface {
 
 	// Fix 对 sql 语句作调整
 	//
-	// 比如处理 sql.NamedArgs，postgresql 需要将 ? 改成 $1 等形式。
+	// 比如处理 [sql.NamedArgs]，postgresql 需要将 ? 改成 $1 等形式。
 	// 以及对 args 的参数作校正，比如 lib/pq 对 time.Time 处理有问题，也可以在此处作调整。
 	//
 	// NOTE: query 中不能同时存在 ? 和命名参数。因为如果是命名参数，则 args 的顺序可以是随意的。
@@ -140,7 +140,7 @@ type Dialect interface {
 
 	// Prepare 对预编译的内容进行处理
 	//
-	// 目前大部分驱动都不支持 sql.NamedArgs，为了支持该功能，
+	// 目前大部分驱动都不支持 [sql.NamedArgs]，为了支持该功能，
 	// 需要在预编译之前，对语句进行如下处理：
 	//  1. 将 sql 中的 @xx 替换成 ?
 	//  2. 将 sql 中的 @xx 在 sql 中的位置进行记录，并通过 orders 返回。
