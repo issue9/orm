@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert/v4"
+
+	"github.com/issue9/orm/v5/internal/model/testdata"
 )
 
 func (ms *Models) len() (cnt int) {
@@ -35,11 +37,17 @@ func TestModels(t *testing.T) {
 		NotNil(m).
 		Equal(1, ms.len())
 
+	// 相同的表名，但是类型不同
+	m, err = ms.New(&testdata.User{})
+	a.NotError(err).
+		NotNil(m).
+		Equal(2, ms.len())
+
 	// 添加新的 model
 	m, err = ms.New(&Admin{})
 	a.NotError(err).
 		NotNil(m).
-		Equal(2, ms.len())
+		Equal(3, ms.len())
 
 	ms.Clear()
 	a.Equal(0, ms.len())

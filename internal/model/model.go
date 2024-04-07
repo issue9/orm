@@ -23,12 +23,6 @@ func propertyError(field, name, message string) error {
 //
 // obj 可以是一个 struct 实例或是指针。
 func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
-	name := obj.TableName()
-
-	if m, found := ms.models.Load(name); found {
-		return m.(*core.Model), nil
-	}
-
 	rtype := reflect.TypeOf(obj)
 	for rtype.Kind() == reflect.Ptr {
 		rtype = rtype.Elem()
@@ -38,7 +32,11 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 		return nil, fetch.ErrInvalidKind
 	}
 
-	m := core.NewModel(core.Table, name, rtype.NumField())
+	if m, found := ms.models.Load(rtype); found {
+		return m.(*core.Model), nil
+	}
+
+	m := core.NewModel(core.Table, obj.TableName(), rtype.NumField())
 	m.GoType = rtype
 
 	if err := parseColumns(m, rtype); err != nil {
@@ -66,10 +64,10 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 
 	// 在构建完 core.Model 时在其它地方写入了相同名称的 core.Model，
 	// 相当于在函数的开始阶段判断是否存在同名的对象，返回已经存在的对象。
-	if m, found := ms.models.Load(m.Name); found {
+	if m, found := ms.models.Load(rtype); found {
 		return m.(*core.Model), nil
 	}
-	ms.models.Store(m.Name, m)
+	ms.models.Store(rtype, m)
 	return m, nil
 }
 
