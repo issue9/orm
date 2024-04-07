@@ -18,7 +18,7 @@ var _ sqlbuilder.ExecStmt = &sqlbuilder.DeleteStmt{}
 
 func TestDelete_Exec(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -45,13 +45,13 @@ func TestDelete_Exec(t *testing.T) {
 
 func TestWhereStmt_Delete(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
 
-		sql := sqlbuilder.Where().And("id=?", 1).
+		sql := sqlbuilder.Where("").And("id=?", 1).
 			Delete(t.DB).
 			Table("users")
 		_, err := sql.Exec()

@@ -26,7 +26,7 @@ func BenchmarkDB_Insert(b *testing.B) {
 		Created: time.Now(),
 	}
 
-	suite := test.NewSuite(a, benchDBDriverName)
+	suite := test.NewSuite(a, "", benchDBDriverName)
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
@@ -49,7 +49,7 @@ func BenchmarkDB_Update(b *testing.B) {
 		Created: time.Now(),
 	}
 
-	suite := test.NewSuite(a, benchDBDriverName)
+	suite := test.NewSuite(a, "", benchDBDriverName)
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
@@ -79,7 +79,7 @@ func BenchmarkDB_Select(b *testing.B) {
 		Created: time.Now(),
 	}
 
-	suite := test.NewSuite(a, benchDBDriverName)
+	suite := test.NewSuite(a, "", benchDBDriverName)
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
@@ -106,7 +106,7 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 		Created: time.Now(),
 	}
 
-	suite := test.NewSuite(a, benchDBDriverName)
+	suite := test.NewSuite(a, "", benchDBDriverName)
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))

@@ -21,7 +21,7 @@ var (
 func TestConstraint(t *testing.T) {
 	a := assert.New(t, false)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -60,7 +60,7 @@ func TestConstraint(t *testing.T) {
 
 func TestConstraint_Check(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -83,7 +83,7 @@ func TestConstraint_Check(t *testing.T) {
 
 func TestConstraint_PK(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -142,7 +142,7 @@ func TestConstraint_PK(t *testing.T) {
 
 func TestConstraint_FK(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)

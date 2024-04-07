@@ -30,7 +30,7 @@ func CreateIndex(e core.Engine) *CreateIndexStmt {
 
 // Table 指定表名
 func (stmt *CreateIndexStmt) Table(tbl string) *CreateIndexStmt {
-	stmt.table = tbl
+	stmt.table = stmt.TablePrefix() + tbl
 	return stmt
 }
 
@@ -130,7 +130,7 @@ func DropIndex(e core.Engine) *DropIndexStmt {
 
 // Table 指定表名
 func (stmt *DropIndexStmt) Table(tbl string) *DropIndexStmt {
-	stmt.tableName = tbl
+	stmt.tableName = stmt.TablePrefix() + tbl
 	return stmt
 }
 

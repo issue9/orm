@@ -40,8 +40,10 @@ type (
 		BeforeInsert() error
 	}
 
-	// ModelEngine 针对操作 [TableNamer] 的操作接口
-	ModelEngine interface {
+	// Engine 针对操作 [TableNamer] 的操作接口
+	Engine interface {
+		core.Engine
+
 		// LastInsertID 插入一条数据并返回其自增 ID
 		//
 		// 理论上功能等同于以下两步操作：
@@ -97,14 +99,13 @@ type (
 
 		// Where 生成 WhereStmt 语句
 		Where(cond string, args ...any) *WhereStmt
-	}
 
-	Engine interface {
-		core.Engine
-		ModelEngine
-
-		// SQLBuilder 返回 [sqlbuilder.SQLBuilder] 实例
 		SQLBuilder() *sqlbuilder.SQLBuilder
+
+		// newModel 获取指定表名的模型
+		//
+		// 内部使用不公开，[Engine] 也不会有外部的实现。
+		newModel(v TableNamer) (*core.Model, error)
 	}
 )
 

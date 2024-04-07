@@ -17,7 +17,7 @@ import (
 func TestMergeDDL(t *testing.T) {
 	a := assert.New(t, false)
 
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)

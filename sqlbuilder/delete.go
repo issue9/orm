@@ -14,7 +14,7 @@ type DeleteStmt struct {
 	table string
 }
 
-type deleteWhere = WhereStmtOf[DeleteStmt]
+type deleteWhere = WhereStmtOf[*DeleteStmt]
 
 // Delete 生成删除语句
 func (sql *SQLBuilder) Delete() *DeleteStmt { return Delete(sql.engine) }
@@ -30,7 +30,7 @@ func Delete(e core.Engine) *DeleteStmt {
 
 // Table 指定表名
 func (stmt *DeleteStmt) Table(table string) *DeleteStmt {
-	stmt.table = table
+	stmt.table = stmt.TablePrefix() + table
 	return stmt
 }
 

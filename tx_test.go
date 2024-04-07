@@ -15,7 +15,7 @@ import (
 
 func TestTx_InsertMany(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		tx, err := t.DB.Begin()
@@ -111,7 +111,7 @@ func TestTx_InsertMany(t *testing.T) {
 
 func TestTx_LastInsertID(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		a.NotError(t.DB.Create(&User{}))
@@ -134,7 +134,7 @@ func TestTx_LastInsertID(t *testing.T) {
 
 func TestTx_Insert(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&User{}))
@@ -179,7 +179,7 @@ func TestTx_Insert(t *testing.T) {
 
 func TestTx_Update(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initData(t)
@@ -227,7 +227,7 @@ func TestTx_Update(t *testing.T) {
 
 func TestTX(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&User{}))

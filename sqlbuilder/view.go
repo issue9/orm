@@ -33,8 +33,10 @@ func CreateView(e core.Engine) *CreateViewStmt {
 }
 
 // View 将当前查询语句转换为视图
+//
+// name 为视图名称，会加上 [SelectStmt.TablePrefix] 作为前缀；
 func (stmt *SelectStmt) View(name string) *CreateViewStmt {
-	return CreateView(stmt.Engine()).From(stmt).Name(name)
+	return CreateView(stmt.Engine()).From(stmt).Name(stmt.TablePrefix() + name)
 }
 
 // Reset 重置对象
@@ -62,7 +64,7 @@ func (stmt *CreateViewStmt) Column(col ...string) *CreateViewStmt {
 
 // Name 指定视图名称
 func (stmt *CreateViewStmt) Name(name string) *CreateViewStmt {
-	stmt.name = name
+	stmt.name = stmt.TablePrefix() + name
 	return stmt
 }
 
@@ -125,7 +127,7 @@ func DropView(e core.Engine) *DropViewStmt {
 
 // Name 指定需要删除的视图名称
 func (stmt *DropViewStmt) Name(name string) *DropViewStmt {
-	stmt.name = name
+	stmt.name = stmt.TablePrefix() + name
 	return stmt
 }
 
@@ -169,7 +171,7 @@ func (sql *SQLBuilder) ViewExists() *ViewExistsStmt {
 }
 
 func (stmt *ViewExistsStmt) View(table string) *ViewExistsStmt {
-	stmt.name = table
+	stmt.name = stmt.TablePrefix() + table
 	return stmt
 }
 

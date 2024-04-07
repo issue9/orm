@@ -18,7 +18,7 @@ var benchDBDriverName = test.Mysql
 
 func BenchmarkObject(b *testing.B) {
 	a := assert.New(b, false)
-	suite := test.NewSuite(a, benchDBDriverName)
+	suite := test.NewSuite(a, "", benchDBDriverName)
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -43,7 +43,7 @@ func BenchmarkObject(b *testing.B) {
 
 func BenchmarkMap(b *testing.B) {
 	a := assert.New(b, false)
-	suite := test.NewSuite(a, benchDBDriverName)
+	suite := test.NewSuite(a, "", benchDBDriverName)
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)

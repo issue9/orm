@@ -17,11 +17,12 @@ import (
 // DB 数据库操作实例
 type DB struct {
 	*sql.DB
-	dialect    Dialect
-	sqlBuilder *sqlbuilder.SQLBuilder
-	models     *model.Models
-	version    string
-	replacer   *strings.Replacer
+	tablePrefix string
+	dialect     Dialect
+	sqlBuilder  *sqlbuilder.SQLBuilder
+	models      *model.Models
+	version     string
+	replacer    *strings.Replacer
 
 	sqlLogger func(string)
 }
@@ -35,23 +36,24 @@ func defaultSQLLogger(string) {}
 //   - postgres 已经固定为 UTC；
 //   - sqlite3 可以在 dsn 中通过 _loc=UTC 指定；
 //   - mysql 默认是 UTC，也可以在 DSN 中通过 loc=UTC 指定；
-func NewDB(dsn string, dialect Dialect) (*DB, error) {
+func NewDB(tablePrefix, dsn string, dialect Dialect) (*DB, error) {
 	db, err := sql.Open(dialect.DriverName(), dsn)
 	if err != nil {
 		return nil, err
 	}
-	return NewDBWithStdDB(db, dialect)
+	return NewDBWithStdDB(tablePrefix, db, dialect)
 }
 
 // NewDBWithStdDB 从 [sql.DB] 构建 [DB] 实例
 //
 // NOTE: 请确保用于打开 db 的 driverName 参数与 dialect.DriverName() 是相同的，
 // 否则后续操作的结果是未知的。
-func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
+func NewDBWithStdDB(tablePRefix string, db *sql.DB, dialect Dialect) (*DB, error) {
 	l, r := dialect.Quotes()
 	inst := &DB{
-		DB:      db,
-		dialect: dialect,
+		DB:          db,
+		tablePrefix: tablePRefix,
+		dialect:     dialect,
 		replacer: strings.NewReplacer(
 			string(core.QuoteLeft), string(l),
 			string(core.QuoteRight), string(r),
@@ -65,6 +67,8 @@ func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
 
 	return inst, nil
 }
+
+func (db *DB) TablePrefix() string { return db.tablePrefix }
 
 // Debug 指定调输出调试内容通道
 //

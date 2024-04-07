@@ -15,7 +15,7 @@ import (
 
 func TestVersion(t *testing.T) {
 	a := assert.New(t, false)
-	s := test.NewSuite(a)
+	s := test.NewSuite(a, "")
 
 	s.Run(func(t *test.Driver) {
 		ver, err := sqlbuilder.Version(t.DB)

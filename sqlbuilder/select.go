@@ -24,7 +24,7 @@ type SelectQuery struct {
 	stmt *core.Stmt
 }
 
-type selectWhere = WhereStmtOf[SelectStmt]
+type selectWhere = WhereStmtOf[*SelectStmt]
 
 // SelectStmt 查询语句
 type SelectStmt struct {
@@ -241,7 +241,7 @@ func (stmt *SelectStmt) buildColumns(builder *core.Builder) {
 //	table.*
 //	sum({table}.{col}) as col1
 //
-// 如果列名是关键字，可以使用 {} 包含。
+// 如果列名是关键字，可以使用 {} 包含。如果包含了表名，则需要自行添加表名前缀。
 func (stmt *SelectStmt) Column(col string) *SelectStmt {
 	stmt.columns = append(stmt.columns, col)
 	return stmt
@@ -249,7 +249,7 @@ func (stmt *SelectStmt) Column(col string) *SelectStmt {
 
 // Columns 指定列名
 //
-// 相当于按参数顺序依次调用 Select.Column，如果存在别名，
+// 相当于按参数顺序依次调用 [Select.Column]，如果存在别名，
 // 可以使用 col AS alias 的方式指定每一个参数。
 //
 // 如果列名是关键字，可以使用 {} 包含。
@@ -273,7 +273,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 		return stmt
 	}
 
-	builder := core.NewBuilder("").QuoteKey(table)
+	builder := core.NewBuilder("").QuoteKey(stmt.TablePrefix() + table)
 
 	switch len(alias) {
 	case 0:
@@ -308,7 +308,7 @@ func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 	stmt.joins.WBytes(' ').
 		WString(typ).
 		WString(" JOIN ").
-		QuoteKey(table).
+		QuoteKey(stmt.TablePrefix() + table).
 		WString(" AS ").
 		QuoteKey(alias).
 		WString(" ON ").

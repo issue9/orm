@@ -90,4 +90,10 @@ type (
 )
 
 // New 声明 SQLBuilder 实例
-func New(e core.Engine) *SQLBuilder { return &SQLBuilder{engine: e} }
+//
+// tablePrefix 表名前缀；
+func New(e core.Engine) *SQLBuilder {
+	return &SQLBuilder{engine: e}
+}
+
+func (sql *SQLBuilder) TablePrefix() string { return sql.engine.TablePrefix() }

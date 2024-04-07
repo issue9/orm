@@ -16,7 +16,7 @@ import (
 
 func TestMap(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	eq := func(m1, m2 []map[string]any) bool {
 		if len(m1) != len(m2) {
@@ -104,7 +104,7 @@ func TestMap(t *testing.T) {
 
 func TestMapString(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)

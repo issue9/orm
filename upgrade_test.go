@@ -29,7 +29,7 @@ func (u *u2) ApplyModel(m *core.Model) error {
 
 func TestUpgrader(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		sql := t.DB.SQLBuilder().CreateTable().

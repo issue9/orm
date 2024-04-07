@@ -6,7 +6,7 @@ package sqlbuilder
 
 import "github.com/issue9/orm/v5/core"
 
-// AddConstraintStmtHooker AddConstraintStmt.DDLSQL 的钩子函数
+// AddConstraintStmtHooker [AddConstraintStmt.DDLSQL] 的钩子函数
 type AddConstraintStmtHooker interface {
 	AddConstraintStmtHook(*AddConstraintStmt) ([]string, error)
 }
@@ -51,7 +51,7 @@ func (stmt *AddConstraintStmt) Reset() *AddConstraintStmt {
 
 // Table 指定表名
 func (stmt *AddConstraintStmt) Table(t string) *AddConstraintStmt {
-	stmt.TableName = t
+	stmt.TableName = stmt.TablePrefix() + t
 	return stmt
 }
 
@@ -223,7 +223,7 @@ func DropConstraint(e core.Engine) *DropConstraintStmt {
 //
 // 重复指定，会覆盖之前的。
 func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
-	stmt.TableName = table
+	stmt.TableName = stmt.TablePrefix() + table
 	return stmt
 }
 

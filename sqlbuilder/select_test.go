@@ -19,7 +19,7 @@ var _ sqlbuilder.SQLer = &sqlbuilder.SelectStmt{}
 
 func TestSelect(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -68,7 +68,7 @@ func TestSelect(t *testing.T) {
 
 func TestSelectWithNamedParam(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -118,7 +118,7 @@ func TestSelectWithNamedParam(t *testing.T) {
 // 多个乱序命名参数
 func TestSelectQuery(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -145,7 +145,7 @@ func TestSelectQuery(t *testing.T) {
 
 func TestSelectStmt_Join(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -180,7 +180,7 @@ func TestSelectStmt_Join(t *testing.T) {
 
 func TestSelectStmt_Group(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -205,7 +205,7 @@ func TestSelectStmt_Group(t *testing.T) {
 
 func TestSelectStmt_Union(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -248,7 +248,7 @@ func TestSelectStmt_Union(t *testing.T) {
 
 func TestSelectStmt_UnionAll(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)

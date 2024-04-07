@@ -84,7 +84,7 @@ func clearDB(t *test.Driver) {
 
 func TestObject_strict(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -217,7 +217,7 @@ func TestObject_strict(t *testing.T) {
 
 func TestObject_no_strict(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -359,7 +359,7 @@ func TestObject_no_strict(t *testing.T) {
 
 func TestObjectNest(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -390,7 +390,7 @@ func TestObjectNest(t *testing.T) {
 
 func TestObjectNotFound(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)

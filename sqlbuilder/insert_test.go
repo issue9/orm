@@ -19,7 +19,7 @@ var _ sqlbuilder.SQLer = &sqlbuilder.InsertStmt{}
 
 func TestInsert(t *testing.T) {
 	a := assert.New(t, false)
-	s := test.NewSuite(a)
+	s := test.NewSuite(a, "")
 	tableName := "users"
 
 	s.Run(func(t *test.Driver) {
@@ -66,7 +66,7 @@ func TestInsert(t *testing.T) {
 
 func TestInsert_NamedArgs(t *testing.T) {
 	a := assert.New(t, false)
-	s := test.NewSuite(a)
+	s := test.NewSuite(a, "")
 	tableName := "users"
 
 	s.Run(func(t *test.Driver) {

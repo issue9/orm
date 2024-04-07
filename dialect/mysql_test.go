@@ -18,7 +18,7 @@ import (
 
 func TestMysql_VersionSQL(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
+	suite := test.NewSuite(a, "", test.Mysql, test.Mariadb)
 
 	suite.Run(func(t *test.Driver) {
 		testDialectVersionSQL(t)
@@ -27,7 +27,7 @@ func TestMysql_VersionSQL(t *testing.T) {
 
 func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
+	suite := test.NewSuite(a, "", test.Mysql, test.Mariadb)
 
 	// 约束名不是根据 core.pkName 生成的
 	suite.Run(func(t *test.Driver) {
@@ -72,7 +72,7 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 func TestMysql_DropIndexSQL(t *testing.T) {
 	a := assert.New(t, false)
 
-	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
+	suite := test.NewSuite(a, "", test.Mysql, test.Mariadb)
 
 	suite.Run(func(t *test.Driver) {
 		qs, err := t.DB.Dialect().DropIndexSQL("tbl", "index_name")
@@ -83,7 +83,7 @@ func TestMysql_DropIndexSQL(t *testing.T) {
 func TestMysql_TruncateTableSQL(t *testing.T) {
 	a := assert.New(t, false)
 
-	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
+	suite := test.NewSuite(a, "", test.Mysql, test.Mariadb)
 
 	suite.Run(func(t *test.Driver) {
 		qs, err := t.DB.Dialect().TruncateTableSQL("tbl", "")
@@ -270,7 +270,7 @@ func TestMysql_SQLType(t *testing.T) {
 
 func TestMysql_Types(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
+	suite := test.NewSuite(a, "", test.Mysql, test.Mariadb)
 
 	suite.Run(func(t *test.Driver) {
 		testTypes(t)
@@ -279,7 +279,7 @@ func TestMysql_Types(t *testing.T) {
 
 func TestMysql_TypesDefault(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Mysql, test.Mariadb)
+	suite := test.NewSuite(a, "", test.Mysql, test.Mariadb)
 
 	suite.Run(func(t *test.Driver) {
 		testTypesDefault(t)

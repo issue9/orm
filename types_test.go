@@ -65,7 +65,7 @@ func (o *beforeObject2) BeforeUpdate() error {
 
 func TestBeforeCreateUpdate(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		// create

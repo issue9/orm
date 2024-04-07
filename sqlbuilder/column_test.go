@@ -17,11 +17,12 @@ import (
 var (
 	_ sqlbuilder.DDLStmt = &sqlbuilder.AddColumnStmt{}
 	_ sqlbuilder.DDLStmt = &sqlbuilder.DropColumnStmt{}
+	_ core.TablePrefix   = &sqlbuilder.AddColumnStmt{}
 )
 
 func TestColumn(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		db := t.DB

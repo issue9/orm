@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 func TestSuite_Run(t *testing.T) {
 	a := assert.New(t, false)
 
-	s := NewSuite(a)
+	s := NewSuite(a, "")
 
 	var size int
 	s.Run(func(t *Driver) {
@@ -49,7 +49,7 @@ func TestSuite_Run_withDialect(t *testing.T) {
 	// 通过参数限定了 dialect
 
 	dialects := []core.Dialect{Mysql, Sqlite3}
-	s := NewSuite(a, dialects...)
+	s := NewSuite(a, "", dialects...)
 
 	size := 0
 	s.Run(func(t *Driver) {

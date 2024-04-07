@@ -19,29 +19,23 @@ import (
 // 的方式插入一条没有 AI 列的对象时，会返回此错误。
 var ErrNeedAutoIncrementColumn = errors.New("必须存在自增列")
 
-type modelEngine interface {
-	SQLBuilder() *sqlbuilder.SQLBuilder
-	newModel(v TableNamer) (*core.Model, error)
-	getEngine() core.Engine
+func (db *DB) newModel(obj TableNamer) (*core.Model, error) {
+	return db.models.New("", obj)
 }
 
-func (db *DB) getEngine() core.Engine { return db }
+func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) {
+	return tx.db.models.New("", obj)
+}
 
-func (tx *Tx) getEngine() core.Engine { return tx }
+func (p *dbPrefix) newModel(obj TableNamer) (*core.Model, error) {
+	return p.models.New("", obj)
+}
 
-func (p *dbPrefix) getEngine() core.Engine { return p.db }
+func (p *txPrefix) newModel(obj TableNamer) (*core.Model, error) {
+	return p.Tx.db.models.New("", obj)
+}
 
-func (p *txPrefix) getEngine() core.Engine { return p.tx }
-
-func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New("", obj) }
-
-func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.newModel(obj) }
-
-func (p *dbPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.db.models.New(p.p, obj) }
-
-func (p *txPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.tx.db.models.New(p.p, obj) }
-
-func getModel(e modelEngine, v TableNamer) (*core.Model, reflect.Value, error) {
+func getModel(e Engine, v TableNamer) (*core.Model, reflect.Value, error) {
 	m, err := e.newModel(v)
 	if err != nil {
 		return nil, reflect.Value{}, err
@@ -116,7 +110,7 @@ func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []any)
 }
 
 // 创建表或是视图。
-func create(e modelEngine, v TableNamer) error {
+func create(e Engine, v TableNamer) error {
 	m, _, err := getModel(e, v)
 	if err != nil {
 		return err
@@ -126,8 +120,7 @@ func create(e modelEngine, v TableNamer) error {
 		return createView(e, m)
 	}
 
-	sb := e.SQLBuilder().CreateTable()
-	sb.Table(m.Name)
+	sb := e.SQLBuilder().CreateTable().Table(m.Name)
 	for _, col := range m.Columns {
 		if col.AI {
 			sb.AutoIncrement(col.Name, col.PrimitiveType)
@@ -141,7 +134,7 @@ func create(e modelEngine, v TableNamer) error {
 		for _, col := range index.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.Index(core.IndexDefault, constraintName(m.Name, index.Name), cols...)
+		sb.Index(core.IndexDefault, constraintName(e.TablePrefix(), m.Name, index.Name), cols...)
 	}
 
 	for _, unique := range m.Uniques {
@@ -149,15 +142,15 @@ func create(e modelEngine, v TableNamer) error {
 		for _, col := range unique.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.Unique(constraintName(m.Name, unique.Name), cols...)
+		sb.Unique(constraintName(e.TablePrefix(), m.Name, unique.Name), cols...)
 	}
 
 	for name, expr := range m.Checks {
-		sb.Check(constraintName(m.Name, name), expr)
+		sb.Check(constraintName(e.TablePrefix(), m.Name, name), expr)
 	}
 
 	for _, fk := range m.ForeignKeys {
-		name := constraintName(m.Name, fk.Name)
+		name := constraintName(e.TablePrefix(), m.Name, fk.Name)
 		sb.ForeignKey(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 	}
 
@@ -166,13 +159,13 @@ func create(e modelEngine, v TableNamer) error {
 		for _, col := range m.PrimaryKey.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.PK(constraintName(m.Name, m.PrimaryKey.Name), cols...)
+		sb.PK(constraintName(e.TablePrefix(), m.Name, m.PrimaryKey.Name), cols...)
 	}
 
 	return sb.Exec()
 }
 
-func createView(e modelEngine, m *core.Model) error {
+func createView(e Engine, m *core.Model) error {
 	stmt := e.SQLBuilder().CreateView().Name(m.Name)
 
 	for _, col := range m.Columns {
@@ -181,7 +174,7 @@ func createView(e modelEngine, m *core.Model) error {
 	return stmt.FromQuery(m.ViewAs).Exec()
 }
 
-func truncate(e modelEngine, v TableNamer) error {
+func truncate(e Engine, v TableNamer) error {
 	m, err := e.newModel(v)
 	if err != nil {
 		return err
@@ -193,7 +186,7 @@ func truncate(e modelEngine, v TableNamer) error {
 
 	stmt := e.SQLBuilder().TruncateTable()
 	if m.AutoIncrement != nil {
-		stmt.Table(m.Name, constraintName(m.Name, m.AutoIncrement.Name))
+		stmt.Table(m.Name, constraintName(e.TablePrefix(), m.Name, m.AutoIncrement.Name))
 	} else {
 		stmt.Table(m.Name, "")
 	}
@@ -202,7 +195,7 @@ func truncate(e modelEngine, v TableNamer) error {
 }
 
 // 删除表或视图
-func drop(e modelEngine, v TableNamer) error {
+func drop(e Engine, v TableNamer) error {
 	m, err := e.newModel(v)
 	if err != nil {
 		return err
@@ -215,7 +208,7 @@ func drop(e modelEngine, v TableNamer) error {
 	return e.SQLBuilder().DropTable().Table(m.Name).Exec()
 }
 
-func lastInsertID(e modelEngine, v TableNamer) (int64, error) {
+func lastInsertID(e Engine, v TableNamer) (int64, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return 0, err
@@ -253,7 +246,7 @@ func lastInsertID(e modelEngine, v TableNamer) (int64, error) {
 	return stmt.LastInsertID(m.Name, m.AutoIncrement.Name)
 }
 
-func insert(e modelEngine, v TableNamer) (sql.Result, error) {
+func insert(e Engine, v TableNamer) (sql.Result, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
@@ -291,7 +284,7 @@ func insert(e modelEngine, v TableNamer) (sql.Result, error) {
 //
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
-func find(e modelEngine, v TableNamer) (bool, error) {
+func find(e Engine, v TableNamer) (bool, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return false, err
@@ -340,7 +333,7 @@ func forUpdate(tx *Tx, v TableNamer) error {
 //
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func update(e modelEngine, v TableNamer, cols ...string) (sql.Result, error) {
+func update(e Engine, v TableNamer, cols ...string) (sql.Result, error) {
 	stmt := e.SQLBuilder().Update()
 
 	m, rval, err := getUpdateColumns(e, v, stmt, cols...)
@@ -355,7 +348,7 @@ func update(e modelEngine, v TableNamer, cols ...string) (sql.Result, error) {
 	return stmt.Exec()
 }
 
-func getUpdateColumns(e modelEngine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols ...string) (*core.Model, reflect.Value, error) {
+func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols ...string) (*core.Model, reflect.Value, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, reflect.Value{}, err
@@ -395,7 +388,7 @@ func getUpdateColumns(e modelEngine, v TableNamer, stmt *sqlbuilder.UpdateStmt, 
 }
 
 // 将 v 生成 delete 的 sql 语句
-func del(e modelEngine, v TableNamer) (sql.Result, error) {
+func del(e Engine, v TableNamer) (sql.Result, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
@@ -416,7 +409,7 @@ func del(e modelEngine, v TableNamer) (sql.Result, error) {
 var errInsertManyHasDifferentType = errors.New("InsertMany 必须是相同的数据类型")
 
 // rval 为结构体指针组成的数据
-func buildInsertManySQL(e modelEngine, v ...TableNamer) (*sqlbuilder.InsertStmt, error) {
+func buildInsertManySQL(e Engine, v ...TableNamer) (*sqlbuilder.InsertStmt, error) {
 	query := e.SQLBuilder().Insert()
 	var keys []string          // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
@@ -482,4 +475,4 @@ func buildInsertManySQL(e modelEngine, v ...TableNamer) (*sqlbuilder.InsertStmt,
 	return query, nil
 }
 
-func constraintName(table, name string) string { return table + "_" + name }
+func constraintName(prefix, table, name string) string { return prefix + table + "_" + name }

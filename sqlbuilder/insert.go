@@ -54,7 +54,7 @@ func (stmt *InsertStmt) Select(sel *SelectStmt) *InsertStmt {
 
 // Table 指定表名
 func (stmt *InsertStmt) Table(table string) *InsertStmt {
-	stmt.table = table
+	stmt.table = stmt.TablePrefix() + table
 	return stmt
 }
 
@@ -207,13 +207,13 @@ func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []any, error)
 //
 // NOTE: 对于指定了自增值的，其结果是未知的。
 func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
-	return stmt.LastInsertIDContext(context.Background(), table, col)
+	return stmt.LastInsertIDContext(context.Background(), col)
 }
 
 // LastInsertIDContext 执行 SQL 语句
 //
 // 并根据表名和自增列 ID 返回当前行的自增 ID 值。
-func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, _, col string) (id int64, err error) {
+func (stmt *InsertStmt) LastInsertIDContext(ctx context.Context, col string) (id int64, err error) {
 	if len(stmt.args) > 1 {
 		// mysql 没有好的方法可以处理多行插入数据时，返回最大的 ID 值。
 		return 0, errors.New("多行插入语句，无法获取 LastInsertIDContext")

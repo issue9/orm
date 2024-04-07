@@ -11,45 +11,55 @@ import (
 )
 
 type dbPrefix struct {
+	*DB
 	p  string
-	db *DB
+	sb *sqlbuilder.SQLBuilder
 }
 
 type txPrefix struct {
+	*Tx
 	p  string
-	tx *Tx
+	sb *sqlbuilder.SQLBuilder
 }
 
-// Prefix 表名前缀
+// Prefix 为所有的表加上统一的前缀
 //
-// 经由 Prefix 返回的 [ModelEngine] 对象会对所有的表名加上 Prefix 作为前缀。
+// 将采用 [DB.Prefix]+Prefix 作为表名前缀
 type Prefix string
 
-func (p Prefix) DB(db *DB) ModelEngine { return db.Prefix(string(p)) }
+func (p Prefix) DB(db *DB) Engine { return db.Prefix(string(p)) }
 
-func (p Prefix) Tx(tx *Tx) ModelEngine { return tx.Prefix(string(p)) }
+func (p Prefix) Tx(tx *Tx) Engine { return tx.Prefix(string(p)) }
 
 func (p Prefix) TableName(v TableNamer) string { return string(p) + v.TableName() }
 
 // Prefix 为所有操作的表名加上统一的前缀
 //
 // 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 DB 或 Tx。
-func (db *DB) Prefix(p string) ModelEngine {
-	return &dbPrefix{
-		p:  p,
-		db: db,
+func (db *DB) Prefix(p string) Engine {
+	dp := &dbPrefix{
+		p:  db.TablePrefix() + p,
+		DB: db,
 	}
+	dp.sb = sqlbuilder.New(dp)
+
+	return dp
 }
 
 // Prefix 为所有操作的表名加上统一的前缀
 //
 // 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 DB 或 Tx。
-func (tx *Tx) Prefix(p string) ModelEngine {
-	return &txPrefix{
-		p:  p,
-		tx: tx,
+func (tx *Tx) Prefix(p string) Engine {
+	dp := &txPrefix{
+		p:  tx.TablePrefix() + p,
+		Tx: tx,
 	}
+	dp.sb = sqlbuilder.New(dp)
+
+	return dp
 }
+
+func (p *dbPrefix) TablePrefix() string { return p.p }
 
 func (p *dbPrefix) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(p, v) }
 
@@ -73,12 +83,14 @@ func (p *dbPrefix) Drop(v TableNamer) error { return drop(p, v) }
 func (p *dbPrefix) Truncate(v TableNamer) error { return truncate(p, v) }
 
 func (p *dbPrefix) InsertMany(max int, v ...TableNamer) error {
-	return p.db.DoTransaction(func(tx *Tx) error {
+	return p.DB.DoTransaction(func(tx *Tx) error {
 		return tx.Prefix(p.p).InsertMany(max, v...)
 	})
 }
 
-func (p *dbPrefix) SQLBuilder() *sqlbuilder.SQLBuilder { return p.db.SQLBuilder() }
+func (p *dbPrefix) SQLBuilder() *sqlbuilder.SQLBuilder { return p.sb }
+
+func (p *txPrefix) TablePrefix() string { return p.p }
 
 func (p *txPrefix) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(p, v) }
 
@@ -121,4 +133,4 @@ func (p *txPrefix) InsertMany(max int, v ...TableNamer) error {
 	return nil
 }
 
-func (p *txPrefix) SQLBuilder() *sqlbuilder.SQLBuilder { return p.tx.SQLBuilder() }
+func (p *txPrefix) SQLBuilder() *sqlbuilder.SQLBuilder { return p.sb }

@@ -15,7 +15,7 @@ import (
 
 func TestPrefix_InsertMany(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		tx, err := t.DB.Begin()
@@ -117,7 +117,7 @@ func TestPrefix_InsertMany(t *testing.T) {
 
 func TestPrefix_LastInsertID(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		p := t.DB.Prefix("p2_")

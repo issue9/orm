@@ -19,7 +19,7 @@ import (
 
 func TestPostgres_VersionSQL(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Postgres)
+	suite := test.NewSuite(a, "", test.Postgres)
 
 	suite.Run(func(t *test.Driver) {
 		testDialectVersionSQL(t)
@@ -214,7 +214,7 @@ func TestPostgres_SQLType(t *testing.T) {
 func TestPostgres_TruncateTableSQL(t *testing.T) {
 	a := assert.New(t, false)
 
-	suite := test.NewSuite(a, test.Postgres)
+	suite := test.NewSuite(a, "", test.Postgres)
 
 	suite.Run(func(t *test.Driver) {
 		stmt := sqlbuilder.TruncateTable(t.DB).Table("tbl", "")
@@ -302,7 +302,7 @@ func BenchmarkPostgres_Fix(b *testing.B) {
 
 func TestPostgres_Types(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Postgres)
+	suite := test.NewSuite(a, "", test.Postgres)
 
 	suite.Run(func(t *test.Driver) {
 		testTypes(t)
@@ -311,7 +311,7 @@ func TestPostgres_Types(t *testing.T) {
 
 func TestPostgres_TypesDefault(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Postgres)
+	suite := test.NewSuite(a, "", test.Postgres)
 
 	suite.Run(func(t *test.Driver) {
 		testTypesDefault(t)

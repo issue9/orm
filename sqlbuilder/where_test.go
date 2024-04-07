@@ -9,14 +9,18 @@ import (
 
 	"github.com/issue9/assert/v4"
 
+	"github.com/issue9/orm/v5/core"
 	"github.com/issue9/orm/v5/internal/sqltest"
 )
 
-var _ SQLer = &WhereStmt{}
+var (
+	_ SQLer            = &WhereStmt{}
+	_ core.TablePrefix = &WhereStmt{}
+)
 
 func TestWhere(t *testing.T) {
 	a := assert.New(t, false)
-	w := Where()
+	w := Where("")
 	a.NotNil(w)
 
 	w.And("id=?", 1)
@@ -64,7 +68,7 @@ func TestWhere(t *testing.T) {
 
 func TestWhereStmt_IsNull(t *testing.T) {
 	a := assert.New(t, false)
-	w := Where()
+	w := Where("")
 
 	w.AndIsNull("col1")
 	query, args, err := w.SQL()
@@ -90,7 +94,7 @@ func TestWhereStmt_IsNull(t *testing.T) {
 
 func TestWhereStmt_Like(t *testing.T) {
 	a := assert.New(t, false)
-	w := Where()
+	w := Where("")
 
 	w.AndLike("col1", "%str1")
 	query, args, err := w.SQL()
@@ -120,7 +124,7 @@ func TestWhereStmt_Like(t *testing.T) {
 
 func TestWhereStmt_Between(t *testing.T) {
 	a := assert.New(t, false)
-	w := Where()
+	w := Where("")
 
 	// AndBetween
 	w.AndBetween("col1", 1, 2)
@@ -154,7 +158,7 @@ func TestWhereStmt_Between(t *testing.T) {
 
 func TestWhereStmt_In(t *testing.T) {
 	a := assert.New(t, false)
-	w := Where()
+	w := Where("")
 
 	w.OrIn("col1", 1, 2, 3)
 	query, args, err := w.SQL()
@@ -184,7 +188,7 @@ func TestWhereStmt_In(t *testing.T) {
 
 func TestWhereStmt_Group(t *testing.T) {
 	a := assert.New(t, false)
-	w := Where()
+	w := Where("")
 
 	w.AndGroup(func(ws *WhereStmt) {
 		ws.And("id=?", 4)
@@ -214,7 +218,7 @@ func TestWhereStmt_Group(t *testing.T) {
 
 func TestWhereStmt_Cond(t *testing.T) {
 	a := assert.New(t, false)
-	w := Where()
+	w := Where("")
 
 	w.Cond(true, func(ww *WhereStmt) {
 		ww.AndGroup(func(ws *WhereStmt) {

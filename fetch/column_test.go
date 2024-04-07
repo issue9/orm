@@ -16,7 +16,7 @@ import (
 
 func TestColumn(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	eq := func(s1, s2 []any) bool {
 		if len(s1) != len(s2) {
@@ -99,7 +99,7 @@ func TestColumn(t *testing.T) {
 
 func TestColumnString(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)

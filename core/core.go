@@ -33,6 +33,15 @@ type IndexType int8
 
 type ConstraintType int8
 
+// TablePrefix 表名前缀
+//
+// 当需要在一个数据库中创建不同的实例，
+// 或是同一个数据模式应用在不同的对象是，可以通过不同的表名前缀对数据表进行区分。
+type TablePrefix interface {
+	// TablePrefix 所有数据表拥有的统一表名前缀
+	TablePrefix() string
+}
+
 // Engine 数据库执行的基本接口
 //
 // orm.DB 和 orm.Tx 应该实现此接口。
@@ -54,6 +63,8 @@ type Engine interface {
 	Prepare(query string) (*Stmt, error)
 
 	PrepareContext(ctx context.Context, query string) (*Stmt, error)
+
+	TablePrefix
 }
 
 // Dialect 用于描述与数据库和驱动相关的一些特性

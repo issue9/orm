@@ -68,6 +68,8 @@ func newDDLStmt(e core.Engine, sql DDLSQLer) *ddlStmt {
 	}
 }
 
+func (stmt *baseStmt) TablePrefix() string { return stmt.engine.TablePrefix() }
+
 func (stmt *baseStmt) Dialect() core.Dialect { return stmt.engine.Dialect() }
 
 func (stmt *baseStmt) Engine() core.Engine { return stmt.engine }
@@ -95,7 +97,7 @@ func (stmt *ddlStmt) ExecContext(ctx context.Context) error {
 	return nil
 }
 
-// CombineSQL 合并 SQLer.SQL 返回的 query 和 args 参数
+// CombineSQL 合并 [SQLer.SQL] 返回的 query 和 args 参数
 func (stmt *execStmt) CombineSQL() (query string, err error) {
 	query, args, err := stmt.SQL()
 	if err != nil {
@@ -120,9 +122,9 @@ func (stmt *execStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 
 // Prepare 预编译语句
 //
-// 预编译语句，参数最好采用 sql.NamedArg 类型。
+// 预编译语句，参数最好采用 [sql.NamedArg] 类型。
 // 在生成语句时，参数顺序会发生变化，如果采用 ? 的形式，
-// 用户需要自己处理参数顺序问题，而 sql.NamedArg 没有这些问题。
+// 用户需要自己处理参数顺序问题，而 [sql.NamedArg] 没有这些问题。
 func (stmt *execStmt) Prepare() (*core.Stmt, error) {
 	return stmt.PrepareContext(context.Background())
 }
@@ -140,7 +142,7 @@ func (stmt *queryStmt) Prepare() (*core.Stmt, error) {
 	return stmt.PrepareContext(context.Background())
 }
 
-// CombineSQL 将 SQLer.SQL 中返回的参数替换掉 query 中的占位符，
+// CombineSQL 将 [SQLer.SQL] 中返回的参数替换掉 query 中的占位符，
 // 形成一条完整的查询语句。
 func (stmt *queryStmt) CombineSQL() (query string, err error) {
 	query, args, err := stmt.SQL()
@@ -173,7 +175,7 @@ func (stmt *queryStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 	return stmt.Engine().QueryContext(ctx, query, args...)
 }
 
-// MergeDDL 合并多个 DDLSQLer 对象
+// MergeDDL 合并多个 [DDLSQLer] 对象
 func MergeDDL(ddl ...DDLSQLer) DDLSQLer { return multipleDDLStmt(ddl) }
 
 func (stmt multipleDDLStmt) DDLSQL() ([]string, error) {

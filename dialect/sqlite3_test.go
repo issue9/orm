@@ -53,7 +53,7 @@ func clearSqlite3CreateTable(t *test.Driver, db core.Engine) {
 
 func TestSqlite3_VersionSQL(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Sqlite3)
+	suite := test.NewSuite(a, "", test.Sqlite3)
 
 	suite.Run(func(t *test.Driver) {
 		testDialectVersionSQL(t)
@@ -62,7 +62,7 @@ func TestSqlite3_VersionSQL(t *testing.T) {
 
 func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Sqlite3)
+	suite := test.NewSuite(a, "", test.Sqlite3)
 
 	suite.Run(func(t *test.Driver) {
 		db := t.DB
@@ -87,7 +87,7 @@ func TestSqlite3_AddConstraintStmtHook(t *testing.T) {
 func TestSqlite3_DropConstraintStmtHook(t *testing.T) {
 	a := assert.New(t, false)
 
-	suite := test.NewSuite(a, test.Sqlite3)
+	suite := test.NewSuite(a, "", test.Sqlite3)
 
 	suite.Run(func(t *test.Driver) {
 		db := t.DB
@@ -143,7 +143,7 @@ func testMysqlDropConstraintStmtHook(t *test.Driver) {
 
 func TestSqlite3_DropColumnStmtHook(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Sqlite3)
+	suite := test.NewSuite(a, "", test.Sqlite3)
 
 	suite.Run(func(t *test.Driver) {
 		db := t.DB
@@ -196,7 +196,7 @@ func TestSqlite3_CreateTableOptions(t *testing.T) {
 func TestSqlite3_TruncateTableSQL(t *testing.T) {
 	a := assert.New(t, false)
 
-	suite := test.NewSuite(a, test.Sqlite3)
+	suite := test.NewSuite(a, "", test.Sqlite3)
 
 	suite.Run(func(t *test.Driver) {
 		qs, err := t.DB.Dialect().TruncateTableSQL("tbl", "")
@@ -313,7 +313,7 @@ func TestSqlite3_SQLType(t *testing.T) {
 
 func TestSqlite3_Types(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Sqlite3)
+	suite := test.NewSuite(a, "", test.Sqlite3)
 
 	suite.Run(func(t *test.Driver) {
 		testTypes(t)
@@ -322,7 +322,7 @@ func TestSqlite3_Types(t *testing.T) {
 
 func TestSqlite3_TypesDefault(t *testing.T) {
 	a := assert.New(t, false)
-	suite := test.NewSuite(a, test.Sqlite3)
+	suite := test.NewSuite(a, "", test.Sqlite3)
 
 	suite.Run(func(t *test.Driver) {
 		testTypesDefault(t)

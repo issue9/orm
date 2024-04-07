@@ -88,7 +88,7 @@ type Suite struct {
 // NewSuite 初始化测试内容
 //
 // dialect 指定了当前需要测试的驱动，若未指定表示测试 flags 中的所有内容。
-func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
+func NewSuite(a *assert.Assertion, tablePrefix string, dialect ...core.Dialect) *Suite {
 	s := &Suite{a: a}
 	a.TB().Cleanup(func() {
 		s.close()
@@ -107,7 +107,7 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 			continue
 		}
 
-		db, err := orm.NewDB(c.dsn, c.dialect)
+		db, err := orm.NewDB(tablePrefix, c.dsn, c.dialect)
 		a.NotError(err).NotNil(db)
 
 		s.drivers = append(s.drivers, &Driver{

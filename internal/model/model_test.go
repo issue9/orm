@@ -14,7 +14,6 @@ import (
 	"github.com/issue9/assert/v4"
 
 	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/sqlbuilder"
 )
 
 var (
@@ -104,11 +103,7 @@ type viewObject struct {
 func (v *viewObject) TableName() string { return "view_objects" }
 
 func (v *viewObject) ViewAs(e core.Engine) (string, error) {
-	return sqlbuilder.Select(e).
-		Columns("id", "username").
-		From("User").
-		Where("id>?", 10).
-		CombineSQL()
+	return `SELECT id,username FROMa User WHERE id>10`,nil
 }
 
 func TestModels_New(t *testing.T) {

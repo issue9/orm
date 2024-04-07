@@ -66,7 +66,7 @@ func TestTable_CreateTableSQL(t *testing.T) {
 func TestParseSqlite3CreateTable(t *testing.T) {
 	a := assert.New(t, false)
 
-	suite := test.NewSuite(a, test.Sqlite3)
+	suite := test.NewSuite(a, "", test.Sqlite3)
 
 	suite.Run(func(t *test.Driver) {
 		db := t.DB
