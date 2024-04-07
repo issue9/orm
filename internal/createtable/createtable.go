@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v6/core"
 )
 
 var backQuoteReplacer = strings.NewReplacer("`", "")

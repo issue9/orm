@@ -9,7 +9,7 @@ import (
 
 	"github.com/issue9/assert/v4"
 
-	"github.com/issue9/orm/v5/internal/model/testdata"
+	"github.com/issue9/orm/v6/internal/model/testdata"
 )
 
 func (ms *Models) len() (cnt int) {

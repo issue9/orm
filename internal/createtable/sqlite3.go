@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v6/core"
 )
 
 // Sqlite3Table 包含从 sqlite_master 中获取的与当前表相关的信息

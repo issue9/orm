@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/fetch"
+	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6/fetch"
 )
 
 func propertyError(field, name, message string) error {

@@ -9,9 +9,9 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/internal/model"
-	"github.com/issue9/orm/v5/sqlbuilder"
+	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6/internal/model"
+	"github.com/issue9/orm/v6/sqlbuilder"
 )
 
 // DB 数据库操作实例

@@ -1,4 +1,4 @@
-module github.com/issue9/orm/v5
+module github.com/issue9/orm/v6
 
 require (
 	github.com/go-sql-driver/mysql v1.8.1

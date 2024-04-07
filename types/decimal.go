@@ -12,7 +12,7 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v6/core"
 )
 
 type Decimal struct {

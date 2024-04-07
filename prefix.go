@@ -7,7 +7,7 @@ package orm
 import (
 	"database/sql"
 
-	"github.com/issue9/orm/v5/sqlbuilder"
+	"github.com/issue9/orm/v6/sqlbuilder"
 )
 
 type dbPrefix struct {

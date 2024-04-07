@@ -7,8 +7,8 @@ package orm
 import (
 	"fmt"
 
-	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/sqlbuilder"
+	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6/sqlbuilder"
 )
 
 // Upgrader 更新数据表对象

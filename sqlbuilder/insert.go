@@ -9,7 +9,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v6/core"
 )
 
 // InsertStmt 表示插入操作的 SQL 语句

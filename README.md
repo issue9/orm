@@ -1,7 +1,7 @@
 orm
 [![Go Report Card](https://goreportcard.com/badge/github.com/issue9/orm)](https://goreportcard.com/report/github.com/issue9/orm)
 [![codecov](https://codecov.io/gh/issue9/orm/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/orm)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/orm/v5)](https://pkg.go.dev/github.com/issue9/orm/v5)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/orm/v6)](https://pkg.go.dev/github.com/issue9/orm/v6)
 ![Go version](https://img.shields.io/github/go-mod/go-version/issue9/orm)
 ======
 
@@ -28,7 +28,7 @@ sqlite 为纯 Go 代码编写，如果涉及到交叉编译的可以采用此驱
 
 ```go
 import (
-    github.com/issue9/orm/v5/dialect  // sqlite3 的 dialect 声明在此处
+    github.com/issue9/orm/v6/dialect  // sqlite3 的 dialect 声明在此处
     _ github.com/mattn/go-sqlite3     // 加载数据库驱动
 )
 
@@ -84,12 +84,12 @@ func(u *User) ApplyModel(m *core.Model) error {
 
 目前支持以下的 struct tag：
 
-##### name(fieldName): 
+##### name(fieldName):
 
 指定当前字段在数据表中的名称，如果未指定，则和字段名相同。
 只有可导出的字段才有效果。
 
-##### len(l1, l2): 
+##### len(l1, l2):
 
 指定字段的长度。比如 mysql 中的int(5),varchar(255),double(1,2),
 不支持该特性的数据，将会忽略该标签的内容，比如 sqlite3。

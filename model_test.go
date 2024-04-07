@@ -11,9 +11,9 @@ import (
 	"github.com/issue9/assert/v4"
 	"github.com/issue9/conv"
 
-	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/fetch"
-	"github.com/issue9/orm/v5/internal/test"
+	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6/fetch"
+	"github.com/issue9/orm/v6/internal/test"
 )
 
 // Group 带有自增 ID 的普通表结构

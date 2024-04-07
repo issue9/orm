@@ -4,7 +4,7 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v5/core"
+import "github.com/issue9/orm/v6/core"
 
 // WhereStmt SQL 语句的 where 部分
 type WhereStmt struct {

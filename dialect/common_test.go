@@ -12,11 +12,11 @@ import (
 
 	"github.com/issue9/assert/v4"
 
-	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/internal/sqltest"
-	"github.com/issue9/orm/v5/internal/test"
-	"github.com/issue9/orm/v5/sqlbuilder"
-	"github.com/issue9/orm/v5/types"
+	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6/internal/sqltest"
+	"github.com/issue9/orm/v6/internal/test"
+	"github.com/issue9/orm/v6/sqlbuilder"
+	"github.com/issue9/orm/v6/types"
 )
 
 func TestMain(m *testing.M) {

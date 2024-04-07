@@ -9,7 +9,7 @@ import (
 	"database/sql/driver"
 	"math/big"
 
-	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v6/core"
 )
 
 // Rat 有理数

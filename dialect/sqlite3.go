@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/issue9/orm/v5/core"
-	"github.com/issue9/orm/v5/internal/createtable"
-	"github.com/issue9/orm/v5/sqlbuilder"
+	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6/internal/createtable"
+	"github.com/issue9/orm/v6/sqlbuilder"
 )
 
 const sqlite3RowID = "sqlite3_rowid"

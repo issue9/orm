@@ -64,7 +64,7 @@ func main() {
 
 ```go.mod
 require (
-    github.com/issue9/orm/v5 v5.x.x
+    github.com/issue9/orm/v6 v6.x.x
 )
 
 go 1.18

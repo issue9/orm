@@ -4,7 +4,7 @@
 
 package testdata
 
-import "github.com/issue9/orm/v5/core"
+import "github.com/issue9/orm/v6/core"
 
 // User 与 model.User 完全相同，包括表名
 //

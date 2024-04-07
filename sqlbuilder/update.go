@@ -9,7 +9,7 @@ import (
 
 	"github.com/issue9/sliceutil"
 
-	"github.com/issue9/orm/v5/core"
+	"github.com/issue9/orm/v6/core"
 )
 
 // UpdateStmt 更新语句

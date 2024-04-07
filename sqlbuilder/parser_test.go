@@ -11,7 +11,7 @@ import (
 
 	"github.com/issue9/assert/v4"
 
-	"github.com/issue9/orm/v5/internal/sqltest"
+	"github.com/issue9/orm/v6/internal/sqltest"
 )
 
 var _ bufio.SplitFunc = splitWithAS
