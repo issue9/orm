@@ -5,7 +5,7 @@ require (
 	github.com/issue9/assert/v4 v4.1.1
 	github.com/issue9/conv v1.3.5
 	github.com/issue9/errwrap v0.3.2
-	github.com/issue9/sliceutil v0.16.0
+	github.com/issue9/sliceutil v0.16.1
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/shopspring/decimal v1.3.1

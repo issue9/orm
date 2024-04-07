@@ -39,11 +39,11 @@ func TestSuite_Run_withDialect(t *testing.T) {
 
 	// 不再限定 flags
 	flags = []*flagVar{
-		{DBName: "mysql", DriverName: "mysql"},
-		{DBName: "sqlite3", DriverName: "sqlite3"},
-		{DBName: "sqlite3", DriverName: "sqlite"},
-		{DBName: "mariadb", DriverName: "mariadb"},
-		{DBName: "postgres", DriverName: "postgres"},
+		{Name: "mysql", DriverName: "mysql"},
+		{Name: "sqlite3", DriverName: "sqlite3"},
+		{Name: "sqlite3", DriverName: "sqlite"},
+		{Name: "mariadb", DriverName: "mariadb"},
+		{Name: "postgres", DriverName: "postgres"},
 	}
 
 	// 通过参数限定了 dialect
@@ -61,7 +61,7 @@ func TestSuite_Run_withDialect(t *testing.T) {
 
 		d := t.DB.Dialect()
 		a.Equal(sliceutil.Count(dialects, func(i core.Dialect, _ int) bool {
-			return i.DBName() == d.DBName() && i.DriverName() == d.DriverName()
+			return i.Name() == d.Name() && i.DriverName() == d.DriverName()
 		}), 1)
 
 		size++

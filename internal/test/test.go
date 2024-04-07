@@ -75,7 +75,7 @@ type Driver struct {
 	*assert.Assertion
 	DB         *orm.DB
 	DriverName string
-	DBName     string
+	Name       string
 	dsn        string
 }
 
@@ -95,15 +95,15 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 	})
 
 	for _, c := range cases {
-		name := c.dialect.DBName()
+		name := c.dialect.Name()
 		driver := c.dialect.DriverName()
 
-		if len(dialect) > 0 && sliceutil.Count(dialect, func(i core.Dialect, _ int) bool { return i.DBName() == name && i.DriverName() == driver }) <= 0 {
+		if len(dialect) > 0 && sliceutil.Count(dialect, func(i core.Dialect, _ int) bool { return i.Name() == name && i.DriverName() == driver }) <= 0 {
 			continue
 		}
 
 		fs := flags
-		if len(fs) > 0 && sliceutil.Count(fs, func(i *flagVar, _ int) bool { return i.DBName == name && i.DriverName == driver }) <= 0 {
+		if len(fs) > 0 && sliceutil.Count(fs, func(i *flagVar, _ int) bool { return i.Name == name && i.DriverName == driver }) <= 0 {
 			continue
 		}
 
@@ -114,7 +114,7 @@ func NewSuite(a *assert.Assertion, dialect ...core.Dialect) *Suite {
 			Assertion:  a,
 			DB:         db,
 			DriverName: driver,
-			DBName:     name,
+			Name:       name,
 			dsn:        c.dsn,
 		})
 	}

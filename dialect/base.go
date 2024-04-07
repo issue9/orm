@@ -6,20 +6,20 @@ package dialect
 
 type base struct {
 	driverName     string
-	dbName         string
+	name           string
 	quoteL, quoteR byte
 }
 
-func newBase(dbName, driverName string, quoteLeft, quoteRight byte) base {
+func newBase(name, driverName string, quoteLeft, quoteRight byte) base {
 	return base{
-		dbName:     dbName,
+		name:       name,
 		driverName: driverName,
 		quoteL:     quoteLeft,
 		quoteR:     quoteRight,
 	}
 }
 
-func (b *base) DBName() string { return b.dbName }
+func (b *base) Name() string { return b.name }
 
 func (b *base) DriverName() string { return b.driverName }
 

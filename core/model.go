@@ -93,7 +93,7 @@ type (
 		// 表级别的数据
 		//
 		// 如存储引擎，表名和字符集等，在创建表时，可能会用到这此数据。
-		// 可以采用 dialect.DBName 限定数据库，比如 mysql_charset 限定为 mysql 下的 charset 属性。
+		// 可以采用 [Dialect.Name] 限定数据库，比如 mysql_charset 限定为 mysql 下的 charset 属性。
 		// 具体可参考各个 dialect 实现的介绍。
 		Options map[string][]string
 	}

@@ -15,12 +15,12 @@ import (
 var flags []*flagVar
 
 type flagVar struct {
-	DBName, DriverName string
+	Name, DriverName string
 }
 
 // Main 供测试的 TestMain 调用
 func Main(m *testing.M) {
-	dbString := flag.String("dbs", "sqlite3,sqlite3", "指定需要测试的数据库，格式为 dbName,driverName:dbName,driverName")
+	dbString := flag.String("dbs", "sqlite3,sqlite3", "指定需要测试的数据库，格式为 name,driverName:name,driverName")
 
 	flag.Parse()
 
@@ -36,7 +36,7 @@ func Main(m *testing.M) {
 		if len(i) != 2 {
 			panic(fmt.Sprintf("格式错误：%v", *dbString))
 		}
-		flags = append(flags, &flagVar{DBName: i[0], DriverName: i[1]})
+		flags = append(flags, &flagVar{Name: i[0], DriverName: i[1]})
 	}
 
 	os.Exit(m.Run())

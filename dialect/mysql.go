@@ -48,9 +48,9 @@ func Mariadb(driverName string) core.Dialect {
 	return newMysql(true, "mariadb", driverName)
 }
 
-func newMysql(isMariadb bool, dbName, driverName string) core.Dialect {
+func newMysql(isMariadb bool, name, driverName string) core.Dialect {
 	return &mysql{
-		base:      newBase(dbName, driverName, '`', '`'),
+		base:      newBase(name, driverName, '`', '`'),
 		isMariadb: isMariadb,
 	}
 }

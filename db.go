@@ -68,8 +68,7 @@ func NewDBWithStdDB(db *sql.DB, dialect Dialect) (*DB, error) {
 
 // Debug 指定调输出调试内容通道
 //
-// 如果 l 不为 nil，则每次 SQL 调用都会输出 SQL 语句，
-// 预编译的语句，仅在预编译时输出；
+// 如果 l 不为 nil，则每次 SQL 调用都会输出 SQL 语句，预编译的语句，仅在预编译时输出；
 // 如果为 nil，则表示关闭调试。
 func (db *DB) Debug(l func(string)) {
 	if l == nil {
