@@ -25,11 +25,8 @@ func propertyError(field, name, message string) error {
 func (ms *Models) New(p string, obj core.TableNamer) (*core.Model, error) {
 	name := p + obj.TableName()
 
-	ms.locker.Lock()
-	defer ms.locker.Unlock()
-
-	if m, found := ms.models[name]; found {
-		return m, nil
+	if m, found := ms.models.Load(name); found {
+		return m.(*core.Model), nil
 	}
 
 	rtype := reflect.TypeOf(obj)
@@ -67,10 +64,10 @@ func (ms *Models) New(p string, obj core.TableNamer) (*core.Model, error) {
 		return nil, err
 	}
 
-	if _, found := ms.models[m.Name]; found {
+	if _, found := ms.models.Load(m.Name); found {
 		return nil, fmt.Errorf("已经存在表模型 %s", m.Name)
 	}
-	ms.models[m.Name] = m
+	ms.models.Store(m.Name, m)
 	// NOTE: Model 的约束名会加上表名作为其前缀，只要在单个 Model 中能保证唯一，那么就可以保证全局唯一了。
 
 	return m, nil

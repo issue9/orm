@@ -14,21 +14,21 @@ import (
 type Models struct {
 	engine core.Engine
 	locker sync.Mutex
-	models map[string]*core.Model
+	models *sync.Map
 }
 
 // NewModels 声明 Models 变量
 func NewModels(e core.Engine) *Models {
 	return &Models{
 		engine: e,
-		models: map[string]*core.Model{},
+		models: &sync.Map{},
 	}
 }
 
 // Clear 清除所有的 Model 缓存
 func (ms *Models) Clear() {
-	ms.locker.Lock()
-	defer ms.locker.Unlock()
-
-	ms.models = map[string]*core.Model{}
+	ms.models.Range(func(key, _ any) bool {
+		ms.models.Delete(key)
+		return true
+	})
 }

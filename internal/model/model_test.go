@@ -103,7 +103,7 @@ type viewObject struct {
 func (v *viewObject) TableName() string { return "view_objects" }
 
 func (v *viewObject) ViewAs(e core.Engine) (string, error) {
-	return `SELECT id,username FROMa User WHERE id>10`,nil
+	return `SELECT id,username FROMa User WHERE id>10`, nil
 }
 
 func TestModels_New(t *testing.T) {
@@ -169,17 +169,17 @@ func TestModels_New(t *testing.T) {
 	m, err = ms.New("", o)
 	a.NotError(err).NotNil(m)
 	a.Equal(m.Name, "objs")
-	a.Equal(len(ms.models), 2)
+	a.Equal(ms.len(), 2)
 
 	m, err = ms.New("", &o)
 	a.NotError(err).NotNil(m)
 	a.Equal(m.Name, "objs")
-	a.Equal(len(ms.models), 2)
+	a.Equal(ms.len(), 2)
 
 	m, err = ms.New("p_", &o)
 	a.NotError(err).NotNil(m)
 	a.Equal(m.Name, "p_objs")
-	a.Equal(len(ms.models), 3)
+	a.Equal(ms.len(), 3)
 
 	// view
 	m, err = ms.New("", &viewObject{})
