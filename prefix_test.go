@@ -120,17 +120,26 @@ func TestPrefix_LastInsertID(t *testing.T) {
 	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
-		p := t.DB.Prefix("p2_")
+		p1 := t.DB.Prefix("p1_")
+		p2 := t.DB.Prefix("p2_")
 
-		a.NotError(p.Create(&User{}))
+		a.NotError(p1.Create(&User{}))
+		a.NotError(p2.Create(&User{}))
 		defer func() {
-			a.NotError(p.Drop(&User{}))
+			a.NotError(p1.Drop(&User{}))
+			a.NotError(p2.Drop(&User{}))
 		}()
 
-		id, err := p.LastInsertID(&User{Username: "1"})
-		t.NotError(err).Equal(id, 1)
+		ids1, err := p1.LastInsertID(&User{Username: "1"})
+		t.NotError(err).Equal(ids1, 1)
 
-		id, err = p.LastInsertID(&User{Username: "2"})
-		t.NotError(err).Equal(id, 2)
+		ids2, err := p2.LastInsertID(&User{Username: "1"})
+		t.NotError(err).Equal(ids2, 1)
+
+		ids1, err = p1.LastInsertID(&User{Username: "2"})
+		t.NotError(err).Equal(ids1, 2)
+
+		ids2, err = p2.LastInsertID(&User{Username: "2"})
+		t.NotError(err).Equal(ids2, 2)
 	})
 }

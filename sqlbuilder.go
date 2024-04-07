@@ -19,21 +19,13 @@ import (
 // 的方式插入一条没有 AI 列的对象时，会返回此错误。
 var ErrNeedAutoIncrementColumn = errors.New("必须存在自增列")
 
-func (db *DB) newModel(obj TableNamer) (*core.Model, error) {
-	return db.models.New("", obj)
-}
+func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New(obj) }
 
-func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) {
-	return tx.db.models.New("", obj)
-}
+func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.models.New(obj) }
 
-func (p *dbPrefix) newModel(obj TableNamer) (*core.Model, error) {
-	return p.models.New("", obj)
-}
+func (p *dbPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.models.New(obj) }
 
-func (p *txPrefix) newModel(obj TableNamer) (*core.Model, error) {
-	return p.Tx.db.models.New("", obj)
-}
+func (p *txPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.Tx.db.models.New(obj) }
 
 func getModel(e Engine, v TableNamer) (*core.Model, reflect.Value, error) {
 	m, err := e.newModel(v)
@@ -109,7 +101,7 @@ func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []any)
 	return keys, vals
 }
 
-// 创建表或是视图。
+// 创建表或是视图
 func create(e Engine, v TableNamer) error {
 	m, _, err := getModel(e, v)
 	if err != nil {

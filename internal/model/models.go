@@ -13,11 +13,10 @@ import (
 // Models 数据模型管理
 type Models struct {
 	engine core.Engine
-	locker sync.Mutex
 	models *sync.Map
 }
 
-// NewModels 声明 Models 变量
+// NewModels 声明 [Models] 变量
 func NewModels(e core.Engine) *Models {
 	return &Models{
 		engine: e,

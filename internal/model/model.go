@@ -22,8 +22,8 @@ func propertyError(field, name, message string) error {
 // New 从一个 obj 声明一个 Model 实例
 //
 // obj 可以是一个 struct 实例或是指针。
-func (ms *Models) New(p string, obj core.TableNamer) (*core.Model, error) {
-	name := p + obj.TableName()
+func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
+	name := obj.TableName()
 
 	if m, found := ms.models.Load(name); found {
 		return m.(*core.Model), nil
@@ -64,12 +64,12 @@ func (ms *Models) New(p string, obj core.TableNamer) (*core.Model, error) {
 		return nil, err
 	}
 
-	if _, found := ms.models.Load(m.Name); found {
-		return nil, fmt.Errorf("已经存在表模型 %s", m.Name)
+	// 在构建完 core.Model 时在其它地方写入了相同名称的 core.Model，
+	// 相当于在函数的开始阶段判断是否存在同名的对象，返回已经存在的对象。
+	if m, found := ms.models.Load(m.Name); found {
+		return m.(*core.Model), nil
 	}
 	ms.models.Store(m.Name, m)
-	// NOTE: Model 的约束名会加上表名作为其前缀，只要在单个 Model 中能保证唯一，那么就可以保证全局唯一了。
-
 	return m, nil
 }
 

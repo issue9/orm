@@ -111,7 +111,7 @@ func TestModels_New(t *testing.T) {
 	ms := NewModels(nil)
 	a.NotNil(ms)
 
-	m, err := ms.New("", &Admin{})
+	m, err := ms.New(&Admin{})
 	a.NotError(err).NotNil(m)
 	a.Equal(m.Type, core.Table).
 		Empty(m.ViewAs)
@@ -166,25 +166,25 @@ func TestModels_New(t *testing.T) {
 	// 多层指针下的 Receive
 
 	o := obj{}
-	m, err = ms.New("", o)
-	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "objs")
-	a.Equal(ms.len(), 2)
+	m, err = ms.New(o)
+	a.NotError(err).NotNil(m).
+		Equal(m.Name, "objs").
+		Equal(ms.len(), 2)
 
-	m, err = ms.New("", &o)
-	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "objs")
-	a.Equal(ms.len(), 2)
+	m, err = ms.New(&o)
+	a.NotError(err).NotNil(m).
+		Equal(m.Name, "objs").
+		Equal(ms.len(), 2)
 
-	m, err = ms.New("p_", &o)
-	a.NotError(err).NotNil(m)
-	a.Equal(m.Name, "p_objs")
-	a.Equal(ms.len(), 3)
+	m, err = ms.New(&o)
+	a.NotError(err).NotNil(m).
+		Equal(m.Name, "objs").
+		Equal(ms.len(), 2)
 
 	// view
-	m, err = ms.New("", &viewObject{})
-	a.NotError(err).NotNil(m)
-	a.Equal(m.Type, core.View).
+	m, err = ms.New(&viewObject{})
+	a.NotError(err).NotNil(m).
+		Equal(m.Type, core.View).
 		NotNil(m.ViewAs)
 }
 
