@@ -22,17 +22,6 @@ type txPrefix struct {
 	sb *sqlbuilder.SQLBuilder
 }
 
-// Prefix 为所有的表加上统一的前缀
-//
-// 将采用 [DB.Prefix]+Prefix 作为表名前缀
-type Prefix string
-
-func (p Prefix) DB(db *DB) Engine { return db.Prefix(string(p)) }
-
-func (p Prefix) Tx(tx *Tx) Engine { return tx.Prefix(string(p)) }
-
-func (p Prefix) TableName(v TableNamer) string { return string(p) + v.TableName() }
-
 // Prefix 为所有操作的表名加上统一的前缀
 //
 // 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 DB 或 Tx。
@@ -48,7 +37,9 @@ func (db *DB) Prefix(p string) Engine {
 
 // Prefix 为所有操作的表名加上统一的前缀
 //
-// 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 DB 或 Tx。
+// 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 [DB] 或 [Tx]。
+//
+// 创建的 [Engine] 依然属于当前事务。
 func (tx *Tx) Prefix(p string) Engine {
 	dp := &txPrefix{
 		p:  tx.TablePrefix() + p,
@@ -81,6 +72,8 @@ func (p *dbPrefix) Create(v TableNamer) error { return create(p, v) }
 func (p *dbPrefix) Drop(v TableNamer) error { return drop(p, v) }
 
 func (p *dbPrefix) Truncate(v TableNamer) error { return truncate(p, v) }
+
+func (p *dbPrefix) TableName(v TableNamer) string { return p.TablePrefix() + v.TableName() }
 
 func (p *dbPrefix) InsertMany(max int, v ...TableNamer) error {
 	return p.DB.DoTransaction(func(tx *Tx) error {
@@ -134,3 +127,5 @@ func (p *txPrefix) InsertMany(max int, v ...TableNamer) error {
 }
 
 func (p *txPrefix) SQLBuilder() *sqlbuilder.SQLBuilder { return p.sb }
+
+func (p *txPrefix) TableName(v TableNamer) string { return p.TablePrefix() + v.TableName() }

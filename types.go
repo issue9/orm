@@ -97,6 +97,9 @@ type (
 		// 但是依然在一个事务中完成。
 		InsertMany(max int, v ...TableNamer) error
 
+		// TableName 返回 v 的真实表名
+		TableName(v TableNamer) string
+
 		// Where 生成 WhereStmt 语句
 		Where(cond string, args ...any) *WhereStmt
 

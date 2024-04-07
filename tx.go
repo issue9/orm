@@ -158,6 +158,8 @@ func (tx *Tx) Truncate(v TableNamer) error { return truncate(tx, v) }
 
 func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder { return tx.sqlBuilder }
 
+func (tx *Tx) TableName(v TableNamer) string { return tx.TablePrefix() + v.TableName() }
+
 // DoTransaction 将 f 中的内容以事务的方式执行
 func (db *DB) DoTransaction(f func(tx *Tx) error) error {
 	return db.DoTransactionTx(context.Background(), nil, f)

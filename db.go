@@ -213,3 +213,5 @@ func (db *DB) InsertMany(max int, v ...TableNamer) error {
 }
 
 func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }
+
+func (db *DB) TableName(v TableNamer) string { return db.TablePrefix() + v.TableName() }
