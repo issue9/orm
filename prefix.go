@@ -28,13 +28,19 @@ type txPrefix struct {
 
 // Prefix 为所有操作的表名加上统一的前缀
 //
-// 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 DB 或 Tx。
+// 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 [DB] 或 [Tx]。
 func (db *DB) Prefix(p string) Engine {
-	p = db.TablePrefix() + p
+	return newDBPrefix(db, db.TablePrefix()+p, db.Dialect())
+}
 
+func (p *dbPrefix) Prefix(pp string) Engine {
+	return newDBPrefix(p.db, p.TablePrefix()+pp, p.Dialect())
+}
+
+func newDBPrefix(db *DB, tablePrefix string, d Dialect) Engine {
 	dp := &dbPrefix{
-		Engine: engine.New(db.DB(), p, db.Dialect()),
-		p:      p,
+		Engine: engine.New(db.DB(), tablePrefix, d),
+		p:      tablePrefix,
 		db:     db,
 	}
 	dp.sb = sqlbuilder.New(dp)
@@ -48,10 +54,17 @@ func (db *DB) Prefix(p string) Engine {
 //
 // 创建的 [Engine] 依然属于当前事务。
 func (tx *Tx) Prefix(p string) Engine {
-	p = tx.TablePrefix() + p
+	return newTxPrefix(tx, tx.TablePrefix()+p, tx.Dialect())
+}
+
+func (p *txPrefix) Prefix(pp string) Engine {
+	return newTxPrefix(p.tx, p.TablePrefix()+pp, p.Dialect())
+}
+
+func newTxPrefix(tx *Tx, tablePrefix string, d Dialect) Engine {
 	dp := &txPrefix{
-		Engine: engine.New(tx.Tx(), p, tx.Dialect()),
-		p:      p,
+		Engine: engine.New(tx.Tx(), tablePrefix, d),
+		p:      tablePrefix,
 		tx:     tx,
 	}
 	dp.sb = sqlbuilder.New(dp)

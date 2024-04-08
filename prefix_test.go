@@ -121,9 +121,11 @@ func TestPrefix_LastInsertID(t *testing.T) {
 
 	suite.Run(func(t *test.Driver) {
 		p1 := t.DB.Prefix("p1_")
+		p11 := p1.Prefix("p1_")
 		p2 := t.DB.Prefix("p2_")
 
 		a.NotError(p1.Create(&User{}))
+		a.NotError(p11.Create(&User{}))
 		a.NotError(p2.Create(&User{}))
 		defer func() {
 			a.NotError(p1.Drop(&User{}))
