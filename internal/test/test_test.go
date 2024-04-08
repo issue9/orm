@@ -26,8 +26,8 @@ func TestSuite_Run(t *testing.T) {
 	s.Run(func(t *Driver) {
 		a.NotNil(t).
 			NotNil(t.DB).
+			NotNil(t.DB.DB()).
 			NotNil(t.DB.Dialect()).
-			NotNil(t.DB.DB).
 			Equal(t.Assertion, a)
 		size++
 	})
@@ -55,8 +55,8 @@ func TestSuite_Run_withDialect(t *testing.T) {
 	s.Run(func(t *Driver) {
 		a.NotNil(t).
 			NotNil(t.DB).
+			NotNil(t.DB.DB()).
 			NotNil(t.DB.Dialect()).
-			NotNil(t.DB.DB).
 			Equal(t.Assertion, a)
 
 		d := t.DB.Dialect()

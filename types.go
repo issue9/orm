@@ -43,9 +43,9 @@ type (
 	// Engine 数据操作引擎
 	//
 	// 相对于 [core.Engine]，添加了针对 [TableNamer] 的操作。
-	// 与 sqlbuilder 的拼接方式不同，所有针对 [TableNamer] 的操作，
-	// 其定义的约束会添加表名作为约束名的前缀，以防止约束名重复，
-	// 而 sqlbuilder 中对约束名的使用，则需要用户自己确保唯一性。
+	// 所有针对 [TableNamer] 的操作与 sqlbuilder 的拼接方式有以下区别：
+	//  - 针对 [TableNamer] 的操作会自动为表名加上 # 表名前缀；
+	//  - 针对 [TableNamer] 的操作会为约束名加上表名，以确保约束名的唯一性；
 	Engine interface {
 		core.Engine
 
@@ -101,9 +101,6 @@ type (
 		// max 表示一次最多插入的数量，如果超过此值，会分批执行，
 		// 但是依然在一个事务中完成。
 		InsertMany(max int, v ...TableNamer) error
-
-		// TableName 返回 v 的真实表名
-		TableName(v TableNamer) string
 
 		// Where 生成 [WhereStmt] 语句
 		Where(cond string, args ...any) *WhereStmt

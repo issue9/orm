@@ -98,7 +98,7 @@ func TestPrefix_InsertMany(t *testing.T) {
 		t.NotError(err).True(found)
 		t.Equal(u4, &UserInfo{UID: 4, FirstName: "f4", LastName: "l4", Sex: "male"})
 
-		// 不带前经的 DB，找不到数据。
+		// 不带前缀的 DB，找不到数据。
 		u5 := &UserInfo{UID: 5}
 		found, err = t.DB.Select(u5)
 		t.Error(err).False(found)

@@ -24,9 +24,9 @@ func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.N
 
 func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.models.New(obj) }
 
-func (p *dbPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.models.New(obj) }
+func (p *dbPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.db.models.New(obj) }
 
-func (p *txPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.Tx.db.models.New(obj) }
+func (p *txPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.tx.db.models.New(obj) }
 
 func getModel(e Engine, v TableNamer) (*core.Model, reflect.Value, error) {
 	m, err := e.newModel(v)
@@ -126,7 +126,7 @@ func create(e Engine, v TableNamer) error {
 		for _, col := range index.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.Index(core.IndexDefault, constraintName(e.TablePrefix(), m.Name, index.Name), cols...)
+		sb.Index(core.IndexDefault, constraintName(m.Name, index.Name), cols...)
 	}
 
 	for _, unique := range m.Uniques {
@@ -134,15 +134,15 @@ func create(e Engine, v TableNamer) error {
 		for _, col := range unique.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.Unique(constraintName(e.TablePrefix(), m.Name, unique.Name), cols...)
+		sb.Unique(constraintName(m.Name, unique.Name), cols...)
 	}
 
 	for name, expr := range m.Checks {
-		sb.Check(constraintName(e.TablePrefix(), m.Name, name), expr)
+		sb.Check(constraintName(m.Name, name), expr)
 	}
 
 	for _, fk := range m.ForeignKeys {
-		name := constraintName(e.TablePrefix(), m.Name, fk.Name)
+		name := constraintName(m.Name, fk.Name)
 		sb.ForeignKey(name, fk.Column.Name, fk.RefTableName, fk.RefColName, fk.UpdateRule, fk.DeleteRule)
 	}
 
@@ -151,7 +151,7 @@ func create(e Engine, v TableNamer) error {
 		for _, col := range m.PrimaryKey.Columns {
 			cols = append(cols, col.Name)
 		}
-		sb.PK(constraintName(e.TablePrefix(), m.Name, m.PrimaryKey.Name), cols...)
+		sb.PK(constraintName(m.Name, m.PrimaryKey.Name), cols...)
 	}
 
 	return sb.Exec()
@@ -178,7 +178,7 @@ func truncate(e Engine, v TableNamer) error {
 
 	stmt := e.SQLBuilder().TruncateTable()
 	if m.AutoIncrement != nil {
-		stmt.Table(m.Name, constraintName(e.TablePrefix(), m.Name, m.AutoIncrement.Name))
+		stmt.Table(m.Name, constraintName(m.Name, m.AutoIncrement.Name))
 	} else {
 		stmt.Table(m.Name, "")
 	}
@@ -471,4 +471,4 @@ func buildInsertManySQL(e Engine, v ...TableNamer) (*sqlbuilder.InsertStmt, erro
 	return query, nil
 }
 
-func constraintName(prefix, table, name string) string { return prefix + table + "_" + name }
+func constraintName(table, name string) string { return table + "_" + name }

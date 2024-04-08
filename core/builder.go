@@ -7,7 +7,7 @@ package core
 import "github.com/issue9/errwrap"
 
 // 作用于表名，列名等非关键字上的引号占位符。
-// 在执行会自动替换成该数据相应的符号。
+// 在执行会自动替换成该数据库相应的符号。
 const (
 	QuoteLeft  = '{'
 	QuoteRight = '}'
@@ -51,14 +51,10 @@ func (b *Builder) WRunes(r ...rune) *Builder {
 }
 
 // Quote 给 str 左右添加 l 和 r 两个字符
-func (b *Builder) Quote(str string, l, r byte) *Builder {
-	return b.WBytes(l).WString(str).WBytes(r)
-}
+func (b *Builder) Quote(str string, l, r byte) *Builder { return b.WBytes(l).WString(str).WBytes(r) }
 
 // QuoteKey 给 str 左右添加 [QuoteLeft] 和 [QuoteRight] 两个字符
-func (b *Builder) QuoteKey(str string) *Builder {
-	return b.Quote(str, QuoteLeft, QuoteRight)
-}
+func (b *Builder) QuoteKey(str string) *Builder { return b.Quote(str, QuoteLeft, QuoteRight) }
 
 // Reset 重置内容，同时也会将 err 设置为 nil
 func (b *Builder) Reset() *Builder {

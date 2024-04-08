@@ -109,7 +109,6 @@ func TestConstraint_PK(t *testing.T) {
 		t.NotError(err)
 	})
 
-	// 约束名不是根据 core.pkName 生成的
 	suite.Run(func(t *test.Driver) {
 		query := "CREATE TABLE info (uid BIGINT NOT NULL,CONSTRAINT test_pk PRIMARY KEY(uid))"
 		_, err := t.DB.Exec(query)

@@ -54,7 +54,7 @@ func (stmt *InsertStmt) Select(sel *SelectStmt) *InsertStmt {
 
 // Table 指定表名
 func (stmt *InsertStmt) Table(table string) *InsertStmt {
-	stmt.table = stmt.TablePrefix() + table
+	stmt.table = table
 	return stmt
 }
 

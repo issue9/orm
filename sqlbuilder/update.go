@@ -47,7 +47,7 @@ func Update(e core.Engine) *UpdateStmt {
 
 // Table 指定表名
 func (stmt *UpdateStmt) Table(table string) *UpdateStmt {
-	stmt.table = stmt.TablePrefix() + table
+	stmt.table = table
 	return stmt
 }
 
@@ -162,7 +162,7 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []any, error) {
 		return stmt.WhereStmt().SQL()
 	}
 
-	w := Where(stmt.TablePrefix())
+	w := Where()
 	w.appendGroup(true, stmt.WhereStmt())
 
 	if named, ok := stmt.occValue.(sql.NamedArg); ok && named.Name != "" {

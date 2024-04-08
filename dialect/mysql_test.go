@@ -29,7 +29,6 @@ func TestMysql_DropConstrainStmtHook(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, "", test.Mysql, test.Mariadb)
 
-	// 约束名不是根据 core.pkName 生成的
 	suite.Run(func(t *test.Driver) {
 		db := t.DB
 

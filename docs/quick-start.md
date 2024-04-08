@@ -60,7 +60,7 @@ func main() {
 
 ### 安装
 
-在项目的 go.mod 中引用项目即可，当前版本为 v5：
+在项目的 go.mod 中引用项目即可，当前版本为 v6：
 
 ```go.mod
 require (
@@ -110,7 +110,7 @@ my, err := orm.NewDBWithStdDB(db, dialect.Mysql())
 
 ### 调试
 
-系统提供了 `DB.Debug(l log.Logger)` 用于调试，调用时，如果指定了非空参数，
+系统提供了 `DB.Debug` 用于调试，调用时，如果指定了非空参数，
 那么在下次 SQL 调用时，会将 SQL 输出到 l 指定的日志上；如果指定了空值，
 则表示关闭调试输出。
 

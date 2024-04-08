@@ -51,7 +51,7 @@ func (stmt *AddConstraintStmt) Reset() *AddConstraintStmt {
 
 // Table 指定表名
 func (stmt *AddConstraintStmt) Table(t string) *AddConstraintStmt {
-	stmt.TableName = stmt.TablePrefix() + t
+	stmt.TableName = t
 	return stmt
 }
 
@@ -223,7 +223,7 @@ func DropConstraint(e core.Engine) *DropConstraintStmt {
 //
 // 重复指定，会覆盖之前的。
 func (stmt *DropConstraintStmt) Table(table string) *DropConstraintStmt {
-	stmt.TableName = stmt.TablePrefix() + table
+	stmt.TableName = table
 	return stmt
 }
 

@@ -51,7 +51,7 @@ func TestWhereStmt_Delete(t *testing.T) {
 		initDB(t)
 		defer clearDB(t)
 
-		sql := sqlbuilder.Where("").And("id=?", 1).
+		sql := sqlbuilder.Where().And("id=?", 1).
 			Delete(t.DB).
 			Table("users")
 		_, err := sql.Exec()

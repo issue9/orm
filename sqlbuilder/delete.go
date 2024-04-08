@@ -30,7 +30,7 @@ func Delete(e core.Engine) *DeleteStmt {
 
 // Table 指定表名
 func (stmt *DeleteStmt) Table(table string) *DeleteStmt {
-	stmt.table = stmt.TablePrefix() + table
+	stmt.table = table
 	return stmt
 }
 

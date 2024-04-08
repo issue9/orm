@@ -161,24 +161,24 @@ func TestModels_New(t *testing.T) {
 		"mysql_charset": {"utf8"},
 	})
 
-	a.Equal(m.Name, "administrators")
+	a.Equal(m.Name, "#administrators")
 
 	// 多层指针下的 Receive
 
 	o := obj{}
 	m, err = ms.New(o)
 	a.NotError(err).NotNil(m).
-		Equal(m.Name, "objs").
+		Equal(m.Name, "#objs").
 		Equal(ms.len(), 2)
 
 	m, err = ms.New(&o)
 	a.NotError(err).NotNil(m).
-		Equal(m.Name, "objs").
+		Equal(m.Name, "#objs").
 		Equal(ms.len(), 2)
 
 	m, err = ms.New(&o)
 	a.NotError(err).NotNil(m).
-		Equal(m.Name, "objs").
+		Equal(m.Name, "#objs").
 		Equal(ms.len(), 2)
 
 	// view

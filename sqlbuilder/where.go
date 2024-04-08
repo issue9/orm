@@ -11,30 +11,26 @@ type WhereStmt struct {
 	andGroups []*WhereStmt
 	orGroups  []*WhereStmt
 
-	builder     *core.Builder
-	args        []any
-	tablePrefix string
+	builder *core.Builder
+	args    []any
 }
 
 // WhereStmtOf 用于将 [WhereStmt] 的方法与其它对象组合
-type WhereStmtOf[T core.TablePrefix] struct {
+type WhereStmtOf[T any] struct {
 	w *WhereStmt
 	t T
 }
 
 // Where 生成 [Where] 语句
-func (sql *SQLBuilder) Where() *WhereStmt { return Where(sql.TablePrefix()) }
+func (sql *SQLBuilder) Where() *WhereStmt { return Where() }
 
 // Where 生成 [Where] 语句
-func Where(tablePrefix string) *WhereStmt {
+func Where() *WhereStmt {
 	return &WhereStmt{
-		builder:     core.NewBuilder(""),
-		args:        make([]any, 0, 10),
-		tablePrefix: tablePrefix,
+		builder: core.NewBuilder(""),
+		args:    make([]any, 0, 10),
 	}
 }
-
-func (stmt *WhereStmt) TablePrefix() string { return stmt.tablePrefix }
 
 // Reset 重置内容
 func (stmt *WhereStmt) Reset() {
@@ -273,7 +269,7 @@ func (stmt *WhereStmt) in(and, not bool, col string, v ...any) *WhereStmt {
 
 // AndGroup 开始一个子条件语句
 func (stmt *WhereStmt) AndGroup(f func(*WhereStmt)) *WhereStmt {
-	w := Where(stmt.tablePrefix)
+	w := Where()
 	f(w)
 	stmt.appendGroup(true, w)
 	return stmt
@@ -281,7 +277,7 @@ func (stmt *WhereStmt) AndGroup(f func(*WhereStmt)) *WhereStmt {
 
 // OrGroup 开始一个子条件语句
 func (stmt *WhereStmt) OrGroup(f func(*WhereStmt)) *WhereStmt {
-	w := Where(stmt.tablePrefix)
+	w := Where()
 	f(w)
 	stmt.appendGroup(false, w)
 	return stmt
@@ -326,8 +322,8 @@ func (stmt *WhereStmt) Cond(expr bool, f func(stmt *WhereStmt)) *WhereStmt {
 	return stmt
 }
 
-func NewWhereStmtOf[T core.TablePrefix](t T) *WhereStmtOf[T] {
-	return &WhereStmtOf[T]{w: Where(t.TablePrefix()), t: t}
+func NewWhereStmtOf[T any](t T) *WhereStmtOf[T] {
+	return &WhereStmtOf[T]{w: Where(), t: t}
 }
 
 func (stmt *WhereStmtOf[T]) Where(cond string, args ...any) T {

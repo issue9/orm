@@ -43,7 +43,7 @@ func (stmt *CreateTableStmt) Reset() *CreateTableStmt {
 // Table 指定表名
 func (stmt *CreateTableStmt) Table(t string) *CreateTableStmt {
 	stmt.model.Type = core.Table
-	stmt.model.Name = stmt.TablePrefix() + t
+	stmt.model.Name = t
 	stmt.name = t
 	return stmt
 }
@@ -178,7 +178,7 @@ func (stmt *CreateTableStmt) ForeignKey(name, col, refTable, refCol, updateRule,
 	stmt.err = stmt.model.NewForeignKey(&core.ForeignKey{
 		Name:         name,
 		Column:       stmt.model.FindColumn(col),
-		RefTableName: stmt.TablePrefix() + refTable,
+		RefTableName: refTable,
 		RefColName:   refCol,
 		UpdateRule:   updateRule,
 		DeleteRule:   deleteRule,
@@ -428,7 +428,7 @@ func DropTable(e core.Engine) *DropTableStmt {
 // 多次指定，则会删除多个表
 func (stmt *DropTableStmt) Table(table ...string) *DropTableStmt {
 	for i, t := range table {
-		table[i] = stmt.TablePrefix() + t
+		table[i] = t
 	}
 
 	if stmt.tables == nil {
@@ -485,7 +485,7 @@ func (sql *SQLBuilder) TableExists() *TableExistsStmt {
 }
 
 func (stmt *TableExistsStmt) Table(table string) *TableExistsStmt {
-	stmt.name = stmt.TablePrefix() + table
+	stmt.name = table
 	return stmt
 }
 

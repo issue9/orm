@@ -7,17 +7,21 @@ package orm
 import (
 	"database/sql"
 
+	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6/internal/engine"
 	"github.com/issue9/orm/v6/sqlbuilder"
 )
 
 type dbPrefix struct {
-	*DB
+	core.Engine
+	db *DB
 	p  string
 	sb *sqlbuilder.SQLBuilder
 }
 
 type txPrefix struct {
-	*Tx
+	core.Engine
+	tx *Tx
 	p  string
 	sb *sqlbuilder.SQLBuilder
 }
@@ -26,9 +30,12 @@ type txPrefix struct {
 //
 // 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 DB 或 Tx。
 func (db *DB) Prefix(p string) Engine {
+	p = db.TablePrefix() + p
+
 	dp := &dbPrefix{
-		p:  db.TablePrefix() + p,
-		DB: db,
+		Engine: engine.New(db.DB(), p, db.Dialect()),
+		p:      p,
+		db:     db,
 	}
 	dp.sb = sqlbuilder.New(dp)
 
@@ -41,9 +48,11 @@ func (db *DB) Prefix(p string) Engine {
 //
 // 创建的 [Engine] 依然属于当前事务。
 func (tx *Tx) Prefix(p string) Engine {
+	p = tx.TablePrefix() + p
 	dp := &txPrefix{
-		p:  tx.TablePrefix() + p,
-		Tx: tx,
+		Engine: engine.New(tx.Tx(), p, tx.Dialect()),
+		p:      p,
+		tx:     tx,
 	}
 	dp.sb = sqlbuilder.New(dp)
 
@@ -73,10 +82,8 @@ func (p *dbPrefix) Drop(v TableNamer) error { return drop(p, v) }
 
 func (p *dbPrefix) Truncate(v TableNamer) error { return truncate(p, v) }
 
-func (p *dbPrefix) TableName(v TableNamer) string { return p.TablePrefix() + v.TableName() }
-
 func (p *dbPrefix) InsertMany(max int, v ...TableNamer) error {
-	return p.DB.DoTransaction(func(tx *Tx) error {
+	return p.db.DoTransaction(func(tx *Tx) error {
 		return tx.Prefix(p.p).InsertMany(max, v...)
 	})
 }
@@ -124,5 +131,3 @@ func (p *txPrefix) InsertMany(max int, v ...TableNamer) error {
 }
 
 func (p *txPrefix) SQLBuilder() *sqlbuilder.SQLBuilder { return p.sb }
-
-func (p *txPrefix) TableName(v TableNamer) string { return p.TablePrefix() + v.TableName() }

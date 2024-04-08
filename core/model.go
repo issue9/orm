@@ -13,8 +13,6 @@ import (
 	"github.com/issue9/sliceutil"
 )
 
-const pkName = "_pk"
-
 var (
 	// ErrAutoIncrementPrimaryKeyConflict 自增和主键不能同时存在
 	//
@@ -181,6 +179,8 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 // 自增会自动转换为主键。
 // 多次调用，则多列形成一个多列主键。
 func (m *Model) AddPrimaryKey(col *Column) error {
+	const pkName = "_pk"
+
 	if m.AutoIncrement != nil {
 		return ErrAutoIncrementPrimaryKeyConflict
 	}

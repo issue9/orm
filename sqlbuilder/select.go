@@ -272,7 +272,7 @@ func (stmt *SelectStmt) From(table string, alias ...string) *SelectStmt {
 		return stmt
 	}
 
-	builder := core.NewBuilder("").QuoteKey(stmt.TablePrefix() + table)
+	builder := core.NewBuilder("").QuoteKey(table)
 
 	switch len(alias) {
 	case 0:
@@ -307,7 +307,7 @@ func (stmt *SelectStmt) Join(typ, table, alias, on string) *SelectStmt {
 	stmt.joins.WBytes(' ').
 		WString(typ).
 		WString(" JOIN ").
-		QuoteKey(stmt.TablePrefix() + table).
+		QuoteKey(table).
 		WString(" AS ").
 		QuoteKey(alias).
 		WString(" ON ").

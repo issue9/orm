@@ -33,18 +33,11 @@ type IndexType int8
 
 type ConstraintType int8
 
-// TablePrefix 表名前缀
-//
-// 当需要在一个数据库中创建不同的实例，
-// 或是同一个数据表结构应用在不同的对象是，可以通过不同的表名前缀对数据表进行区分。
-type TablePrefix interface {
-	// TablePrefix 所有数据表拥有的统一表名前缀
-	TablePrefix() string
-}
-
 // Engine 数据库执行的基本接口
 //
-// orm.DB 和 orm.Tx 应该实现此接口。
+// Engine 对查询语句作了以下处理：
+//   - {} 符号会被替换为 [Dialect.Quotes] 对应的符号；
+//   - # 会被替换为 [Engine.TablePrefix] 的返回值；
 type Engine interface {
 	Dialect() Dialect
 
@@ -64,7 +57,16 @@ type Engine interface {
 
 	PrepareContext(ctx context.Context, query string) (*Stmt, error)
 
-	TablePrefix
+	// TablePrefix 所有数据表拥有的统一表名前缀
+	//
+	// 当需要在一个数据库中创建不同的实例，
+	// 或是同一个数据表结构应用在不同的对象是，可以通过不同的表名前缀对数据表进行区分。
+	TablePrefix() string
+
+	// Debug 启用调试输出
+	//
+	// 如果传递了一个非空值，那么会将生成的 SQL 输出到 l。
+	Debug(l func(string))
 }
 
 // Dialect 用于描述与数据库和驱动相关的一些特性
@@ -88,7 +90,7 @@ type Dialect interface {
 
 	// SQLType 将列转换成数据支持的类型表达式
 	//
-	// 必须实现对所有 PrimitiveType 类型的转换。
+	// 必须实现对所有 [PrimitiveType] 类型的转换。
 	SQLType(*Column) (string, error)
 
 	// TransactionalDDL 是否允许在事务中执行 DDL

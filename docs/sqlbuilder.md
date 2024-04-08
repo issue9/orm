@@ -35,7 +35,7 @@ stmt.QueryObject(false, &list)
 
 ### 命名参数
 
-支持 Go 1.8 之后提供的 sql.NamedArgs 格式的命名参数。在链式操作中，并不要求语句的顺序，比如：
+支持 Go 1.8 之后提供的 `sql.NamedArgs` 格式的命名参数。在链式操作中，并不要求语句的顺序，比如：
 
 ```go
 stmt1, err := sqlbuilder.Select(db)
@@ -83,7 +83,7 @@ stmt2.Query([]interface{}{
 
 如果你表中的字段是 SQL 的关键字，那么在查询时，需要将该字段加特殊的引号，
 各个数据库不尽相同。
-在 sqlbuilder 中，你不需要关心具体是什么唯一，我们统一采用 `{}`，
+在 sqlbuilder 中，你不需要关心具体是什么，我们统一采用 `{}`，
 系统会自动处理成当前数据库的符号。
 
 当然大部分时候，你都不需要手动添加，系统会自动帮你添加，
@@ -95,6 +95,9 @@ query := sqlbuilder.Select(db).
     Column("group").              // 此处不需要
     Where("{group} IS NOT NULL")  // WHERE 表达式需要加 {}
 ```
+
+还支持使用 # 表示表名前缀，这在将多个实例安装在同一个数据库时非常有用，
+表名前缀由 `New` 或是 `DB.Prefix` 指定。
 
 ### CrateTable/TruncateTable/DropTable
 

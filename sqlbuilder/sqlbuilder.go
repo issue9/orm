@@ -95,5 +95,3 @@ type (
 func New(e core.Engine) *SQLBuilder {
 	return &SQLBuilder{engine: e}
 }
-
-func (sql *SQLBuilder) TablePrefix() string { return sql.engine.TablePrefix() }

@@ -24,10 +24,11 @@ func AddColumn(e core.Engine) *AddColumnStmt {
 	return stmt
 }
 
-// Table 指定表名。
-// 重复指定，会覆盖之前的。
+// Table 指定表名
+//
+// NOTE: 重复指定，会覆盖之前的。
 func (stmt *AddColumnStmt) Table(table string) *AddColumnStmt {
-	stmt.table = stmt.TablePrefix() + table
+	stmt.table = table
 	return stmt
 }
 
@@ -116,7 +117,7 @@ func DropColumn(e core.Engine) *DropColumnStmt {
 // Table 指定表名。
 // 重复指定，会覆盖之前的。
 func (stmt *DropColumnStmt) Table(table string) *DropColumnStmt {
-	stmt.TableName = stmt.TablePrefix() + table
+	stmt.TableName = table
 	return stmt
 }
 

@@ -68,8 +68,6 @@ func newDDLStmt(e core.Engine, sql DDLSQLer) *ddlStmt {
 	}
 }
 
-func (stmt *baseStmt) TablePrefix() string { return stmt.engine.TablePrefix() }
-
 func (stmt *baseStmt) Dialect() core.Dialect { return stmt.engine.Dialect() }
 
 func (stmt *baseStmt) Engine() core.Engine { return stmt.engine }

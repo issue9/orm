@@ -36,7 +36,7 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 		return m.(*core.Model), nil
 	}
 
-	m := core.NewModel(core.Table, obj.TableName(), rtype.NumField())
+	m := core.NewModel(core.Table, "#"+obj.TableName(), rtype.NumField())
 	m.GoType = rtype
 
 	if err := parseColumns(m, rtype); err != nil {

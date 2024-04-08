@@ -17,7 +17,6 @@ import (
 var (
 	_ sqlbuilder.DDLStmt = &sqlbuilder.AddColumnStmt{}
 	_ sqlbuilder.DDLStmt = &sqlbuilder.DropColumnStmt{}
-	_ core.TablePrefix   = &sqlbuilder.AddColumnStmt{}
 )
 
 func TestColumn(t *testing.T) {
