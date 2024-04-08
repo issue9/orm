@@ -192,7 +192,7 @@ tx.InsertMany(&User{Id:1,FirstName:"abc"},&User{Id:1,FirstName:"abc"})
 
 ```go
 // 导出 id=1 的数据
-_,err := sqlbuilder.Select(e, e.Dialect()).Select("*").From("{#table}").Where("id=1").QueryObj(obj)
+_,err := sqlbuilder.Select(e, e.Dialect()).Select("*").From("{table}").Where("id=1").QueryObj(obj)
 // 导出 id 为 1 的数据，并回填到 user 实例中
 user := &User{Id:1}
 err := e.Select(u)
@@ -240,6 +240,19 @@ lastID,err := db.InsertLastID(&User{FirstName:"abc"})
 默认的 DB 是不支持事务的，若需要事务支持，则需要调用 DB.Begin()
 返回事务对象 Tx，当然并不是所有的数据库都支持事务操作的。
 Tx 拥有一组与 DB 相同的接口。
+
+测试
+---
+
+可通过运行以下脚本执行测试：
+```shell
+go test ./... -dbs=sqlite3,sqlite3
+```
+
+性能测试：
+```
+go test -bench=. -dbs=sqlite3,sqlite3
+```
 
 版权
 ---

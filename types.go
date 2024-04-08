@@ -40,7 +40,12 @@ type (
 		BeforeInsert() error
 	}
 
-	// Engine 针对操作 [TableNamer] 的操作接口
+	// Engine 数据操作引擎
+	//
+	// 相对于 [core.Engine]，添加了针对 [TableNamer] 的操作。
+	// 与 sqlbuilder 的拼接方式不同，所有针对 [TableNamer] 的操作，
+	// 其定义的约束会添加表名作为约束名的前缀，以防止约束名重复，
+	// 而 sqlbuilder 中对约束名的使用，则需要用户自己确保唯一性。
 	Engine interface {
 		core.Engine
 
@@ -100,12 +105,12 @@ type (
 		// TableName 返回 v 的真实表名
 		TableName(v TableNamer) string
 
-		// Where 生成 WhereStmt 语句
+		// Where 生成 [WhereStmt] 语句
 		Where(cond string, args ...any) *WhereStmt
 
 		SQLBuilder() *sqlbuilder.SQLBuilder
 
-		// newModel 获取指定表名的模型
+		// newModel 获取 v 的 [core.Model] 实例
 		//
 		// 内部使用不公开，[Engine] 也不会有外部的实现。
 		newModel(v TableNamer) (*core.Model, error)

@@ -36,7 +36,7 @@ type ConstraintType int8
 // TablePrefix 表名前缀
 //
 // 当需要在一个数据库中创建不同的实例，
-// 或是同一个数据模式应用在不同的对象是，可以通过不同的表名前缀对数据表进行区分。
+// 或是同一个数据表结构应用在不同的对象是，可以通过不同的表名前缀对数据表进行区分。
 type TablePrefix interface {
 	// TablePrefix 所有数据表拥有的统一表名前缀
 	TablePrefix() string

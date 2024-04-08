@@ -2,8 +2,8 @@
 
 ```go
 import (
-    "github.com/issue9/orm/v4"
-    "github.com/issue9/orm/v4/dialect"
+    "github.com/issue9/orm/v6"
+    "github.com/issue9/orm/v6/dialect"
 
     _ "github.com/mattn/go-sqlite3"
 )
@@ -85,8 +85,8 @@ go 1.18
 
 ```go
 import (
-    "github.com/issue9/orm/v4"
-    "github.com/issue9/orm/v4/dialect"
+    "github.com/issue9/orm/v6"
+    "github.com/issue9/orm/v6/dialect"
 
     _ "github.com/mattn/go-sql-driver/mysql"
     _ "github.com/mattn/mattn/go-sqlite3"

@@ -41,8 +41,7 @@ func getModel(e Engine, v TableNamer) (*core.Model, reflect.Value, error) {
 	return m, rval, nil
 }
 
-// 根据 Model 中的主键或是唯一索引为 sql 产生 where 语句，
-// 若两者都不存在，则返回错误信息。rval 为 struct 的 reflect.Value
+// 根据 Model 中的主键或是唯一索引生成 where 语句，若两者都不存在，则返回错误信息。
 func where(ws *sqlbuilder.WhereStmt, m *core.Model, rval reflect.Value) error {
 	var keys []string
 	var vals []any

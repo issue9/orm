@@ -15,7 +15,7 @@ import (
 	"github.com/issue9/orm/v6/fetch"
 )
 
-// ErrNoData 在 Select.QueryInt 等函数中，
+// ErrNoData 在 [Select.QueryInt] 等函数中，
 // 如果没有符合条件的数据，则返回此错误。
 var ErrNoData = errors.New("不存在符合和条件的数据")
 
@@ -437,7 +437,7 @@ func (stmt *SelectStmt) Union(all bool, sel ...*SelectStmt) *SelectStmt {
 
 // QueryObject 将符合当前条件的所有记录依次写入 objs 中
 //
-// 关于 objs 的值类型，可以参考 github.com/issue9/orm/fetch.Object 函数的相关介绍。
+// 关于 objs 的类型，可以参考 [fetch.Object] 函数的相关介绍。
 func (stmt *SelectStmt) QueryObject(strict bool, objs any) (size int, err error) {
 	rows, err := stmt.Query()
 	if err != nil {

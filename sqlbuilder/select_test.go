@@ -43,17 +43,19 @@ func TestSelect(t *testing.T) {
 		a.Error(err).Empty(f)
 
 		name, err := stmt.QueryString("name")
-		a.NotError(err).
-			Equal(name, "4")
+		a.NotError(err).Equal(name, "4")
 
 		obj := &user{}
 		size, err := stmt.QueryObject(true, obj)
-		a.NotError(err).Equal(1, size)
-		a.Equal(obj.ID, 4)
+		a.NotError(err).Equal(1, size).
+			Equal(obj.ID, 4)
+
+		objs := make([]*user, 0, 2)
+		size, err = stmt.QueryObject(true, &objs)
+		a.NotError(err).Equal(4, size).Length(objs, 4)
 
 		cnt, err := stmt.Count("count(*) as cnt").QueryInt("cnt")
-		a.NotError(err).
-			Equal(cnt, 4)
+		a.NotError(err).Equal(cnt, 4)
 
 		// 没有符合条件的数据
 		stmt.Reset()

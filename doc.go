@@ -5,9 +5,10 @@
 // Package orm 一个简单小巧的 orm 实现方案
 //
 // 目前内置了对以下数据库的支持：
-//   - sqlite3:  github.com/mattn/go-sqlite3
-//   - mysql:    github.com/go-sql-driver/mysql
-//   - postgres: github.com/lib/pq
+//   - sqlite3:          github.com/mattn/go-sqlite3
+//   - mysql/mariadb:    github.com/go-sql-driver/mysql
+//   - postgres:         github.com/lib/pq
+//   - sqlite            modernc.org/sqlite 纯 Go 的 sqlite3，无须 CGO。
 //
 // 其它数据库，用户可以通过实现 [Dialect] 接口，来实现相应的支持。
 //
@@ -17,7 +18,7 @@
 //
 //	import (
 //	    _ github.com/mattn/go-sqlite3       // 加载数据库驱动
-//	    _ github.com/issue9/orm/v4/dialect  // sqlite3 的 dialect 声明在此处
+//	    _ github.com/issue9/orm/v6/dialect  // sqlite3 的 dialect 声明在此处
 //	)
 //
 //	// 初始化一个 DB
@@ -37,7 +38,7 @@
 //
 //	select * from p_user where `group`=1
 //
-// DB.Query(),DB.Exec(),DB.Prepare().DB.Where() 及 Tx 与之对应的函数都可以使用占位符。
+// [DB.Query]、[DB.Exec]、[DB.Prepare]、[DB.Where] 及 [Tx] 与之对应的函数都可以使用占位符。
 //
 // Model 不能指定占位符，它们默认总会使用占位符，且无法取消。
 //
@@ -142,7 +143,7 @@
 // Select:
 //
 //	// 导出 id=1 的数据
-//	_,err := sqlbuilder.Select(e, e.Dialect()).Select("*").From("{#table}").Where("id=1").QueryObj(obj)
+//	_,err := sqlbuilder.Select(e, e.Dialect()).Select("*").From("{table}").Where("id=1").QueryObj(obj)
 //	// 导出 id 为 1 的数据，并回填到 user 实例中
 //	user := &User{Id:1}
 //	err := e.Select(u)

@@ -15,18 +15,16 @@ import (
 	"github.com/issue9/orm/v6/sqlbuilder"
 )
 
-// 测试性能的数据库驱动名称
-var benchDBDriverName = test.Mysql
-
 func BenchmarkDB_Insert(b *testing.B) {
 	a := assert.New(b, false)
 
 	m := &Group{
 		Name:    "name",
 		Created: time.Now(),
+		Any:     5,
 	}
 
-	suite := test.NewSuite(a, "", benchDBDriverName)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
@@ -47,9 +45,10 @@ func BenchmarkDB_Update(b *testing.B) {
 	m := &Group{
 		Name:    "name",
 		Created: time.Now(),
+		Any:     5,
 	}
 
-	suite := test.NewSuite(a, "", benchDBDriverName)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
@@ -77,9 +76,10 @@ func BenchmarkDB_Select(b *testing.B) {
 	m := &Group{
 		Name:    "name",
 		Created: time.Now(),
+		Any:     5,
 	}
 
-	suite := test.NewSuite(a, "", benchDBDriverName)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
@@ -104,9 +104,10 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 	m := &Group{
 		Name:    "name",
 		Created: time.Now(),
+		Any:     5,
 	}
 
-	suite := test.NewSuite(a, "", benchDBDriverName)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		t.NotError(t.DB.Create(&Group{}))
@@ -122,7 +123,7 @@ func BenchmarkDB_WhereUpdate(b *testing.B) {
 
 		for i := 0; i < b.N; i++ {
 			_, err := sqlbuilder.
-				Update(t.DB).Table("{#groups}").
+				Update(t.DB).Table("{groups}").
 				Set("name", "n1").
 				Increase("created", 1).
 				Where("{id}=?", i+1).
