@@ -15,8 +15,9 @@ import (
 	"github.com/issue9/orm/v6/sqlbuilder"
 )
 
-// ErrNeedAutoIncrementColumn 当以 LastInsertID
-// 的方式插入一条没有 AI 列的对象时，会返回此错误。
+// ErrNeedAutoIncrementColumn 缺少必要的自增列
+//
+// 当以 LastInsertID 的方式插入一条没有 AI 列的对象时，会返回此错误。
 var ErrNeedAutoIncrementColumn = errors.New("必须存在自增列")
 
 func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.New(obj) }
@@ -402,6 +403,10 @@ var errInsertManyHasDifferentType = errors.New("InsertMany 必须是相同的数
 // rval 为结构体指针组成的数据
 func buildInsertManySQL(e Engine, v ...TableNamer) (*sqlbuilder.InsertStmt, error) {
 	query := e.SQLBuilder().Insert()
+	if len(v) == 0 {
+		return query, nil
+	}
+
 	var keys []string          // 保存列的顺序，方便后续元素获取值
 	var firstType reflect.Type // 记录数组中第一个元素的类型，保证后面的都相同
 
@@ -461,7 +466,7 @@ func buildInsertManySQL(e Engine, v ...TableNamer) (*sqlbuilder.InsertStmt, erro
 			}
 			query.Values(vals...)
 		}
-	} // end for array
+	}
 
 	return query, nil
 }

@@ -5,6 +5,7 @@
 package createtable
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -125,9 +126,7 @@ func parseSqlite3Indexes(table *Sqlite3Table, tableName string, engine core.Engi
 		return err
 	}
 	defer func() {
-		if err1 := rows.Close(); err1 != nil {
-			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-		}
+		err = errors.Join(err, rows.Close())
 	}()
 
 	for rows.Next() {

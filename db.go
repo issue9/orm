@@ -198,18 +198,14 @@ func (db *DB) Truncate(v TableNamer) error {
 		return truncate(db, v)
 	}
 
-	return db.DoTransaction(func(tx *Tx) error {
-		return truncate(tx, v)
-	})
+	return db.DoTransaction(func(tx *Tx) error { return truncate(tx, v) })
 }
 
 // InsertMany 一次插入多条数据
 //
 // 会自动转换成事务进行处理。
 func (db *DB) InsertMany(max int, v ...TableNamer) error {
-	return db.DoTransaction(func(tx *Tx) error {
-		return tx.InsertMany(max, v...)
-	})
+	return db.DoTransaction(func(tx *Tx) error { return tx.InsertMany(max, v...) })
 }
 
 func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }

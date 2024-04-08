@@ -8,7 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/issue9/orm/v6/core"
@@ -543,21 +542,12 @@ func (stmt *SelectQuery) QueryInt(colName string, arg ...any) (int64, error) {
 func (stmt *SelectQuery) Close() error { return stmt.stmt.Close() }
 
 func queryObject(rows *sql.Rows, strict bool, objs any) (size int, err error) {
-	defer func() {
-		if err1 := rows.Close(); err1 != nil {
-			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-		}
-	}()
-
+	defer func() { err = errors.Join(err, rows.Close()) }()
 	return fetch.Object(strict, rows, objs)
 }
 
 func queryString(rows *sql.Rows, colName string) (v string, err error) {
-	defer func() {
-		if err1 := rows.Close(); err1 != nil {
-			err = fmt.Errorf("在抛出错误 %s 时再次发生错误 %w", err.Error(), err1)
-		}
-	}()
+	defer func() { err = errors.Join(err, rows.Close()) }()
 
 	cols, err := fetch.ColumnString(true, colName, rows)
 	if err != nil {

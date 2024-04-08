@@ -109,10 +109,7 @@ func (p *txPrefix) Truncate(v TableNamer) error { return truncate(p, v) }
 func (p *txPrefix) InsertMany(max int, v ...TableNamer) error {
 	l := len(v)
 	for i := 0; i < l; i += max {
-		j := i + max
-		if j > l {
-			j = l
-		}
+		j := min(i+max, l)
 		query, err := buildInsertManySQL(p, v[i:j]...)
 		if err != nil {
 			return err

@@ -7,7 +7,7 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 
 	"github.com/issue9/orm/v6/core"
 	"github.com/issue9/orm/v6/sqlbuilder"
@@ -127,10 +127,7 @@ func (tx *Tx) ForUpdate(v TableNamer) error { return forUpdate(tx, v) }
 func (tx *Tx) InsertMany(max int, v ...TableNamer) error {
 	l := len(v)
 	for i := 0; i < l; i += max {
-		j := i + max
-		if j > l {
-			j = l
-		}
+		j := min(i+max, l)
 		query, err := buildInsertManySQL(tx, v[i:j]...)
 		if err != nil {
 			return err
@@ -175,10 +172,7 @@ func (db *DB) DoTransactionTx(ctx context.Context, opt *sql.TxOptions, f func(tx
 	}
 
 	if err := f(tx); err != nil {
-		if err1 := tx.Rollback(); err1 != nil {
-			return fmt.Errorf("在抛出错误 %w 时再次发生错误 %s", err, err1.Error())
-		}
-		return err
+		return errors.Join(err, tx.Rollback())
 	}
 
 	return tx.Commit()

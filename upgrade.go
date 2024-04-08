@@ -5,6 +5,7 @@
 package orm
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/issue9/orm/v6/core"
@@ -246,10 +247,7 @@ func (u *Upgrader) Do() error {
 
 	for _, ddl := range u.ddl {
 		if err := ddl.Exec(); err != nil {
-			if err2 := u.rollback(); err2 != nil {
-				err = fmt.Errorf("%w,%s", err, err2)
-			}
-			return err
+			return errors.Join(err, u.rollback())
 		}
 	}
 

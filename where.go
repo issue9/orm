@@ -76,8 +76,7 @@ func (stmt *WhereStmt) Update(v TableNamer, cols ...string) (sql.Result, error) 
 
 // Select 获取所有符合条件的数据
 //
-// v 可能是某个对象的指针，或是一组相同对象指针数组。
-// 表名来自 v，列名为 v 的所有列。
+// v 可能是某个对象的指针，或是一组相同对象指针数组。表名来自 v，列名为 v 的所有列。
 func (stmt *WhereStmt) Select(strict bool, v any) (int, error) {
 	t := reflect.TypeOf(v)
 	for t.Kind() == reflect.Ptr || t.Kind() == reflect.Slice || t.Kind() == reflect.Array {
