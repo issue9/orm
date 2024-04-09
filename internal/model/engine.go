@@ -2,8 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-// Package engine [core.Engine] 的默认实现
-package engine
+package model
 
 import (
 	"context"
@@ -14,8 +13,8 @@ import (
 )
 
 type coreEngine struct {
+	ms          *Models
 	engine      stdEngine
-	dialect     core.Dialect
 	tablePrefix string
 	replacer    *strings.Replacer
 	sqlLogger   func(string)
@@ -31,12 +30,13 @@ type stdEngine interface {
 
 func defaultSQLLogger(string) {}
 
-func New(e stdEngine, tablePrefix string, d core.Dialect) core.Engine {
-	l, r := d.Quotes()
+// NewEngine 声明实现 [core.Engine] 接口的实例
+func (ms *Models) NewEngine(e stdEngine, tablePrefix string) core.Engine {
+	l, r := ms.dialect.Quotes()
 
 	return &coreEngine{
+		ms:          ms,
 		engine:      e,
-		dialect:     d,
 		tablePrefix: tablePrefix,
 		sqlLogger:   defaultSQLLogger,
 		replacer: strings.NewReplacer(
@@ -60,7 +60,7 @@ func (db *coreEngine) Debug(l func(string)) {
 	db.sqlLogger = l
 }
 
-func (db *coreEngine) Dialect() core.Dialect { return db.dialect }
+func (db *coreEngine) Dialect() core.Dialect { return db.ms.dialect }
 
 func (db *coreEngine) QueryRow(query string, args ...any) *sql.Row {
 	return db.QueryRowContext(context.Background(), query, args...)

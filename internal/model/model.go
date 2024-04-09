@@ -19,9 +19,9 @@ func propertyError(field, name, message string) error {
 	return fmt.Errorf("%s 的 %s 属性发生以下错误: %s", field, name, message)
 }
 
-// New 从一个 obj 声明一个 Model 实例
+// New 从一个 obj 声明 [core.Model] 实例
 //
-// obj 可以是一个 struct 实例或是指针。
+// obj 可以是一个结构体或是指针。
 func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 	rtype := reflect.TypeOf(obj)
 	for rtype.Kind() == reflect.Ptr {

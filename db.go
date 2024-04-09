@@ -9,7 +9,6 @@ import (
 	"database/sql"
 
 	"github.com/issue9/orm/v6/core"
-	"github.com/issue9/orm/v6/internal/engine"
 	"github.com/issue9/orm/v6/internal/model"
 	"github.com/issue9/orm/v6/sqlbuilder"
 )
@@ -44,9 +43,11 @@ func NewDB(tablePrefix, dsn string, dialect Dialect) (*DB, error) {
 // NOTE: 请确保用于打开 db 的 driverName 参数与 dialect.DriverName() 是相同的，
 // 否则后续操作的结果是未知的。
 func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error) {
+	ms := model.NewModels(dialect)
 	inst := &DB{
 		db:     db,
-		Engine: engine.New(db, tablePrefix, dialect),
+		models: ms,
+		Engine: ms.NewEngine(db, tablePrefix),
 	}
 
 	ver, err := sqlbuilder.Version(inst)
@@ -55,7 +56,6 @@ func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error
 	}
 
 	inst.version = ver
-	inst.models = model.NewModels()
 	inst.sqlBuilder = sqlbuilder.New(inst)
 
 	return inst, nil
@@ -69,7 +69,7 @@ func (db *DB) New(tablePrefix string) *DB {
 		return db
 	}
 
-	e := engine.New(db.DB(), tablePrefix, db.Dialect())
+	e := db.models.NewEngine(db.DB(), tablePrefix)
 	return &DB{
 		Engine:     e,
 		sqlBuilder: sqlbuilder.New(e),

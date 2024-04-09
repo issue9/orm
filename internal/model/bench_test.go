@@ -12,7 +12,7 @@ import (
 
 func BenchmarkNewModelNoCached(b *testing.B) {
 	a := assert.New(b, false)
-	ms := NewModels()
+	ms := NewModels(nil)
 	a.NotNil(ms)
 
 	for i := 0; i < b.N; i++ {
@@ -24,7 +24,7 @@ func BenchmarkNewModelNoCached(b *testing.B) {
 
 func BenchmarkNewModelCached(b *testing.B) {
 	a := assert.New(b, false)
-	ms := NewModels()
+	ms := NewModels(nil)
 	a.NotNil(ms)
 
 	for i := 0; i < b.N; i++ {

@@ -10,7 +10,6 @@ import (
 	"errors"
 
 	"github.com/issue9/orm/v6/core"
-	"github.com/issue9/orm/v6/internal/engine"
 	"github.com/issue9/orm/v6/sqlbuilder"
 )
 
@@ -39,7 +38,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	return &Tx{
 		tx:     tx,
 		db:     db,
-		Engine: engine.New(tx, db.TablePrefix(), db.Dialect()),
+		Engine: db.models.NewEngine(tx, db.TablePrefix()),
 	}, nil
 }
 
@@ -85,7 +84,7 @@ func (tx *Tx) NewEngine(tablePrefix string) Engine {
 	}
 
 	return &txEngine{
-		Engine: engine.New(tx.Tx(), tablePrefix, tx.Dialect()),
+		Engine: tx.db.models.NewEngine(tx.Tx(), tablePrefix),
 		tx:     tx,
 	}
 }

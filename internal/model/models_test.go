@@ -23,7 +23,7 @@ func (ms *Models) len() (cnt int) {
 func TestModels(t *testing.T) {
 	a := assert.New(t, false)
 
-	ms := NewModels()
+	ms := NewModels(nil)
 	a.NotNil(ms)
 
 	m, err := ms.New(&User{})
