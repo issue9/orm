@@ -5,6 +5,7 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -51,7 +52,7 @@ type (
 	Engine interface {
 		core.Engine
 
-		// LastInsertID 插入一条数据并返回其自增 ID
+		// LastInsertIDContext 插入一条数据并返回其自增 ID
 		//
 		// 理论上功能等同于以下两步操作：
 		//  rslt, err := engine.Insert(obj)
@@ -61,28 +62,32 @@ type (
 		// 更简单和安全的方法。
 		//
 		// NOTE: 要求 v 有定义自增列。
+		LastInsertIDContext(ctx context.Context, v TableNamer) (int64, error)
 		LastInsertID(v TableNamer) (int64, error)
 
-		// Insert 插入数据
+		// InsertContext 插入数据
 		//
 		// NOTE: 若需一次性插入多条数据，请使用 [Engine.InsertMany] 。
+		InsertContext(ctx context.Context, v TableNamer) (sql.Result, error)
 		Insert(v TableNamer) (sql.Result, error)
 
 		// Delete 删除符合条件的数据
 		//
 		// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 		// 若两者都不存在，则将返回 error
+		DeleteContext(ctx context.Context, v TableNamer) (sql.Result, error)
 		Delete(v TableNamer) (sql.Result, error)
 
-		// Update 更新数据
+		// UpdateContext 更新数据
 		//
 		// 零值不会被提交，cols 指定的列，即使是零值也会被更新。
 		//
 		// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下)来查找，
 		// 若两者都不存在，则将返回 error
+		UpdateContext(ctx context.Context, v TableNamer, cols ...string) (sql.Result, error)
 		Update(v TableNamer, cols ...string) (sql.Result, error)
 
-		// Select 查询一个符合条件的数据
+		// SelectContext 查询一个符合条件的数据
 		//
 		// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下 ) 来查找，
 		// 若两者都不存在，则将返回 error
@@ -90,21 +95,26 @@ type (
 		//
 		// 查找条件的查找顺序是为 自增 > 主键 > 唯一约束，
 		// 如果同时存在多个唯一约束满足条件(可能每个唯一约束查询至的结果是不一样的)，则返回错误信息。
+		SelectContext(ctx context.Context, v TableNamer) (found bool, err error)
 		Select(v TableNamer) (found bool, err error)
 
+		CreateContext(ctx context.Context, v TableNamer) error
 		Create(v TableNamer) error
 
+		DropContext(ctx context.Context, v TableNamer) error
 		Drop(v TableNamer) error
 
-		// Truncate 清空表并重置 ai 但保留表结构
+		// TruncateContext 清空表并重置 ai 但保留表结构
+		TruncateContext(ctx context.Context, v TableNamer) error
 		Truncate(v TableNamer) error
 
-		// InsertMany 插入多条相同的数据
+		// InsertManyContext 插入多条相同的数据
 		//
 		// 若需要向某张表中插入多条记录，此方法会比 [Engine.Insert] 性能上好很多。
 		//
 		// max 表示一次最多插入的数量，如果超过此值，会分批执行，
 		// 但是依然在一个事务中完成。
+		InsertManyContext(ctx context.Context, max int, v ...TableNamer) error
 		InsertMany(max int, v ...TableNamer) error
 
 		// Where 生成 [WhereStmt] 语句

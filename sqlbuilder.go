@@ -5,6 +5,7 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -100,14 +101,14 @@ func getKV(rval reflect.Value, cols ...*core.Column) (keys []string, vals []any)
 }
 
 // 创建表或是视图
-func create(e Engine, v TableNamer) error {
+func create(ctx context.Context, e Engine, v TableNamer) error {
 	m, _, err := getModel(e, v)
 	if err != nil {
 		return err
 	}
 
 	if m.Type == core.View {
-		return createView(e, m)
+		return createView(ctx, e, m)
 	}
 
 	sb := e.SQLBuilder().CreateTable().Table(m.Name)
@@ -152,19 +153,19 @@ func create(e Engine, v TableNamer) error {
 		sb.PK(constraintName(m.Name, m.PrimaryKey.Name), cols...)
 	}
 
-	return sb.Exec()
+	return sb.ExecContext(ctx)
 }
 
-func createView(e Engine, m *core.Model) error {
+func createView(ctx context.Context, e Engine, m *core.Model) error {
 	stmt := e.SQLBuilder().CreateView().Name(m.Name)
 
 	for _, col := range m.Columns {
 		stmt.Column(col.Name)
 	}
-	return stmt.FromQuery(m.ViewAs).Exec()
+	return stmt.FromQuery(m.ViewAs).ExecContext(ctx)
 }
 
-func truncate(e Engine, v TableNamer) error {
+func truncate(ctx context.Context, e Engine, v TableNamer) error {
 	m, err := e.newModel(v)
 	if err != nil {
 		return err
@@ -181,24 +182,24 @@ func truncate(e Engine, v TableNamer) error {
 		stmt.Table(m.Name, "")
 	}
 
-	return stmt.Exec()
+	return stmt.ExecContext(ctx)
 }
 
 // 删除表或视图
-func drop(e Engine, v TableNamer) error {
+func drop(ctx context.Context, e Engine, v TableNamer) error {
 	m, err := e.newModel(v)
 	if err != nil {
 		return err
 	}
 
 	if m.Type == core.View {
-		return e.SQLBuilder().DropView().Name(m.Name).Exec()
+		return e.SQLBuilder().DropView().Name(m.Name).ExecContext(ctx)
 	}
 
-	return e.SQLBuilder().DropTable().Table(m.Name).Exec()
+	return e.SQLBuilder().DropTable().Table(m.Name).ExecContext(ctx)
 }
 
-func lastInsertID(e Engine, v TableNamer) (int64, error) {
+func lastInsertID(ctx context.Context, e Engine, v TableNamer) (int64, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return 0, err
@@ -233,10 +234,10 @@ func lastInsertID(e Engine, v TableNamer) (int64, error) {
 		stmt.KeyValue(col.Name, field.Interface())
 	}
 
-	return stmt.LastInsertID(m.Name, m.AutoIncrement.Name)
+	return stmt.LastInsertIDContext(ctx, m.AutoIncrement.Name)
 }
 
-func insert(e Engine, v TableNamer) (sql.Result, error) {
+func insert(ctx context.Context, e Engine, v TableNamer) (sql.Result, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
@@ -267,14 +268,14 @@ func insert(e Engine, v TableNamer) (sql.Result, error) {
 		stmt.KeyValue(col.Name, field.Interface())
 	}
 
-	return stmt.Exec()
+	return stmt.ExecContext(ctx)
 }
 
 // 查找数据
 //
 // 根据 v 的 pk 或中唯一索引列查找一行数据，并赋值给 v。
 // 若 v 为空，则不发生任何操作，v 可以是数组。
-func find(e Engine, v TableNamer) (bool, error) {
+func find(ctx context.Context, e Engine, v TableNamer) (bool, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return false, err
@@ -285,7 +286,7 @@ func find(e Engine, v TableNamer) (bool, error) {
 		return false, err
 	}
 
-	size, err := stmt.QueryObject(true, v)
+	size, err := stmt.QueryObjectContext(ctx, true, v)
 	if err != nil {
 		return false, err
 	}
@@ -293,7 +294,7 @@ func find(e Engine, v TableNamer) (bool, error) {
 }
 
 // for update 只能作用于事务
-func forUpdate(tx *Tx, v TableNamer) error {
+func forUpdate(ctx context.Context, tx *Tx, v TableNamer) error {
 	m, rval, err := getModel(tx, v)
 	if err != nil {
 		return err
@@ -314,7 +315,7 @@ func forUpdate(tx *Tx, v TableNamer) error {
 		return err
 	}
 
-	_, err = stmt.QueryObject(true, v)
+	_, err = stmt.QueryObjectContext(ctx, true, v)
 	return err
 }
 
@@ -323,7 +324,7 @@ func forUpdate(tx *Tx, v TableNamer) error {
 //
 // 更新依据为每个对象的主键或是唯一索引列。
 // 若不存在此两个类型的字段，则返回错误信息。
-func update(e Engine, v TableNamer, cols ...string) (sql.Result, error) {
+func update(ctx context.Context, e Engine, v TableNamer, cols ...string) (sql.Result, error) {
 	stmt := e.SQLBuilder().Update()
 
 	m, rval, err := getUpdateColumns(e, v, stmt, cols...)
@@ -335,7 +336,7 @@ func update(e Engine, v TableNamer, cols ...string) (sql.Result, error) {
 		return nil, err
 	}
 
-	return stmt.Exec()
+	return stmt.ExecContext(ctx)
 }
 
 func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols ...string) (*core.Model, reflect.Value, error) {
@@ -378,7 +379,7 @@ func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols 
 }
 
 // 将 v 生成 delete 的 sql 语句
-func del(e Engine, v TableNamer) (sql.Result, error) {
+func del(ctx context.Context, e Engine, v TableNamer) (sql.Result, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {
 		return nil, err
@@ -393,7 +394,7 @@ func del(e Engine, v TableNamer) (sql.Result, error) {
 		return nil, err
 	}
 
-	return stmt.Exec()
+	return stmt.ExecContext(ctx)
 }
 
 var errInsertManyHasDifferentType = errors.New("InsertMany 必须是相同的数据类型")

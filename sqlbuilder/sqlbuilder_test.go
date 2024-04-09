@@ -75,7 +75,7 @@ func initDB(t *test.Driver) {
 	sql.Table("users").
 		Columns("name").
 		Values("7")
-	id, err := sql.LastInsertID("users", "id")
+	id, err := sql.LastInsertID("id")
 	t.NotError(err, "%s@%s", err, t.DriverName).
 		Equal(id, 7, "%d != %d @ %s", id, 7, t.DriverName)
 
@@ -84,7 +84,7 @@ func initDB(t *test.Driver) {
 		Columns("name").
 		Values("8").
 		Values("9")
-	id, err = sql.LastInsertID("users", "id")
+	id, err = sql.LastInsertID("id")
 	t.Error(err, "%s@%s", err, t.DriverName).
 		Empty(id, "not empty @%s", t.DriverName)
 }

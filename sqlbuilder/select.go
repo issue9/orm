@@ -437,25 +437,37 @@ func (stmt *SelectStmt) Union(all bool, sel ...*SelectStmt) *SelectStmt {
 //
 // 关于 objs 的类型，可以参考 [fetch.Object] 函数的相关介绍。
 func (stmt *SelectStmt) QueryObject(strict bool, objs any) (size int, err error) {
-	rows, err := stmt.Query()
+	return stmt.QueryObjectContext(context.Background(), strict, objs)
+}
+
+func (stmt *SelectStmt) QueryObjectContext(ctx context.Context, strict bool, objs any) (size int, err error) {
+	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		return 0, err
 	}
-	return queryObject(rows, strict, objs)
+	return fetchObject(rows, strict, objs)
 }
 
 // QueryString 查询指定列的第一行数据，并将其转换成 string
 func (stmt *SelectStmt) QueryString(colName string) (v string, err error) {
-	rows, err := stmt.Query()
+	return stmt.QueryStringContext(context.Background(), colName)
+}
+
+func (stmt *SelectStmt) QueryStringContext(ctx context.Context, colName string) (v string, err error) {
+	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		return "", err
 	}
-	return queryString(rows, colName)
+	return fetchString(rows, colName)
 }
 
 // QueryFloat 查询指定列的第一行数据，并将其转换成 float64
 func (stmt *SelectStmt) QueryFloat(colName string) (float64, error) {
-	v, err := stmt.QueryString(colName)
+	return stmt.QueryFloatContext(context.Background(), colName)
+}
+
+func (stmt *SelectStmt) QueryFloatContext(ctx context.Context, colName string) (float64, error) {
+	v, err := stmt.QueryStringContext(ctx, colName)
 	if err != nil {
 		return 0, err
 	}
@@ -465,10 +477,14 @@ func (stmt *SelectStmt) QueryFloat(colName string) (float64, error) {
 
 // QueryInt 查询指定列的第一行数据，并将其转换成 int64
 func (stmt *SelectStmt) QueryInt(colName string) (int64, error) {
+	return stmt.QueryIntContext(context.Background(), colName)
+}
+
+func (stmt *SelectStmt) QueryIntContext(ctx context.Context, colName string) (int64, error) {
 	// NOTE: 可能会出现浮点数的情况。比如：
 	// select avg(xx) as avg form xxx where xxx
 	// 查询 avg 的值可能是 5.000 等值。
-	v, err := stmt.QueryString(colName)
+	v, err := stmt.QueryStringContext(ctx, colName)
 	if err != nil {
 		return 0, err
 	}
@@ -503,7 +519,7 @@ func (stmt *SelectQuery) QueryObject(strict bool, objs any, arg ...any) (size in
 	if err != nil {
 		return 0, err
 	}
-	return queryObject(rows, strict, objs)
+	return fetchObject(rows, strict, objs)
 }
 
 // QueryString 查询指定列的第一行数据，并将其转换成 string
@@ -512,7 +528,7 @@ func (stmt *SelectQuery) QueryString(colName string, arg ...any) (v string, err 
 	if err != nil {
 		return "", err
 	}
-	return queryString(rows, colName)
+	return fetchString(rows, colName)
 }
 
 // QueryFloat 查询指定列的第一行数据，并将其转换成 float64
@@ -540,13 +556,13 @@ func (stmt *SelectQuery) QueryInt(colName string, arg ...any) (int64, error) {
 
 func (stmt *SelectQuery) Close() error { return stmt.stmt.Close() }
 
-func queryObject(rows *sql.Rows, strict bool, objs any) (size int, err error) {
+func fetchObject(rows *sql.Rows, strict bool, objs any) (size int, err error) {
 	defer func() { err = errors.Join(err, rows.Close()) }()
 	size, err = fetch.Object(strict, rows, objs)
 	return
 }
 
-func queryString(rows *sql.Rows, colName string) (v string, err error) {
+func fetchString(rows *sql.Rows, colName string) (v string, err error) {
 	defer func() { err = errors.Join(err, rows.Close()) }()
 
 	cols, err := fetch.ColumnString(true, colName, rows)

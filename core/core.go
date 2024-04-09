@@ -39,23 +39,19 @@ type ConstraintType int8
 //   - {} 符号会被替换为 [Dialect.Quotes] 对应的符号；
 //   - # 会被替换为 [Engine.TablePrefix] 的返回值；
 type Engine interface {
-	Dialect() Dialect
-
 	Query(query string, args ...any) (*sql.Rows, error)
-
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 
 	QueryRow(query string, args ...any) *sql.Row
-
 	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 
 	Exec(query string, args ...any) (sql.Result, error)
-
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 
 	Prepare(query string) (*Stmt, error)
-
 	PrepareContext(ctx context.Context, query string) (*Stmt, error)
+
+	Dialect() Dialect
 
 	// TablePrefix 所有数据表拥有的统一表名前缀
 	//

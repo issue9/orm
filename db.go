@@ -92,35 +92,73 @@ func (db *DB) Close() error {
 // Version 数据库服务端的版本号
 func (db *DB) Version() string { return db.version }
 
-func (db *DB) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(db, v) }
+func (db *DB) LastInsertID(v TableNamer) (int64, error) {
+	return db.LastInsertIDContext(context.Background(), v)
+}
+
+func (db *DB) LastInsertIDContext(ctx context.Context, v TableNamer) (int64, error) {
+	return lastInsertID(ctx, db, v)
+}
 
 // Insert 插入数据
 //
 // NOTE: 若需一次性插入多条数据，请使用 [Tx.InsertMany]。
-func (db *DB) Insert(v TableNamer) (sql.Result, error) { return insert(db, v) }
+func (db *DB) Insert(v TableNamer) (sql.Result, error) {
+	return db.InsertContext(context.Background(), v)
+}
 
-func (db *DB) Delete(v TableNamer) (sql.Result, error) { return del(db, v) }
+func (db *DB) InsertContext(ctx context.Context, v TableNamer) (sql.Result, error) {
+	return insert(ctx, db, v)
+}
 
-func (db *DB) Update(v TableNamer, cols ...string) (sql.Result, error) { return update(db, v, cols...) }
+func (db *DB) Delete(v TableNamer) (sql.Result, error) {
+	return db.DeleteContext(context.Background(), v)
+}
 
-func (db *DB) Select(v TableNamer) (bool, error) { return find(db, v) }
+func (db *DB) DeleteContext(ctx context.Context, v TableNamer) (sql.Result, error) {
+	return del(ctx, db, v)
+}
 
-func (db *DB) Create(v TableNamer) error { return create(db, v) }
+func (db *DB) Update(v TableNamer, cols ...string) (sql.Result, error) {
+	return db.UpdateContext(context.Background(), v, cols...)
+}
 
-func (db *DB) Drop(v TableNamer) error { return drop(db, v) }
+func (db *DB) UpdateContext(ctx context.Context, v TableNamer, cols ...string) (sql.Result, error) {
+	return update(ctx, db, v, cols...)
+}
+
+func (db *DB) Select(v TableNamer) (bool, error) { return db.SelectContext(context.Background(), v) }
+
+func (db *DB) SelectContext(ctx context.Context, v TableNamer) (bool, error) { return find(ctx, db, v) }
+
+func (db *DB) Create(v TableNamer) error { return db.CreateContext(context.Background(), v) }
+
+func (db *DB) CreateContext(ctx context.Context, v TableNamer) error { return create(ctx, db, v) }
+
+func (db *DB) Drop(v TableNamer) error { return db.DropContext(context.Background(), v) }
+
+func (db *DB) DropContext(ctx context.Context, v TableNamer) error { return drop(ctx, db, v) }
 
 func (db *DB) Truncate(v TableNamer) error {
+	return db.TruncateContext(context.Background(), v)
+}
+
+func (db *DB) TruncateContext(ctx context.Context, v TableNamer) error {
 	if !db.Dialect().TransactionalDDL() {
-		return truncate(db, v)
+		return truncate(ctx, db, v)
 	}
-	return db.DoTransaction(func(tx *Tx) error { return truncate(tx, v) })
+	return db.DoTransaction(func(tx *Tx) error { return truncate(ctx, tx, v) })
 }
 
 // InsertMany 一次插入多条数据
 //
 // 会自动转换成事务进行处理。
 func (db *DB) InsertMany(max int, v ...TableNamer) error {
-	return db.DoTransaction(func(tx *Tx) error { return tx.InsertMany(max, v...) })
+	return db.InsertManyContext(context.Background(), max, v...)
+}
+
+func (db *DB) InsertManyContext(ctx context.Context, max int, v ...TableNamer) error {
+	return db.DoTransaction(func(tx *Tx) error { return tx.InsertManyContext(ctx, max, v...) })
 }
 
 func (db *DB) SQLBuilder() *sqlbuilder.SQLBuilder { return db.sqlBuilder }

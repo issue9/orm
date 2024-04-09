@@ -195,7 +195,7 @@ func (stmt *ViewExistsStmt) Exists() (bool, error) {
 		return false, err
 	}
 
-	name, err := queryString(rows, "name")
+	name, err := fetchString(rows, "name")
 	switch {
 	case errors.Is(err, ErrNoData):
 		return false, nil

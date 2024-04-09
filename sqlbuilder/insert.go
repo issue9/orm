@@ -206,7 +206,7 @@ func (stmt *InsertStmt) fromSelect(builder *core.Builder) (string, []any, error)
 // 并根据表名和自增列 ID 返回当前行的自增 ID 值。
 //
 // NOTE: 对于指定了自增值的，其结果是未知的。
-func (stmt *InsertStmt) LastInsertID(table, col string) (int64, error) {
+func (stmt *InsertStmt) LastInsertID(col string) (int64, error) {
 	return stmt.LastInsertIDContext(context.Background(), col)
 }
 
