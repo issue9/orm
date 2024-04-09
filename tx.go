@@ -21,6 +21,11 @@ type Tx struct {
 	db *DB
 }
 
+type txEngine struct {
+	core.Engine
+	tx *Tx
+}
+
 // Begin 开始一个新的事务
 func (db *DB) Begin() (*Tx, error) { return db.BeginTx(context.Background(), nil) }
 
@@ -47,7 +52,9 @@ func (tx *Tx) Select(v TableNamer) (bool, error) { return find(tx, v) }
 // ForUpdate 读数据并锁定
 func (tx *Tx) ForUpdate(v TableNamer) error { return forUpdate(tx, v) }
 
-func (tx *Tx) InsertMany(max int, v ...TableNamer) error {
+func (tx *Tx) InsertMany(max int, v ...TableNamer) error { return txInsertMany(tx, max, v...) }
+
+func txInsertMany(tx Engine, max int, v ...TableNamer) error {
 	l := len(v)
 	for i := 0; i < l; i += max {
 		j := min(i+max, l)
@@ -105,4 +112,42 @@ func (db *DB) DoTransactionTx(ctx context.Context, opt *sql.TxOptions, f func(tx
 	}
 
 	return tx.Commit()
+}
+
+// NewEngine 为当前事务创建一个不同表名前缀的 [Engine] 对象
+//
+// 如果要复用表模型，可以采此方法创建一个不同表名前缀的 [Engine] 进行操作表模型。
+func (tx *Tx) NewEngine(tablePrefix string) Engine {
+	if tx.TablePrefix() == tablePrefix {
+		return tx
+	}
+
+	return &txEngine{
+		Engine: engine.New(tx.Tx(), tablePrefix, tx.Dialect()),
+		tx:     tx,
+	}
+}
+
+func (p *txEngine) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(p, v) }
+
+func (p *txEngine) Insert(v TableNamer) (sql.Result, error) { return insert(p, v) }
+
+func (p *txEngine) Delete(v TableNamer) (sql.Result, error) { return del(p, v) }
+
+func (p *txEngine) Update(v TableNamer, cols ...string) (sql.Result, error) {
+	return update(p, v, cols...)
+}
+
+func (p *txEngine) Select(v TableNamer) (bool, error) { return find(p, v) }
+
+func (p *txEngine) Create(v TableNamer) error { return create(p, v) }
+
+func (p *txEngine) Drop(v TableNamer) error { return drop(p, v) }
+
+func (p *txEngine) Truncate(v TableNamer) error { return truncate(p, v) }
+
+func (p *txEngine) InsertMany(max int, v ...TableNamer) error { return txInsertMany(p, max, v...) }
+
+func (p *txEngine) SQLBuilder() *sqlbuilder.SQLBuilder {
+	return sqlbuilder.New(p) // txPrefix 般是一个临时对象，没必要像 [DB] 一样固定 sqlbuilder 对象。
 }

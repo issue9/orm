@@ -110,11 +110,6 @@ type (
 
 		SQLBuilder() *sqlbuilder.SQLBuilder
 
-		// Prefix 声明带有统一表名前缀的 [Engine]
-		//
-		// 返回的实例表名前缀为当前实例的表名前缀+p
-		Prefix(p string) Engine
-
 		// newModel 获取 v 的 [core.Model] 实例
 		//
 		// 内部使用不公开，[Engine] 也不会有外部的实现。

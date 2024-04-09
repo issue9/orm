@@ -19,15 +19,24 @@ func TestTx_InsertMany(t *testing.T) {
 
 	suite.Run(func(t *test.Driver) {
 		tx, err := t.DB.Begin()
-		a.NotError(err)
+		a.NotError(err).NotNil(tx)
+
 		a.NotError(tx.Create(&UserInfo{}))
+
+		p1 := tx.NewEngine("p1_")
+		a.NotError(p1.Create(&UserInfo{}))
 
 		defer func() {
 			t.TB().Helper()
-			t.NotError(t.DB.Drop(&UserInfo{}))
+			t.NotError(t.DB.Drop(&UserInfo{})).
+				NotError(t.DB.Drop(&UserInfo{}))
 		}()
 
 		a.NotError(tx.InsertMany(10, &UserInfo{
+			UID:       1,
+			FirstName: "f1",
+			LastName:  "l1",
+		})).NotError(p1.InsertMany(10, &UserInfo{
 			UID:       1,
 			FirstName: "f1",
 			LastName:  "l1",
@@ -79,33 +88,44 @@ func TestTx_InsertMany(t *testing.T) {
 
 		u2 := &UserInfo{LastName: "l2", FirstName: "f2"}
 		found, err = t.DB.Select(u2)
-		t.NotError(err).True(found)
-		t.Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
+		t.NotError(err).True(found).
+			Equal(u2, &UserInfo{UID: 2, FirstName: "f2", LastName: "l2", Sex: "male"})
 
 		u3 := &UserInfo{UID: 3}
 		found, err = t.DB.Select(u3)
-		t.NotError(err).True(found)
-		t.Equal(u3, &UserInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
+		t.NotError(err).True(found).
+			Equal(u3, &UserInfo{UID: 3, FirstName: "f3", LastName: "l3", Sex: "male"})
 
 		u4 := &UserInfo{UID: 4}
 		found, err = t.DB.Select(u4)
-		t.NotError(err).True(found)
-		t.Equal(u4, &UserInfo{UID: 4, FirstName: "f4", LastName: "l4", Sex: "male"})
+		t.NotError(err).True(found).
+			Equal(u4, &UserInfo{UID: 4, FirstName: "f4", LastName: "l4", Sex: "male"})
 
 		u5 := &UserInfo{UID: 5}
 		found, err = t.DB.Select(u5)
-		t.NotError(err).True(found)
-		t.Equal(u5, &UserInfo{UID: 5, FirstName: "f5", LastName: "l5", Sex: "male"})
+		t.NotError(err).True(found).
+			Equal(u5, &UserInfo{UID: 5, FirstName: "f5", LastName: "l5", Sex: "male"})
 
 		u6 := &UserInfo{UID: 6}
 		found, err = t.DB.Select(u6)
-		t.NotError(err).True(found)
-		t.Equal(u6, &UserInfo{UID: 6, FirstName: "f6", LastName: "l6", Sex: "male"})
+		t.NotError(err).True(found).
+			Equal(u6, &UserInfo{UID: 6, FirstName: "f6", LastName: "l6", Sex: "male"})
 
 		u7 := &UserInfo{UID: 7}
 		found, err = t.DB.Select(u7)
-		t.NotError(err).True(found)
-		t.Equal(u7, &UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
+		t.NotError(err).True(found).
+			Equal(u7, &UserInfo{UID: 7, FirstName: "f7", LastName: "l7", Sex: "male"})
+
+		p1db := t.DB.New("p1_")
+
+		pu1 := &UserInfo{UID: 1}
+		found, err = p1db.Select(pu1)
+		t.NotError(err).True(found).
+			Equal(pu1, &UserInfo{UID: 1, FirstName: "f1", LastName: "l1", Sex: "male"})
+
+		pu7 := &UserInfo{UID: 7}
+		found, err = p1db.Select(pu7)
+		t.NotError(err).False(found)
 	})
 }
 
@@ -230,11 +250,11 @@ func TestTX(t *testing.T) {
 	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
-		t.NotError(t.DB.Create(&User{}))
-		t.NotError(t.DB.Create(&UserInfo{}))
+		t.NotError(t.DB.Create(&User{})).
+			NotError(t.DB.Create(&UserInfo{}))
 		defer func() {
-			t.NotError(t.DB.Drop(&User{}))
-			t.NotError(t.DB.Drop(&UserInfo{}))
+			t.NotError(t.DB.Drop(&User{})).
+				NotError(t.DB.Drop(&UserInfo{}))
 		}()
 
 		// 回滚事务

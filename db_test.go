@@ -6,7 +6,6 @@ package orm_test
 
 import (
 	"bytes"
-	"log"
 	"strings"
 	"testing"
 
@@ -295,9 +294,8 @@ func TestDB_Debug(t *testing.T) {
 
 	suite.Run(func(t *test.Driver) {
 		buf := new(bytes.Buffer)
-		l := log.New(buf, "[SQL]", 0)
 
-		t.DB.Debug(func(v string) { l.Print(v) })
+		t.DB.Debug(func(v string) { buf.WriteString(v) })
 		_, err := t.DB.Query("select 1+1")
 		t.NotError(err)
 		t.DB.Debug(nil)
@@ -306,5 +304,38 @@ func TestDB_Debug(t *testing.T) {
 
 		t.True(strings.Contains(buf.String(), "select 1+1")).
 			False(strings.Contains(buf.String(), "select 2+2"))
+	})
+}
+
+func TestDB_NewEngine(t *testing.T) {
+	a := assert.New(t, false)
+	suite := test.NewSuite(a, "")
+
+	suite.Run(func(t *test.Driver) {
+		p1 := t.DB.New("p1_")
+		p11 := p1.New("p11_")
+		p2 := t.DB.New("p2_")
+
+		a.Equal(p2, p2.New("p2_"))
+
+		a.NotError(p1.Create(&User{}))
+		a.NotError(p11.Create(&User{}))
+		a.NotError(p2.Create(&User{}))
+		defer func() {
+			a.NotError(p1.Drop(&User{}))
+			a.NotError(p2.Drop(&User{}))
+		}()
+
+		ids1, err := p1.LastInsertID(&User{Username: "1"})
+		t.NotError(err).Equal(ids1, 1)
+
+		ids2, err := p2.LastInsertID(&User{Username: "1"})
+		t.NotError(err).Equal(ids2, 1)
+
+		ids1, err = p1.LastInsertID(&User{Username: "2"})
+		t.NotError(err).Equal(ids1, 2)
+
+		ids2, err = p2.LastInsertID(&User{Username: "2"})
+		t.NotError(err).Equal(ids2, 2)
 	})
 }

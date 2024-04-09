@@ -32,13 +32,7 @@ func (tx *Tx) Where(cond string, args ...any) *WhereStmt {
 	return w.Where(cond, args...)
 }
 
-func (p *dbPrefix) Where(cond string, args ...any) *WhereStmt {
-	w := &WhereStmt{engine: p}
-	w.whereWhere = sqlbuilder.NewWhereStmtOf(w)
-	return w.Where(cond, args...)
-}
-
-func (p *txPrefix) Where(cond string, args ...any) *WhereStmt {
+func (p *txEngine) Where(cond string, args ...any) *WhereStmt {
 	w := &WhereStmt{engine: p}
 	w.whereWhere = sqlbuilder.NewWhereStmtOf(w)
 	return w.Where(cond, args...)

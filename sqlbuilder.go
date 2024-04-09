@@ -24,9 +24,7 @@ func (db *DB) newModel(obj TableNamer) (*core.Model, error) { return db.models.N
 
 func (tx *Tx) newModel(obj TableNamer) (*core.Model, error) { return tx.db.models.New(obj) }
 
-func (p *dbPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.db.models.New(obj) }
-
-func (p *txPrefix) newModel(obj TableNamer) (*core.Model, error) { return p.tx.db.models.New(obj) }
+func (p *txEngine) newModel(obj TableNamer) (*core.Model, error) { return p.tx.db.models.New(obj) }
 
 func getModel(e Engine, v TableNamer) (*core.Model, reflect.Value, error) {
 	m, err := e.newModel(v)

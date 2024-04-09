@@ -54,9 +54,28 @@ func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error
 	return inst, nil
 }
 
+// New 重新指定表名前缀为 tablePrefix
+//
+// 如果要复用表模型，可以采此方法创建一个不同表名前缀的 [DB] 对表模型进行操作。
+func (db *DB) New(tablePrefix string) *DB {
+	if tablePrefix == db.TablePrefix() {
+		return db
+	}
+
+	e := engine.New(db.DB(), tablePrefix, db.Dialect())
+	return &DB{
+		Engine:     e,
+		db:         db.DB(),
+		sqlBuilder: sqlbuilder.New(e),
+		models:     db.models,
+		version:    db.version,
+	}
+}
+
 // Close 关闭连接
 //
-// 同时会清除缓存的模型数据
+// 同时会清除缓存的模型数据。
+// 此操作会让数据库不再可用，包括由 [DB.Prefix] 派生的对象。
 func (db *DB) Close() error {
 	db.models.Clear()
 	return db.DB().Close()
