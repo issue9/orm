@@ -39,13 +39,9 @@ func Sqlite3(driverName string) core.Dialect {
 	}
 }
 
-func (s *sqlite3) Fix(query string, args []any) (string, []any, error) {
-	return query, args, nil
-}
+func (s *sqlite3) Fix(query string, args []any) (string, []any, error) { return query, args, nil }
 
-func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) {
-	return "", false
-}
+func (s *sqlite3) LastInsertIDSQL(table, col string) (sql string, append bool) { return "", false }
 
 func (s *sqlite3) VersionSQL() string { return `select sqlite_version();` }
 
@@ -209,9 +205,7 @@ func (s *sqlite3) buildSQLS(e core.Engine, table *createtable.Sqlite3Table, tabl
 	return ret, nil
 }
 
-func (s *sqlite3) DropIndexSQL(_, index string) (string, error) {
-	return stdDropIndex(index)
-}
+func (s *sqlite3) DropIndexSQL(_, index string) (string, error) { return stdDropIndex(index) }
 
 func (s *sqlite3) ExistsSQL(name string, view bool) (string, []any) {
 	t := "table"

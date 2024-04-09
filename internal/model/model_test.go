@@ -146,7 +146,7 @@ func TestModels_New(t *testing.T) {
 	a.True(found).
 		Equal(fk.Name, "fk_admin_name").
 		Equal(fk.Column, groupCol).
-		Equal(fk.RefTableName, "groups").
+		Equal(fk.RefTableName, "#groups").
 		Equal(fk.RefColName, "id").
 		Equal(fk.UpdateRule, "NO ACTION").
 		Equal(fk.DeleteRule, "")

@@ -76,9 +76,7 @@ func (stmt *baseStmt) Err() error { return stmt.err }
 
 func (stmt *baseStmt) Reset() { stmt.err = nil }
 
-func (stmt ddlStmt) Exec() error {
-	return stmt.ExecContext(context.Background())
-}
+func (stmt ddlStmt) Exec() error { return stmt.ExecContext(context.Background()) }
 
 func (stmt *ddlStmt) ExecContext(ctx context.Context) error {
 	qs, err := stmt.DDLSQL()
@@ -105,9 +103,7 @@ func (stmt *execStmt) CombineSQL() (query string, err error) {
 	return fillArgs(query, args)
 }
 
-func (stmt *execStmt) Exec() (sql.Result, error) {
-	return stmt.ExecContext(context.Background())
-}
+func (stmt *execStmt) Exec() (sql.Result, error) { return stmt.ExecContext(context.Background()) }
 
 func (stmt *execStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 	query, args, err := stmt.SQL()
@@ -123,9 +119,7 @@ func (stmt *execStmt) ExecContext(ctx context.Context) (sql.Result, error) {
 // 预编译语句，参数最好采用 [sql.NamedArg] 类型。
 // 在生成语句时，参数顺序会发生变化，如果采用 ? 的形式，
 // 用户需要自己处理参数顺序问题，而 [sql.NamedArg] 没有这些问题。
-func (stmt *execStmt) Prepare() (*core.Stmt, error) {
-	return stmt.PrepareContext(context.Background())
-}
+func (stmt *execStmt) Prepare() (*core.Stmt, error) { return stmt.PrepareContext(context.Background()) }
 
 func (stmt *execStmt) PrepareContext(ctx context.Context) (*core.Stmt, error) {
 	query, _, err := stmt.SQL()
@@ -160,9 +154,7 @@ func (stmt *queryStmt) PrepareContext(ctx context.Context) (*core.Stmt, error) {
 	return stmt.Engine().PrepareContext(ctx, query)
 }
 
-func (stmt queryStmt) Query() (*sql.Rows, error) {
-	return stmt.QueryContext(context.Background())
-}
+func (stmt queryStmt) Query() (*sql.Rows, error) { return stmt.QueryContext(context.Background()) }
 
 func (stmt *queryStmt) QueryContext(ctx context.Context) (*sql.Rows, error) {
 	query, args, err := stmt.SQL()

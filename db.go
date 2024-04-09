@@ -84,9 +84,7 @@ func (db *DB) Insert(v TableNamer) (sql.Result, error) { return insert(db, v) }
 
 func (db *DB) Delete(v TableNamer) (sql.Result, error) { return del(db, v) }
 
-func (db *DB) Update(v TableNamer, cols ...string) (sql.Result, error) {
-	return update(db, v, cols...)
-}
+func (db *DB) Update(v TableNamer, cols ...string) (sql.Result, error) { return update(db, v, cols...) }
 
 func (db *DB) Select(v TableNamer) (bool, error) { return find(db, v) }
 

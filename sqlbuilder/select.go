@@ -64,7 +64,6 @@ func Select(e core.Engine) *SelectStmt {
 	stmt := &SelectStmt{columns: make([]string, 0, 10)}
 	stmt.queryStmt = newQueryStmt(e, stmt)
 	stmt.selectWhere = NewWhereStmtOf(stmt)
-
 	return stmt
 }
 
@@ -543,7 +542,8 @@ func (stmt *SelectQuery) Close() error { return stmt.stmt.Close() }
 
 func queryObject(rows *sql.Rows, strict bool, objs any) (size int, err error) {
 	defer func() { err = errors.Join(err, rows.Close()) }()
-	return fetch.Object(strict, rows, objs)
+	size, err = fetch.Object(strict, rows, objs)
+	return
 }
 
 func queryString(rows *sql.Rows, colName string) (v string, err error) {

@@ -61,6 +61,9 @@ type (
 		// NOTE: 要求 v 有定义自增列。
 		LastInsertID(v TableNamer) (int64, error)
 
+		// Insert 插入数据
+		//
+		// NOTE: 若需一次性插入多条数据，请使用 [Engine.InsertMany] 。
 		Insert(v TableNamer) (sql.Result, error)
 
 		// Delete 删除符合条件的数据
@@ -96,7 +99,7 @@ type (
 
 		// InsertMany 插入多条相同的数据
 		//
-		// 若需要向某张表中插入多条记录，InsertMany() 会比 Insert() 性能上好很多。
+		// 若需要向某张表中插入多条记录，此方法会比 [Engine.Insert] 性能上好很多。
 		//
 		// max 表示一次最多插入的数量，如果超过此值，会分批执行，
 		// 但是依然在一个事务中完成。
@@ -124,3 +127,5 @@ func NowUnix() Unix { return Unix{Time: time.Now()} }
 
 // NowNullTime 返回当前时间
 func NowNullTime() sql.NullTime { return sql.NullTime{Time: time.Now(), Valid: true} }
+
+func TableName(t TableNamer) string { return "#" + t.TableName() }

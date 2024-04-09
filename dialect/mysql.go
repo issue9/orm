@@ -55,15 +55,11 @@ func (m *mysql) Fix(query string, args []any) (string, []any, error) {
 	return fixQueryAndArgs(query, args)
 }
 
-func (m *mysql) LastInsertIDSQL(_, _ string) (sql string, append bool) {
-	return "", false
-}
+func (m *mysql) LastInsertIDSQL(_, _ string) (sql string, append bool) { return "", false }
 
 func (m *mysql) VersionSQL() string { return `select version();` }
 
-func (m *mysql) Prepare(query string) (string, map[string]int, error) {
-	return PrepareNamedArgs(query)
-}
+func (m *mysql) Prepare(query string) (string, map[string]int, error) { return PrepareNamedArgs(query) }
 
 func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
 	if len(options[mysqlEngine]) == 1 {

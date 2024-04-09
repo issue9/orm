@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"unicode"
 
 	"github.com/issue9/conv"
 
@@ -154,7 +153,7 @@ func getName(field reflect.StructField) string {
 		}
 	}
 
-	if unicode.IsUpper(rune(field.Name[0])) { // 未指定 struct tag，则尝试直接使用字段名
+	if field.IsExported() { // 未指定 struct tag，则尝试直接使用字段名
 		return field.Name
 	}
 
@@ -205,7 +204,7 @@ func fetchOnceObj(strict bool, val reflect.Value, rows *sql.Rows) (int, error) {
 		return 0, err
 	}
 
-	if err = afterFetch(val.Interface()); err != nil {
+	if err = afterFetch(val); err != nil {
 		return 0, err
 	}
 	return 1, nil
@@ -236,7 +235,7 @@ func fetchOnceObjNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 		}
 	}
 
-	if err = afterFetch(val.Interface()); err != nil {
+	if err = afterFetch(val); err != nil {
 		return 0, err
 	}
 
@@ -275,7 +274,7 @@ func fetchObjToFixedSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, 
 			return 0, err
 		}
 
-		if err = afterFetch(val.Index(i).Interface()); err != nil {
+		if err = afterFetch(val.Index(i)); err != nil {
 			return 0, err
 		}
 	}
@@ -298,11 +297,7 @@ func fetchObjToFixedSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error
 		return 0, err
 	}
 
-	l := len(mapped)
-	if l > val.Len() {
-		l = val.Len()
-	}
-
+	l := min(len(mapped), val.Len())
 	for i := 0; i < l; i++ {
 		objItem := make(map[string]reflect.Value, len(mapped[i]))
 		if err = parseObject(val.Index(i), &objItem); err != nil {
@@ -318,7 +313,7 @@ func fetchObjToFixedSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error
 			}
 		} // end for objItem
 
-		if err = afterFetch(val.Index(i).Interface()); err != nil {
+		if err = afterFetch(val.Index(i)); err != nil {
 			return 0, err
 		}
 	}
@@ -369,7 +364,7 @@ func fetchObjToSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, error
 			return 0, err
 		}
 
-		if err = afterFetch(elem.Index(i).Interface()); err != nil {
+		if err = afterFetch(elem.Index(i)); err != nil {
 			return 0, err
 		}
 	}
@@ -419,7 +414,7 @@ func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 			}
 		} // end for objItem
 
-		if err = afterFetch(elem.Index(i).Interface()); err != nil {
+		if err = afterFetch(elem.Index(i)); err != nil {
 			return 0, err
 		}
 	}
@@ -427,12 +422,9 @@ func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 	return len(mapped), nil
 }
 
-func afterFetch(v any) error {
-	if f, ok := v.(AfterFetcher); ok {
-		if err := f.AfterFetch(); err != nil {
-			return err
-		}
+func afterFetch(v reflect.Value) error {
+	if f, ok := v.Interface().(AfterFetcher); ok {
+		return f.AfterFetch()
 	}
-
 	return nil
 }

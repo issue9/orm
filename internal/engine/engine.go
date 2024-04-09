@@ -68,7 +68,7 @@ func (db *coreEngine) QueryRow(query string, args ...any) *sql.Row {
 
 func (db *coreEngine) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	db.sqlLogger(query)
-	query, args, err := db.dialect.Fix(query, args)
+	query, args, err := db.Dialect().Fix(query, args)
 	if err != nil {
 		panic(err)
 	}

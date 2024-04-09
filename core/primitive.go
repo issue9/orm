@@ -113,10 +113,10 @@ var (
 )
 
 type PrimitiveTyper interface {
-	// NOTE: 最简单的方法是复用 driver.Valuer 接口，从其返回值中获取类型信息，
+	// NOTE: 最简单的方法是复用 [driver.Valuer] 接口，从其返回值中获取类型信息，
 	// 但是该接口有可能返回 nil 值，无法确定类型。
 
-	// PrimitiveType 返回当前对象所表示的 PrimitiveType 值
+	// PrimitiveType 返回当前对象所表示的 [PrimitiveType] 值
 	//
 	// NOTE: 每个对象在任何时间返回的值应该都是固定的。
 	PrimitiveType() PrimitiveType
@@ -127,7 +127,7 @@ type PrimitiveTyper interface {
 // PrimitiveType 由 [Dialect.SQLType] 转换成相应数据的实际类型。
 type PrimitiveType int
 
-// GetPrimitiveType 获取 t 所关联的 PrimitiveType 值
+// GetPrimitiveType 获取 t 所关联的 [PrimitiveType] 值
 //
 // t.Kind 不能为 [reflect.Ptr] 否则将返回 [Auto]。
 func GetPrimitiveType(t reflect.Type) PrimitiveType {

@@ -125,13 +125,12 @@ func parseSqlite3Indexes(table *Sqlite3Table, tableName string, engine core.Engi
 	if err != nil {
 		return err
 	}
-	defer func() {
-		err = errors.Join(err, rows.Close())
-	}()
+
+	defer func() { err = errors.Join(err, rows.Close()) }()
 
 	for rows.Next() {
 		var name, sql string
-		if err := rows.Scan(&name, &sql); err != nil {
+		if err = rows.Scan(&name, &sql); err != nil {
 			return err
 		}
 		table.Indexes[name] = &Sqlite3Index{

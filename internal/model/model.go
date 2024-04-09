@@ -148,7 +148,7 @@ func setFK(m *core.Model, col *column, vals []string) error {
 	fk := &core.ForeignKey{
 		Name:         strings.ToLower(vals[0]),
 		Column:       col.Column,
-		RefTableName: vals[1],
+		RefTableName: "#" + vals[1],
 		RefColName:   vals[2],
 	}
 

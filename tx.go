@@ -17,9 +17,8 @@ import (
 // Tx 事务对象
 type Tx struct {
 	core.Engine
-	tx         *sql.Tx
-	db         *DB
-	sqlBuilder *sqlbuilder.SQLBuilder
+	tx *sql.Tx
+	db *DB
 }
 
 // Begin 开始一个新的事务
@@ -32,19 +31,14 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 		return nil, err
 	}
 
-	inst := &Tx{
+	return &Tx{
 		tx:     tx,
 		db:     db,
 		Engine: engine.New(tx, db.TablePrefix(), db.Dialect()),
-	}
-	inst.sqlBuilder = sqlbuilder.New(inst)
-
-	return inst, nil
+	}, nil
 }
 
-func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
-	return lastInsertID(tx, v)
-}
+func (tx *Tx) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(tx, v) }
 
 func (tx *Tx) Insert(v TableNamer) (sql.Result, error) { return insert(tx, v) }
 
@@ -70,9 +64,7 @@ func (tx *Tx) InsertMany(max int, v ...TableNamer) error {
 	return nil
 }
 
-func (tx *Tx) Update(v TableNamer, cols ...string) (sql.Result, error) {
-	return update(tx, v, cols...)
-}
+func (tx *Tx) Update(v TableNamer, cols ...string) (sql.Result, error) { return update(tx, v, cols...) }
 
 func (tx *Tx) Delete(v TableNamer) (sql.Result, error) { return del(tx, v) }
 
@@ -82,7 +74,17 @@ func (tx *Tx) Drop(v TableNamer) error { return drop(tx, v) }
 
 func (tx *Tx) Truncate(v TableNamer) error { return truncate(tx, v) }
 
-func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder { return tx.sqlBuilder }
+func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder {
+	return sqlbuilder.New(tx) // 事务一般是一个临时对象，没必要像 [DB] 一样固定 sqlbuilder 对象。
+}
+
+// Commit 提交事务
+func (tx *Tx) Commit() error { return tx.Tx().Commit() }
+
+func (tx *Tx) Rollback() error { return tx.Tx().Rollback() }
+
+// Tx 返回标准库的事务接口 [sql.Tx]
+func (tx *Tx) Tx() *sql.Tx { return tx.tx }
 
 // DoTransaction 将 f 中的内容以事务的方式执行
 func (db *DB) DoTransaction(f func(tx *Tx) error) error {
@@ -104,11 +106,3 @@ func (db *DB) DoTransactionTx(ctx context.Context, opt *sql.TxOptions, f func(tx
 
 	return tx.Commit()
 }
-
-// Commit 提交事务
-func (tx *Tx) Commit() error { return tx.Tx().Commit() }
-
-func (tx *Tx) Rollback() error { return tx.Tx().Rollback() }
-
-// Tx 返回标准库的事务接口 [sql.Tx]
-func (tx *Tx) Tx() *sql.Tx { return tx.tx }

@@ -15,37 +15,27 @@ import (
 type dbPrefix struct {
 	core.Engine
 	db *DB
-	p  string
-	sb *sqlbuilder.SQLBuilder
 }
 
 type txPrefix struct {
 	core.Engine
 	tx *Tx
-	p  string
-	sb *sqlbuilder.SQLBuilder
 }
 
 // Prefix 为所有操作的表名加上统一的前缀
 //
 // 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 [DB] 或 [Tx]。
-func (db *DB) Prefix(p string) Engine {
-	return newDBPrefix(db, db.TablePrefix()+p, db.Dialect())
-}
+func (db *DB) Prefix(p string) Engine { return newDBPrefix(db, db.TablePrefix()+p, db.Dialect()) }
 
 func (p *dbPrefix) Prefix(pp string) Engine {
 	return newDBPrefix(p.db, p.TablePrefix()+pp, p.Dialect())
 }
 
 func newDBPrefix(db *DB, tablePrefix string, d Dialect) Engine {
-	dp := &dbPrefix{
+	return &dbPrefix{
 		Engine: engine.New(db.DB(), tablePrefix, d),
-		p:      tablePrefix,
 		db:     db,
 	}
-	dp.sb = sqlbuilder.New(dp)
-
-	return dp
 }
 
 // Prefix 为所有操作的表名加上统一的前缀
@@ -53,32 +43,21 @@ func newDBPrefix(db *DB, tablePrefix string, d Dialect) Engine {
 // 如果要复用表结构，可以采此对象进行相关操作，而不是直接使用 [DB] 或 [Tx]。
 //
 // 创建的 [Engine] 依然属于当前事务。
-func (tx *Tx) Prefix(p string) Engine {
-	return newTxPrefix(tx, tx.TablePrefix()+p, tx.Dialect())
-}
+func (tx *Tx) Prefix(p string) Engine { return newTxPrefix(tx, tx.TablePrefix()+p, tx.Dialect()) }
 
 func (p *txPrefix) Prefix(pp string) Engine {
 	return newTxPrefix(p.tx, p.TablePrefix()+pp, p.Dialect())
 }
 
 func newTxPrefix(tx *Tx, tablePrefix string, d Dialect) Engine {
-	dp := &txPrefix{
+	return &txPrefix{
 		Engine: engine.New(tx.Tx(), tablePrefix, d),
-		p:      tablePrefix,
 		tx:     tx,
 	}
-	dp.sb = sqlbuilder.New(dp)
-
-	return dp
 }
-
-func (p *dbPrefix) TablePrefix() string { return p.p }
 
 func (p *dbPrefix) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(p, v) }
 
-// Insert 插入数据
-//
-// NOTE: 若需一次性插入多条数据，请使用 tx.InsertMany()。
 func (p *dbPrefix) Insert(v TableNamer) (sql.Result, error) { return insert(p, v) }
 
 func (p *dbPrefix) Delete(v TableNamer) (sql.Result, error) { return del(p, v) }
@@ -97,19 +76,16 @@ func (p *dbPrefix) Truncate(v TableNamer) error { return truncate(p, v) }
 
 func (p *dbPrefix) InsertMany(max int, v ...TableNamer) error {
 	return p.db.DoTransaction(func(tx *Tx) error {
-		return tx.Prefix(p.p).InsertMany(max, v...)
+		return tx.Prefix(p.TablePrefix()).InsertMany(max, v...)
 	})
 }
 
-func (p *dbPrefix) SQLBuilder() *sqlbuilder.SQLBuilder { return p.sb }
-
-func (p *txPrefix) TablePrefix() string { return p.p }
+func (p *dbPrefix) SQLBuilder() *sqlbuilder.SQLBuilder {
+	return sqlbuilder.New(p) // dbPrefix 般是一个临时对象，没必要像 [DB] 一样固定 sqlbuilder 对象。
+}
 
 func (p *txPrefix) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(p, v) }
 
-// Insert 插入数据
-//
-// NOTE: 若需一次性插入多条数据，请使用 InsertMany。
 func (p *txPrefix) Insert(v TableNamer) (sql.Result, error) { return insert(p, v) }
 
 func (p *txPrefix) Delete(v TableNamer) (sql.Result, error) { return del(p, v) }
@@ -143,4 +119,6 @@ func (p *txPrefix) InsertMany(max int, v ...TableNamer) error {
 	return nil
 }
 
-func (p *txPrefix) SQLBuilder() *sqlbuilder.SQLBuilder { return p.sb }
+func (p *txPrefix) SQLBuilder() *sqlbuilder.SQLBuilder {
+	return sqlbuilder.New(p) // txPrefix 般是一个临时对象，没必要像 [DB] 一样固定 sqlbuilder 对象。
+}

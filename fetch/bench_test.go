@@ -13,12 +13,9 @@ import (
 	"github.com/issue9/orm/v6/internal/test"
 )
 
-// 测试性能的数据库驱动名称
-var benchDBDriverName = test.Mysql
-
 func BenchmarkObject(b *testing.B) {
 	a := assert.New(b, false)
-	suite := test.NewSuite(a, "", benchDBDriverName)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
@@ -43,7 +40,7 @@ func BenchmarkObject(b *testing.B) {
 
 func BenchmarkMap(b *testing.B) {
 	a := assert.New(b, false)
-	suite := test.NewSuite(a, "", benchDBDriverName)
+	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
 		initDB(t)

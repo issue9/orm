@@ -64,13 +64,13 @@ func scanCreateTable(engine core.Engine, table, query string, val ...any) error 
 		return err
 	}
 
-	defer func() {
-		err = errors.Join(err, rows.Close())
-	}()
+	defer func() { err = errors.Join(err, rows.Close()) }()
 
 	if !rows.Next() {
-		return fmt.Errorf("未找到任何与 %s 相关的 CREATE TABLE 数据", table)
+		err = fmt.Errorf("未找到任何与 %s 相关的 CREATE TABLE 数据", table)
+		return err
 	}
 
-	return rows.Scan(val...)
+	err = rows.Scan(val...)
+	return err
 }
