@@ -102,13 +102,13 @@ type viewObject struct {
 
 func (v *viewObject) TableName() string { return "view_objects" }
 
-func (v *viewObject) ViewAs(e core.Engine) (string, error) {
+func (v *viewObject) ViewAs() (string, error) {
 	return `SELECT id,username FROMa User WHERE id>10`, nil
 }
 
 func TestModels_New(t *testing.T) {
 	a := assert.New(t, false)
-	ms := NewModels(nil)
+	ms := NewModels()
 	a.NotNil(ms)
 
 	m, err := ms.New(&Admin{})

@@ -27,8 +27,8 @@ type (
 	//
 	// 当一个模型实现了该接口，会被识别为视图模型，不再在数据库中创建普通的数据表。
 	Viewer interface {
-		// ViewAs 返回视图所需的 Select 语句
-		ViewAs(e Engine) (string, error)
+		// ViewAs 返回视图所需的 SELECT 语句
+		ViewAs() (string, error)
 	}
 
 	// TableNamer 表或是视图必须实现的接口
@@ -68,8 +68,9 @@ type (
 		// 模型的名称
 		Name string
 
-		// 如果当前模型是视图，那么此值表示的是视图的 select 语句，
-		// 其它类型下，ViewAs 不启作用。
+		// 视图的 select 语句
+		//
+		// 仅在 ModelType == View 时有效果，可由 [Engine.Query] 等处理。
 		ViewAs string
 
 		Type    ModelType

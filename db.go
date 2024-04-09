@@ -17,10 +17,11 @@ import (
 // DB 数据库操作实例
 type DB struct {
 	core.Engine
-	db         *sql.DB
 	sqlBuilder *sqlbuilder.SQLBuilder
-	models     *model.Models
-	version    string
+
+	db      *sql.DB
+	models  *model.Models
+	version string
 }
 
 // NewDB 声明一个新的 [DB] 实例
@@ -48,7 +49,13 @@ func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error
 		Engine: engine.New(db, tablePrefix, dialect),
 	}
 
-	inst.models = model.NewModels(inst)
+	ver, err := sqlbuilder.Version(inst)
+	if err != nil {
+		return nil, err
+	}
+
+	inst.version = ver
+	inst.models = model.NewModels()
 	inst.sqlBuilder = sqlbuilder.New(inst)
 
 	return inst, nil
@@ -65,10 +72,11 @@ func (db *DB) New(tablePrefix string) *DB {
 	e := engine.New(db.DB(), tablePrefix, db.Dialect())
 	return &DB{
 		Engine:     e,
-		db:         db.DB(),
 		sqlBuilder: sqlbuilder.New(e),
-		models:     db.models,
-		version:    db.version,
+
+		db:      db.DB(),
+		models:  db.models,
+		version: db.version,
 	}
 }
 
@@ -82,17 +90,7 @@ func (db *DB) Close() error {
 }
 
 // Version 数据库服务端的版本号
-func (db *DB) Version() (string, error) {
-	if db.version == "" {
-		ver, err := sqlbuilder.Version(db)
-		if err != nil {
-			return "", err
-		}
-		db.version = ver
-	}
-
-	return db.version, nil
-}
+func (db *DB) Version() string { return db.version }
 
 func (db *DB) LastInsertID(v TableNamer) (int64, error) { return lastInsertID(db, v) }
 

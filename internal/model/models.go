@@ -4,22 +4,16 @@
 
 package model
 
-import (
-	"sync"
-
-	"github.com/issue9/orm/v6/core"
-)
+import "sync"
 
 // Models 数据模型管理
 type Models struct {
-	engine core.Engine
 	models *sync.Map
 }
 
 // NewModels 声明 [Models] 变量
-func NewModels(e core.Engine) *Models {
+func NewModels() *Models {
 	return &Models{
-		engine: e,
 		models: &sync.Map{},
 	}
 }

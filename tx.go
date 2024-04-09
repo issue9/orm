@@ -54,23 +54,6 @@ func (tx *Tx) ForUpdate(v TableNamer) error { return forUpdate(tx, v) }
 
 func (tx *Tx) InsertMany(max int, v ...TableNamer) error { return txInsertMany(tx, max, v...) }
 
-func txInsertMany(tx Engine, max int, v ...TableNamer) error {
-	l := len(v)
-	for i := 0; i < l; i += max {
-		j := min(i+max, l)
-		query, err := buildInsertManySQL(tx, v[i:j]...)
-		if err != nil {
-			return err
-		}
-
-		if _, err = query.Exec(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (tx *Tx) Update(v TableNamer, cols ...string) (sql.Result, error) { return update(tx, v, cols...) }
 
 func (tx *Tx) Delete(v TableNamer) (sql.Result, error) { return del(tx, v) }
@@ -92,27 +75,6 @@ func (tx *Tx) Rollback() error { return tx.Tx().Rollback() }
 
 // Tx 返回标准库的事务接口 [sql.Tx]
 func (tx *Tx) Tx() *sql.Tx { return tx.tx }
-
-// DoTransaction 将 f 中的内容以事务的方式执行
-func (db *DB) DoTransaction(f func(tx *Tx) error) error {
-	return db.DoTransactionTx(context.Background(), nil, f)
-}
-
-// DoTransactionTx 将 f 中的内容以事务的方式执行
-//
-// 如果执行失败，自动回滚，且返回错误信息。否则会直接提交。
-func (db *DB) DoTransactionTx(ctx context.Context, opt *sql.TxOptions, f func(tx *Tx) error) error {
-	tx, err := db.BeginTx(ctx, opt)
-	if err != nil {
-		return err
-	}
-
-	if err := f(tx); err != nil {
-		return errors.Join(err, tx.Rollback())
-	}
-
-	return tx.Commit()
-}
 
 // NewEngine 为当前事务创建一个不同表名前缀的 [Engine] 对象
 //
@@ -150,4 +112,42 @@ func (p *txEngine) InsertMany(max int, v ...TableNamer) error { return txInsertM
 
 func (p *txEngine) SQLBuilder() *sqlbuilder.SQLBuilder {
 	return sqlbuilder.New(p) // txPrefix 般是一个临时对象，没必要像 [DB] 一样固定 sqlbuilder 对象。
+}
+
+func txInsertMany(tx Engine, max int, v ...TableNamer) error {
+	l := len(v)
+	for i := 0; i < l; i += max {
+		j := min(i+max, l)
+		query, err := buildInsertManySQL(tx, v[i:j]...)
+		if err != nil {
+			return err
+		}
+
+		if _, err = query.Exec(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// DoTransaction 将 f 中的内容以事务的方式执行
+func (db *DB) DoTransaction(f func(tx *Tx) error) error {
+	return db.DoTransactionTx(context.Background(), nil, f)
+}
+
+// DoTransactionTx 将 f 中的内容以事务的方式执行
+//
+// 如果执行失败，自动回滚，且返回错误信息。否则会直接提交。
+func (db *DB) DoTransactionTx(ctx context.Context, opt *sql.TxOptions, f func(tx *Tx) error) error {
+	tx, err := db.BeginTx(ctx, opt)
+	if err != nil {
+		return err
+	}
+
+	if err := f(tx); err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	return tx.Commit()
 }

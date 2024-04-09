@@ -46,6 +46,8 @@ type (
 	// 所有针对 [TableNamer] 的操作与 sqlbuilder 的拼接方式有以下区别：
 	//  - 针对 [TableNamer] 的操作会自动为表名加上 # 表名前缀；
 	//  - 针对 [TableNamer] 的操作会为约束名加上表名，以确保约束名的唯一性；
+	//
+	// [DB] 和 [Tx] 均实现了此接口。
 	Engine interface {
 		core.Engine
 

@@ -51,7 +51,7 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 
 	if view, ok := obj.(core.Viewer); ok {
 		m.Type = core.View
-		sql, err := view.ViewAs(ms.engine)
+		sql, err := view.ViewAs()
 		if err != nil {
 			return nil, err
 		}

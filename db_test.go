@@ -282,9 +282,7 @@ func TestDB_Version(t *testing.T) {
 	suite := test.NewSuite(a, "")
 
 	suite.Run(func(t *test.Driver) {
-		v, err := t.DB.Version()
-		t.NotError(err).
-			NotEmpty(v)
+		t.NotEmpty(t.DB.Version())
 	})
 }
 
