@@ -448,7 +448,7 @@ func buildInsertManySQL(e Engine, v ...TableNamer) (*sqlbuilder.InsertStmt, erro
 			for _, name := range keys {
 				col := m.FindColumn(name)
 				if col == nil {
-					return nil, fmt.Errorf("不存在的列名 %s", name)
+					return nil, core.ErrColumnNotFound(name)
 				}
 
 				field := irval.FieldByName(col.GoName)

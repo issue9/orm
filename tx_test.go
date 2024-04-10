@@ -29,7 +29,7 @@ func TestTx_InsertMany(t *testing.T) {
 		defer func() {
 			t.TB().Helper()
 			t.NotError(t.DB.Drop(&UserInfo{})).
-				NotError(t.DB.Drop(&UserInfo{}))
+				NotError(t.DB.New("p1_").Drop(&UserInfo{}))
 		}()
 
 		a.NotError(tx.InsertMany(10, &UserInfo{

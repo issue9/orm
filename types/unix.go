@@ -56,7 +56,7 @@ func (n *Unix) Scan(src any) (err error) {
 			return err
 		}
 	default:
-		return core.ErrInvalidColumnType
+		return core.ErrInvalidColumnType()
 	}
 
 	n.Time = time.Unix(unix, 0)

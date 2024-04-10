@@ -115,7 +115,7 @@ func (stmt *SelectStmt) SQL() (string, []any, error) {
 	}
 
 	if stmt.tableExpr == "" {
-		return "", nil, ErrTableIsEmpty
+		return "", nil, SyntaxError("SELECT", "未指定表名")
 	}
 
 	builder := core.NewBuilder("SELECT ")
@@ -191,7 +191,7 @@ func (stmt *SelectStmt) buildUnions(builder *core.Builder) (args []any, err erro
 
 	for _, u := range stmt.unions {
 		if len(u.stmt.columns) != l {
-			return nil, ErrUnionColumnNotMatch
+			return nil, SyntaxError("SELECT", "union 各个 select 的列数量不相同")
 		}
 
 		query, a, err := u.stmt.SQL()

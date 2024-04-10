@@ -9,11 +9,15 @@ import (
 	"fmt"
 )
 
+var errInvalidColumnType = errors.New("无效的列类型")
+
 // ErrInvalidColumnType 无效的列类型
 //
-// 作为列类型，该数据类型必须是可序列化的。
-// 像 [reflect.Func]、[reflect.Chan] 等类型的数据都将返回该错误。
-var ErrInvalidColumnType = errors.New("无效的列类型")
+// 当一个数据无法表达为数据库中的对应的字段类型时返回此错误。
+func ErrInvalidColumnType() error { return errInvalidColumnType }
+
+// ErrColumnNotFound 返回列不存在的错误
+func ErrColumnNotFound(s string) error { return fmt.Errorf("列 %s 未找到", s) }
 
 // Column 列结构
 type Column struct {
@@ -31,7 +35,7 @@ type Column struct {
 // NewColumn 从 Go 类型中生成 [Column]
 func NewColumn(p PrimitiveType) (*Column, error) {
 	if p <= Auto || p >= maxPrimitiveType {
-		return nil, ErrInvalidColumnType
+		return nil, ErrInvalidColumnType()
 	}
 
 	return &Column{

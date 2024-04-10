@@ -102,10 +102,10 @@ func (m *mysql) DropConstraintStmtHook(stmt *sqlbuilder.DropConstraintStmt) ([]s
 
 func (m *mysql) DropIndexSQL(table, index string) (string, error) {
 	if table == "" {
-		return "", sqlbuilder.ErrTableIsEmpty
+		return "", sqlbuilder.SyntaxError("DROP", "未指定表名")
 	}
 	if index == "" {
-		return "", sqlbuilder.ErrColumnsIsEmpty
+		return "", sqlbuilder.SyntaxError("DROP", "未指定列")
 	}
 
 	return core.NewBuilder("ALTER TABLE ").

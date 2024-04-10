@@ -80,7 +80,7 @@ func (u *Upgrader) AddColumn(name ...string) *Upgrader {
 
 		col := u.model.FindColumn(n)
 		if col == nil {
-			u.err = fmt.Errorf("列名 %s 不存在", n)
+			u.err = core.ErrColumnNotFound(n)
 			return u
 		}
 

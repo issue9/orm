@@ -112,7 +112,7 @@ func (stmt *InsertStmt) SQL() (string, []any, error) {
 	}
 
 	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+		return "", nil, SyntaxError("INSERT", "未指定表名")
 	}
 
 	builder := core.NewBuilder("INSERT INTO ").QuoteKey(stmt.table)
@@ -127,7 +127,7 @@ func (stmt *InsertStmt) SQL() (string, []any, error) {
 
 	for _, vals := range stmt.args {
 		if len(vals) != len(stmt.cols) {
-			return "", nil, ErrArgsNotMatch
+			return "", nil, SyntaxError("INSERT", "列与值不匹配")
 		}
 	}
 

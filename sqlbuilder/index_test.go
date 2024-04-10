@@ -71,14 +71,14 @@ func TestIndex(t *testing.T) {
 		t.NotError(err, "cc")
 
 		createStmt.Reset()
-		a.ErrorIs(createStmt.Exec(), sqlbuilder.ErrTableIsEmpty)
+		a.ErrorString(createStmt.Exec(), "未指定表名")
 
 		createStmt.Reset()
 		createStmt.Table("test")
-		a.ErrorIs(createStmt.Exec(), sqlbuilder.ErrColumnsIsEmpty)
+		a.ErrorString(createStmt.Exec(), "未指定列")
 
 		dropStmt.Reset()
 		dropStmt.Table("test")
-		a.ErrorIs(dropStmt.Exec(), sqlbuilder.ErrColumnsIsEmpty)
+		a.ErrorString(dropStmt.Exec(), "未指定列")
 	})
 }

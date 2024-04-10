@@ -159,7 +159,7 @@ func (s *sqlite3) DropColumnStmtHook(stmt *sqlbuilder.DropColumnStmt) ([]string,
 	}
 
 	if _, found := info.Columns[stmt.ColumnName]; !found {
-		return nil, fmt.Errorf("列 %s 不存在", stmt.ColumnName)
+		return nil, core.ErrColumnNotFound(stmt.ColumnName)
 	}
 
 	delete(info.Columns, stmt.ColumnName)

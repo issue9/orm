@@ -28,7 +28,7 @@ func (n *SliceOf[T]) Scan(value any) (err error) {
 	case []byte:
 		j = v
 	default:
-		return core.ErrInvalidColumnType
+		return core.ErrInvalidColumnType()
 	}
 
 	return json.Unmarshal(j, n)

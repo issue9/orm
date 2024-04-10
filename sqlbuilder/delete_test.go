@@ -35,11 +35,11 @@ func TestDelete_Exec(t *testing.T) {
 			Where("id=?").
 			Or("name=?", "xx")
 		_, err = sql.Exec()
-		a.ErrorIs(err, sqlbuilder.ErrArgsNotMatch)
+		a.ErrorString(err, "列与值不匹配")
 
 		sql.Reset()
 		_, err = sql.Exec()
-		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorString(err, "未指定表名")
 	})
 }
 

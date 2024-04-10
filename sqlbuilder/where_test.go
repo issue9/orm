@@ -43,7 +43,7 @@ func TestWhere(t *testing.T) {
 
 	w.And("id=?", 5, 7)
 	sql, args, err = w.SQL()
-	a.Equal(err, ErrArgsNotMatch).Nil(args).Empty(sql)
+	a.ErrorString(err, "列与值不匹配").Nil(args).Empty(sql)
 
 	// cond==""
 
@@ -57,9 +57,9 @@ func TestWhere(t *testing.T) {
 	sqltest.Equal(a, sql, "")
 
 	w.Reset()
-	a.PanicType(func() {
+	a.PanicString(func() {
 		w.And("", 3)
-	}, ErrArgsNotMatch)
+	}, "列与值不匹配")
 }
 
 func TestWhereStmt_IsNull(t *testing.T) {

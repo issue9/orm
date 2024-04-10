@@ -12,7 +12,7 @@ orm
 mysql     | mysql github.com/go-sql-driver/mysql | [![Mysql](https://github.com/issue9/orm/workflows/Mysql/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3AMysql)
 mariadb   | mysql github.com/go-sql-driver/mysql | [![Mariadb](https://github.com/issue9/orm/workflows/Mariadb/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3AMariadb)
 sqlite3   | sqlite3 github.com/mattn/go-sqlite3  | [![Sqlite3](https://github.com/issue9/orm/workflows/Sqlite3/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3ASqlite3)
-sqlite   | sqlite3 modernc.org/sqlite           | [![Sqlite](https://github.com/issue9/orm/workflows/Sqlite/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3ASqlite)
+sqlite3   | sqlite modernc.org/sqlite            | [![Sqlite](https://github.com/issue9/orm/workflows/Sqlite/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3ASqlite)
 postgres  | postgres github.com/lib/pq           | [![Postgres](https://github.com/issue9/orm/workflows/Postgres/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3APostgres)
 
 理论上 <github.com/jackc/pgx/v4/stdlib> 也是可用于 postgres，不过其驱动的注册名称为 pgx。

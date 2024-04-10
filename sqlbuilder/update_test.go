@@ -23,9 +23,9 @@ func TestUpdate_columnsHasDup(t *testing.T) {
 		u := sqlbuilder.Update(t.DB).
 			Table("users").
 			Set("c1", "v1").
-			Set("c1", "v1")
+			Set("c1", "v2")
 		_, err := u.Exec()
-		a.ErrorIs(err, sqlbuilder.ErrDupColumn)
+		a.ErrorString(err, "存在重复的列名")
 	})
 }
 

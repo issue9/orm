@@ -20,10 +20,10 @@ func TestNewColumn(t *testing.T) {
 	a.NotError(err).NotNil(col).Equal(col.PrimitiveType, Bool)
 
 	col, err = NewColumn(Auto)
-	a.ErrorIs(err, ErrInvalidColumnType).Nil(col)
+	a.ErrorIs(err, ErrInvalidColumnType()).Nil(col)
 
 	col, err = NewColumn(maxPrimitiveType)
-	a.ErrorIs(err, ErrInvalidColumnType).Nil(col)
+	a.ErrorIs(err, ErrInvalidColumnType()).Nil(col)
 }
 
 func TestModel_AddColumns(t *testing.T) {

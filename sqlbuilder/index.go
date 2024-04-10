@@ -68,11 +68,11 @@ func (stmt *CreateIndexStmt) DDLSQL() ([]string, error) {
 	}
 
 	if stmt.table == "" {
-		return nil, ErrTableIsEmpty
+		return nil, SyntaxError("CREATE INDEX", "未指定表名")
 	}
 
 	if len(stmt.cols) == 0 {
-		return nil, ErrColumnsIsEmpty
+		return nil, SyntaxError("CREATE INDEX", "未指定列")
 	}
 
 	var builder *core.Builder

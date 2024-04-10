@@ -53,7 +53,7 @@ func (n *Rat) Scan(src any) (err error) {
 		}
 		return n.UnmarshalText([]byte(v))
 	default:
-		return core.ErrInvalidColumnType
+		return core.ErrInvalidColumnType()
 	}
 }
 

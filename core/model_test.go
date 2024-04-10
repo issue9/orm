@@ -56,7 +56,7 @@ func TestModel_SetAutoIncrement(t *testing.T) {
 	m.Reset()
 	a.NotError(m.AddColumns(ai2))
 	a.NotError(m.AddPrimaryKey(ai2)) // 主键
-	a.ErrorIs(m.SetAutoIncrement(ai), ErrAutoIncrementPrimaryKeyConflict)
+	a.ErrorIs(m.SetAutoIncrement(ai), errAutoIncrementPrimaryKeyConflict)
 
 	// ai 不存在
 	m.Reset()

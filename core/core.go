@@ -70,8 +70,9 @@ type Engine interface {
 // Dialect 的实现者除了要实现 Dialect 之外，
 // 还需要根据数据库的支持情况实现 sqlbuilder 下的部分 *Hooker 接口。
 type Dialect interface {
-	// Name 当前关联的实例名称
+	// Name 当前关联实例的名称
 	//
+	// 一般为该数据库的官方名称。
 	// 实例名称和驱动名未必相同。比如 mysql 和 mariadb 可能采用相同的驱动名；
 	Name() string
 

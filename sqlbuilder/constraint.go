@@ -4,7 +4,14 @@
 
 package sqlbuilder
 
-import "github.com/issue9/orm/v6/core"
+import (
+	"errors"
+	"fmt"
+
+	"github.com/issue9/orm/v6/core"
+)
+
+var errConstraintType = errors.New("约束类型错误，已经设置为其它约束")
 
 // AddConstraintStmtHooker [AddConstraintStmt.DDLSQL] 的钩子函数
 type AddConstraintStmtHooker interface {
@@ -62,7 +69,7 @@ func (stmt *AddConstraintStmt) Unique(name string, col ...string) *AddConstraint
 	}
 
 	if stmt.Type != core.ConstraintNone {
-		stmt.err = ErrConstraintType
+		stmt.err = errConstraintType
 		return stmt
 	}
 
@@ -80,7 +87,7 @@ func (stmt *AddConstraintStmt) PK(name string, col ...string) *AddConstraintStmt
 	}
 
 	if stmt.Type != core.ConstraintNone {
-		stmt.err = ErrConstraintType
+		stmt.err = errConstraintType
 		return stmt
 	}
 
@@ -98,7 +105,7 @@ func (stmt *AddConstraintStmt) Check(name, expr string) *AddConstraintStmt {
 	}
 
 	if stmt.Type != core.ConstraintNone {
-		stmt.err = ErrConstraintType
+		stmt.err = errConstraintType
 		return stmt
 	}
 
@@ -116,7 +123,7 @@ func (stmt *AddConstraintStmt) FK(name, col, refTable, refColumn, updateRule, de
 	}
 
 	if stmt.Type != core.ConstraintNone {
-		stmt.err = ErrConstraintType
+		stmt.err = errConstraintType
 		return stmt
 	}
 
@@ -134,15 +141,15 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 	}
 
 	if stmt.TableName == "" {
-		return nil, ErrTableIsEmpty
+		return nil, SyntaxError("ADD CONSTRAINT", "未指定表名")
 	}
 
 	if len(stmt.Data) == 0 {
-		return nil, ErrColumnsIsEmpty
+		return nil, SyntaxError("ADD CONSTRAINT", "未指定列")
 	}
 
 	if stmt.Name == "" {
-		return nil, ErrConstraintIsEmpty
+		return nil, SyntaxError("ADD CONSTRAINT", "未指定名称")
 	}
 
 	if hook, ok := stmt.Dialect().(AddConstraintStmtHooker); ok {
@@ -184,7 +191,7 @@ func (stmt *AddConstraintStmt) DDLSQL() ([]string, error) {
 		}
 		builder.TruncateLast(1).WBytes(')')
 	default:
-		return nil, ErrUnknownConstraint
+		panic(fmt.Sprintf("未知的约束类型 %v", stmt.Type))
 	}
 
 	query, err := builder.String()
@@ -249,11 +256,11 @@ func (stmt *DropConstraintStmt) DDLSQL() ([]string, error) {
 	}
 
 	if stmt.TableName == "" {
-		return nil, ErrTableIsEmpty
+		return nil, SyntaxError("DROP CONSTRAINT", "未指定表名")
 	}
 
 	if stmt.Name == "" {
-		return nil, ErrColumnsIsEmpty
+		return nil, SyntaxError("DROP CONSTRAINT", "未指定名称")
 	}
 
 	if hook, ok := stmt.Dialect().(DropConstraintStmtHooker); ok {

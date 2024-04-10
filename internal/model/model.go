@@ -29,7 +29,7 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 	}
 
 	if rtype.Kind() != reflect.Struct {
-		return nil, fetch.ErrInvalidKind
+		return nil, fetch.ErrUnsupportedKind()
 	}
 
 	if m, found := ms.models.Load(rtype); found {

@@ -321,6 +321,7 @@ func TestDB_NewEngine(t *testing.T) {
 		a.NotError(p2.Create(&User{}))
 		defer func() {
 			a.NotError(p1.Drop(&User{}))
+			a.NotError(p11.Drop(&User{}))
 			a.NotError(p2.Drop(&User{}))
 		}()
 

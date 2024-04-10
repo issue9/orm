@@ -11,45 +11,9 @@ package sqlbuilder
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"fmt"
 
 	"github.com/issue9/orm/v6/core"
-)
-
-var (
-	// ErrTableIsEmpty 未指定表名
-	//
-	// 任何 SQL 语句中，若未指定表名或是视图名，会返回此错误。
-	ErrTableIsEmpty = errors.New("表名为空")
-
-	// ErrValueIsEmpty 在 Update 和 Insert 语句中，
-	// 若未指定任何值，则返回此错误
-	ErrValueIsEmpty = errors.New("值为空")
-
-	// ErrColumnsIsEmpty 在 Insert 和 Select 语句中，
-	// 若未指定任何列表，则返回此错误
-	ErrColumnsIsEmpty = errors.New("未指定列")
-
-	// ErrConstraintIsEmpty 约束名不能为空，某些需要操作约束的 SQL 会返回此值。
-	ErrConstraintIsEmpty = errors.New("约束名不能为空")
-
-	// ErrDupColumn 在 Update 中可能存在重复设置的列名
-	ErrDupColumn = errors.New("重复的列名")
-
-	// ErrArgsNotMatch 在生成的 SQL 语句中，传递的参数与语句的占位符数量不匹配。
-	ErrArgsNotMatch = errors.New("列与值的数量不匹配")
-
-	// ErrUnknownConstraint 该约束类型不支持，或是当前环境下无法使用
-	ErrUnknownConstraint = errors.New("不支持的约束类型")
-
-	// ErrNotImplemented 部分数据库如果没有实现的功能，可以返回该错误
-	ErrNotImplemented = errors.New("未实现该功能")
-
-	// ErrConstraintType 约束类型错误
-	ErrConstraintType = errors.New("约束类型错误，已经设置为其它约束")
-
-	// ErrUnionColumnNotMatch 在 Union 中，各个 select 中的列长度不相同。
-	ErrUnionColumnNotMatch = errors.New("union 列长度不相同")
 )
 
 type (
@@ -94,4 +58,12 @@ type (
 // tablePrefix 表名前缀；
 func New(e core.Engine) *SQLBuilder {
 	return &SQLBuilder{engine: e}
+}
+
+// SyntaxError 返回语法错误的信息
+//
+// typ 表示语句的类型，比如 SELECT、UPDATE 等；
+// msg 为具体的错误信息；
+func SyntaxError(typ string, msg any) error {
+	return fmt.Errorf("在 %s 语句中存在语法错误 %s", typ, msg)
 }

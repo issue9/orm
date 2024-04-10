@@ -52,7 +52,7 @@ func TestRat_SQL(t *testing.T) {
 	a.Nil(val).NotError(err)
 
 	r = &Rat{}
-	a.ErrorIs(r.Scan(1), core.ErrInvalidColumnType)
+	a.ErrorIs(r.Scan(1), core.ErrInvalidColumnType())
 	val, err = r.Value()
 	a.Nil(val).NotError(err)
 

@@ -244,7 +244,7 @@ func TestSelectStmt_Union(t *testing.T) {
 		// 添加了一个新的列名。导致长度不相同
 		sel2.Column("name")
 		rs, err := sel1.Query() // 不能命名为 rows，否则会影响上面 rows.Close 的执行
-		a.ErrorIs(err, sqlbuilder.ErrUnionColumnNotMatch).Nil(rs)
+		a.ErrorString(err, "union 各个 select 的列数量不相同").Nil(rs)
 	})
 }
 

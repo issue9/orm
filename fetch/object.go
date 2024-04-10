@@ -21,12 +21,14 @@ type AfterFetcher interface {
 	AfterFetch() error
 }
 
-// ErrInvalidKind 表示当前功能对数据的 Kind 值有特殊需求
-var ErrInvalidKind = errors.New("无效的 Kind 类型")
+var errUnsupportedKind = errors.New("不支持的 Kind 类型")
+
+// ErrUnsupportedKind 表示当前功能对数据的 Kind 值有特殊需求
+func ErrUnsupportedKind() error { return errUnsupportedKind }
 
 // 输出无法转换时的字段信息
-func convertError(field, message string) error {
-	return fmt.Errorf("字段 %s 转换出错：%s", field, message)
+func convertError(field string, message error) error {
+	return fmt.Errorf("字段 %s 转换出错：%w", field, message)
 }
 
 // Object 将 rows 中的数据导出到 obj 中
@@ -73,12 +75,12 @@ func Object(strict bool, rows *sql.Rows, obj any) (int, error) {
 		case reflect.Struct: // 结构指针，只能导出一个
 			return fetchOnceObj(strict, elem, rows)
 		default:
-			return 0, ErrInvalidKind
+			return 0, ErrUnsupportedKind()
 		}
 	case reflect.Slice: // slice 只能按其大小导出。
 		return fetchObjToFixedSlice(strict, val, rows)
 	default:
-		return 0, ErrInvalidKind
+		return 0, ErrUnsupportedKind()
 	}
 }
 
@@ -88,7 +90,7 @@ func Object(strict bool, rows *sql.Rows, obj any) (int, error) {
 func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 	v = getRealValue(v)
 	if v.Kind() != reflect.Struct {
-		return ErrInvalidKind
+		return ErrUnsupportedKind()
 	}
 
 	vt := v.Type()
@@ -231,7 +233,7 @@ func fetchOnceObjNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 			continue
 		}
 		if err = conv.Value(v, item); err != nil {
-			return 0, convertError(index, err.Error())
+			return 0, convertError(index, err)
 		}
 	}
 
@@ -256,7 +258,7 @@ func fetchObjToFixedSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, 
 		itemType = itemType.Elem()
 	}
 	if itemType.Kind() != reflect.Struct {
-		return 0, ErrInvalidKind
+		return 0, ErrUnsupportedKind()
 	}
 
 	cols, err := rows.Columns()
@@ -288,7 +290,7 @@ func fetchObjToFixedSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error
 		itemType = itemType.Elem()
 	}
 	if itemType.Kind() != reflect.Struct {
-		return 0, ErrInvalidKind
+		return 0, ErrUnsupportedKind()
 	}
 
 	// 先导出数据到 map 中
@@ -309,7 +311,7 @@ func fetchObjToFixedSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error
 				continue
 			}
 			if err = conv.Value(v, item); err != nil {
-				return i, convertError(index, err.Error()) // 已经有 i 条数据被正确导出
+				return i, convertError(index, err) // 已经有 i 条数据被正确导出
 			}
 		} // end for objItem
 
@@ -338,7 +340,7 @@ func fetchObjToSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, error
 		itemType = itemType.Elem()
 	}
 	if itemType.Kind() != reflect.Struct {
-		return 0, ErrInvalidKind
+		return 0, ErrUnsupportedKind()
 	}
 
 	cols, err := rows.Columns()
@@ -380,7 +382,7 @@ func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 		itemType = itemType.Elem()
 	}
 	if itemType.Kind() != reflect.Struct {
-		return 0, ErrInvalidKind
+		return 0, ErrUnsupportedKind()
 	}
 
 	// 先导出数据到 map 中
@@ -410,7 +412,7 @@ func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 				continue
 			}
 			if err = conv.Value(e, item); err != nil {
-				return i, convertError(index, err.Error())
+				return i, convertError(index, err)
 			}
 		} // end for objItem
 

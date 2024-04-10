@@ -49,13 +49,13 @@ func TestColumn(t *testing.T) {
 		t.NotError(err, "%s@%s", err, t.DriverName)
 
 		err = addStmt.Reset().Exec()
-		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorString(err, "未指定表名")
 
 		err = addStmt.Reset().Table("users").Exec()
-		a.ErrorIs(err, sqlbuilder.ErrColumnsIsEmpty)
+		a.ErrorString(err, "未指定列")
 
 		err = dropStmt.Reset().Exec()
-		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorString(err, "未指定表名")
 	})
 
 	// 添加主键

@@ -51,11 +51,11 @@ func (stmt *AddColumnStmt) DDLSQL() ([]string, error) {
 	}
 
 	if stmt.table == "" {
-		return nil, ErrTableIsEmpty
+		return nil, SyntaxError("ALTER TABLE ADD", "未指定表名")
 	}
 
 	if stmt.column == nil {
-		return nil, ErrColumnsIsEmpty
+		return nil, SyntaxError("ALTER TABLE ADD", "未指定列")
 	}
 
 	if err := stmt.column.Check(); err != nil {
@@ -135,7 +135,7 @@ func (stmt *DropColumnStmt) DDLSQL() ([]string, error) {
 	}
 
 	if stmt.TableName == "" {
-		return nil, ErrTableIsEmpty
+		return nil, SyntaxError("DROP COLUMN", "未指定表名")
 	}
 
 	if hook, ok := stmt.Dialect().(DropColumnStmtHooker); ok {

@@ -42,13 +42,13 @@ func TestSuite_Run_withDialect(t *testing.T) {
 		{Name: "mysql", DriverName: "mysql"},
 		{Name: "sqlite3", DriverName: "sqlite3"},
 		{Name: "sqlite3", DriverName: "sqlite"},
-		{Name: "mariadb", DriverName: "mariadb"},
+		{Name: "mariadb", DriverName: "mysql"},
 		{Name: "postgres", DriverName: "postgres"},
 	}
 
 	// 通过参数限定了 dialect
 
-	dialects := []core.Dialect{Mysql, Sqlite3}
+	dialects := []core.Dialect{Sqlite3}
 	s := NewSuite(a, "", dialects...)
 
 	size := 0

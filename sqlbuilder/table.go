@@ -207,7 +207,7 @@ func (stmt *CreateTableStmt) DDLSQL() ([]string, error) {
 	}
 
 	if len(stmt.model.Columns) == 0 {
-		return nil, ErrColumnsIsEmpty
+		return nil, SyntaxError("CREATE TABLE", "未指定列")
 	}
 
 	w := core.NewBuilder("CREATE TABLE IF NOT EXISTS ").
@@ -446,7 +446,7 @@ func (stmt *DropTableStmt) DDLSQL() ([]string, error) {
 	}
 
 	if len(stmt.tables) == 0 {
-		return nil, ErrTableIsEmpty
+		return nil, SyntaxError("DROP TABLE", "未指定表名")
 	}
 
 	qs := make([]string, 0, len(stmt.tables))
@@ -496,7 +496,7 @@ func (stmt *TableExistsStmt) Reset() *TableExistsStmt {
 
 func (stmt *TableExistsStmt) SQL() (string, []any, error) {
 	if stmt.name == "" {
-		return "", nil, ErrTableIsEmpty
+		return "", nil, SyntaxError("TABLE EXISTS", "未指定表名")
 	}
 
 	sql, args := stmt.Dialect().ExistsSQL(stmt.name, false)

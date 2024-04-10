@@ -144,7 +144,7 @@ func PrepareNamedArgs(query string) (string, map[string]int, error) {
 
 func stdDropIndex(index string) (string, error) {
 	if index == "" {
-		return "", sqlbuilder.ErrColumnsIsEmpty
+		return "", sqlbuilder.SyntaxError("DROP INDEX", "未指定列")
 	}
 
 	return core.NewBuilder("DROP INDEX ").QuoteKey(index).String()

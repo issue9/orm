@@ -181,16 +181,15 @@ func (stmt *UpdateStmt) getWhereSQL() (string, []any, error) {
 // 检测列名是否存在重复，先排序，再与后一元素比较。
 func (stmt *UpdateStmt) checkErrors() error {
 	if stmt.table == "" {
-		return ErrTableIsEmpty
+		return SyntaxError("UPDATE", "未指定表名")
 	}
 
 	if len(stmt.values) == 0 {
-		return ErrValueIsEmpty
+		return SyntaxError("UPDATE", "未指定任何更新的值")
 	}
 
-	// 检测列名是否存在重复，先排序，再与后一元素比较。
 	if len(sliceutil.Dup(stmt.values, func(i, j *updateSet) bool { return i.column == j.column })) > 0 {
-		return ErrDupColumn
+		return SyntaxError("UPDATE", "存在重复的列名")
 	}
 
 	return nil

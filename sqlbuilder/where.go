@@ -55,7 +55,7 @@ func (stmt *WhereStmt) SQL() (string, []any, error) {
 	}
 
 	if cnt != len(stmt.args) {
-		return "", nil, ErrArgsNotMatch
+		return "", nil, SyntaxError("WHERE", "列与值不匹配")
 	}
 
 	for _, w := range stmt.andGroups {
@@ -109,7 +109,7 @@ func (stmt *WhereStmt) writeAnd(and bool) {
 func (stmt *WhereStmt) where(and bool, cond string, args ...any) *WhereStmt {
 	if cond == "" {
 		if len(args) > 0 {
-			panic(ErrArgsNotMatch)
+			panic("列与值不匹配")
 		}
 
 		return stmt

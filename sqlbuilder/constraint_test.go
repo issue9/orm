@@ -48,13 +48,12 @@ func TestConstraint(t *testing.T) {
 		a.Error(err, "并未出错 @%s", t.DriverName)
 
 		err = dropStmt.Reset().Exec()
-		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorString(err, "未指定表名")
 
 		err = dropStmt.Reset().Table("tbl").Exec()
-		a.ErrorIs(err, sqlbuilder.ErrColumnsIsEmpty)
-
-		a.ErrorIs(addStmt.Reset().Unique("", "name").Exec(), sqlbuilder.ErrTableIsEmpty)
-		a.ErrorIs(addStmt.Reset().Table("users").Unique("", "name").Exec(), sqlbuilder.ErrConstraintIsEmpty)
+		a.ErrorString(err, "未指定名称").
+			ErrorString(addStmt.Reset().Unique("", "name").Exec(), "未指定表名").
+			ErrorString(addStmt.Reset().Table("users").Unique("", "name").Exec(), "未指定名称")
 	})
 }
 

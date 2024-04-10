@@ -66,9 +66,9 @@ func TestCreateTableStmt(t *testing.T) {
 			Exec()
 		a.Error(err)
 
-		a.Error(stmt.Reset().Exec(), sqlbuilder.ErrTableIsEmpty)
+		a.ErrorString(stmt.Reset().Exec(), "缺少模型名称")
 
-		a.Error(stmt.Reset().Table("users").Exec(), sqlbuilder.ErrColumnsIsEmpty)
+		a.ErrorString(stmt.Reset().Table("users").Exec(), "未指定列")
 
 		insert := sqlbuilder.Insert(t.DB).
 			Table(table).

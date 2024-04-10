@@ -52,11 +52,11 @@ func TestInsert(t *testing.T) {
 
 		i.Reset().Columns("id", "name")
 		_, err = i.Exec()
-		a.ErrorIs(err, sqlbuilder.ErrTableIsEmpty)
+		a.ErrorString(err, "未指定表名")
 
 		i.Reset().Table(tableName).Columns("id", "name").Values("100")
 		_, err = i.Exec()
-		a.ErrorIs(err, sqlbuilder.ErrArgsNotMatch)
+		a.ErrorString(err, "列与值不匹配")
 
 		// default value
 		_, err = i.Reset().Table(tableName).Exec()

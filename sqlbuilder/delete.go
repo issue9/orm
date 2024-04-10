@@ -41,7 +41,7 @@ func (stmt *DeleteStmt) SQL() (string, []any, error) {
 	}
 
 	if stmt.table == "" {
-		return "", nil, ErrTableIsEmpty
+		return "", nil, SyntaxError("DELETE", "未指定表名")
 	}
 
 	query, args, err := stmt.WhereStmt().SQL()

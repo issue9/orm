@@ -45,6 +45,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 func (tx *Tx) LastInsertID(v TableNamer) (int64, error) {
 	return tx.LastInsertIDContext(context.Background(), v)
 }
+
 func (tx *Tx) LastInsertIDContext(ctx context.Context, v TableNamer) (int64, error) {
 	return lastInsertID(ctx, tx, v)
 }

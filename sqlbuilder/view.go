@@ -134,7 +134,7 @@ func (stmt *DropViewStmt) Name(name string) *DropViewStmt {
 // DDLSQL 返回删除视图的 SQL 语句
 func (stmt *DropViewStmt) DDLSQL() ([]string, error) {
 	if len(stmt.name) == 0 {
-		return nil, ErrTableIsEmpty
+		return nil, SyntaxError("DROP VIEW", "未指定表名")
 	}
 
 	query, err := core.NewBuilder("DROP VIEW IF EXISTS ").
@@ -182,7 +182,7 @@ func (stmt *ViewExistsStmt) Reset() *ViewExistsStmt {
 
 func (stmt *ViewExistsStmt) SQL() (string, []any, error) {
 	if stmt.name == "" {
-		return "", nil, ErrTableIsEmpty
+		return "", nil, SyntaxError("VIEW EXISTS", "未指定表名")
 	}
 
 	sql, args := stmt.Dialect().ExistsSQL(stmt.name, true)

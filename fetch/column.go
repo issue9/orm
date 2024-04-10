@@ -6,13 +6,10 @@ package fetch
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
-)
 
-func columnNotExists(col string) error {
-	return fmt.Errorf("指定的列名 %s 不存在", col)
-}
+	"github.com/issue9/orm/v6/core"
+)
 
 // Column 导出 rows 中某列的所有或一行数据
 //
@@ -36,7 +33,7 @@ func Column(once bool, colName string, rows *sql.Rows) ([]any, error) {
 	}
 
 	if index == -1 {
-		return nil, columnNotExists(colName)
+		return nil, core.ErrColumnNotFound(colName)
 	}
 
 	var data []any
@@ -75,7 +72,7 @@ func ColumnString(once bool, colName string, rows *sql.Rows) ([]string, error) {
 	}
 
 	if index == -1 {
-		return nil, columnNotExists(colName)
+		return nil, core.ErrColumnNotFound(colName)
 	}
 
 	var data []string

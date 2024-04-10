@@ -13,13 +13,10 @@ import (
 	"github.com/issue9/sliceutil"
 )
 
-var (
-	// ErrAutoIncrementPrimaryKeyConflict 自增和主键不能同时存在
-	//
-	// 当添加自增时，会自动将其转换为主键，如果此时已经已经存在主键，则会报此错误。
-	ErrAutoIncrementPrimaryKeyConflict = errors.New("自增和主键不能同时存在")
-)
+// 当添加自增时，会自动将其转换为主键，如果此时已经已经存在主键，则会报此错误。
+var errAutoIncrementPrimaryKeyConflict = errors.New("自增和主键不能同时存在")
 
+// 自增和乐观锁列必须是数值型的数据
 func errColMustNumber(name string) error { return fmt.Errorf("列 %s 必须是数值类型", name) }
 
 type (
@@ -163,7 +160,7 @@ func (m *Model) SetAutoIncrement(col *Column) error {
 	}
 
 	if m.PrimaryKey != nil {
-		return ErrAutoIncrementPrimaryKeyConflict
+		return errAutoIncrementPrimaryKeyConflict
 	}
 
 	if !m.columnExists(col) {
@@ -183,7 +180,7 @@ func (m *Model) AddPrimaryKey(col *Column) error {
 	const pkName = "_pk"
 
 	if m.AutoIncrement != nil {
-		return ErrAutoIncrementPrimaryKeyConflict
+		return errAutoIncrementPrimaryKeyConflict
 	}
 
 	if !m.columnExists(col) {
