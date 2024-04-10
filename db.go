@@ -16,8 +16,9 @@ import (
 // DB 数据库操作实例
 type DB struct {
 	core.Engine
-	sqlBuilder *sqlbuilder.SQLBuilder
-	models     *model.Models
+	tablePrefix string
+	sqlBuilder  *sqlbuilder.SQLBuilder
+	models      *model.Models
 }
 
 // NewDB 声明一个新的 [DB] 实例
@@ -48,9 +49,10 @@ func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error
 	}
 
 	return &DB{
-		models:     ms,
-		Engine:     e,
-		sqlBuilder: sqlbuilder.New(e),
+		Engine:      e,
+		tablePrefix: tablePrefix,
+		sqlBuilder:  sqlbuilder.New(e),
+		models:      ms,
 	}, nil
 }
 
@@ -64,9 +66,10 @@ func (db *DB) New(tablePrefix string) *DB {
 
 	e := db.models.NewEngine(db.DB(), tablePrefix)
 	return &DB{
-		Engine:     e,
-		sqlBuilder: sqlbuilder.New(e),
-		models:     db.models,
+		Engine:      e,
+		tablePrefix: tablePrefix,
+		sqlBuilder:  sqlbuilder.New(e),
+		models:      db.models,
 	}
 }
 
@@ -158,3 +161,9 @@ func (db *DB) Stats() sql.DBStats { return db.DB().Stats() }
 
 // DB 返回标准库的 [sql.DB] 实例
 func (db *DB) DB() *sql.DB { return db.models.DB() }
+
+// TablePrefix 所有数据表拥有的统一表名前缀
+//
+// 当需要在一个数据库中创建不同的实例，
+// 或是同一个数据表结构应用在不同的对象是，可以通过不同的表名前缀对数据表进行区分。
+func (db *DB) TablePrefix() string { return db.tablePrefix }

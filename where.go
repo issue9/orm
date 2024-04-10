@@ -38,8 +38,6 @@ func (p *txEngine) Where(cond string, args ...any) *WhereStmt {
 	return w.Where(cond, args...)
 }
 
-func (stmt *WhereStmt) TablePrefix() string { return stmt.engine.TablePrefix() }
-
 // Delete 从 v 表中删除符合条件的内容
 func (stmt *WhereStmt) Delete(v TableNamer) (sql.Result, error) {
 	m, err := stmt.engine.newModel(v)

@@ -13,11 +13,10 @@ import (
 )
 
 type coreEngine struct {
-	ms          *Models
-	engine      stdEngine
-	tablePrefix string
-	replacer    *strings.Replacer
-	sqlLogger   func(string)
+	ms        *Models
+	engine    stdEngine
+	replacer  *strings.Replacer
+	sqlLogger func(string)
 }
 
 // [sql.DB] 与 [sql.Tx] 的最小接口
@@ -35,10 +34,9 @@ func (ms *Models) NewEngine(e stdEngine, tablePrefix string) core.Engine {
 	l, r := ms.dialect.Quotes()
 
 	return &coreEngine{
-		ms:          ms,
-		engine:      e,
-		tablePrefix: tablePrefix,
-		sqlLogger:   defaultSQLLogger,
+		ms:        ms,
+		engine:    e,
+		sqlLogger: defaultSQLLogger,
 		replacer: strings.NewReplacer(
 			string(core.QuoteLeft), string(l),
 			string(core.QuoteRight), string(r),
@@ -46,8 +44,6 @@ func (ms *Models) NewEngine(e stdEngine, tablePrefix string) core.Engine {
 		),
 	}
 }
-
-func (db *coreEngine) TablePrefix() string { return db.tablePrefix }
 
 // Debug 指定调输出调试内容通道
 //

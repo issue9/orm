@@ -53,12 +53,6 @@ type Engine interface {
 
 	Dialect() Dialect
 
-	// TablePrefix 所有数据表拥有的统一表名前缀
-	//
-	// 当需要在一个数据库中创建不同的实例，
-	// 或是同一个数据表结构应用在不同的对象是，可以通过不同的表名前缀对数据表进行区分。
-	TablePrefix() string
-
 	// Debug 启用调试输出
 	//
 	// 如果传递了一个非空值，那么会将生成的 SQL 输出到 l。

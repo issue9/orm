@@ -36,9 +36,9 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	}
 
 	return &Tx{
+		Engine: db.models.NewEngine(tx, db.TablePrefix()),
 		tx:     tx,
 		db:     db,
-		Engine: db.models.NewEngine(tx, db.TablePrefix()),
 	}, nil
 }
 
@@ -118,8 +118,9 @@ func (tx *Tx) Tx() *sql.Tx { return tx.tx }
 // NewEngine 为当前事务创建一个不同表名前缀的 [Engine] 对象
 //
 // 如果要复用表模型，可以采此方法创建一个不同表名前缀的 [Engine] 进行操作表模型。
+// 返回对象的生命周期与 [Tx] 相同。
 func (tx *Tx) NewEngine(tablePrefix string) Engine {
-	if tx.TablePrefix() == tablePrefix {
+	if tx.db.TablePrefix() == tablePrefix { // 事务的表名前缀必然是与创建他的 [DB] 是相同的
 		return tx
 	}
 
@@ -129,70 +130,70 @@ func (tx *Tx) NewEngine(tablePrefix string) Engine {
 	}
 }
 
-func (p *txEngine) LastInsertID(v TableNamer) (int64, error) {
-	return p.LastInsertIDContext(context.Background(), v)
+func (e *txEngine) LastInsertID(v TableNamer) (int64, error) {
+	return e.LastInsertIDContext(context.Background(), v)
 }
 
-func (p *txEngine) LastInsertIDContext(ctx context.Context, v TableNamer) (int64, error) {
-	return lastInsertID(ctx, p, v)
+func (e *txEngine) LastInsertIDContext(ctx context.Context, v TableNamer) (int64, error) {
+	return lastInsertID(ctx, e, v)
 }
 
-func (p *txEngine) Insert(v TableNamer) (sql.Result, error) {
-	return p.InsertContext(context.Background(), v)
+func (e *txEngine) Insert(v TableNamer) (sql.Result, error) {
+	return e.InsertContext(context.Background(), v)
 }
 
-func (p *txEngine) InsertContext(ctx context.Context, v TableNamer) (sql.Result, error) {
-	return insert(ctx, p, v)
+func (e *txEngine) InsertContext(ctx context.Context, v TableNamer) (sql.Result, error) {
+	return insert(ctx, e, v)
 }
 
-func (p *txEngine) Delete(v TableNamer) (sql.Result, error) {
-	return p.DeleteContext(context.Background(), v)
+func (e *txEngine) Delete(v TableNamer) (sql.Result, error) {
+	return e.DeleteContext(context.Background(), v)
 }
 
-func (p *txEngine) DeleteContext(ctx context.Context, v TableNamer) (sql.Result, error) {
-	return del(ctx, p, v)
+func (e *txEngine) DeleteContext(ctx context.Context, v TableNamer) (sql.Result, error) {
+	return del(ctx, e, v)
 }
 
-func (p *txEngine) Update(v TableNamer, cols ...string) (sql.Result, error) {
-	return p.UpdateContext(context.Background(), v, cols...)
+func (e *txEngine) Update(v TableNamer, cols ...string) (sql.Result, error) {
+	return e.UpdateContext(context.Background(), v, cols...)
 }
 
-func (p *txEngine) UpdateContext(ctx context.Context, v TableNamer, cols ...string) (sql.Result, error) {
-	return update(ctx, p, v, cols...)
+func (e *txEngine) UpdateContext(ctx context.Context, v TableNamer, cols ...string) (sql.Result, error) {
+	return update(ctx, e, v, cols...)
 }
 
-func (p *txEngine) Select(v TableNamer) (bool, error) {
-	return p.SelectContext(context.Background(), v)
+func (e *txEngine) Select(v TableNamer) (bool, error) {
+	return e.SelectContext(context.Background(), v)
 }
 
-func (p *txEngine) SelectContext(ctx context.Context, v TableNamer) (bool, error) {
-	return find(ctx, p, v)
+func (e *txEngine) SelectContext(ctx context.Context, v TableNamer) (bool, error) {
+	return find(ctx, e, v)
 }
 
-func (p *txEngine) Create(v TableNamer) error { return p.CreateContext(context.Background(), v) }
+func (e *txEngine) Create(v TableNamer) error { return e.CreateContext(context.Background(), v) }
 
-func (p *txEngine) CreateContext(ctx context.Context, v TableNamer) error { return create(ctx, p, v) }
+func (e *txEngine) CreateContext(ctx context.Context, v TableNamer) error { return create(ctx, e, v) }
 
-func (p *txEngine) Drop(v TableNamer) error { return p.DropContext(context.Background(), v) }
+func (e *txEngine) Drop(v TableNamer) error { return e.DropContext(context.Background(), v) }
 
-func (p *txEngine) DropContext(ctx context.Context, v TableNamer) error { return drop(ctx, p, v) }
+func (e *txEngine) DropContext(ctx context.Context, v TableNamer) error { return drop(ctx, e, v) }
 
-func (p *txEngine) Truncate(v TableNamer) error { return p.TruncateContext(context.Background(), v) }
+func (e *txEngine) Truncate(v TableNamer) error { return e.TruncateContext(context.Background(), v) }
 
-func (p *txEngine) TruncateContext(ctx context.Context, v TableNamer) error {
-	return truncate(ctx, p, v)
+func (e *txEngine) TruncateContext(ctx context.Context, v TableNamer) error {
+	return truncate(ctx, e, v)
 }
 
-func (p *txEngine) InsertMany(max int, v ...TableNamer) error {
-	return p.InsertManyContext(context.Background(), max, v...)
+func (e *txEngine) InsertMany(max int, v ...TableNamer) error {
+	return e.InsertManyContext(context.Background(), max, v...)
 }
 
-func (p *txEngine) InsertManyContext(ctx context.Context, max int, v ...TableNamer) error {
-	return txInsertMany(ctx, p, max, v...)
+func (e *txEngine) InsertManyContext(ctx context.Context, max int, v ...TableNamer) error {
+	return txInsertMany(ctx, e, max, v...)
 }
 
-func (p *txEngine) SQLBuilder() *sqlbuilder.SQLBuilder {
-	return sqlbuilder.New(p) // txPrefix 般是一个临时对象，没必要像 [DB] 一样固定 sqlbuilder 对象。
+func (e *txEngine) SQLBuilder() *sqlbuilder.SQLBuilder {
+	return sqlbuilder.New(e) // txPrefix 般是一个临时对象，没必要像 [DB] 一样固定 sqlbuilder 对象。
 }
 
 func txInsertMany(ctx context.Context, tx Engine, max int, v ...TableNamer) error {
