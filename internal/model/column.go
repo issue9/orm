@@ -16,12 +16,12 @@ import (
 	"github.com/issue9/orm/v6/internal/tags"
 )
 
-type column struct {
+type Column struct {
 	*core.Column
 	GoType reflect.Type
 }
 
-func newColumn(field reflect.StructField) (*column, error) {
+func NewColumn(field reflect.StructField) (*Column, error) {
 	t := field.Type
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -34,13 +34,13 @@ func newColumn(field reflect.StructField) (*column, error) {
 
 	col.Name = field.Name
 	col.GoName = field.Name
-	return &column{
+	return &Column{
 		Column: col,
 		GoType: t,
 	}, nil
 }
 
-func (col *column) parseTags(m *core.Model, tag string) (err error) {
+func (col *Column) ParseTags(m *core.Model, tag string) (err error) {
 	if err = m.AddColumn(col.Column); err != nil {
 		return err
 	}
@@ -56,21 +56,21 @@ func (col *column) parseTags(m *core.Model, tag string) (err error) {
 		case "index":
 			err = setIndex(m, col, tag.Args)
 		case "pk":
-			err = setPK(m, col, tag.Args)
+			err = SetPK(m, col, tag.Args)
 		case "unique":
 			err = setUnique(m, col, tag.Args)
 		case "nullable":
-			err = col.setNullable(tag.Args)
+			err = col.SetNullable(tag.Args)
 		case "ai":
-			err = col.setAI(m, tag.Args)
+			err = col.SetAI(m, tag.Args)
 		case "len":
-			err = col.setLen(tag.Args)
+			err = col.SetLen(tag.Args)
 		case "fk":
 			err = setFK(m, col, tag.Args)
 		case "default":
-			err = col.setDefault(tag.Args)
+			err = col.SetDefault(tag.Args)
 		case "occ":
-			err = setOCC(m, col, tag.Args)
+			err = SetOCC(m, col, tag.Args)
 		default:
 			err = propertyError(col.Name, tag.Name, "未知的属性")
 		}
@@ -86,7 +86,7 @@ func (col *column) parseTags(m *core.Model, tag string) (err error) {
 // 从参数中获取 Column 的 len1 和 len2 变量
 //
 //	len(len1,len2)
-func (col *column) setLen(vals []string) (err error) {
+func (col *Column) SetLen(vals []string) (err error) {
 	l := len(vals)
 	switch l {
 	case 1:
@@ -110,7 +110,7 @@ func (col *column) setLen(vals []string) (err error) {
 }
 
 // nullable
-func (col *column) setNullable(vals []string) (err error) {
+func (col *Column) SetNullable(vals []string) (err error) {
 	if len(vals) > 0 {
 		return propertyError(col.Name, "nullable", "指定了太多的值")
 	}
@@ -124,7 +124,7 @@ func (col *column) setNullable(vals []string) (err error) {
 }
 
 // default(5)
-func (col *column) setDefault(vals []string) error {
+func (col *Column) SetDefault(vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "default", "太多的值")
 	}
@@ -171,7 +171,7 @@ func (col *column) setDefault(vals []string) error {
 }
 
 // ai
-func (col *column) setAI(m *core.Model, vals []string) error {
+func (col *Column) SetAI(m *core.Model, vals []string) error {
 	if len(vals) != 0 {
 		return propertyError(col.Name, "ai", "太多的值")
 	}

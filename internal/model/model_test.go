@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package model
+package model_test
 
 import (
 	"database/sql"
@@ -14,6 +14,7 @@ import (
 	"github.com/issue9/assert/v4"
 
 	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6/internal/model"
 )
 
 var (
@@ -108,8 +109,7 @@ func (v *viewObject) ViewAs() (string, error) {
 
 func TestModels_New(t *testing.T) {
 	a := assert.New(t, false)
-	ms := NewModels(nil, nil)
-	a.NotNil(ms)
+	ms := newModules(a)
 
 	m, err := ms.New(&Admin{})
 	a.NotError(err).NotNil(m)
@@ -169,17 +169,17 @@ func TestModels_New(t *testing.T) {
 	m, err = ms.New(o)
 	a.NotError(err).NotNil(m).
 		Equal(m.Name, "#objs").
-		Equal(ms.len(), 2)
+		Equal(ms.Length(), 2)
 
 	m, err = ms.New(&o)
 	a.NotError(err).NotNil(m).
 		Equal(m.Name, "#objs").
-		Equal(ms.len(), 2)
+		Equal(ms.Length(), 2)
 
 	m, err = ms.New(&o)
 	a.NotError(err).NotNil(m).
 		Equal(m.Name, "#objs").
-		Equal(ms.len(), 2)
+		Equal(ms.Length(), 2)
 
 	// view
 	m, err = ms.New(&viewObject{})
@@ -194,19 +194,19 @@ func TestModel_setOCC(t *testing.T) {
 
 	c, err := core.NewColumn(core.Int)
 	a.NotError(err).NotNil(c)
-	col := &column{Column: c}
+	col := &model.Column{Column: c}
 	col.Name = "occ"
 	a.NotError(m.AddColumn(c))
 
-	a.NotError(setOCC(m, col, nil))
+	a.NotError(model.SetOCC(m, col, nil))
 	a.Equal(col.Column, m.OCC)
 
 	// m.OCC 已经存在
-	a.Error(setOCC(m, col, nil))
+	a.Error(model.SetOCC(m, col, nil))
 
 	// 太多的值，occ(true)
 	m.OCC = nil
-	a.Error(setOCC(m, col, []string{"true"}))
+	a.Error(model.SetOCC(m, col, []string{"true"}))
 }
 
 func TestModel_setPK(t *testing.T) {
@@ -217,8 +217,8 @@ func TestModel_setPK(t *testing.T) {
 	a.NotError(err).NotNil(c)
 
 	// 过多的参数
-	col := &column{Column: c}
-	a.Error(setPK(m, col, []string{"123"}))
+	col := &model.Column{Column: c}
+	a.Error(model.SetPK(m, col, []string{"123"}))
 }
 
 func TestModel_setAI(t *testing.T) {
@@ -228,21 +228,21 @@ func TestModel_setAI(t *testing.T) {
 
 	c, err := core.NewColumn(core.Int)
 	a.NotError(err).NotNil(c)
-	col := &column{Column: c}
+	col := &model.Column{Column: c}
 
 	// 太多的参数
-	a.Error(col.setAI(m, []string{"true", "false"}))
+	a.Error(col.SetAI(m, []string{"true", "false"}))
 
 	// 列类型只能是整数型
 	c, err = core.NewColumn(core.Float32)
 	a.NotError(err).NotNil(c)
-	col = &column{Column: c}
-	a.Error(col.setAI(m, nil))
+	col = &model.Column{Column: c}
+	a.Error(col.SetAI(m, nil))
 
 	c, err = core.NewColumn(core.Int)
 	a.NotError(err).NotNil(c)
-	col = &column{Column: c}
+	col = &model.Column{Column: c}
 	col.Name = "ai"
 	a.NotError(m.AddColumn(col.Column))
-	a.NotError(col.setAI(m, nil))
+	a.NotError(col.SetAI(m, nil))
 }

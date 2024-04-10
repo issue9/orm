@@ -42,21 +42,16 @@ func NewDB(tablePrefix, dsn string, dialect Dialect) (*DB, error) {
 //
 // NOTE: db 的资源由返回的 [DB] 接管，外部不应该直接关闭 db 连接。
 func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error) {
-	ms := model.NewModels(db, dialect)
-	inst := &DB{
-		models: ms,
-		Engine: ms.NewEngine(db, tablePrefix),
-	}
-
-	ver, err := sqlbuilder.Version(inst)
+	ms, e, err := model.NewModels(db, dialect, tablePrefix)
 	if err != nil {
 		return nil, err
 	}
 
-	ms.SetVersion(ver)
-	inst.sqlBuilder = sqlbuilder.New(inst)
-
-	return inst, nil
+	return &DB{
+		models:     ms,
+		Engine:     e,
+		sqlBuilder: sqlbuilder.New(e),
+	}, nil
 }
 
 // New 重新指定表名前缀为 tablePrefix

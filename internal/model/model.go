@@ -93,13 +93,13 @@ func parseColumns(m *core.Model, rtype reflect.Type) error {
 			continue
 		}
 
-		col, err := newColumn(field)
+		col, err := NewColumn(field)
 		if err != nil {
 			return err
 		}
 
 		// 这属于代码级别的错误，直接 panic 了。
-		if err := col.parseTags(m, tag); err != nil {
+		if err := col.ParseTags(m, tag); err != nil {
 			panic(err)
 		}
 	}
@@ -108,7 +108,7 @@ func parseColumns(m *core.Model, rtype reflect.Type) error {
 }
 
 // occ
-func setOCC(m *core.Model, c *column, vals []string) error {
+func SetOCC(m *core.Model, c *Column, vals []string) error {
 	if len(vals) > 0 {
 		return propertyError(c.Name, "occ", "指定了太多的值")
 	}
@@ -116,7 +116,7 @@ func setOCC(m *core.Model, c *column, vals []string) error {
 }
 
 // index(idx_name)
-func setIndex(m *core.Model, col *column, vals []string) error {
+func setIndex(m *core.Model, col *Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "index", "太多的值")
 	}
@@ -124,7 +124,7 @@ func setIndex(m *core.Model, col *column, vals []string) error {
 }
 
 // pk
-func setPK(m *core.Model, col *column, vals []string) error {
+func SetPK(m *core.Model, col *Column, vals []string) error {
 	if len(vals) != 0 {
 		return propertyError(col.Name, "pk", "太多的值")
 	}
@@ -132,7 +132,7 @@ func setPK(m *core.Model, col *column, vals []string) error {
 }
 
 // unique(unique_name)
-func setUnique(m *core.Model, col *column, vals []string) error {
+func setUnique(m *core.Model, col *Column, vals []string) error {
 	if len(vals) != 1 {
 		return propertyError(col.Name, "unique", "只能带一个参数")
 	}
@@ -140,7 +140,7 @@ func setUnique(m *core.Model, col *column, vals []string) error {
 }
 
 // fk(fk_name,refTable,refColName,updateRule,deleteRule)
-func setFK(m *core.Model, col *column, vals []string) error {
+func setFK(m *core.Model, col *Column, vals []string) error {
 	if len(vals) < 3 || len(vals) > 5 {
 		return propertyError(col.Name, "fk", "参数数量不正确")
 	}

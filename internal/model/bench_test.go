@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package model
+package model_test
 
 import (
 	"testing"
@@ -12,8 +12,7 @@ import (
 
 func BenchmarkNewModelNoCached(b *testing.B) {
 	a := assert.New(b, false)
-	ms := NewModels(nil, nil)
-	a.NotNil(ms)
+	ms := newModules(a)
 
 	for i := 0; i < b.N; i++ {
 		m, err := ms.New(&User{})
@@ -24,8 +23,7 @@ func BenchmarkNewModelNoCached(b *testing.B) {
 
 func BenchmarkNewModelCached(b *testing.B) {
 	a := assert.New(b, false)
-	ms := NewModels(nil, nil)
-	a.NotNil(ms)
+	ms := newModules(a)
 
 	for i := 0; i < b.N; i++ {
 		m, err := ms.New(&User{})
