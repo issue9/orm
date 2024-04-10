@@ -17,10 +17,7 @@ import (
 type DB struct {
 	core.Engine
 	sqlBuilder *sqlbuilder.SQLBuilder
-
-	db      *sql.DB
-	models  *model.Models
-	version string
+	models     *model.Models
 }
 
 // NewDB 声明一个新的 [DB] 实例
@@ -42,10 +39,11 @@ func NewDB(tablePrefix, dsn string, dialect Dialect) (*DB, error) {
 //
 // NOTE: 请确保用于打开 db 的 driverName 参数与 dialect.DriverName() 是相同的，
 // 否则后续操作的结果是未知的。
+//
+// NOTE: db 的资源由返回的 [DB] 接管，外部不应该直接关闭 db 连接。
 func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error) {
-	ms := model.NewModels(dialect)
+	ms := model.NewModels(db, dialect)
 	inst := &DB{
-		db:     db,
 		models: ms,
 		Engine: ms.NewEngine(db, tablePrefix),
 	}
@@ -55,7 +53,7 @@ func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error
 		return nil, err
 	}
 
-	inst.version = ver
+	ms.SetVersion(ver)
 	inst.sqlBuilder = sqlbuilder.New(inst)
 
 	return inst, nil
@@ -73,24 +71,18 @@ func (db *DB) New(tablePrefix string) *DB {
 	return &DB{
 		Engine:     e,
 		sqlBuilder: sqlbuilder.New(e),
-
-		db:      db.DB(),
-		models:  db.models,
-		version: db.version,
+		models:     db.models,
 	}
 }
 
 // Close 关闭连接
 //
 // 同时会清除缓存的模型数据。
-// 此操作会让数据库不再可用，包括由 [DB.Prefix] 派生的对象。
-func (db *DB) Close() error {
-	db.models.Clear()
-	return db.DB().Close()
-}
+// 此操作会让数据库不再可用，包括由 [DB.New] 派生的对象。
+func (db *DB) Close() error { return db.models.Close() }
 
 // Version 数据库服务端的版本号
-func (db *DB) Version() string { return db.version }
+func (db *DB) Version() string { return db.models.Version() }
 
 func (db *DB) LastInsertID(v TableNamer) (int64, error) {
 	return db.LastInsertIDContext(context.Background(), v)
@@ -170,4 +162,4 @@ func (db *DB) PingContext(ctx context.Context) error { return db.DB().PingContex
 func (db *DB) Stats() sql.DBStats { return db.DB().Stats() }
 
 // DB 返回标准库的 [sql.DB] 实例
-func (db *DB) DB() *sql.DB { return db.db }
+func (db *DB) DB() *sql.DB { return db.models.DB() }

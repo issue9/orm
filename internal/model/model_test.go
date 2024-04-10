@@ -108,7 +108,7 @@ func (v *viewObject) ViewAs() (string, error) {
 
 func TestModels_New(t *testing.T) {
 	a := assert.New(t, false)
-	ms := NewModels(nil)
+	ms := NewModels(nil, nil)
 	a.NotNil(ms)
 
 	m, err := ms.New(&Admin{})
