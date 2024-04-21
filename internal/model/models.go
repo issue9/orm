@@ -21,7 +21,7 @@ type Models struct {
 
 // NewModels 声明 [Models] 变量
 //
-// 返回对象中除了 [Models] 之外，还包含了一个 core.Engine 对象，
+// 返回对象中除了 [Models] 之外，还包含了一个 [core.Engine] 对象，
 // 该对象的表名前缀由参数 tablePrefix 指定。
 func NewModels(db *sql.DB, d core.Dialect, tablePrefix string) (*Models, core.Engine, error) {
 	ms := &Models{

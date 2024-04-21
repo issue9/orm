@@ -9,7 +9,7 @@ import (
 
 	"github.com/issue9/assert/v4"
 
-	"github.com/issue9/orm/v6/core"
+	"github.com/issue9/orm/v6"
 	"github.com/issue9/orm/v6/internal/test"
 )
 
@@ -43,7 +43,7 @@ func TestTx_InsertMany(t *testing.T) {
 		}))
 
 		// 分批插入
-		a.NotError(tx.InsertMany(2, []core.TableNamer{
+		a.NotError(tx.InsertMany(2, []orm.TableNamer{
 			&UserInfo{
 				UID:       2,
 				FirstName: "f2",

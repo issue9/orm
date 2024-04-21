@@ -16,6 +16,13 @@ import (
 )
 
 type (
+	ApplyModeler = core.ApplyModeler
+
+	// Column 列结构
+	Column = core.Column
+
+	TableNamer = core.TableNamer
+
 	// Unix 表示 Unix 时间戳的数据样式
 	//
 	// 表现为 [time.Time]，但是保存数据库时，以 unix 时间戳的形式保存。
