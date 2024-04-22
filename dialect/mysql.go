@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/issue9/orm/v6/core"
@@ -24,6 +25,7 @@ const (
 type mysql struct {
 	base
 	isMariadb bool
+	innoDB    bool // 仅此支持事务 DDL
 }
 
 var (
@@ -48,6 +50,7 @@ func newMysql(isMariadb bool, name, driverName string) core.Dialect {
 	return &mysql{
 		base:      newBase(name, driverName, '`', '`'),
 		isMariadb: isMariadb,
+		innoDB:    true, // 两个数据默认都为 true
 	}
 }
 
@@ -63,9 +66,11 @@ func (m *mysql) Prepare(query string) (string, map[string]int, error) { return P
 
 func (m *mysql) CreateTableOptionsSQL(w *core.Builder, options map[string][]string) error {
 	if len(options[mysqlEngine]) == 1 {
+		engine := options[mysqlEngine][0]
 		w.WString(" ENGINE=")
-		w.WString(options[mysqlEngine][0])
+		w.WString(engine)
 		w.WBytes(' ')
+		m.innoDB = strings.ToLower(engine) == "innodb"
 	} else if len(options[mysqlEngine]) > 0 {
 		return errors.New("无效的属性值：" + mysqlCharset)
 	}
@@ -155,7 +160,7 @@ func (m *mysql) InsertDefaultValueHook(table string) (string, []any, error) {
 	return query, nil, nil
 }
 
-func (m *mysql) TransactionalDDL() bool { return false }
+func (m *mysql) TransactionalDDL() bool { return m.innoDB }
 
 func (m *mysql) ExistsSQL(name string, view bool) (string, []any) {
 	t := "BASE TABLE"
