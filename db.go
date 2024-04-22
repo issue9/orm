@@ -121,23 +121,72 @@ func (db *DB) Select(v TableNamer) (bool, error) { return db.SelectContext(conte
 
 func (db *DB) SelectContext(ctx context.Context, v TableNamer) (bool, error) { return find(ctx, db, v) }
 
-func (db *DB) Create(v TableNamer) error { return db.CreateContext(context.Background(), v) }
+func (db *DB) Create(v ...TableNamer) error { return db.CreateContext(context.Background(), v...) }
 
-func (db *DB) CreateContext(ctx context.Context, v TableNamer) error { return create(ctx, db, v) }
+func (db *DB) CreateContext(ctx context.Context, v ...TableNamer) error {
+	if !db.Dialect().TransactionalDDL() {
+		for _, t := range v {
+			if err := create(ctx, db, t); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 
-func (db *DB) Drop(v TableNamer) error { return db.DropContext(context.Background(), v) }
-
-func (db *DB) DropContext(ctx context.Context, v TableNamer) error { return drop(ctx, db, v) }
-
-func (db *DB) Truncate(v TableNamer) error {
-	return db.TruncateContext(context.Background(), v)
+	return db.DoTransaction(func(tx *Tx) error {
+		for _, t := range v {
+			if err := create(ctx, tx, t); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
-func (db *DB) TruncateContext(ctx context.Context, v TableNamer) error {
+func (db *DB) Drop(v ...TableNamer) error { return db.DropContext(context.Background(), v...) }
+
+func (db *DB) DropContext(ctx context.Context, v ...TableNamer) error {
 	if !db.Dialect().TransactionalDDL() {
-		return truncate(ctx, db, v)
+		for _, t := range v {
+			if err := drop(ctx, db, t); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
-	return db.DoTransaction(func(tx *Tx) error { return truncate(ctx, tx, v) })
+
+	return db.DoTransaction(func(tx *Tx) error {
+		for _, t := range v {
+			if err := drop(ctx, tx, t); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (db *DB) Truncate(v ...TableNamer) error {
+	return db.TruncateContext(context.Background(), v...)
+}
+
+func (db *DB) TruncateContext(ctx context.Context, v ...TableNamer) error {
+	if !db.Dialect().TransactionalDDL() {
+		for _, t := range v {
+			if err := truncate(ctx, db, t); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	return db.DoTransaction(func(tx *Tx) error {
+		for _, t := range v {
+			if err := truncate(ctx, tx, t); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // InsertMany 一次插入多条数据

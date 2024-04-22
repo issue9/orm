@@ -20,7 +20,8 @@ postgres  | postgres github.com/lib/pq           | [![Postgres](https://github.c
 sqlite 为纯 Go 代码编写，如果涉及到交叉编译的可以采用此驱动，会很方便。
 
 其它数据库，用户可以通过实现 Dialect 接口，来实现相应的支持。
-如果用到了 check 约束，则需要 mysql > 8.0.19、mariadb > 10.2.1。
+如果用到了 check 约束，则需要 mysql > 8.0.19、mariadb > 10.2.1，
+mysql 的 MyISAM 是不支持外键约束的。
 
 #### 初始化
 

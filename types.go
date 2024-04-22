@@ -101,25 +101,24 @@ type (
 		//
 		// 查找条件的查找顺序是为 自增 > 主键 > 唯一约束，
 		// 如果同时存在多个唯一约束满足条件(可能每个唯一约束查询至的结果是不一样的)，则返回错误信息。
-		SelectContext(ctx context.Context, v TableNamer) (found bool, err error)
-		Select(v TableNamer) (found bool, err error)
+		SelectContext(context.Context, TableNamer) (found bool, err error)
+		Select(TableNamer) (found bool, err error)
 
-		CreateContext(ctx context.Context, v TableNamer) error
-		Create(v TableNamer) error
+		CreateContext(context.Context, ...TableNamer) error
+		Create(...TableNamer) error
 
-		DropContext(ctx context.Context, v TableNamer) error
-		Drop(v TableNamer) error
+		DropContext(context.Context, ...TableNamer) error
+		Drop(...TableNamer) error
 
 		// TruncateContext 清空表并重置 ai 但保留表结构
-		TruncateContext(ctx context.Context, v TableNamer) error
-		Truncate(v TableNamer) error
+		TruncateContext(context.Context, ...TableNamer) error
+		Truncate(...TableNamer) error
 
 		// InsertManyContext 插入多条相同的数据
 		//
 		// 若需要向某张表中插入多条记录，此方法会比 [Engine.Insert] 性能上好很多。
 		//
-		// max 表示一次最多插入的数量，如果超过此值，会分批执行，
-		// 但是依然在一个事务中完成。
+		// max 表示一次最多插入的数量，如果超过此值，会分批执行，但是依然在一个事务中完成。
 		InsertManyContext(ctx context.Context, max int, v ...TableNamer) error
 		InsertMany(max int, v ...TableNamer) error
 

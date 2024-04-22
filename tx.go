@@ -91,17 +91,38 @@ func (tx *Tx) DeleteContext(ctx context.Context, v TableNamer) (sql.Result, erro
 	return del(ctx, tx, v)
 }
 
-func (tx *Tx) Create(v TableNamer) error { return tx.CreateContext(context.Background(), v) }
+func (tx *Tx) Create(v ...TableNamer) error { return tx.CreateContext(context.Background(), v...) }
 
-func (tx *Tx) CreateContext(ctx context.Context, v TableNamer) error { return create(ctx, tx, v) }
+func (tx *Tx) CreateContext(ctx context.Context, v ...TableNamer) error {
+	for _, t := range v {
+		if err := create(ctx, tx, t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-func (tx *Tx) Drop(v TableNamer) error { return tx.DropContext(context.Background(), v) }
+func (tx *Tx) Drop(v ...TableNamer) error { return tx.DropContext(context.Background(), v...) }
 
-func (tx *Tx) DropContext(ctx context.Context, v TableNamer) error { return drop(ctx, tx, v) }
+func (tx *Tx) DropContext(ctx context.Context, v ...TableNamer) error {
+	for _, t := range v {
+		if err := drop(ctx, tx, t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-func (tx *Tx) Truncate(v TableNamer) error { return tx.TruncateContext(context.Background(), v) }
+func (tx *Tx) Truncate(v ...TableNamer) error { return tx.TruncateContext(context.Background(), v...) }
 
-func (tx *Tx) TruncateContext(ctx context.Context, v TableNamer) error { return truncate(ctx, tx, v) }
+func (tx *Tx) TruncateContext(ctx context.Context, v ...TableNamer) error {
+	for _, t := range v {
+		if err := truncate(ctx, tx, t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (tx *Tx) SQLBuilder() *sqlbuilder.SQLBuilder {
 	return sqlbuilder.New(tx) // 事务一般是一个临时对象，没必要像 [DB] 一样固定 sqlbuilder 对象。
@@ -170,18 +191,39 @@ func (e *txEngine) SelectContext(ctx context.Context, v TableNamer) (bool, error
 	return find(ctx, e, v)
 }
 
-func (e *txEngine) Create(v TableNamer) error { return e.CreateContext(context.Background(), v) }
+func (e *txEngine) Create(v ...TableNamer) error { return e.CreateContext(context.Background(), v...) }
 
-func (e *txEngine) CreateContext(ctx context.Context, v TableNamer) error { return create(ctx, e, v) }
+func (e *txEngine) CreateContext(ctx context.Context, v ...TableNamer) error {
+	for _, t := range v {
+		if err := create(ctx, e, t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-func (e *txEngine) Drop(v TableNamer) error { return e.DropContext(context.Background(), v) }
+func (e *txEngine) Drop(v ...TableNamer) error { return e.DropContext(context.Background(), v...) }
 
-func (e *txEngine) DropContext(ctx context.Context, v TableNamer) error { return drop(ctx, e, v) }
+func (e *txEngine) DropContext(ctx context.Context, v ...TableNamer) error {
+	for _, t := range v {
+		if err := drop(ctx, e, t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-func (e *txEngine) Truncate(v TableNamer) error { return e.TruncateContext(context.Background(), v) }
+func (e *txEngine) Truncate(v ...TableNamer) error {
+	return e.TruncateContext(context.Background(), v...)
+}
 
-func (e *txEngine) TruncateContext(ctx context.Context, v TableNamer) error {
-	return truncate(ctx, e, v)
+func (e *txEngine) TruncateContext(ctx context.Context, v ...TableNamer) error {
+	for _, t := range v {
+		if err := truncate(ctx, e, t); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (e *txEngine) InsertMany(max int, v ...TableNamer) error {
