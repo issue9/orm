@@ -33,16 +33,7 @@ func NewDB(tablePrefix, dsn string, dialect Dialect) (*DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewDBWithStdDB(tablePrefix, db, dialect)
-}
 
-// NewDBWithStdDB 从 [sql.DB] 构建 [DB] 实例
-//
-// NOTE: 请确保用于打开 db 的 driverName 参数与 dialect.DriverName() 是相同的，
-// 否则后续操作的结果是未知的。
-//
-// NOTE: db 的资源由返回的 [DB] 接管，外部不应该直接关闭 db 连接。
-func NewDBWithStdDB(tablePrefix string, db *sql.DB, dialect Dialect) (*DB, error) {
 	ms, e, err := model.NewModels(db, dialect, tablePrefix)
 	if err != nil {
 		return nil, err

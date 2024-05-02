@@ -99,11 +99,10 @@ import (
 
 ```go
 // 初始化 sqlite3 的实例
-sqlite, err := orm.NewDB("./orm.db", dialect.Sqlite3())
+sqlite, err := orm.NewDB("" ,"./orm.db", dialect.Sqlite3())
 
 // 初始化 mysql 的实例
-db, err := sql.Open("mysql", "root@/orm")
-my, err := orm.NewDBWithStdDB(db, dialect.Mysql())
+my, err := orm.NewDB("", "root@/orm", dialect.Mysql())
 ```
 
 后续代码中可以同时使用 my 和 sqlite 两个实例操纵不同的数据库数据。
