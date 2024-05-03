@@ -9,9 +9,13 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	xm "github.com/go-sql-driver/mysql"
 
 	"github.com/issue9/orm/v6/core"
 	"github.com/issue9/orm/v6/sqlbuilder"
@@ -306,4 +310,39 @@ func formatTime(col *core.Column, t time.Time) (string, error) {
 		return "", invalidTimeFractional(col)
 	}
 	return "'" + t.Format(datetimeLayouts[index]) + "'", nil
+}
+
+func (m *mysql) Backup(dsn, dest string) error {
+	conf, err := xm.ParseDSN(dsn)
+	if err != nil {
+		return err
+	}
+
+	if conf.DBName == "" {
+		panic("未指定数据库名")
+	}
+
+	h, p, err := net.SplitHostPort(conf.Addr)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	cmd := newCommand("mysqldump", []string{}, []string{
+		buildCmdArgs("--host", h),
+		buildCmdArgs("--port", p),
+		buildCmdArgs("--protocol", conf.Net),
+		buildCmdArgs("--user", conf.User),
+		buildCmdArgs("--password", conf.Passwd),
+		conf.DBName,
+	})
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = file
+
+	return cmd.Run()
 }

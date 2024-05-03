@@ -5,6 +5,7 @@
 package dialect_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/issue9/assert/v4"
@@ -282,5 +283,16 @@ func TestMysql_TypesDefault(t *testing.T) {
 
 	suite.Run(func(t *test.Driver) {
 		testTypesDefault(t)
+	})
+}
+
+func TestMysql_Backup(t *testing.T) {
+	a := assert.New(t, false)
+	suite := test.NewSuite(a, "", test.Mysql, test.Mariadb)
+	suite.Run(func(d *test.Driver) {
+		path := "./testdata/mysql.sql"
+		d.Assertion.NotError(d.DB.Backup(path))
+		d.Assertion.FileExists(path)
+		d.Assertion.NotError(os.Remove(path))
 	})
 }

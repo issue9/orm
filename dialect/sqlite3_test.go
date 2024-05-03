@@ -5,6 +5,7 @@
 package dialect_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/issue9/assert/v4"
@@ -326,5 +327,16 @@ func TestSqlite3_TypesDefault(t *testing.T) {
 
 	suite.Run(func(t *test.Driver) {
 		testTypesDefault(t)
+	})
+}
+
+func TestSqlite3_Backup(t *testing.T) {
+	a := assert.New(t, false)
+	suite := test.NewSuite(a, "", test.Sqlite3)
+	suite.Run(func(d *test.Driver) {
+		path := "./testdata/sqlite3.db"
+		d.Assertion.NotError(d.DB.Backup(path))
+		d.Assertion.FileExists(path)
+		d.Assertion.NotError(os.Remove(path))
 	})
 }

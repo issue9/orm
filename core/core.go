@@ -73,7 +73,7 @@ type Dialect interface {
 	// DriverName 与当前实例关联的驱动名称
 	//
 	// 原则上驱动名和 Dialect 应该是一一对应的，但是也会有例外，比如：
-	// github.com/lib/pq 和 github.com/jackc/pgx/v4/stdlib 功能上是相同的，
+	// github.com/lib/pq 和 github.com/jackc/pgx/v5/stdlib 功能上是相同的，
 	// 仅注册的名称的不同。
 	DriverName() string
 
@@ -153,6 +153,12 @@ type Dialect interface {
 	//
 	// NOTE: query 中不能同时存在 ? 和命名参数。因为如果是命名参数，则 Exec 等的参数顺序可以是随意的。
 	Prepare(sql string) (query string, orders map[string]int, err error)
+
+	// Backup 备份数据库
+	//
+	// dsn 初始化数据库的参数，主要从其中获取数据库名称等参数；
+	// dest 备份的文件名，格式由实现者决定；
+	Backup(dsn, dest string) error
 }
 
 // ErrConstraintExists 返回约束名已经存在的错误

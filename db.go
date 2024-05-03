@@ -19,6 +19,7 @@ type DB struct {
 	tablePrefix string
 	sqlBuilder  *sqlbuilder.SQLBuilder
 	models      *model.Models
+	dsn         string
 }
 
 // NewDB 声明一个新的 [DB] 实例
@@ -44,8 +45,14 @@ func NewDB(tablePrefix, dsn string, dialect Dialect) (*DB, error) {
 		tablePrefix: tablePrefix,
 		sqlBuilder:  sqlbuilder.New(e),
 		models:      ms,
+		dsn:         dsn,
 	}, nil
 }
+
+// Backup 备份数据库至 dest
+//
+// 具体格式由各个数据库自行决定。
+func (db *DB) Backup(dest string) error { return db.Dialect().Backup(db.dsn, dest) }
 
 // New 重新指定表名前缀为 tablePrefix
 //
@@ -61,6 +68,7 @@ func (db *DB) New(tablePrefix string) *DB {
 		tablePrefix: tablePrefix,
 		sqlBuilder:  sqlbuilder.New(e),
 		models:      db.models,
+		dsn:         db.dsn,
 	}
 }
 

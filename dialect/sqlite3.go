@@ -9,7 +9,9 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/issue9/orm/v6/core"
@@ -342,4 +344,17 @@ func (s *sqlite3) formatSQL(v any) (f string, err error) {
 	}
 
 	return fmt.Sprint(v), nil
+}
+
+func (s *sqlite3) Backup(dsn, dest string) error {
+	if index := strings.IndexByte(dsn, '?'); index >= 0 {
+		dsn = dsn[:index]
+	}
+
+	data,err :=os.ReadFile(dsn)
+	if err!=nil{
+		return err
+	}
+
+	return os.WriteFile(dest, data , os.ModePerm)
 }

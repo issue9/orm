@@ -9,9 +9,12 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 
 	"github.com/issue9/orm/v6/core"
 )
@@ -260,4 +263,49 @@ func (p *postgres) formatSQL(col *core.Column) (f string, err error) {
 	}
 
 	return fmt.Sprint(v), nil
+}
+
+func (p *postgres) Backup(dsn, dest string) error {
+	// http://www.postgres.cn/docs/14/app-pgdump.html
+
+	opt, err := parsePostgresDSN(dsn)
+	if err != nil {
+		return err
+	}
+
+	cmd := newCommand("pg_dump", []string{
+		buildCmdArgs("PGPASSWORD", opt["password"]),
+	}, []string{
+		buildCmdArgs("--format", "c"),
+		buildCmdArgs("--file", dest),
+		buildCmdArgs("--host", opt["host"]),
+		buildCmdArgs("--port", opt["port"]),
+		buildCmdArgs("--username", opt["user"]),
+		buildCmdArgs("--dbname", opt["dbname"]),
+		"--no-password",
+	})
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+
+	return cmd.Run()
+}
+
+func parsePostgresDSN(dsn string) (opt map[string]string, err error) {
+	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
+		if dsn, err = pq.ParseURL(dsn); err != nil {
+			return nil, err
+		}
+	}
+
+	items := strings.Fields(dsn)
+	opt = make(map[string]string, len(items))
+	for _, item := range items {
+		kv := strings.Split(item, "=")
+		if len(kv) != 2 {
+			panic("参数格式错误：" + item)
+		}
+		opt[kv[0]] = kv[1]
+	}
+
+	return opt, nil
 }

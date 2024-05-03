@@ -7,9 +7,9 @@ package test
 
 import (
 	"os"
+	"slices"
 
 	"github.com/issue9/assert/v4"
-	"github.com/issue9/sliceutil"
 
 	"github.com/issue9/orm/v6"
 	"github.com/issue9/orm/v6/core"
@@ -92,16 +92,16 @@ func NewSuite(a *assert.Assertion, tablePrefix string, dialect ...core.Dialect) 
 	s := &Suite{a: a}
 	a.TB().Cleanup(func() { s.close() })
 
+	fs := flags
 	for _, c := range cases {
 		name := c.dialect.Name()
 		driver := c.dialect.DriverName()
 
-		if len(dialect) > 0 && sliceutil.Count(dialect, func(i core.Dialect, _ int) bool { return i.Name() == name && i.DriverName() == driver }) <= 0 {
+		if len(dialect) > 0 && slices.IndexFunc(dialect, func(i core.Dialect) bool { return i.Name() == name && i.DriverName() == driver }) < 0 {
 			continue
 		}
 
-		fs := flags
-		if len(fs) > 0 && sliceutil.Count(fs, func(i *flagVar, _ int) bool { return i.Name == name && i.DriverName == driver }) <= 0 {
+		if len(fs) > 0 && slices.IndexFunc(fs, func(i *flagVar) bool { return i.Name == name && i.DriverName == driver }) < 0 {
 			continue
 		}
 
