@@ -327,11 +327,13 @@ func (m *mysql) Backup(dsn, dest string) error {
 		return err
 	}
 
-	file, err := os.Create(dest)
+	output, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		err = errors.Join(err, output.Close())
+	}()
 
 	cmd := newCommand("mysqldump", []string{}, []string{
 		buildCmdArgs("--host", h),
@@ -342,7 +344,8 @@ func (m *mysql) Backup(dsn, dest string) error {
 		conf.DBName,
 	})
 	cmd.Stderr = os.Stderr
-	cmd.Stdout = file
+	cmd.Stdout = output
 
-	return cmd.Run()
+	err = cmd.Run() // defer 需要用到
+	return err
 }
