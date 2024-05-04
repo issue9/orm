@@ -565,7 +565,7 @@ func fetchObject(rows *sql.Rows, strict bool, objs any) (size int, err error) {
 func fetchString(rows *sql.Rows, colName string) (v string, err error) {
 	defer func() { err = errors.Join(err, rows.Close()) }()
 
-	cols, err := fetch.ColumnString(true, colName, rows)
+	cols, err := fetch.Column[string](true, colName, rows)
 	if err != nil {
 		return "", err
 	}

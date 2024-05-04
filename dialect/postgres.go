@@ -205,9 +205,9 @@ func (p *postgres) SQLType(col *core.Column) (string, error) {
 			return "", invalidTimeFractional(col)
 		}
 		return p.buildType("TIMESTAMP", col, 1)
+	default:
+		return "", errUncovert(col)
 	}
-
-	return "", errUncovert(col)
 }
 
 // l 表示需要取的长度数量

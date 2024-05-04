@@ -222,9 +222,9 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 			return "", invalidTimeFractional(col)
 		}
 		return m.buildType("DATETIME", col, false, 1)
+	default:
+		return "", errUncovert(col)
 	}
-
-	return "", errUncovert(col)
 }
 
 // l 表示需要取的长度数量

@@ -293,9 +293,9 @@ func (s *sqlite3) SQLType(col *core.Column) (string, error) {
 		return s.buildType("BLOB", col)
 	case core.Time:
 		return s.buildType("DATETIME", col)
+	default:
+		return "", errUncovert(col)
 	}
-
-	return "", errUncovert(col)
 }
 
 // l 表示需要取的长度数量
@@ -351,10 +351,10 @@ func (s *sqlite3) Backup(dsn, dest string) error {
 		dsn = dsn[:index]
 	}
 
-	data,err :=os.ReadFile(dsn)
-	if err!=nil{
+	data, err := os.ReadFile(dsn)
+	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(dest, data , os.ModePerm)
+	return os.WriteFile(dest, data, os.ModePerm)
 }

@@ -5,7 +5,6 @@
 package fetch_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/issue9/assert/v4"
@@ -18,18 +17,6 @@ func TestColumn(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, "")
 
-	eq := func(s1, s2 []any) bool {
-		if len(s1) != len(s2) {
-			return false
-		}
-		for i, v := range s1 {
-			if !reflect.DeepEqual(v, s2[i]) {
-				return false
-			}
-		}
-		return true
-	}
-
 	suite.Run(func(t *test.Driver) {
 		initDB(t)
 		defer clearDB(t)
@@ -40,28 +27,20 @@ func TestColumn(t *testing.T) {
 		rows, err := db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err := fetch.Column(false, "id", rows)
+		cols, err := fetch.Column[int64](false, "id", rows)
 		t.NotError(err).NotNil(cols)
 
-		if t.DriverName == "mysql" { // mysql 返回的是 []byte 类型
-			eq(cols, []any{[]byte{'1'}, []byte{'2'}})
-		} else {
-			eq(cols, []any{int64(1), int64(2)})
-		}
+		t.Equal(cols, []int64{int64(1), int64(2)})
 		t.NotError(rows.Close())
 
 		// 正常数据匹配，读取一行
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err = fetch.Column(true, "id", rows)
+		cols, err = fetch.Column[int64](true, "id", rows)
 		t.NotError(err).NotNil(cols)
 
-		if t.DriverName == "mysql" { // mysql 返回的是 []byte 类型
-			eq([]any{[]byte{'1'}}, cols)
-		} else {
-			eq([]any{int64(1)}, cols)
-		}
+		t.Equal(cols, []int64{int64(1)})
 		t.NotError(rows.Close())
 
 		// 没有数据匹配，读取多行
@@ -69,7 +48,7 @@ func TestColumn(t *testing.T) {
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err = fetch.Column(false, "id", rows)
+		cols, err = fetch.Column[int64](false, "id", rows)
 		t.NotError(err)
 
 		t.Empty(cols)
@@ -79,7 +58,7 @@ func TestColumn(t *testing.T) {
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err = fetch.Column(true, "id", rows)
+		cols, err = fetch.Column[int64](true, "id", rows)
 		t.NotError(err)
 
 		t.Empty(cols)
@@ -89,7 +68,7 @@ func TestColumn(t *testing.T) {
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err = fetch.Column(true, "not-exists", rows)
+		cols, err = fetch.Column[int64](true, "not-exists", rows)
 		t.Error(err)
 
 		t.Empty(cols)
@@ -111,7 +90,7 @@ func TestColumnString(t *testing.T) {
 		rows, err := db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err := fetch.ColumnString(false, "id", rows)
+		cols, err := fetch.Column[string](false, "id", rows)
 		t.NotError(err).NotNil(cols)
 
 		t.Equal([]string{"1", "2"}, cols)
@@ -121,7 +100,7 @@ func TestColumnString(t *testing.T) {
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err = fetch.ColumnString(true, "id", rows)
+		cols, err = fetch.Column[string](true, "id", rows)
 		t.NotError(err).NotNil(cols)
 
 		t.Equal([]string{"1"}, cols)
@@ -132,7 +111,7 @@ func TestColumnString(t *testing.T) {
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err = fetch.ColumnString(false, "id", rows)
+		cols, err = fetch.Column[string](false, "id", rows)
 		t.NotError(err)
 
 		t.Empty(cols)
@@ -142,7 +121,7 @@ func TestColumnString(t *testing.T) {
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err = fetch.ColumnString(true, "id", rows)
+		cols, err = fetch.Column[string](true, "id", rows)
 		t.NotError(err)
 
 		t.Empty(cols)
@@ -152,7 +131,7 @@ func TestColumnString(t *testing.T) {
 		rows, err = db.Query(sql)
 		t.NotError(err).NotNil(rows)
 
-		cols, err = fetch.ColumnString(true, "not-exists", rows)
+		cols, err = fetch.Column[string](true, "not-exists", rows)
 		t.Error(err)
 
 		t.Empty(cols)

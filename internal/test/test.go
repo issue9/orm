@@ -125,7 +125,8 @@ func (s Suite) close() {
 	for _, t := range s.drivers {
 		t.NotError(t.DB.Close())
 
-		if t.DB.Dialect().DriverName() != Sqlite3.DriverName() {
+		dn := t.DB.Dialect().DriverName()
+		if dn != Sqlite3.DriverName() && dn != Sqlite.DriverName() {
 			return
 		}
 
