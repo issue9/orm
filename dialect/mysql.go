@@ -285,7 +285,7 @@ func (m *mysql) formatSQL(col *core.Column) (f string, err error) {
 		}
 		return "0", nil
 	case string:
-		return "'" + vv + "'", nil
+		return "'" + escapeApostrophe.Replace(vv) + "'", nil
 	case time.Time: // datetime
 		return formatTime(col, vv)
 	case sql.NullTime: // datetime

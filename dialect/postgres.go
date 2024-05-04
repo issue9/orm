@@ -255,7 +255,7 @@ func (p *postgres) formatSQL(col *core.Column) (f string, err error) {
 
 	switch vv := v.(type) {
 	case string:
-		return "'" + vv + "'", nil
+		return "'" + quoteApostrophe.Replace(vv) + "'", nil
 	case time.Time: // timestamp
 		return formatTime(col, vv)
 	case sql.NullTime: // timestamp

@@ -336,7 +336,7 @@ func (s *sqlite3) formatSQL(v any) (f string, err error) {
 
 	switch vv := v.(type) {
 	case string:
-		return "'" + vv + "'", nil
+		return "'" + quoteApostrophe.Replace(vv) + "'", nil
 	case time.Time: // timestamp
 		return "'" + vv.In(time.UTC).Format(datetimeLayouts[0]) + "'", nil
 	case sql.NullTime: // timestamp
