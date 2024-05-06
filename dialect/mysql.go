@@ -222,9 +222,9 @@ func (m *mysql) SQLType(col *core.Column) (string, error) {
 			return "", invalidTimeFractional(col)
 		}
 		return m.buildType("DATETIME", col, false, 1)
+	default:
+		return "", errUncovert(col)
 	}
-
-	return "", errUncovert(col)
 }
 
 // l 表示需要取的长度数量
@@ -285,7 +285,7 @@ func (m *mysql) formatSQL(col *core.Column) (f string, err error) {
 		}
 		return "0", nil
 	case string:
-		return "'" + vv + "'", nil
+		return "'" + escapeApostrophe.Replace(vv) + "'", nil
 	case time.Time: // datetime
 		return formatTime(col, vv)
 	case sql.NullTime: // datetime

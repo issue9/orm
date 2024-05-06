@@ -6,8 +6,14 @@ package dialect
 
 import (
 	"os/exec"
+	"strings"
 
 	"github.com/issue9/sliceutil"
+)
+
+var (
+	quoteApostrophe  = strings.NewReplacer("'", "''")  // 标准 SQL 用法
+	escapeApostrophe = strings.NewReplacer("'", "\\'") // mysql 用法
 )
 
 type base struct {

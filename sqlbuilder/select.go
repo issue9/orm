@@ -8,7 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"strconv"
 
 	"github.com/issue9/orm/v6/core"
 	"github.com/issue9/orm/v6/fetch"
@@ -454,11 +453,7 @@ func (stmt *SelectStmt) QueryString(colName string) (v string, err error) {
 }
 
 func (stmt *SelectStmt) QueryStringContext(ctx context.Context, colName string) (v string, err error) {
-	rows, err := stmt.QueryContext(ctx)
-	if err != nil {
-		return "", err
-	}
-	return fetchString(rows, colName)
+	return fetchSelectStmtColumn[string](stmt, ctx, colName)
 }
 
 // QueryFloat 查询指定列的第一行数据，并将其转换成 float64
@@ -467,12 +462,7 @@ func (stmt *SelectStmt) QueryFloat(colName string) (float64, error) {
 }
 
 func (stmt *SelectStmt) QueryFloatContext(ctx context.Context, colName string) (float64, error) {
-	v, err := stmt.QueryStringContext(ctx, colName)
-	if err != nil {
-		return 0, err
-	}
-
-	return strconv.ParseFloat(v, 64)
+	return fetchSelectStmtColumn[float64](stmt, ctx, colName)
 }
 
 // QueryInt 查询指定列的第一行数据，并将其转换成 int64
@@ -481,15 +471,7 @@ func (stmt *SelectStmt) QueryInt(colName string) (int64, error) {
 }
 
 func (stmt *SelectStmt) QueryIntContext(ctx context.Context, colName string) (int64, error) {
-	// NOTE: 可能会出现浮点数的情况。比如：
-	// select avg(xx) as avg form xxx where xxx
-	// 查询 avg 的值可能是 5.000 等值。
-	v, err := stmt.QueryStringContext(ctx, colName)
-	if err != nil {
-		return 0, err
-	}
-
-	return strconv.ParseInt(v, 10, 64)
+	return fetchSelectStmtColumn[int64](stmt, ctx, colName)
 }
 
 // Select 生成 select 语句
@@ -523,35 +505,18 @@ func (stmt *SelectQuery) QueryObject(strict bool, objs any, arg ...any) (size in
 }
 
 // QueryString 查询指定列的第一行数据，并将其转换成 string
-func (stmt *SelectQuery) QueryString(colName string, arg ...any) (v string, err error) {
-	rows, err := stmt.stmt.Query(arg...)
-	if err != nil {
-		return "", err
-	}
-	return fetchString(rows, colName)
+func (stmt *SelectQuery) QueryString(colName string, arg ...any) (string, error) {
+	return fetchSelectQueryColumn[string](stmt, colName, arg...)
 }
 
 // QueryFloat 查询指定列的第一行数据，并将其转换成 float64
 func (stmt *SelectQuery) QueryFloat(colName string, arg ...any) (float64, error) {
-	v, err := stmt.QueryString(colName, arg...)
-	if err != nil {
-		return 0, err
-	}
-
-	return strconv.ParseFloat(v, 64)
+	return fetchSelectQueryColumn[float64](stmt, colName, arg...)
 }
 
 // QueryInt 查询指定列的第一行数据，并将其转换成 int64
 func (stmt *SelectQuery) QueryInt(colName string, arg ...any) (int64, error) {
-	// NOTE: 可能会出现浮点数的情况。比如：
-	// select avg(xx) as avg form xxx where xxx
-	// 查询 avg 的值可能是 5.000 等值。
-	v, err := stmt.QueryString(colName, arg...)
-	if err != nil {
-		return 0, err
-	}
-
-	return strconv.ParseInt(v, 10, 64)
+	return fetchSelectQueryColumn[int64](stmt, colName, arg...)
 }
 
 func (stmt *SelectQuery) Close() error { return stmt.stmt.Close() }
@@ -559,19 +524,35 @@ func (stmt *SelectQuery) Close() error { return stmt.stmt.Close() }
 func fetchObject(rows *sql.Rows, strict bool, objs any) (size int, err error) {
 	defer func() { err = errors.Join(err, rows.Close()) }()
 	size, err = fetch.Object(strict, rows, objs)
-	return
+	return // 注意 defer，独立为一行
 }
 
-func fetchString(rows *sql.Rows, colName string) (v string, err error) {
+func fetchSelectStmtColumn[T any](stmt *SelectStmt, ctx context.Context, colName string) (v T, err error) {
+	rows, err := stmt.QueryContext(ctx)
+	if err != nil {
+		return v, err
+	}
+	return fetchColumn[T](rows, colName)
+}
+
+func fetchSelectQueryColumn[T any](stmt *SelectQuery, colName string, arg ...any) (v T, err error) {
+	rows, err := stmt.stmt.Query(arg...)
+	if err != nil {
+		return v, err
+	}
+	return fetchColumn[T](rows, colName)
+}
+
+func fetchColumn[T any](rows *sql.Rows, colName string) (v T, err error) {
 	defer func() { err = errors.Join(err, rows.Close()) }()
 
-	cols, err := fetch.ColumnString(true, colName, rows)
+	cols, err := fetch.Column[T](true, colName, rows)
 	if err != nil {
-		return "", err
+		return v, err
 	}
 
 	if len(cols) == 0 {
-		return "", ErrNoData
+		return v, ErrNoData
 	}
 
 	return cols[0], nil
