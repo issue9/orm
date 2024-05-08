@@ -114,8 +114,8 @@ NOTE:字符串类型必须指定长度，若长度过大或是将长度设置了
 
 ##### unique(index_name):
 
-唯一索引，支持联合索引，index_name 为约束名，
-会将 index_name 为一样的字段定义为一个联合索引。
+唯一索引，支持联合索引，index_name 为约束名，会将 index_name 为一样的字段定义为一个联合索引。
+在联合索引中，零值会被当作空值处理，当零值是一个有效的值时，应当使用 sql.NullInt 等类型替换 int 类型。
 
 ##### index(index_name):
 

@@ -32,8 +32,8 @@ func (tx *Tx) Where(cond string, args ...any) *WhereStmt {
 	return w.Where(cond, args...)
 }
 
-func (p *txEngine) Where(cond string, args ...any) *WhereStmt {
-	w := &WhereStmt{engine: p}
+func (e *txEngine) Where(cond string, args ...any) *WhereStmt {
+	w := &WhereStmt{engine: e}
 	w.whereWhere = sqlbuilder.NewWhereStmtOf(w)
 	return w.Where(cond, args...)
 }

@@ -63,7 +63,7 @@ var (
 	}
 
 	types = map[reflect.Type]PrimitiveType{
-		reflect.TypeOf(true):           Bool,
+		reflect.TypeOf(true):           Bool, // TODO(g1.22): reflect.TypeFor
 		reflect.TypeOf(int(1)):         Int,
 		reflect.TypeOf(int8(1)):        Int8,
 		reflect.TypeOf(int16(1)):       Int16,
