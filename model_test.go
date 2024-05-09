@@ -18,13 +18,13 @@ import (
 
 // Group 带有自增 ID 的普通表结构
 type Group struct {
-	ID      sql.NullInt64 `orm:"name(id);ai;unique(unique_groups_id)"`
+	ID      sql.NullInt64 `orm:"name(id);ai;unique(unique_groups_id)"` // 其它表的外键，所以必须得有唯一约束。
 	Name    string        `orm:"name(name);len(500)"`
 	Created time.Time     `orm:"name(created)"`
-	Any     any           `orm:"name(any)"` // any
+	Any     any           `orm:"name(any);nullable"` // any
 }
 
-func (g *Group) TableName() string { return "groups" }
+func (g *Group) TableName() string { return "groups" } // groups 在 mysql 下是关键字？
 
 func (g *Group) BeforeInsert() error {
 	g.Created = time.Now()
@@ -123,7 +123,6 @@ func initData(t *test.Driver) {
 
 	insert(&Group{
 		Name: "group1",
-		ID:   sql.NullInt64{Int64: 1, Valid: true},
 		Any:  "attr",
 	})
 

@@ -166,19 +166,16 @@ func TestTx_Insert(t *testing.T) {
 		t.NotError(err)
 
 		_, err = tx.Insert(&User{
-			ID:       1,
 			Username: "u1",
 		})
 		t.NotError(err)
 
 		_, err = tx.Insert(&User{
-			ID:       2,
 			Username: "u2",
 		})
 		a.NotError(err)
 
 		_, err = tx.Insert(&User{
-			ID:       3,
 			Username: "u3",
 		})
 		t.NotError(err)

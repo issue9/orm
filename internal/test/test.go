@@ -92,7 +92,6 @@ func NewSuite(a *assert.Assertion, tablePrefix string, dialect ...core.Dialect) 
 	s := &Suite{a: a}
 	a.TB().Cleanup(func() { s.close() })
 
-	fs := flags
 	for _, c := range cases {
 		name := c.dialect.Name()
 		driver := c.dialect.DriverName()
@@ -101,7 +100,7 @@ func NewSuite(a *assert.Assertion, tablePrefix string, dialect ...core.Dialect) 
 			continue
 		}
 
-		if len(fs) > 0 && slices.IndexFunc(fs, func(i *flagVar) bool { return i.Name == name && i.DriverName == driver }) < 0 {
+		if len(flags) > 0 && slices.IndexFunc(flags, func(i *flagVar) bool { return i.Name == name && i.DriverName == driver }) < 0 {
 			continue
 		}
 

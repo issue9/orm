@@ -75,7 +75,7 @@ func TestBeforeCreateUpdate(t *testing.T) {
 		}()
 
 		// insert
-		o := &beforeObject1{ID: 1, Name: "name1"}
+		o := &beforeObject1{Name: "name1"}
 		_, err := t.DB.Insert(o)
 		t.NotError(err)
 		o = &beforeObject1{ID: 1}

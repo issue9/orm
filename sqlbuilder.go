@@ -226,8 +226,12 @@ func lastInsertID(ctx context.Context, e Engine, v TableNamer) (int64, error) {
 			return 0, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 		}
 
-		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if field.IsZero() && (col.AI || col.HasDefault) {
+		if col.AI && !field.IsZero() {
+			return 0, fmt.Errorf("自增列 %s 不允许指定值", col.Name)
+		}
+
+		// 自增或是含有默认值的零值列。
+		if col.AI || (field.IsZero() && col.HasDefault) {
 			continue
 		}
 
@@ -260,8 +264,12 @@ func insert(ctx context.Context, e Engine, v TableNamer) (sql.Result, error) {
 			return nil, fmt.Errorf("未找到该名称 %s 的值", col.GoName)
 		}
 
-		// 在为零值的情况下，若该列是 AI 或是有默认值，则过滤掉。无论该零值是否为手动设置的。
-		if field.IsZero() && (col.AI || col.HasDefault) {
+		if col.AI && !field.IsZero() {
+			return nil, fmt.Errorf("自增列 %s 不允许指定值", col.Name)
+		}
+
+		// 自增或是含有默认值的零值列。
+		if col.AI || (field.IsZero() && col.HasDefault) {
 			continue
 		}
 
