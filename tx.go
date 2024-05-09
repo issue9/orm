@@ -83,6 +83,14 @@ func (tx *Tx) UpdateContext(ctx context.Context, v TableNamer, cols ...string) (
 	return update(ctx, tx, v, cols...)
 }
 
+func (tx *Tx) SaveContext(ctx context.Context, v TableNamer, col ...string) (int64, bool, error) {
+	return save(ctx, tx, v, col...)
+}
+
+func (tx *Tx) Save(v TableNamer, col ...string) (int64, bool, error) {
+	return tx.SaveContext(context.Background(), v, col...)
+}
+
 func (tx *Tx) Delete(v TableNamer) (sql.Result, error) {
 	return tx.DeleteContext(context.Background(), v)
 }
@@ -181,6 +189,14 @@ func (e *txEngine) Update(v TableNamer, cols ...string) (sql.Result, error) {
 
 func (e *txEngine) UpdateContext(ctx context.Context, v TableNamer, cols ...string) (sql.Result, error) {
 	return update(ctx, e, v, cols...)
+}
+
+func (e *txEngine) SaveContext(ctx context.Context, v TableNamer, col ...string) (int64, bool, error) {
+	return save(ctx, e, v, col...)
+}
+
+func (e *txEngine) Save(v TableNamer, col ...string) (int64, bool, error) {
+	return e.SaveContext(context.Background(), v, col...)
 }
 
 func (e *txEngine) Select(v TableNamer) (bool, error) {

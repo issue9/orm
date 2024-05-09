@@ -89,6 +89,14 @@ func (db *DB) LastInsertIDContext(ctx context.Context, v TableNamer) (int64, err
 	return lastInsertID(ctx, db, v)
 }
 
+func (db *DB) SaveContext(ctx context.Context, v TableNamer, col ...string) (int64, bool, error) {
+	return save(ctx, db, v, col...)
+}
+
+func (db *DB) Save(v TableNamer, col ...string) (int64, bool, error) {
+	return db.SaveContext(context.Background(), v, col...)
+}
+
 // Insert 插入数据
 //
 // NOTE: 若需一次性插入多条数据，请使用 [Tx.InsertMany]。

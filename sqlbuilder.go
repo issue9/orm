@@ -347,6 +347,16 @@ func update(ctx context.Context, e Engine, v TableNamer, cols ...string) (sql.Re
 	return stmt.ExecContext(ctx)
 }
 
+func save(ctx context.Context, e Engine, v TableNamer, cols ...string) (int64, bool, error) {
+	if found, err := e.SelectContext(ctx, v); err != nil || !found {
+		id, err := lastInsertID(ctx, e, v)
+		return id, true, err
+	}
+
+	_, err := update(ctx, e, v, cols...)
+	return 0, false, err
+}
+
 func getUpdateColumns(e Engine, v TableNamer, stmt *sqlbuilder.UpdateStmt, cols ...string) (*core.Model, reflect.Value, error) {
 	m, rval, err := getModel(e, v)
 	if err != nil {

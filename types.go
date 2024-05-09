@@ -93,6 +93,14 @@ type (
 		UpdateContext(ctx context.Context, v TableNamer, cols ...string) (sql.Result, error)
 		Update(v TableNamer, cols ...string) (sql.Result, error)
 
+		// SaveContext 更新或是插入数据
+		//
+		// 根据 v 中的唯一约束或是自增列是否要在表中找到值来确定是采用 [Engine.UpdateContext] 还是 [Engine.InsertContext]。
+		//
+		// isnew 表示是否是 insert 的数据，如果是 insert 模式，那么 lastid 表示插入项的 id，否则 lastid 无意义。
+		SaveContext(ctx context.Context, v TableNamer, cols ...string) (lastid int64, isnew bool, err error)
+		Save(v TableNamer, cols ...string) (lastid int64, isnew bool, err error)
+
 		// SelectContext 查询一个符合条件的数据
 		//
 		// 查找条件以结构体定义的主键或是唯一约束(在没有主键的情况下 ) 来查找，

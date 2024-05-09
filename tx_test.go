@@ -5,6 +5,7 @@
 package orm_test
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/issue9/assert/v4"
@@ -239,6 +240,43 @@ func TestTx_Update(t *testing.T) {
 		found, err = t.DB.Select(u2)
 		t.NotError(err).True(found)
 		t.Equal(u2, &UserInfo{UID: 2, FirstName: "firstName2", LastName: "lastName2", Sex: "sex2"})
+	})
+}
+
+func TestTx_Save(t *testing.T) {
+	a := assert.New(t, false)
+	suite := test.NewSuite(a, "")
+
+	suite.Run(func(t *test.Driver) {
+		initData(t)
+		defer clearData(t)
+
+		tx, err := t.DB.Begin()
+		t.NotError(err).NotNil(tx)
+
+		// 指定的行存在，采用 update
+		cnt, err := t.DB.SQLBuilder().Select().Column("count(*) AS cnt").From(orm.TableName(&Group{})).QueryInt("cnt")
+		a.NotError(err).Equal(cnt, 1)
+		lastid, isnew, err := tx.Save(&Group{ID: sql.NullInt64{Valid: true, Int64: 1}, Name: "save"})
+		a.NotError(err).False(isnew).Zero(lastid).
+			NotError(tx.Commit())
+		cnt, err = t.DB.SQLBuilder().Select().Column("count(*) AS cnt").From(orm.TableName(&Group{})).QueryInt("cnt")
+		a.NotError(err).Equal(cnt, 1) // 没有增加行数
+
+		// insert
+		tx, err = t.DB.Begin()
+		t.NotError(err).NotNil(tx)
+		lastid, isnew, err = t.DB.Save(&Group{ID: sql.NullInt64{Valid: true, Int64: 2}, Name: "save"})
+		a.Error(err)
+
+		// insert
+		tx, err = t.DB.Begin()
+		t.NotError(err).NotNil(tx)
+		lastid, isnew, err = t.DB.Save(&Group{Name: "save"})
+		a.NotError(err).True(isnew).Equal(lastid, 2)
+		cnt, err = t.DB.SQLBuilder().Select().Column("count(*) AS cnt").From(orm.TableName(&Group{})).QueryInt("cnt")
+		a.NotError(err).Equal(cnt, 2).
+			NotError(tx.Commit())
 	})
 }
 

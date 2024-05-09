@@ -6,11 +6,13 @@ package orm_test
 
 import (
 	"bytes"
+	"database/sql"
 	"strings"
 	"testing"
 
 	"github.com/issue9/assert/v4"
 
+	"github.com/issue9/orm/v6"
 	"github.com/issue9/orm/v6/internal/test"
 )
 
@@ -305,7 +307,35 @@ func TestDB_Debug(t *testing.T) {
 	})
 }
 
-func TestDB_NewEngine(t *testing.T) {
+func TestDB_Save(t *testing.T) {
+	a := assert.New(t, false)
+	suite := test.NewSuite(a, "")
+
+	suite.Run(func(t *test.Driver) {
+		initData(t)
+		defer clearData(t)
+
+		// 指定的行存在，采用 update
+		cnt, err := t.DB.SQLBuilder().Select().Column("count(*) AS cnt").From(orm.TableName(&Group{})).QueryInt("cnt")
+		a.NotError(err).Equal(cnt, 1)
+		lastid, isnew, err := t.DB.Save(&Group{ID: sql.NullInt64{Valid: true, Int64: 1}, Name: "save"})
+		a.NotError(err).False(isnew).Zero(lastid)
+		cnt, err = t.DB.SQLBuilder().Select().Column("count(*) AS cnt").From(orm.TableName(&Group{})).QueryInt("cnt")
+		a.NotError(err).Equal(cnt, 1) // 没有增加行数
+
+		// insert 不存在的行
+		lastid, isnew, err = t.DB.Save(&Group{ID: sql.NullInt64{Valid: true, Int64: 2}, Name: "save"})
+		a.Error(err)
+
+		// insert 未指定自增列
+		lastid, isnew, err = t.DB.Save(&Group{Name: "save"})
+		a.NotError(err).True(isnew).Equal(lastid, 2)
+		cnt, err = t.DB.SQLBuilder().Select().Column("count(*) AS cnt").From(orm.TableName(&Group{})).QueryInt("cnt")
+		a.NotError(err).Equal(cnt, 2)
+	})
+}
+
+func TestDB_New(t *testing.T) {
 	a := assert.New(t, false)
 	suite := test.NewSuite(a, "")
 
