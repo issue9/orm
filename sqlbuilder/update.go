@@ -117,9 +117,9 @@ func (stmt *UpdateStmt) SQL() (string, []any, error) {
 		return "", nil, err
 	}
 
-	buf := core.NewBuilder("UPDATE ")
-	buf.WString(stmt.table)
-	buf.WString(" SET ")
+	buf := core.NewBuilder("UPDATE ").
+		QuoteKey(stmt.table).
+		WString(" SET ")
 
 	args := make([]any, 0, len(stmt.values))
 
