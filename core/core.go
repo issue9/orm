@@ -72,7 +72,7 @@ type Dialect interface {
 
 	// DriverName 与当前实例关联的驱动名称
 	//
-	// 原则上驱动名和 Dialect 应该是一一对应的，但是也会有例外，比如：
+	// 原则上驱动名和 [Dialect] 应该是一一对应的，但是也会有例外，比如：
 	// github.com/lib/pq 和 github.com/jackc/pgx/v5/stdlib 功能上是相同的，
 	// 仅注册的名称的不同。
 	DriverName() string
@@ -137,7 +137,7 @@ type Dialect interface {
 	// Fix 对 sql 语句作调整
 	//
 	// 比如处理 [sql.NamedArgs]，postgresql 需要将 ? 改成 $1 等形式。
-	// 以及对 args 的参数作校正，比如 lib/pq 对 time.Time 处理有问题，也可以在此处作调整。
+	// 以及对 args 的参数作校正，比如 lib/pq 对 [time.Time] 处理有问题，也可以在此处作调整。
 	//
 	// NOTE: query 中不能同时存在 ? 和命名参数。因为如果是命名参数，则 args 的顺序可以是随意的。
 	Fix(query string, args []any) (string, []any, error)

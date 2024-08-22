@@ -21,7 +21,7 @@ type Builder struct {
 	buffer errwrap.Buffer
 }
 
-// NewBuilder 声明一个新的 Builder 实例
+// NewBuilder 声明一个新的 [Builder] 实例
 func NewBuilder(str ...string) *Builder {
 	b := &Builder{}
 
