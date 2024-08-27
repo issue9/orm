@@ -135,35 +135,35 @@ func (stmt *WhereStmt) Or(cond string, args ...any) *WhereStmt {
 // AndIsNull 指定 WHERE ... AND col IS NULL
 func (stmt *WhereStmt) AndIsNull(col string) *WhereStmt {
 	stmt.writeAnd(true)
-	stmt.builder.QuoteKey(col).WString(" IS NULL ")
+	stmt.builder.QuoteColumn(col).WString(" IS NULL ")
 	return stmt
 }
 
 // OrIsNull 指定 WHERE ... OR col IS NULL
 func (stmt *WhereStmt) OrIsNull(col string) *WhereStmt {
 	stmt.writeAnd(false)
-	stmt.builder.QuoteKey(col).WString(" IS NULL ")
+	stmt.builder.QuoteColumn(col).WString(" IS NULL ")
 	return stmt
 }
 
 // AndIsNotNull 指定 WHERE ... AND col IS NOT NULL
 func (stmt *WhereStmt) AndIsNotNull(col string) *WhereStmt {
 	stmt.writeAnd(true)
-	stmt.builder.QuoteKey(col).WString(" IS NOT NULL ")
+	stmt.builder.QuoteColumn(col).WString(" IS NOT NULL ")
 	return stmt
 }
 
 // OrIsNotNull 指定 WHERE ... OR col IS NOT NULL
 func (stmt *WhereStmt) OrIsNotNull(col string) *WhereStmt {
 	stmt.writeAnd(false)
-	stmt.builder.QuoteKey(col).WString(" IS NOT NULL ")
+	stmt.builder.QuoteColumn(col).WString(" IS NOT NULL ")
 	return stmt
 }
 
 // AndBetween 指定 WHERE ... AND col BETWEEN v1 AND v2
 func (stmt *WhereStmt) AndBetween(col string, v1, v2 any) *WhereStmt {
 	stmt.writeAnd(true)
-	stmt.builder.QuoteKey(col).WString(" BETWEEN ? AND ? ")
+	stmt.builder.QuoteColumn(col).WString(" BETWEEN ? AND ? ")
 	stmt.args = append(stmt.args, v1, v2)
 	return stmt
 }
@@ -171,7 +171,7 @@ func (stmt *WhereStmt) AndBetween(col string, v1, v2 any) *WhereStmt {
 // OrBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
 func (stmt *WhereStmt) OrBetween(col string, v1, v2 any) *WhereStmt {
 	stmt.writeAnd(false)
-	stmt.builder.QuoteKey(col).WString(" BETWEEN ? AND ? ")
+	stmt.builder.QuoteColumn(col).WString(" BETWEEN ? AND ? ")
 	stmt.args = append(stmt.args, v1, v2)
 	return stmt
 }
@@ -179,7 +179,7 @@ func (stmt *WhereStmt) OrBetween(col string, v1, v2 any) *WhereStmt {
 // AndNotBetween 指定 WHERE ... AND col NOT BETWEEN v1 AND v2
 func (stmt *WhereStmt) AndNotBetween(col string, v1, v2 any) *WhereStmt {
 	stmt.writeAnd(true)
-	stmt.builder.QuoteKey(col).WString(" NOT BETWEEN ? AND ? ")
+	stmt.builder.QuoteColumn(col).WString(" NOT BETWEEN ? AND ? ")
 	stmt.args = append(stmt.args, v1, v2)
 	return stmt
 }
@@ -187,7 +187,7 @@ func (stmt *WhereStmt) AndNotBetween(col string, v1, v2 any) *WhereStmt {
 // OrNotBetween 指定 WHERE ... OR col BETWEEN v1 AND v2
 func (stmt *WhereStmt) OrNotBetween(col string, v1, v2 any) *WhereStmt {
 	stmt.writeAnd(false)
-	stmt.builder.QuoteKey(col).WString(" NOT BETWEEN ? AND ? ")
+	stmt.builder.QuoteColumn(col).WString(" NOT BETWEEN ? AND ? ")
 	stmt.args = append(stmt.args, v1, v2)
 	return stmt
 }
@@ -195,7 +195,7 @@ func (stmt *WhereStmt) OrNotBetween(col string, v1, v2 any) *WhereStmt {
 // AndLike 指定 WHERE ... AND col LIKE content
 func (stmt *WhereStmt) AndLike(col string, content any) *WhereStmt {
 	stmt.writeAnd(true)
-	stmt.builder.QuoteKey(col).WString(" LIKE ?")
+	stmt.builder.QuoteColumn(col).WString(" LIKE ?")
 	stmt.args = append(stmt.args, content)
 	return stmt
 }
@@ -203,7 +203,7 @@ func (stmt *WhereStmt) AndLike(col string, content any) *WhereStmt {
 // OrLike 指定 WHERE ... OR col LIKE content
 func (stmt *WhereStmt) OrLike(col string, content any) *WhereStmt {
 	stmt.writeAnd(false)
-	stmt.builder.QuoteKey(col).WString(" LIKE ?")
+	stmt.builder.QuoteColumn(col).WString(" LIKE ?")
 	stmt.args = append(stmt.args, content)
 	return stmt
 }
@@ -211,7 +211,7 @@ func (stmt *WhereStmt) OrLike(col string, content any) *WhereStmt {
 // AndNotLike 指定 WHERE ... AND col NOT LIKE content
 func (stmt *WhereStmt) AndNotLike(col string, content any) *WhereStmt {
 	stmt.writeAnd(true)
-	stmt.builder.QuoteKey(col).WString(" NOT LIKE ?")
+	stmt.builder.QuoteColumn(col).WString(" NOT LIKE ?")
 	stmt.args = append(stmt.args, content)
 	return stmt
 }
@@ -219,7 +219,7 @@ func (stmt *WhereStmt) AndNotLike(col string, content any) *WhereStmt {
 // OrNotLike 指定 WHERE ... OR col NOT LIKE content
 func (stmt *WhereStmt) OrNotLike(col string, content any) *WhereStmt {
 	stmt.writeAnd(false)
-	stmt.builder.QuoteKey(col).WString(" NOT LIKE ?")
+	stmt.builder.QuoteColumn(col).WString(" NOT LIKE ?")
 	stmt.args = append(stmt.args, content)
 	return stmt
 }
@@ -250,7 +250,7 @@ func (stmt *WhereStmt) in(and, not bool, col string, v ...any) *WhereStmt {
 	}
 
 	stmt.writeAnd(and)
-	stmt.builder.QuoteKey(col)
+	stmt.builder.QuoteColumn(col)
 
 	if not {
 		stmt.builder.WString(" NOT")

@@ -4,7 +4,11 @@
 
 package core
 
-import "github.com/issue9/errwrap"
+import (
+	"strings"
+
+	"github.com/issue9/errwrap"
+)
 
 // 作用于表名，列名等非关键字上的引号占位符。
 // 在执行会自动替换成该数据库相应的符号。
@@ -55,6 +59,16 @@ func (b *Builder) Quote(str string, l, r byte) *Builder { return b.WBytes(l).WSt
 
 // QuoteKey 给 str 左右添加 [QuoteLeft] 和 [QuoteRight] 两个字符
 func (b *Builder) QuoteKey(str string) *Builder { return b.Quote(str, QuoteLeft, QuoteRight) }
+
+// QuoteColumn 为列名添加 [QuoteLeft] 和 [QuoteRight] 两个字符
+//
+// NOTE: 列名可能包含表名或是表名别名：table.col
+func (b *Builder) QuoteColumn(col string) *Builder {
+	if index := strings.IndexByte(col, '.'); index > 0 {
+		return b.QuoteKey(col[:index]).WBytes('.').QuoteKey(col[index+1:])
+	}
+	return b.Quote(col, QuoteLeft, QuoteRight)
+}
 
 // Reset 重置内容，同时也会将 err 设置为 nil
 func (b *Builder) Reset() *Builder {

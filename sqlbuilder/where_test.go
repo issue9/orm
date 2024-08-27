@@ -71,10 +71,10 @@ func TestWhereStmt_IsNull(t *testing.T) {
 	a.NotError(err).Empty(args)
 	sqltest.Equal(a, query, "{col1} is null")
 
-	w.OrIsNull("col2")
+	w.OrIsNull("tbl.col2")
 	query, args, err = w.SQL()
 	a.NotError(err).Empty(args)
-	sqltest.Equal(a, query, "{col1} is null or {col2} is null")
+	sqltest.Equal(a, query, "{col1} is null or {tbl}.{col2} is null")
 
 	w.Reset()
 	w.AndIsNotNull("col1")
