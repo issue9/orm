@@ -31,12 +31,10 @@ func TestSelect(t *testing.T) {
 			Desc("id")
 
 		id, err := stmt.QueryInt("id")
-		a.NotError(err).
-			Equal(id, 4)
+		a.NotError(err).Equal(id, 4)
 
 		f, err := stmt.QueryFloat("id")
-		a.NotError(err).
-			Equal(f, 4.0)
+		a.NotError(err).Equal(f, 4.0)
 
 		// 不存在的列
 		f, err = stmt.QueryFloat("id_not_exists")
@@ -56,6 +54,17 @@ func TestSelect(t *testing.T) {
 
 		cnt, err := stmt.Count("count(*) as cnt").QueryInt("cnt")
 		a.NotError(err).Equal(cnt, 4)
+
+		type counter struct {
+			Cnt1 int `orm:"name(cnt1)"`
+			Cnt2 int `orm:"name(cnt2)"`
+		}
+		cntr := &counter{}
+		size, err = stmt.Count("COUNT(CASE WHEN id>3 THEN id END) AS cnt1, COUNT(CASE WHEN id<3 THEN id END) AS cnt2").
+			QueryObject(true, cntr)
+		a.NotError(err).Equal(size, 1).
+			Equal(cntr.Cnt1, 1). // stmt 中的条件是 id<5，所以只有一个符合条件的数据
+			Equal(cntr.Cnt2, 2)
 
 		// 没有符合条件的数据
 		stmt.Reset()

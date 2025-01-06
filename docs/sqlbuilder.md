@@ -240,4 +240,8 @@ list := make([]*User, 0, 10);
 // 查询符合以上条件的所有记录数
 builder.Count("count(*) AS cnt")
     count, err := builder.QueryInt("cnt")
+
+// 也支持 case 作为 count 内容
+builder.Count("count(CASE WHEN age>18 THEN age ELSE NULL END) AS cnt")
+	count, err := builder.QueryInt("cnt")
 ```

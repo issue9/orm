@@ -401,6 +401,10 @@ func (stmt *SelectStmt) Limit(limit any, offset ...any) *SelectStmt {
 //
 // 如果指定了 count 表达式，则会造成 limit 失效，
 // 如果设置为空值，则取消 count，恢复普通的 select 。
+//
+//	stmt := NewSelectStmt()
+//	stmt.Count("count(*) as cnt")
+//	stmt.Count("count(CASE WHEN xx) as cnt1, count(CASE WHEN yy) as cnt2")
 func (stmt *SelectStmt) Count(expr string) *SelectStmt {
 	stmt.countExpr = expr
 

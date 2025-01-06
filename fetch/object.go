@@ -60,7 +60,7 @@ func convertError(field string, message error) error {
 //	    Count int `orm:"-"`         // 不会匹配与该字段对应的列。
 //	}
 //
-// 第一个参数用于表示有多少数据被正确导入到 obj 中
+// 第一个返回参数用于表示有多少数据被正确导入到 obj 中
 func Object(strict bool, rows *sql.Rows, obj any) (int, error) {
 	val := reflect.ValueOf(obj)
 
@@ -183,7 +183,7 @@ func getColumns(v reflect.Value, cols []string) ([]any, error) {
 }
 
 // 将 rows 中的一条记录写入到 val 中，必须保证 val 的类型为 reflect.Struct。
-// 仅供 Obj() 调用。
+// 仅供 Object() 调用。
 func fetchOnceObj(strict bool, val reflect.Value, rows *sql.Rows) (int, error) {
 	if !strict {
 		return fetchOnceObjNoStrict(val, rows)
