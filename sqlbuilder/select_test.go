@@ -60,7 +60,7 @@ func TestSelect(t *testing.T) {
 			Cnt2 int `orm:"name(cnt2)"`
 		}
 		cntr := &counter{}
-		size, err = stmt.Count("COUNT(CASE WHEN id>3 THEN id END) AS cnt1, COUNT(CASE WHEN id<3 THEN id END) AS cnt2").
+		size, err = stmt.Count("COUNT(CASE WHEN id>3 THEN id END) AS cnt1, COUNT(CASE WHEN id<? THEN id END) AS cnt2", 3).
 			QueryObject(true, cntr)
 		a.NotError(err).Equal(size, 1).
 			Equal(cntr.Cnt1, 1). // stmt 中的条件是 id<5，所以只有一个符合条件的数据

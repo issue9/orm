@@ -36,6 +36,7 @@ type SelectStmt struct {
 
 	// COUNT 查询的列内容
 	countExpr string
+	countArgs []any
 
 	unions []*unionSelect
 
@@ -85,6 +86,7 @@ func (stmt *SelectStmt) Reset() *SelectStmt {
 	stmt.forUpdate = false
 
 	stmt.countExpr = ""
+	stmt.w.args = nil
 
 	if stmt.unions != nil {
 		stmt.unions = stmt.unions[:0]
@@ -120,7 +122,7 @@ func (stmt *SelectStmt) SQL() (string, []any, error) {
 	builder := core.NewBuilder("SELECT ")
 	args := make([]any, 0, 10)
 
-	stmt.buildColumns(builder)
+	args = append(args, stmt.buildColumns(builder)...)
 
 	builder.WString(" FROM ").WString(stmt.tableExpr)
 
@@ -205,10 +207,10 @@ func (stmt *SelectStmt) buildUnions(builder *core.Builder) (args []any, err erro
 	return args, nil
 }
 
-func (stmt *SelectStmt) buildColumns(builder *core.Builder) {
+func (stmt *SelectStmt) buildColumns(builder *core.Builder) []any {
 	if stmt.countExpr != "" {
 		builder.WString(stmt.countExpr)
-		return
+		return stmt.countArgs
 	}
 
 	if stmt.distinct {
@@ -217,13 +219,14 @@ func (stmt *SelectStmt) buildColumns(builder *core.Builder) {
 
 	if len(stmt.columns) == 0 {
 		builder.WBytes('*')
-		return
+		return nil
 	}
 
 	for _, col := range stmt.columns {
 		builder.WString(col).WBytes(',')
 	}
 	builder.TruncateLast(1)
+	return nil
 }
 
 // Column 指定列
@@ -405,8 +408,9 @@ func (stmt *SelectStmt) Limit(limit any, offset ...any) *SelectStmt {
 //	stmt := NewSelectStmt()
 //	stmt.Count("count(*) as cnt")
 //	stmt.Count("count(CASE WHEN xx) as cnt1, count(CASE WHEN yy) as cnt2")
-func (stmt *SelectStmt) Count(expr string) *SelectStmt {
+func (stmt *SelectStmt) Count(expr string, args ...any) *SelectStmt {
 	stmt.countExpr = expr
+	stmt.countArgs = args
 
 	return stmt
 }
