@@ -1,7 +1,6 @@
 name: Sqlite
 on: [push, pull_request]
 jobs:
-
   test:
     name: Test
     runs-on: ${{ matrix.os }}
@@ -9,11 +8,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest] # action 不支持非 linux 下的容器, windows-latest, macOS-latest
-        go: ['1.23.x', '1.24.x']
-
+        go: ["1.23.x", "1.24.x"]
 
     steps:
-
       - name: 安装 Go ${{ matrix.go }}
         uses: actions/setup-go@v5
         with:
@@ -27,7 +24,7 @@ jobs:
         run: go vet -v ./...
 
       - name: Test
-        run: go test -p=1 ./... -test.coverprofile=coverage.txt -covermode=atomic -dbs=sqlite3,sqlite -p=1 -parallel=1
+        run: go test ./... -test.coverprofile=coverage.txt -covermode=atomic -dbs=sqlite3,sqlite -p=1 -parallel=1
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5

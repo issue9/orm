@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2025 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -63,32 +63,32 @@ var (
 	}
 
 	types = map[reflect.Type]PrimitiveType{
-		reflect.TypeOf(true):           Bool, // TODO(g1.22): reflect.TypeFor
-		reflect.TypeOf(int(1)):         Int,
-		reflect.TypeOf(int8(1)):        Int8,
-		reflect.TypeOf(int16(1)):       Int16,
-		reflect.TypeOf(int32(1)):       Int32,
-		reflect.TypeOf(int64(1)):       Int64,
-		reflect.TypeOf(uint(1)):        Uint,
-		reflect.TypeOf(uint8(1)):       Uint8,
-		reflect.TypeOf(uint16(1)):      Uint16,
-		reflect.TypeOf(uint32(1)):      Uint32,
-		reflect.TypeOf(uint64(1)):      Uint64,
-		reflect.TypeOf(float32(1)):     Float32,
-		reflect.TypeOf(float64(1)):     Float64,
-		reflect.TypeOf(""):             String,
-		reflect.TypeOf([]byte{}):       Bytes,
-		reflect.TypeOf(sql.RawBytes{}): Bytes,
-		reflect.TypeOf(time.Time{}):    Time,
+		reflect.TypeFor[bool]():         Bool,
+		reflect.TypeFor[int]():          Int,
+		reflect.TypeFor[int8]():         Int8,
+		reflect.TypeFor[int16]():        Int16,
+		reflect.TypeFor[int32]():        Int32,
+		reflect.TypeFor[int64]():        Int64,
+		reflect.TypeFor[uint]():         Uint,
+		reflect.TypeFor[uint8]():        Uint8,
+		reflect.TypeFor[uint16]():       Uint16,
+		reflect.TypeFor[uint32]():       Uint32,
+		reflect.TypeFor[uint64]():       Uint64,
+		reflect.TypeFor[float32]():      Float32,
+		reflect.TypeFor[float64]():      Float64,
+		reflect.TypeFor[string]():       String,
+		reflect.TypeFor[[]byte]():       Bytes,
+		reflect.TypeFor[sql.RawBytes](): Bytes,
+		reflect.TypeFor[time.Time]():    Time,
 
-		reflect.TypeOf(sql.NullString{}):  String,
-		reflect.TypeOf(sql.NullByte{}):    Bytes,
-		reflect.TypeOf(sql.NullInt64{}):   Int64,
-		reflect.TypeOf(sql.NullInt32{}):   Int32,
-		reflect.TypeOf(sql.NullInt16{}):   Int16,
-		reflect.TypeOf(sql.NullBool{}):    Bool,
-		reflect.TypeOf(sql.NullFloat64{}): Float64,
-		reflect.TypeOf(sql.NullTime{}):    Time,
+		reflect.TypeFor[sql.NullString]():  String,
+		reflect.TypeFor[sql.NullByte]():    Bytes,
+		reflect.TypeFor[sql.NullInt64]():   Int64,
+		reflect.TypeFor[sql.NullInt32]():   Int32,
+		reflect.TypeFor[sql.NullInt16]():   Int16,
+		reflect.TypeFor[sql.NullBool]():    Bool,
+		reflect.TypeFor[sql.NullFloat64](): Float64,
+		reflect.TypeFor[sql.NullTime]():    Time,
 	}
 
 	kinds = map[reflect.Kind]PrimitiveType{
@@ -109,7 +109,7 @@ var (
 		reflect.Interface: String,
 	}
 
-	primitiveTyperType = reflect.TypeOf((*PrimitiveTyper)(nil)).Elem()
+	primitiveTyperType = reflect.TypeFor[PrimitiveTyper]()
 )
 
 type PrimitiveTyper interface {
