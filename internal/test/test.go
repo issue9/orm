@@ -57,7 +57,7 @@ var cases = []struct {
 		dialect: Sqlite,
 	},
 	{
-		dsn:     "user=postgres password=postgres dbname=orm_test sslmode=disable",
+		dsn:     "user=postgres host=127.0.0.1 password=postgres dbname=orm_test sslmode=disable",
 		dialect: Postgres,
 	},
 	{
