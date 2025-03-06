@@ -16,7 +16,7 @@ const TimeFormatLayout = time.RFC3339
 // 当前支持的 [PrimitiveType] 值
 //
 // 其中的 [String] 被设计成可以保存部分类型为 [reflect.Interface] 的数据结构，
-// 但是一个有限的集合，比如将一个 any 字段赋予 slice 类型的数，在保存时可会不被支持。
+// 但是一个有限的集合，比如将一个 any 字段赋予 slice 类型，在保存时可能不被支持。
 // 且在读取时，各个数据库略有不同，比如 mysql 返回 []byte，而其它数据一般返回 string。
 const (
 	Auto PrimitiveType = iota
