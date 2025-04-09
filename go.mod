@@ -1,13 +1,13 @@
 module github.com/issue9/orm/v6
 
 require (
-	github.com/go-sql-driver/mysql v1.9.1
+	github.com/go-sql-driver/mysql v1.9.2
 	github.com/issue9/assert/v4 v4.3.1
 	github.com/issue9/conv v1.3.5
 	github.com/issue9/errwrap v0.3.2
 	github.com/issue9/sliceutil v0.17.0
 	github.com/lib/pq v1.10.9
-	github.com/mattn/go-sqlite3 v1.14.25
+	github.com/mattn/go-sqlite3 v1.14.27
 	github.com/shopspring/decimal v1.4.0
 	modernc.org/sqlite v1.37.0
 )
