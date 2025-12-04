@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest] # action 不支持非 linux 下的容器, windows-latest, macOS-latest
-        go: ["1.23.x", "1.24.x"]
+        go: ["1.25.x", "1.24.x"]
 
     steps:
       - name: 安装 Go ${{ matrix.go }}
