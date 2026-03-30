@@ -24,21 +24,20 @@ func TestPrimitiveType(t *testing.T) {
 func TestGetPrimitiveType(t *testing.T) {
 	a := assert.New(t, false)
 
-	a.Equal(GetPrimitiveType(reflect.TypeOf(1)), Int)
-	a.Equal(GetPrimitiveType(reflect.TypeOf([]byte{1, 2})), Bytes)
-	a.Equal(GetPrimitiveType(reflect.TypeOf("string")), String)
-	a.Equal(GetPrimitiveType(reflect.TypeOf(any(5))), Int)
+	a.Equal(GetPrimitiveType(reflect.TypeFor[int]()), Int)
+	a.Equal(GetPrimitiveType(reflect.TypeFor[[]byte]()), Bytes)
+	a.Equal(GetPrimitiveType(reflect.TypeFor[string]()), String)
+	a.Equal(GetPrimitiveType(reflect.TypeFor[any]()), Int)
 
 	// 指针的 PrimitiveType
-	x := 5
-	a.Equal(GetPrimitiveType(reflect.TypeOf(&x)), Auto)
+	a.Equal(GetPrimitiveType(reflect.TypeFor[*int]()), Auto)
 
 	// 自定义类型，但是未实现 PrimitiveTyper 接口
 	type T int16
-	a.Equal(GetPrimitiveType(reflect.TypeOf(T(1))), Int16)
+	a.Equal(GetPrimitiveType(reflect.TypeFor[T]()), Int16)
 
 	type obj struct{}
-	a.Equal(GetPrimitiveType(reflect.TypeOf(obj{})), Auto)
+	a.Equal(GetPrimitiveType(reflect.TypeFor[obj]()), Auto)
 
 	type obj2 struct {
 		Any any

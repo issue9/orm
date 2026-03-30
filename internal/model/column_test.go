@@ -20,30 +20,30 @@ import (
 func TestNewColumn(t *testing.T) {
 	a := assert.New(t, false)
 
-	c, err := model.NewColumn(reflect.StructField{Name: "name", Type: reflect.TypeOf(5)})
+	c, err := model.NewColumn(reflect.StructField{Name: "name", Type: reflect.TypeFor[int]()})
 	a.NotError(err).NotNil(c).
 		Equal(c.Name, "name").Equal(c.GoName, "name").
-		Equal(c.GoType, reflect.TypeOf(1)).
+		Equal(c.GoType, reflect.TypeFor[int]()).
 		Equal(c.PrimitiveType, core.Int)
 
-	c, err = model.NewColumn(reflect.StructField{Name: "Name", Type: reflect.TypeOf(&last{})})
+	c, err = model.NewColumn(reflect.StructField{Name: "Name", Type: reflect.TypeFor[*last]()})
 	a.NotError(err).NotNil(c).
 		Equal(c.Name, "Name").Equal(c.GoName, "Name").
-		Equal(c.GoType, reflect.TypeOf(last{})).
+		Equal(c.GoType, reflect.TypeFor[last]()).
 		Equal(c.PrimitiveType, (&last{}).PrimitiveType())
 
-	c, err = model.NewColumn(reflect.StructField{Name: "Name", Type: reflect.TypeOf([]byte{'1', '2'})})
+	c, err = model.NewColumn(reflect.StructField{Name: "Name", Type: reflect.TypeFor[[]byte]()})
 	a.NotError(err).NotNil(c).
 		Equal(c.Name, "Name").Equal(c.GoName, "Name").
-		Equal(c.GoType, reflect.TypeOf([]byte{})).
+		Equal(c.GoType, reflect.TypeFor[[]byte]()).
 		Equal(c.PrimitiveType, core.Bytes)
 
 	// 自定义类型，但是未实现 PrimitiveTyper 接口
 	type T int16
-	c, err = model.NewColumn(reflect.StructField{Name: "Name", Type: reflect.TypeOf(T(1))})
+	c, err = model.NewColumn(reflect.StructField{Name: "Name", Type: reflect.TypeFor[T]()})
 	a.NotError(err).NotNil(c).
 		Equal(c.Name, "Name").Equal(c.GoName, "Name").
-		Equal(c.GoType, reflect.TypeOf(T(1))).
+		Equal(c.GoType, reflect.TypeFor[T]()).
 		Equal(c.PrimitiveType, core.Int16)
 }
 
@@ -109,7 +109,7 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// col == int
 
-	col, err := model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(1)})
+	col, err := model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeFor[int]()})
 	a.NotError(err).NotNil(col).Equal(col.GoType.Kind(), reflect.Int)
 	a.NotError(m.AddColumn(col.Column))
 
@@ -132,8 +132,8 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// col == []byte
 
-	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf([]byte{'1', '2'})})
-	a.NotError(err).NotNil(col).Equal(col.GoType, reflect.TypeOf([]byte{}))
+	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeFor[[]byte]()})
+	a.NotError(err).NotNil(col).Equal(col.GoType, reflect.TypeFor[[]byte]())
 
 	// 空格
 	a.NotError(col.SetDefault([]string{""}))
@@ -144,8 +144,8 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// col == last
 
-	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&last{})})
-	a.NotError(err).NotNil(col).Equal(col.GoType, reflect.TypeOf(last{}))
+	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeFor[*last]()})
+	a.NotError(err).NotNil(col).Equal(col.GoType, reflect.TypeFor[last]())
 
 	// 格式不正确
 	a.Error(col.SetDefault([]string{"1"}))
@@ -161,7 +161,7 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// col == time.Time
 
-	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(time.Time{})})
+	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeFor[time.Time]()})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
@@ -173,7 +173,7 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// col == core.Unix
 
-	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(types.Unix{})})
+	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeFor[types.Unix]()})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
@@ -186,7 +186,7 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// col == &core.Unix
 
-	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&types.Unix{})})
+	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeFor[*types.Unix]()})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
@@ -198,8 +198,7 @@ func TestColumn_setDefault(t *testing.T) {
 
 	// col == &&core.Unix
 
-	u := &types.Unix{}
-	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeOf(&u)})
+	col, err = model.NewColumn(reflect.StructField{Name: "def", Type: reflect.TypeFor[**types.Unix]()})
 	a.NotError(err).NotNil(col)
 
 	// 格式不正确
