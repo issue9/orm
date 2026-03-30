@@ -27,7 +27,7 @@ func TestGetPrimitiveType(t *testing.T) {
 	a.Equal(GetPrimitiveType(reflect.TypeFor[int]()), Int)
 	a.Equal(GetPrimitiveType(reflect.TypeFor[[]byte]()), Bytes)
 	a.Equal(GetPrimitiveType(reflect.TypeFor[string]()), String)
-	a.Equal(GetPrimitiveType(reflect.TypeFor[any]()), Int)
+	a.Equal(GetPrimitiveType(reflect.TypeOf(any(5))), Int)
 
 	// 指针的 PrimitiveType
 	a.Equal(GetPrimitiveType(reflect.TypeFor[*int]()), Auto)
