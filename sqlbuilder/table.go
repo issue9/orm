@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -427,10 +427,6 @@ func DropTable(e core.Engine) *DropTableStmt {
 //
 // 多次指定，则会删除多个表
 func (stmt *DropTableStmt) Table(table ...string) *DropTableStmt {
-	for i, t := range table {
-		table[i] = t
-	}
-
 	if stmt.tables == nil {
 		stmt.tables = table
 		return stmt

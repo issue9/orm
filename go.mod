@@ -1,11 +1,13 @@
 module github.com/issue9/orm/v6
 
+go 1.27.0
+
 require (
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/issue9/assert/v4 v4.3.1
-	github.com/issue9/conv v1.3.7
-	github.com/issue9/errwrap v0.3.3
-	github.com/issue9/sliceutil v0.17.0
+	github.com/issue9/assert/v5 v5.0.0
+	github.com/issue9/conv v1.4.0
+	github.com/issue9/errwrap v0.4.0
+	github.com/issue9/sliceutil v0.18.0
 	github.com/lib/pq v1.12.0
 	github.com/mattn/go-sqlite3 v1.14.37
 	github.com/shopspring/decimal v1.4.0
@@ -24,5 +26,3 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
-
-go 1.25.0

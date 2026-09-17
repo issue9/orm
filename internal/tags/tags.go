@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -50,8 +50,8 @@ func Parse(tag string) []*Tag {
 		tag = styleReplace.Replace(tag)
 	}
 
-	parts := strings.Split(tag, ";")
-	for _, part := range parts {
+	parts := strings.SplitSeq(tag, ";")
+	for part := range parts {
 		if len(part) == 0 {
 			continue
 		}
@@ -78,8 +78,8 @@ func Get(tag, name string) ([]string, bool) {
 		tag = styleReplace.Replace(tag)
 	}
 
-	parts := strings.Split(tag, ";")
-	for _, part := range parts {
+	parts := strings.SplitSeq(tag, ";")
+	for part := range parts {
 		if len(part) == 0 {
 			continue
 		}
@@ -115,8 +115,8 @@ func Has(tag, name string) bool {
 		tag = styleReplace.Replace(tag)
 	}
 
-	parts := strings.Split(tag, ";")
-	for _, part := range parts {
+	parts := strings.SplitSeq(tag, ";")
+	for part := range parts {
 		if len(part) == 0 {
 			continue
 		}

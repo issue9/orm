@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -24,7 +24,7 @@ func propertyError(field, name, message string) error {
 // obj 可以是一个结构体或是指针。
 func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 	rtype := reflect.TypeOf(obj)
-	for rtype.Kind() == reflect.Ptr {
+	for rtype.Kind() == reflect.Pointer {
 		rtype = rtype.Elem()
 	}
 
@@ -74,7 +74,7 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 // 将 rval 中的结构解析到 m 中，支持匿名字段。
 func parseColumns(m *core.Model, rtype reflect.Type) error {
 	num := rtype.NumField()
-	for i := 0; i < num; i++ {
+	for i := range num {
 		field := rtype.Field(i)
 
 		if field.Anonymous {

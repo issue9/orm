@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/issue9/assert/v4"
+	"github.com/issue9/assert/v5"
 )
 
 var replacer = strings.NewReplacer(
@@ -19,7 +19,7 @@ var replacer = strings.NewReplacer(
 	"=", " = ",
 )
 
-var spaceReplaceRegexp = regexp.MustCompile("\\s+")
+var spaceReplaceRegexp = regexp.MustCompile(`\s+`)
 
 // Equal 检测两条 SQL 语句是否相等
 //

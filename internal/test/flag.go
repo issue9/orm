@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -30,8 +30,8 @@ func Main(m *testing.M) {
 
 	flags = make([]*flagVar, 0, 10)
 
-	items := strings.Split(*dbString, ":")
-	for _, item := range items {
+	items := strings.SplitSeq(*dbString, ":")
+	for item := range items {
 		i := strings.Split(item, ",")
 		if len(i) != 2 {
 			panic(fmt.Sprintf("格式错误：%v", *dbString))

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -65,7 +65,7 @@ func Object(strict bool, rows *sql.Rows, obj any) (int, error) {
 	val := reflect.ValueOf(obj)
 
 	switch val.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		elem := val.Elem()
 		switch elem.Kind() {
 		case reflect.Slice: // slice 指针，可以增长
@@ -95,7 +95,7 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 
 	vt := v.Type()
 	num := vt.NumField()
-	for i := 0; i < num; i++ {
+	for i := range num {
 		field := vt.Field(i)
 		vf := v.Field(i)
 
@@ -133,7 +133,7 @@ func parseObject(v reflect.Value, ret *map[string]reflect.Value) error {
 }
 
 func getRealValue(v reflect.Value) reflect.Value {
-	for v.Kind() == reflect.Ptr {
+	for v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			v.Set(reflect.New(v.Type().Elem()))
 		} else {
@@ -254,7 +254,7 @@ func fetchObjToFixedSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, 
 	}
 
 	itemType := val.Type().Elem()
-	for itemType.Kind() == reflect.Ptr {
+	for itemType.Kind() == reflect.Pointer {
 		itemType = itemType.Elem()
 	}
 	if itemType.Kind() != reflect.Struct {
@@ -286,7 +286,7 @@ func fetchObjToFixedSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, 
 
 func fetchObjToFixedSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 	itemType := val.Type().Elem()
-	for itemType.Kind() == reflect.Ptr {
+	for itemType.Kind() == reflect.Pointer {
 		itemType = itemType.Elem()
 	}
 	if itemType.Kind() != reflect.Struct {
@@ -300,7 +300,7 @@ func fetchObjToFixedSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error
 	}
 
 	l := min(len(mapped), val.Len())
-	for i := 0; i < l; i++ {
+	for i := range l {
 		objItem := make(map[string]reflect.Value, len(mapped[i]))
 		if err = parseObject(val.Index(i), &objItem); err != nil {
 			return 0, err
@@ -336,7 +336,7 @@ func fetchObjToSlice(strict bool, val reflect.Value, rows *sql.Rows) (int, error
 	elem := val.Elem()
 
 	itemType := elem.Type().Elem()
-	for itemType.Kind() == reflect.Ptr {
+	for itemType.Kind() == reflect.Pointer {
 		itemType = itemType.Elem()
 	}
 	if itemType.Kind() != reflect.Struct {
@@ -378,7 +378,7 @@ func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 	elem := val.Elem()
 
 	itemType := elem.Type().Elem()
-	for itemType.Kind() == reflect.Ptr {
+	for itemType.Kind() == reflect.Pointer {
 		itemType = itemType.Elem()
 	}
 	if itemType.Kind() != reflect.Struct {
@@ -394,13 +394,13 @@ func fetchObjToSliceNoStrict(val reflect.Value, rows *sql.Rows) (int, error) {
 	// 使 elem 表示的数组长度最起码和 mapped 一样。
 	size := len(mapped) - elem.Len()
 	if size > 0 {
-		for i := 0; i < size; i++ {
+		for range size {
 			elem = reflect.Append(elem, reflect.New(itemType))
 		}
 		val.Elem().Set(elem)
 	}
 
-	for i := 0; i < len(mapped); i++ {
+	for i := range mapped {
 		objItem := make(map[string]reflect.Value, len(mapped[i]))
 		if err = parseObject(elem.Index(i), &objItem); err != nil {
 			return 0, err

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -43,28 +43,22 @@ type (
 
 func newQueryStmt(e core.Engine, sql SQLer) *queryStmt {
 	return &queryStmt{
-		SQLer: sql,
-		baseStmt: baseStmt{
-			engine: e,
-		},
+		SQLer:  sql,
+		engine: e,
 	}
 }
 
 func newExecStmt(e core.Engine, sql SQLer) *execStmt {
 	return &execStmt{
-		SQLer: sql,
-		baseStmt: baseStmt{
-			engine: e,
-		},
+		SQLer:  sql,
+		engine: e,
 	}
 }
 
 func newDDLStmt(e core.Engine, sql DDLSQLer) *ddlStmt {
 	return &ddlStmt{
 		DDLSQLer: sql,
-		baseStmt: baseStmt{
-			engine: e,
-		},
+		engine:   e,
 	}
 }
 
