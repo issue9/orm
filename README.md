@@ -7,7 +7,7 @@ orm
 
 目前内置了对以下数据库的支持：
 
-数据库    | 驱动                                   | 状态
+数据库    | 驱动                                 | 状态
 ----------|--------------------------------------|------------
 mysql     | mysql github.com/go-sql-driver/mysql | [![Mysql](https://github.com/issue9/orm/workflows/Mysql/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3AMysql)
 mariadb   | mysql github.com/go-sql-driver/mysql | [![Mariadb](https://github.com/issue9/orm/workflows/Mariadb/badge.svg)](https://github.com/issue9/orm/actions?query=workflow%3AMariadb)
