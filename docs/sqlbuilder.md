@@ -72,7 +72,7 @@ stmt2, err := sqlbuilder.Select(db)
     Limit(sql.Named("limit", 20), sql.Named("offset", 10)).
     Where("id>@id", sql.Named("id", 1)).
     Prepare()
-stmt2.Query([]interface{}{
+stmt2.Query([]any{
     sql.Named("id", 1),
     sql.Named("offset", 30),
     sql.Named("limit", 20),
@@ -183,7 +183,7 @@ Where 作为 Delete、Select 和 Update 的共有部分，提供了很多预定�
 ```go
 stmt.Where("id>?", 1).
     And("id>? AND name LIKE ?", 1, "%name").
-    AndIn("id", []interface{}{1, 2, 3}). // IN
+    AndIn("id", []any{1, 2, 3}). // IN
     OrBetween("id", 1, 2).               // BETWEEN
     AndLike("id", "%xx").                // LIKE
     AndIsNull("name").                   // IS NULL

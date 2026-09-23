@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -54,8 +54,6 @@ type (
 )
 
 // New 声明 SQLBuilder 实例
-//
-// tablePrefix 表名前缀；
 func New(e core.Engine) *SQLBuilder {
 	return &SQLBuilder{engine: e}
 }

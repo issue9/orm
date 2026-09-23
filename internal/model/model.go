@@ -71,12 +71,9 @@ func (ms *Models) New(obj core.TableNamer) (*core.Model, error) {
 	return m, nil
 }
 
-// 将 rval 中的结构解析到 m 中，支持匿名字段。
+// 将 rtype 中的结构解析到 m 中，支持匿名字段。
 func parseColumns(m *core.Model, rtype reflect.Type) error {
-	num := rtype.NumField()
-	for i := range num {
-		field := rtype.Field(i)
-
+	for field := range rtype.Fields() {
 		if field.Anonymous {
 			if err := parseColumns(m, field.Type); err != nil {
 				return err

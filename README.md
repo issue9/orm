@@ -204,10 +204,10 @@ err := e.Select(u)
 ```go
 // Query 返回参数与 sql.Query 是相同的
 sql := "select * from tbl_name where id=?"
-rows, err := e.Query(sql, []interface{}{5})
+rows, err := e.Query(sql, []any{5})
 // Exec 返回参数与 sql.Exec 是相同的
 sql = "update tbl_name set name=? where id=?"
-r, err := e.Exec(sql, []interface{}{"name1", 5})
+r, err := e.Exec(sql, []any{"name1", 5})
 ```
 
 ##### 多表查询
@@ -223,7 +223,7 @@ sql := "SELECT o.*, u.id AS 'u.id',u.name AS 'u.name' FROM orders AS o LEFT JOIN
 
 // 以下查询会将 u.name 和 u.id 导入到 User 指向的对象中
 data := []*order{}
-rows,err := e.Query(sql, []interface{}{5})
+rows,err := e.Query(sql, []any{5})
 r, err := fetch.Object(rows, &data)
 ```
 

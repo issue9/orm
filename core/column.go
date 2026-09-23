@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -7,6 +7,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"slices"
 )
 
 var errInvalidColumnType = errors.New("无效的列类型")
@@ -119,11 +120,5 @@ func (m *Model) FindColumn(name string) *Column {
 }
 
 func (m *Model) columnExists(col *Column) bool {
-	for _, c := range m.Columns {
-		if c == col {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(m.Columns, col)
 }

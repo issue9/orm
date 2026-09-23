@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2025 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -129,7 +129,7 @@ type PrimitiveType int
 
 // GetPrimitiveType 获取 t 所关联的 [PrimitiveType] 值
 //
-// t.Kind 不能为 [reflect.Ptr] 否则将返回 [Auto]。
+// t.Kind 不能为 [reflect.Pointer] 否则将返回 [Auto]。
 func GetPrimitiveType(t reflect.Type) PrimitiveType {
 	primitiveType, found := kinds[t.Kind()]
 	if found {

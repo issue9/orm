@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -71,7 +71,7 @@ func (stmt *WhereStmt) Update(v TableNamer, cols ...string) (sql.Result, error) 
 // v 可能是某个对象的指针，或是一组相同对象指针数组。表名来自 v，列名为 v 的所有列。
 func (stmt *WhereStmt) Select(strict bool, v any) (int, error) {
 	t := reflect.TypeOf(v)
-	for t.Kind() == reflect.Ptr || t.Kind() == reflect.Slice || t.Kind() == reflect.Array {
+	for t.Kind() == reflect.Pointer || t.Kind() == reflect.Slice || t.Kind() == reflect.Array {
 		t = t.Elem()
 	}
 

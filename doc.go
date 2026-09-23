@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -156,10 +156,10 @@
 //
 //	// Query 返回参数与 sql.Query 是相同的
 //	sql := "select * from tbl_name where id=?"
-//	rows, err := e.Query(sql, []interface{}{5})
+//	rows, err := e.Query(sql, []any{5})
 //	// Exec 返回参数与 sql.Exec 是相同的
 //	sql = "update tbl_name set name=? where id=?"
-//	r, err := e.Exec(sql, []interface{}{"name1", 5})
+//	r, err := e.Exec(sql, []any{"name1", 5})
 //
 // 事务：
 //

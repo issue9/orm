@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -23,7 +23,7 @@ type Column struct {
 
 func NewColumn(field reflect.StructField) (*Column, error) {
 	t := field.Type
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 
@@ -157,7 +157,7 @@ func (col *Column) SetDefault(vals []string) error {
 		}
 		col.Default = v
 	default:
-		for rval.Kind() == reflect.Ptr {
+		for rval.Kind() == reflect.Pointer {
 			rval = rval.Elem()
 		}
 
